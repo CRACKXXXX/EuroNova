@@ -1,1 +1,99 @@
-Llaves_Euronova.txt
+# ==========================================
+# 1. VARIABLES DE ENTORNO Y SECRETOS (Global)
+# ==========================================
+.env
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.env.*
+
+# ==========================================
+# 2. NOTAS PERSONALES Y ARCHIVOS DE CLAVES
+# ==========================================
+*llave*
+*llaves*
+*key*
+*keys*
+*secret*
+*secrets*
+*credential*
+*credentials*
+*token*
+*tokens*
+*password*
+*.txt.bak
+*.log
+
+# ==========================================
+# 3. GOOGLE CLOUD, GEMINI Y SERVICE ACCOUNTS
+# ==========================================
+*service_account*.json
+*service-account*.json
+client_secret*.json
+credentials.json
+gcp-key*.json
+firebase-adminsdk*.json
+
+# ==========================================
+# 4. TELEGRAM, TELETHON Y BOTS
+# ==========================================
+*.session
+*.session-journal
+session/
+sessions/
+*.sqlite
+*.sqlite3
+*.db
+scraped_data/
+temp_downloads/
+*.pdf
+
+# ==========================================
+# 5. PYTHON Y ENTORNO DEL SCRAPER
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+pip-wheel-metadata/
+
+# ==========================================
+# 6. SUPABASE Y VOLCADOS DE BASE DE DATOS
+# ==========================================
+*.sql.gz
+*.sql.tar
+dump.sql
+supabase/.temp/
+supabase/.branches/
+
+# ==========================================
+# 7. CERTIFICADOS, CLAVES PRIVADAS Y SSH
+# ==========================================
+*.pem
+*.key
+*.pub
+*.cert
+*.crt
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+
+# ==========================================
+# 8. SISTEMA OPERATIVO E IDE (Antigravity / VS Code)
+# ==========================================
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.user
+Thumbs.db
+[Dd]esktop.ini
+.DS_Store
