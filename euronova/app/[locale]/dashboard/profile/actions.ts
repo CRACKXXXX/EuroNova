@@ -3,7 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 
-export async function updateProfile(prevState: any, formData: FormData) {
+export async function updateProfile(prevState: unknown, formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -54,7 +54,8 @@ export async function updateProfile(prevState: any, formData: FormData) {
         country_hq: country_hq || null,
         description: description || null,
         website: website || null,
-        contact_email: contact_email || null
+        contact_email: contact_email || null,
+        verification_status: 'pending'
       });
 
     if (error) return { error: error.message };

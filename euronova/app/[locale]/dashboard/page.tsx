@@ -1,10 +1,7 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
 import { Search, Building, User } from "lucide-react";
 
 export default async function DashboardHome() {
-  const t = await getTranslations("DashboardHome");
-
   return (
     <div className="max-w-4xl mx-auto mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="text-center mb-12">

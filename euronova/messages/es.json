@@ -73,5 +73,40 @@
     "contactEmail": "Email de Contacto",
     "editProfile": "Editar Perfil",
     "cancel": "Cancelar"
+  },
+  "DashboardContent": {
+    "transmissionsReceived": "Misiones Internacionales",
+    "waitingTransmissions": "Esperando misiones...",
+    "adjustFilters": "Prueba a ajustar los filtros para ver más resultados."
+  },
+  "SupportForm": {
+    "title": "Soporte y Asistencia",
+    "description": "¿Tienes algún problema o duda? Rellena el siguiente formulario y nuestro equipo te contactará lo antes posible.",
+    "email": "Correo de Contacto *",
+    "emailPlaceholder": "tu@email.com",
+    "phone": "Teléfono (Opcional)",
+    "phonePlaceholder": "+34 600 000 000",
+    "subject": "Asunto *",
+    "subjectPlaceholder": "Resumen de tu problema",
+    "reason": "Motivo *",
+    "selectReason": "Selecciona un motivo",
+    "reasonTechnical": "Problema Técnico (Bugs, Errores)",
+    "reasonAccount": "Problemas con la Cuenta / Perfil",
+    "reasonProjects": "Dudas sobre Proyectos o Postulaciones",
+    "reasonBilling": "Facturación / Suscripciones",
+    "reasonOther": "Otros",
+    "content": "Contenido detallado *",
+    "contentPlaceholder": "Explica tu problema o duda con el mayor detalle posible...",
+    "success": "¡Ticket enviado con éxito! Nuestro equipo te contactará pronto.",
+    "successDesc": "Puedes cerrar esta página o volver al inicio.",
+    "submit": "Enviar Ticket de Soporte",
+    "submitting": "Enviando..."
+  },
+  "OrgFilters": {
+    "searchPlaceholder": "Buscar por nombre de organización...",
+    "countryPlaceholder": "País de Sede",
+    "entityType": "Tipo de Entidad",
+    "allThemes": "Todas las Temáticas",
+    "onlyVerified": "Solo Verificadas"
   }
 }

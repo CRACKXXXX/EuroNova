@@ -7,7 +7,7 @@ import { CountrySelect } from "@/components/CountrySelect";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
-export function ProfileForm({ initialData, role }: { initialData: any, role: "youth" | "org" }) {
+export function ProfileForm({ initialData, role }: { initialData: Record<string, unknown> | null, role: "youth" | "org" }) {
   const t = useTranslations("Profile");
   const router = useRouter();
   const [state, action, isPending] = useActionState(updateProfile, null);
@@ -16,19 +16,13 @@ export function ProfileForm({ initialData, role }: { initialData: any, role: "yo
 
   console.log("CLIENT DATA RECIBIDA:", initialData);
   
-  const [data, setData] = useState(initialData);
-
-  useEffect(() => {
-    setData(initialData);
-  }, [initialData]);
-
   useEffect(() => {
     if (state?.success) {
-      if (state.data) setData(state.data);
       router.refresh();
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsEditing(false);
     }
-  }, [state?.success, state?.data, router]);
+  }, [state?.success, router]);
 
   if (!isEditing) {
     return (
@@ -38,32 +32,32 @@ export function ProfileForm({ initialData, role }: { initialData: any, role: "yo
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wider">{t('fullName')}</p>
-                <p className="font-semibold text-white mt-1">{data?.full_name || "—"}</p>
+                <p className="font-semibold text-white mt-1">{initialData?.full_name || "—"}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wider">{t('birthDate')}</p>
-                <p className="font-semibold text-white mt-1">{data?.birth_date || "—"}</p>
+                <p className="font-semibold text-white mt-1">{initialData?.birth_date || "—"}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wider">{t('countryResident')}</p>
-                <p className="font-semibold text-white mt-1">{data?.country_code || "—"}</p>
+                <p className="font-semibold text-white mt-1">{initialData?.country_code || "—"}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wider">{t('phone') || "Phone"}</p>
-                <p className="font-semibold text-white mt-1">{data?.phone || "—"}</p>
+                <p className="font-semibold text-white mt-1">{initialData?.phone || "—"}</p>
               </div>
               <div className="md:col-span-2">
                 <p className="text-xs text-gray-500 uppercase tracking-wider">{t('bio') || "Bio"}</p>
-                <p className="text-sm text-gray-300 mt-1">{data?.bio || "—"}</p>
+                <p className="text-sm text-gray-300 mt-1">{initialData?.bio || "—"}</p>
               </div>
               <div className="md:col-span-2">
                 <p className="text-xs text-gray-500 uppercase tracking-wider">{t('languages') || "Languages"}</p>
-                <p className="text-sm text-gray-300 mt-1">{data?.languages?.join(", ") || "—"}</p>
+                <p className="text-sm text-gray-300 mt-1">{initialData?.languages?.join(", ") || "—"}</p>
               </div>
               <div className="md:col-span-2">
                 <p className="text-xs text-gray-500 uppercase tracking-wider">{t('rup')}</p>
-                <p className={`font-semibold mt-1 ${data?.is_rup_region ? "text-rup-emerald" : "text-white"}`}>
-                  {data?.is_rup_region ? "Sí" : "No"}
+                <p className={`font-semibold mt-1 ${initialData?.is_rup_region ? "text-rup-emerald" : "text-white"}`}>
+                  {initialData?.is_rup_region ? "Sí" : "No"}
                 </p>
               </div>
             </div>
@@ -75,19 +69,24 @@ export function ProfileForm({ initialData, role }: { initialData: any, role: "yo
                     <Building className="w-6 h-6 text-hyper-violet" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-white">{data?.org_name || "—"}</h3>
-                    <p className="text-sm text-gray-400 font-mono">OID/PIC: <span className="text-gray-300">{data?.oid_number || "—"}</span></p>
+                    <h3 className="text-xl font-bold text-white">{initialData?.org_name || "—"}</h3>
+                    <p className="text-sm text-gray-400 font-mono">OID/PIC: <span className="text-gray-300">{initialData?.oid_number || "—"}</span></p>
                   </div>
                 </div>
-                {data?.verified ? (
+                {initialData?.verification_status === 'verified' ? (
                   <div className="px-3 py-1 rounded-full bg-rup-emerald/10 border border-rup-emerald flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-rup-emerald animate-pulse"></div>
                     <span className="text-xs font-bold text-rup-emerald uppercase tracking-wider">Entidad Verificada</span>
                   </div>
+                ) : initialData?.verification_status === 'rejected' ? (
+                  <div className="px-3 py-1 rounded-full bg-nova-flare/10 border border-nova-flare/30 flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-nova-flare"></div>
+                    <span className="text-xs font-bold text-nova-flare uppercase tracking-wider">Rechazada</span>
+                  </div>
                 ) : (
                   <div className="px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/30 flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                    <span className="text-xs font-bold text-yellow-500 uppercase tracking-wider">En revisión</span>
+                    <span className="text-xs font-bold text-yellow-500 uppercase tracking-wider">Pendiente de verificación</span>
                   </div>
                 )}
               </div>
@@ -95,17 +94,17 @@ export function ProfileForm({ initialData, role }: { initialData: any, role: "yo
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-gray-500 uppercase tracking-wider">{t('countryHq')}</p>
-                  <p className="font-semibold text-white mt-1">{data?.country_hq || "—"}</p>
+                  <p className="font-semibold text-white mt-1">{initialData?.country_hq || "—"}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 uppercase tracking-wider">{t('contactEmail') || "Contact Email"}</p>
-                  <p className="font-semibold text-white mt-1">{data?.contact_email || "—"}</p>
+                  <p className="font-semibold text-white mt-1">{initialData?.contact_email || "—"}</p>
                 </div>
                 <div className="md:col-span-2">
                   <p className="text-xs text-gray-500 uppercase tracking-wider">{t('website') || "Website"}</p>
-                  {data?.website ? (
-                    <a href={data.website.startsWith('http') ? data.website : `https://${data.website}`} target="_blank" rel="noopener noreferrer" className="font-semibold text-plasma-cyan hover:underline mt-1 inline-block">
-                      {data.website}
+                  {initialData?.website ? (
+                    <a href={initialData.website.startsWith('http') ? initialData.website : `https://${initialData.website}`} target="_blank" rel="noopener noreferrer" className="font-semibold text-plasma-cyan hover:underline mt-1 inline-block">
+                      {initialData.website}
                     </a>
                   ) : (
                     <p className="font-semibold text-white mt-1">—</p>
@@ -113,7 +112,7 @@ export function ProfileForm({ initialData, role }: { initialData: any, role: "yo
                 </div>
                 <div className="md:col-span-2">
                   <p className="text-xs text-gray-500 uppercase tracking-wider">{t('description') || "Description/Mission"}</p>
-                  <p className="text-sm text-gray-300 mt-1">{data?.description || "—"}</p>
+                  <p className="text-sm text-gray-300 mt-1">{initialData?.description || "—"}</p>
                 </div>
               </div>
             </div>

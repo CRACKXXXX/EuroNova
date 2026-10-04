@@ -73,5 +73,40 @@
     "contactEmail": "Contact Email",
     "editProfile": "Edit Profile",
     "cancel": "Cancel"
+  },
+  "DashboardContent": {
+    "transmissionsReceived": "International Missions",
+    "waitingTransmissions": "Waiting for missions...",
+    "adjustFilters": "Try adjusting filters to see more results."
+  },
+  "SupportForm": {
+    "title": "Support and Assistance",
+    "description": "Have any issues or questions? Fill out the form below and our team will contact you shortly.",
+    "email": "Contact Email *",
+    "emailPlaceholder": "you@email.com",
+    "phone": "Phone (Optional)",
+    "phonePlaceholder": "+44 7700 900000",
+    "subject": "Subject *",
+    "subjectPlaceholder": "Brief summary of your issue",
+    "reason": "Reason *",
+    "selectReason": "Select a reason",
+    "reasonTechnical": "Technical Issue (Bugs, Errors)",
+    "reasonAccount": "Account / Profile Issues",
+    "reasonProjects": "Questions about Projects or Applications",
+    "reasonBilling": "Billing / Subscriptions",
+    "reasonOther": "Other",
+    "content": "Detailed Content *",
+    "contentPlaceholder": "Explain your issue or question in as much detail as possible...",
+    "success": "Ticket sent successfully! Our team will contact you soon.",
+    "successDesc": "You can close this page or return home.",
+    "submit": "Send Support Ticket",
+    "submitting": "Sending..."
+  },
+  "OrgFilters": {
+    "searchPlaceholder": "Search by organization name...",
+    "countryPlaceholder": "HQ Country",
+    "entityType": "Entity Type",
+    "allThemes": "All Themes",
+    "onlyVerified": "Verified Only"
   }
 }

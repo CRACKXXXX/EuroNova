@@ -1,4 +1,4 @@
-import { MapPin, Calendar, Users, Zap, PlaneTakeoff } from "lucide-react";
+import { MapPin, Users, Zap, PlaneTakeoff } from "lucide-react";
 
 export interface ProjectData {
   id: string;

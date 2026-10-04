@@ -18,12 +18,12 @@ export default async function ProfilePage() {
   }
 
   // 1. Determinar el rol (Priorizar metadata, sino fallback a tabla)
-  let role: "youth" | "org" = user.user_metadata?.role || "youth";
+  const role: "youth" | "org" = user.user_metadata?.role || "youth";
   let profileData = null;
 
   // 2. Extraer datos o forzar su creación
   if (role === "youth") {
-    const { data: youthData, error: youthError } = await supabase
+    const { data: youthData } = await supabase
       .from("users_youth")
       .select("*")
       .eq("id", user.id)
@@ -41,7 +41,7 @@ export default async function ProfilePage() {
       profileData = newYouth;
     }
   } else {
-    const { data: orgData, error: orgError } = await supabase
+    const { data: orgData } = await supabase
       .from("users_org")
       .select("*")
       .eq("id", user.id)

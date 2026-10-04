@@ -73,5 +73,40 @@
     "contactEmail": "Kontakt-E-Mail",
     "editProfile": "Profil bearbeiten",
     "cancel": "Abbrechen"
+  },
+  "DashboardContent": {
+    "transmissionsReceived": "Internationale Missionen",
+    "waitingTransmissions": "Warten auf Missionen...",
+    "adjustFilters": "Versuchen Sie, die Filter anzupassen, um mehr Ergebnisse zu sehen."
+  },
+  "SupportForm": {
+    "title": "Support und Unterstützung",
+    "description": "Haben Sie ein Problem oder eine Frage? Füllen Sie das folgende Formular aus und unser Team wird Sie in Kürze kontaktieren.",
+    "email": "Kontakt-E-Mail *",
+    "emailPlaceholder": "du@email.com",
+    "phone": "Telefon (Optional)",
+    "phonePlaceholder": "+49 151 0000000",
+    "subject": "Betreff *",
+    "subjectPlaceholder": "Kurze Zusammenfassung Ihres Problems",
+    "reason": "Grund *",
+    "selectReason": "Wählen Sie einen Grund",
+    "reasonTechnical": "Technisches Problem (Bugs, Fehler)",
+    "reasonAccount": "Konto- / Profilprobleme",
+    "reasonProjects": "Fragen zu Projekten oder Bewerbungen",
+    "reasonBilling": "Abrechnung / Abonnements",
+    "reasonOther": "Andere",
+    "content": "Detaillierter Inhalt *",
+    "contentPlaceholder": "Erklären Sie Ihr Problem oder Ihre Frage so detailliert wie möglich...",
+    "success": "Ticket erfolgreich gesendet! Unser Team wird Sie bald kontaktieren.",
+    "successDesc": "Sie können diese Seite schließen oder zur Startseite zurückkehren.",
+    "submit": "Support-Ticket Senden",
+    "submitting": "Senden..."
+  },
+  "OrgFilters": {
+    "searchPlaceholder": "Suche nach Organisationsnamen...",
+    "countryPlaceholder": "HQ Land",
+    "entityType": "Einheitentyp",
+    "allThemes": "Alle Themen",
+    "onlyVerified": "Nur Verifizierte"
   }
 }

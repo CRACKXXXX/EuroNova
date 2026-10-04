@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useActionState } from "react";
-import { Rocket, User, Building } from "lucide-react";
+import { User, Building } from "lucide-react";
 import { login, signup } from "./actions";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
