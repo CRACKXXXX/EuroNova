@@ -136,8 +136,13 @@
     "rupFlights": "RUP FLIGHTS",
     "viewDetails": "View Details",
     "years": "years",
+    "days": "days",
     "europe": "Europe",
-    "unverifiedOrgWarning": "Unverified Organization"
+    "unverifiedOrgWarning": "Unverified Organization",
+    "financingType": "Financing",
+    "total": "Total",
+    "partial": "Partial",
+    "none": "None"
   },
   "Organizations": {
     "backHome": "Back to Home",
@@ -189,11 +194,15 @@
     "publishing": "Publishing...",
     "publish": "Publish Project",
     "eligibleCountriesPlaceholder": "Select eligible countries (Empty = Any)",
-    "themesPlaceholder": "Environment, Art, Tech (comma separated)",
+    "themesPlaceholder": "Select themes...",
     "clickToUpload": "Click to upload",
     "uploadFormats": "SVG, PNG, JPG or GIF",
     "cityRegionPlaceholder": "City/Region",
-    "urlPlaceholder": "https://"
+    "urlPlaceholder": "https://",
+    "financingType": "Financing Type",
+    "financingTotal": "Total",
+    "financingPartial": "Partial",
+    "financingNone": "None"
   },
   "ProjectDetails": {
     "publisherProfile": "Publisher Profile",
@@ -269,5 +278,28 @@
     "deleteEntity": "Delete",
     "noPending": "No pending organizations.",
     "noVerified": "No verified entities yet."
+  },
+  "Sidebar": {
+    "search": "Search",
+    "searchPlaceholder": "Search projects...",
+    "destination": "Destination",
+    "anyCountry": "Any country...",
+    "eligibleCountries": "Eligible Countries",
+    "missionType": "Mission Type",
+    "themes": "Themes",
+    "filters": "Filters",
+    "dates": "Dates",
+    "ageRange": "Age Range",
+    "min": "Min",
+    "max": "Max",
+    "financing": "Financing",
+    "any": "Any",
+    "total": "Total",
+    "partial": "Partial",
+    "none": "None",
+    "accommodationIncluded": "Accommodation Included",
+    "rupFlights": "RUP Flights",
+    "lastMinute": "Last Minute",
+    "addCustomTheme": "Add theme..."
   }
 }

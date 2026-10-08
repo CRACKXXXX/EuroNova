@@ -85,7 +85,10 @@ export default async function AdminPage() {
                 )}
               </div>
 
-              <form action={verifyOrganization.bind(null, org.id)}>
+              <form action={async () => {
+                "use server";
+                await verifyOrganization(org.id);
+              }}>
                 <button type="submit" className="w-full py-3 rounded-lg bg-nova-flare/10 hover:bg-nova-flare/20 text-nova-flare border border-nova-flare/30 font-bold transition-all duration-300 flex items-center justify-center gap-2">
                   <CheckCircle2 className="w-5 h-5" />
                   Approve Entity
@@ -155,12 +158,18 @@ export default async function AdminPage() {
               </div>
               
               <div className="flex gap-3 mt-6 mt-auto pt-4 border-t border-void-border">
-                <form action={revokeOrganization.bind(null, org.id)} className="flex-1">
+                <form action={async () => {
+                  "use server";
+                  await revokeOrganization(org.id);
+                }} className="flex-1">
                   <button type="submit" className="w-full py-2 rounded-lg bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 border border-yellow-500/30 font-bold transition-all text-sm flex items-center justify-center gap-2">
                     <XCircle className="w-4 h-4" /> Revoke
                   </button>
                 </form>
-                <form action={deleteOrganization.bind(null, org.id)} className="flex-1">
+                <form action={async () => {
+                  "use server";
+                  await deleteOrganization(org.id);
+                }} className="flex-1">
                   <button type="submit" className="w-full py-2 rounded-lg bg-nova-flare/10 hover:bg-nova-flare/20 text-nova-flare border border-nova-flare/30 font-bold transition-all text-sm flex items-center justify-center gap-2">
                     <Trash2 className="w-4 h-4" /> Delete
                   </button>

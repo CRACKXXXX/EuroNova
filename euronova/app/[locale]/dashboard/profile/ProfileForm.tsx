@@ -7,7 +7,8 @@ import { CountrySelect } from "@/components/CountrySelect";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
-export function ProfileForm({ initialData, role }: { initialData: Record<string, unknown> | null, role: "youth" | "org" }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function ProfileForm({ initialData, role }: { initialData: Record<string, any>, role: "youth" | "org" }) {
   const t = useTranslations("Profile");
   const router = useRouter();
   const [state, action, isPending] = useActionState(updateProfile, null);
@@ -52,6 +53,7 @@ export function ProfileForm({ initialData, role }: { initialData: Record<string,
           <div className="flex flex-col items-center justify-center mb-6">
             <div className={`w-24 h-24 rounded-full border-2 overflow-hidden flex items-center justify-center bg-void-surface ${role === "youth" ? "border-plasma-cyan" : "border-hyper-violet"}`}>
               {avatarPreview ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
                 <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
               ) : role === "youth" ? (
                 <User className="w-10 h-10 text-plasma-cyan/50" />
@@ -245,6 +247,7 @@ export function ProfileForm({ initialData, role }: { initialData: Record<string,
       <div className="flex flex-col items-center justify-center space-y-4 mb-8">
         <div className={`w-24 h-24 rounded-full border-2 overflow-hidden flex items-center justify-center relative group bg-void-surface ${role === "youth" ? "border-plasma-cyan" : "border-hyper-violet"}`}>
           {avatarPreview ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
             <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
           ) : role === "youth" ? (
             <User className="w-10 h-10 text-plasma-cyan/50" />

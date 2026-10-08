@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
-import { ArrowLeft, Calendar, Euro, MapPin, CheckCircle2, Rocket, Building, AlertTriangle, Trash2, ExternalLink, Users, Globe2, Clock } from "lucide-react";
+import { ArrowLeft, Euro, MapPin, Building, AlertTriangle, Trash2, ExternalLink, Users, Globe2, Clock } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -209,7 +209,10 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
                 )}
 
                 {canDelete && (
-                  <form action={deleteProjectAction.bind(null, project.id)}>
+                  <form action={async () => {
+                    "use server";
+                    await deleteProjectAction(project.id);
+                  }}>
                     <button type="submit" className="w-full px-6 py-3 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-sm">
                       <Trash2 className="w-4 h-4" />
                       {t("deleteProject")}

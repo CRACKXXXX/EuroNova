@@ -6,12 +6,10 @@ import { Search, Tag, Building } from "lucide-react";
 import { MultiSelectCountry } from "@/components/MultiSelectCountry";
 import { useTranslations } from "next-intl";
 
-const THEMES_LIST = [
-  "Medio Ambiente", "Tecnología", "Arte", "Sociedad", "Deportes", "Salud", "Inclusión", "Educación"
-];
+import { ERASMUS_THEMES } from "@/lib/constants/themes";
 
 const ENTITY_TYPES = [
-  "ONG", "Empresa Privada", "Institución Pública", "Universidad"
+  "NGO / Association", "Private Company", "Public Body", "Educational Institution"
 ];
 
 export function OrganizationsClient({ initialQ, initialCountries, initialVerified, initialTheme, initialEntityType }: { initialQ: string, initialCountries: string[], initialVerified: boolean, initialTheme: string, initialEntityType: string }) {
@@ -82,7 +80,7 @@ export function OrganizationsClient({ initialQ, initialCountries, initialVerifie
             className="w-full bg-void-deep border border-void-border rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet transition-all appearance-none"
           >
             <option value="">{t("allThemes")}</option>
-            {THEMES_LIST.map((th) => (
+            {ERASMUS_THEMES.map((th) => (
               <option key={th} value={th}>{th}</option>
             ))}
           </select>

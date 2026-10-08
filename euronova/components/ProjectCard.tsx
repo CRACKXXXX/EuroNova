@@ -1,6 +1,7 @@
-import { MapPin, Users, Zap, PlaneTakeoff, AlertTriangle, Building } from "lucide-react";
+import { MapPin, Users, Zap, PlaneTakeoff, AlertTriangle, Building, Clock, Euro, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { COUNTRIES } from "@/components/CountrySelect";
 
 export interface ProjectData {
   id: string;
@@ -15,6 +16,10 @@ export interface ProjectData {
   org_name?: string;
   verification_status?: string;
   exact_location?: string;
+  duration_days?: number;
+  travel_budget_min?: number;
+  travel_budget_max?: number;
+  financing_type?: string;
 }
 
 export function ProjectCard({ project }: { project: ProjectData }) {
@@ -61,7 +66,11 @@ export function ProjectCard({ project }: { project: ProjectData }) {
           <div className="flex items-center gap-2">
             <MapPin className="w-4 h-4 text-plasma-cyan" />
             <span className="font-medium text-gray-300">
-              {project.dest_country || t("europe")}
+              {(() => {
+                if (!project.dest_country) return t("europe");
+                const c = COUNTRIES.find(x => x.code === project.dest_country);
+                return c ? `${c.flag} ${c.name}` : project.dest_country;
+              })()}
               {project.exact_location ? `, ${project.exact_location}` : ''}
             </span>
           </div>
@@ -69,6 +78,26 @@ export function ProjectCard({ project }: { project: ProjectData }) {
             <Users className="w-4 h-4 text-hyper-violet" />
             <span>{project.min_age} - {project.max_age} {t("years")}</span>
           </div>
+          {(project.duration_days) && (
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-gray-400" />
+              <span>{project.duration_days} {t("days", { defaultValue: "days" })}</span>
+            </div>
+          )}
+          {(project.travel_budget_min !== undefined || project.travel_budget_max !== undefined) && (
+            <div className="flex items-center gap-2">
+              <Euro className="w-4 h-4 text-rup-emerald" />
+              <span>
+                {project.travel_budget_min !== undefined ? `€${project.travel_budget_min}` : "€0"} - {project.travel_budget_max !== undefined ? `€${project.travel_budget_max}` : "No limit"}
+              </span>
+            </div>
+          )}
+          {project.financing_type && (
+            <div className="flex items-center gap-2">
+              <Wallet className="w-4 h-4 text-plasma-cyan" />
+              <span>{t("financingType", { defaultValue: "Financing" })}: {t(project.financing_type.toLowerCase(), { defaultValue: project.financing_type })}</span>
+            </div>
+          )}
         </div>
 
         {/* Themes */}

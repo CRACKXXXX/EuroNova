@@ -8,6 +8,7 @@ import { createProject } from "./actions";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { MultiSelectCountry } from "@/components/MultiSelectCountry";
+import { MultiSelectTheme } from "@/components/MultiSelectTheme";
 import { CountrySelect } from "@/components/CountrySelect";
 
 export default function NewProjectPage() {
@@ -18,6 +19,7 @@ export default function NewProjectPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
+  const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -33,6 +35,7 @@ export default function NewProjectPage() {
 
     const formData = new FormData(e.currentTarget);
     formData.set("eligible_countries", selectedCountries.join(","));
+    formData.set("themes", selectedThemes.join(","));
 
     const result = await createProject(formData);
 
@@ -175,6 +178,15 @@ export default function NewProjectPage() {
               <label className="text-sm font-medium text-gray-300">{t("participationFee")}</label>
               <input type="number" name="participation_fee" defaultValue={0} className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan" />
             </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">{t("financingType")}</label>
+              <select name="financing_type" required className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan">
+                <option value="Total">{t("financingTotal")}</option>
+                <option value="Partial">{t("financingPartial")}</option>
+                <option value="None">{t("financingNone")}</option>
+              </select>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-6 pt-2">
@@ -204,7 +216,11 @@ export default function NewProjectPage() {
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">{t("themes")}</label>
-          <input type="text" name="themes" className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan" placeholder={t("themesPlaceholder")} />
+          <MultiSelectTheme 
+            selected={selectedThemes} 
+            onChange={setSelectedThemes} 
+            placeholder={t("themesPlaceholder")}
+          />
         </div>
 
         <button

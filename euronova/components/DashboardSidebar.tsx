@@ -6,14 +6,7 @@ import { Search, MapPin, Filter, DollarSign, Tag, Calendar, User } from "lucide-
 import { MultiSelectCountry } from "@/components/MultiSelectCountry";
 import { useTranslations } from "next-intl";
 
-const THEMES_LIST = [
-  { key: "Medio Ambiente", tKey: "theme_environment" },
-  { key: "Tecnología", tKey: "theme_tech" },
-  { key: "Arte", tKey: "theme_art" },
-  { key: "Sociedad", tKey: "theme_society" },
-  { key: "Deportes", tKey: "theme_sports" },
-  { key: "Salud", tKey: "theme_health" }
-];
+import { ERASMUS_THEMES } from "@/lib/constants/themes";
 
 export function DashboardSidebar() {
   const router = useRouter();
@@ -74,7 +67,7 @@ export function DashboardSidebar() {
     <div className="bg-void-deep border border-void-border rounded-xl flex flex-col h-[calc(100vh-8rem)] sticky top-24">
       <div className="p-4 border-b border-void-border">
         <h2 className="text-lg font-bold text-white flex items-center gap-2">
-          <Filter className="w-5 h-5 text-plasma-cyan" /> Filtros
+          <Filter className="w-5 h-5 text-plasma-cyan" /> {t('filters')}
         </h2>
       </div>
 
@@ -108,7 +101,7 @@ export function DashboardSidebar() {
 
         <div className="space-y-4">
           <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-            <Calendar className="w-3 h-3" /> Fechas
+            <Calendar className="w-3 h-3" /> {t('dates')}
           </h3>
           <div className="flex gap-2">
             <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full bg-void-surface border border-void-border rounded-lg px-2 py-2 text-xs focus:border-plasma-cyan" />
@@ -118,12 +111,12 @@ export function DashboardSidebar() {
 
         <div className="space-y-4">
           <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-            <User className="w-3 h-3" /> Rango de Edades
+            <User className="w-3 h-3" /> {t('ageRange')}
           </h3>
           <div className="flex gap-2 items-center">
-            <input type="number" placeholder="Mín" value={minAge} onChange={(e) => setMinAge(e.target.value)} className="w-full bg-void-surface border border-void-border rounded-lg px-3 py-2 text-sm focus:border-plasma-cyan" />
+            <input type="number" placeholder={t('min')} value={minAge} onChange={(e) => setMinAge(e.target.value)} className="w-full bg-void-surface border border-void-border rounded-lg px-3 py-2 text-sm focus:border-plasma-cyan" />
             <span className="text-gray-500">-</span>
-            <input type="number" placeholder="Máx" value={maxAge} onChange={(e) => setMaxAge(e.target.value)} className="w-full bg-void-surface border border-void-border rounded-lg px-3 py-2 text-sm focus:border-plasma-cyan" />
+            <input type="number" placeholder={t('max')} value={maxAge} onChange={(e) => setMaxAge(e.target.value)} className="w-full bg-void-surface border border-void-border rounded-lg px-3 py-2 text-sm focus:border-plasma-cyan" />
           </div>
         </div>
 
@@ -145,13 +138,13 @@ export function DashboardSidebar() {
 
         <div className="space-y-4">
           <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-            <DollarSign className="w-3 h-3" /> Financiación
+            <DollarSign className="w-3 h-3" /> {t('financing')}
           </h3>
           <select value={funding} onChange={(e) => setFunding(e.target.value)} className="w-full bg-void-surface border border-void-border rounded-lg px-4 py-2.5 text-sm focus:border-plasma-cyan appearance-none">
-            <option value="">Cualquiera</option>
-            <option value="Total">Total</option>
-            <option value="Parcial">Parcial</option>
-            <option value="Ninguna">Ninguna</option>
+            <option value="">{t('any')}</option>
+            <option value="Total">{t('total')}</option>
+            <option value="Partial">{t('partial')}</option>
+            <option value="None">{t('none')}</option>
           </select>
         </div>
 
@@ -160,13 +153,25 @@ export function DashboardSidebar() {
             <Tag className="w-3 h-3" /> {t('themes')}
           </h3>
           <div className="flex flex-wrap gap-2">
-            {THEMES_LIST.map((themeObj) => (
-              <button key={themeObj.key} onClick={() => toggleTheme(themeObj.key)} className={`px-3 py-1.5 text-xs font-medium rounded-lg border ${themes.includes(themeObj.key) ? "bg-hyper-violet/20 border-hyper-violet text-hyper-violet" : "bg-void-surface border-void-border text-gray-400 hover:border-gray-500"}`}>
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                {t(themeObj.tKey as any)}
+            {themes.map(theme => (
+              <button key={theme} onClick={() => toggleTheme(theme)} className="px-3 py-1.5 text-xs font-medium rounded-lg border bg-hyper-violet/20 border-hyper-violet text-hyper-violet flex items-center gap-1 hover:bg-hyper-violet/30 transition-colors">
+                {theme} <span className="text-[10px] opacity-70 hover:opacity-100">×</span>
               </button>
             ))}
           </div>
+          <select 
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val && !themes.includes(val)) toggleTheme(val);
+              e.target.value = "";
+            }}
+            className="w-full bg-void-surface border border-void-border rounded-lg px-3 py-2 text-sm focus:border-plasma-cyan mt-2 focus:outline-none appearance-none"
+          >
+            <option value="">{t('addCustomTheme', { defaultValue: 'Add theme...' })}</option>
+            {ERASMUS_THEMES.map(th => (
+              <option key={th} value={th} disabled={themes.includes(th)}>{th}</option>
+            ))}
+          </select>
         </div>
 
         <div className="space-y-4 pt-2 border-t border-void-border">
@@ -175,21 +180,21 @@ export function DashboardSidebar() {
             <div className={`w-10 h-6 rounded-full transition-colors relative ${accommodation ? 'bg-plasma-cyan' : 'bg-void-surface border border-void-border'}`}>
               <div className={`absolute w-4 h-4 rounded-full bg-white top-1 transition-transform ${accommodation ? 'translate-x-5' : 'translate-x-1'}`}></div>
             </div>
-            <span className="text-sm font-medium text-gray-300">Alojamiento Incluido</span>
+            <span className="text-sm font-medium text-gray-300">{t('accommodationIncluded')}</span>
           </label>
           <label className="flex items-center gap-3 cursor-pointer">
             <input type="checkbox" className="sr-only" checked={rup} onChange={(e) => setRup(e.target.checked)} />
             <div className={`w-10 h-6 rounded-full transition-colors relative ${rup ? 'bg-rup-emerald' : 'bg-void-surface border border-void-border'}`}>
               <div className={`absolute w-4 h-4 rounded-full bg-white top-1 transition-transform ${rup ? 'translate-x-5' : 'translate-x-1'}`}></div>
             </div>
-            <span className="text-sm font-medium text-gray-300">Vuelos RUP</span>
+            <span className="text-sm font-medium text-gray-300">{t('rupFlights')}</span>
           </label>
           <label className="flex items-center gap-3 cursor-pointer">
             <input type="checkbox" className="sr-only" checked={lastMinute} onChange={(e) => setLastMinute(e.target.checked)} />
             <div className={`w-10 h-6 rounded-full transition-colors relative ${lastMinute ? 'bg-nova-flare' : 'bg-void-surface border border-void-border'}`}>
               <div className={`absolute w-4 h-4 rounded-full bg-white top-1 transition-transform ${lastMinute ? 'translate-x-5' : 'translate-x-1'}`}></div>
             </div>
-            <span className="text-sm font-medium text-gray-300">Last Minute</span>
+            <span className="text-sm font-medium text-gray-300">{t('lastMinute')}</span>
           </label>
         </div>
       </div>

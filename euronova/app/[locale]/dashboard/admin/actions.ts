@@ -26,9 +26,9 @@ export async function verifyOrganization(orgId: string, formData?: FormData) {
 
     revalidatePath("/", "layout");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Verification failed:", error);
-    return { error: error.message || "Failed to verify organization" };
+    return { error: error instanceof Error ? error.message : "Failed to verify organization" };
   }
 }
 
@@ -44,9 +44,9 @@ export async function revokeOrganization(orgId: string, formData?: FormData) {
 
     revalidatePath("/", "layout");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Revoke failed:", error);
-    return { error: error.message || "Failed to revoke organization" };
+    return { error: error instanceof Error ? error.message : "Failed to revoke organization" };
   }
 }
 
@@ -62,8 +62,8 @@ export async function deleteOrganization(orgId: string, formData?: FormData) {
 
     revalidatePath("/", "layout");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Delete failed:", error);
-    return { error: error.message || "Failed to delete organization" };
+    return { error: error instanceof Error ? error.message : "Failed to delete organization" };
   }
 }

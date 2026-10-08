@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
-import { Rocket, Calendar, MapPin, Search, ArrowLeft, Euro, CheckCircle2 } from "lucide-react";
+import { Rocket, Search, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
@@ -47,7 +47,7 @@ export default async function ProjectsPage(props: {
   
   if (eligible) {
     const eligibleArr = eligible.split(",");
-    query = query.contains("eligible_countries", eligibleArr);
+    query = query.overlaps("eligible_countries", eligibleArr);
   }
 
   if (types) {
@@ -61,7 +61,7 @@ export default async function ProjectsPage(props: {
 
   if (themes) {
     const themesArr = themes.split(",");
-    query = query.contains("themes", themesArr);
+    query = query.overlaps("themes", themesArr);
   }
 
   if (duration) query = query.lte("duration_days", parseInt(duration));
@@ -113,7 +113,7 @@ export default async function ProjectsPage(props: {
         {/* Resultados a la derecha */}
         <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-max">
         {projects && projects.length > 0 ? (
-          projects.map((project: any) => {
+          projects.map((project) => {
             const org = project.users_org || {};
             const projectData = {
               ...project,

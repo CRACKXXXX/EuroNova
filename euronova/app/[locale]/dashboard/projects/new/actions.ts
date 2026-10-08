@@ -58,6 +58,7 @@ export async function createProject(formData: FormData) {
     const travel_budget_min = parseInt(formData.get("travel_budget_min") as string) || null;
     const travel_budget_max = parseInt(formData.get("travel_budget_max") as string) || null;
     const participation_fee = parseInt(formData.get("participation_fee") as string) || null;
+    const financing_type = formData.get("financing_type") as string;
 
     const covers_rup_flights = formData.get("covers_rup_flights") === "on";
     const is_last_minute = formData.get("is_last_minute") === "on";
@@ -89,6 +90,7 @@ export async function createProject(formData: FormData) {
       accommodation_covered,
       themes,
       eligible_countries,
+      financing_type,
       image_url: imageUrl,
       status: 'active'
     });
@@ -100,8 +102,8 @@ export async function createProject(formData: FormData) {
     revalidatePath("/", "layout");
     return { success: true };
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Unhandled error in createProject:", error);
-    return { error: error?.message || "An unexpected error occurred while publishing the project." };
+    return { error: error instanceof Error ? error.message : "An unexpected error occurred while publishing the project." };
   }
 }

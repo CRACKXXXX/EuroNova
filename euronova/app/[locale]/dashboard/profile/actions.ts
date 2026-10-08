@@ -17,9 +17,9 @@ export async function deleteMyAccount() {
     if (error) throw error;
 
     await supabase.auth.signOut();
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to delete account:", error);
-    return { error: error.message || "Failed to delete account." };
+    return { error: error instanceof Error ? error.message : "Failed to delete account." };
   }
   
   redirect("/login");
@@ -65,7 +65,8 @@ export async function updateProfile(prevState: unknown, formData: FormData) {
     const languagesStr = formData.get("languages") as string;
     const languages = languagesStr ? languagesStr.split(",").map(s => s.trim()).filter(Boolean) : [];
 
-    const payload: any = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const payload: Record<string, any> = {
       id: user.id,
       full_name: full_name || null,
       birth_date: birth_date || null,
@@ -95,7 +96,8 @@ export async function updateProfile(prevState: unknown, formData: FormData) {
     const social_youtube = formData.get("social_youtube") as string;
     const social_linkedin = formData.get("social_linkedin") as string;
 
-    const payload: any = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const payload: Record<string, any> = {
       id: user.id,
       org_name: org_name || null,
       oid_number: oid_number || null,

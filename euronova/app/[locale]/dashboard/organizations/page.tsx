@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { Building, Globe, Mail, MapPin, ArrowLeft, Camera, Video, Briefcase } from "lucide-react";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { OrganizationsClient } from "./OrganizationsClient";
 import { Suspense } from "react";
 
@@ -11,6 +12,7 @@ export default async function OrganizationsPage(props: {
 }) {
   const searchParams = await props.searchParams;
   const supabase = await createClient();
+  const t = await getTranslations("Organizations");
 
   const q = searchParams.q as string | undefined;
   const countriesParam = searchParams.countries as string | undefined;
@@ -48,17 +50,17 @@ export default async function OrganizationsPage(props: {
       <div className="mb-2">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm font-medium">Volver al Home</span>
+          <span className="text-sm font-medium">{t('backHome')}</span>
         </Link>
       </div>
       
       <div>
         <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
           <Building className="w-8 h-8 text-hyper-violet" /> 
-          Directorio de Organizaciones
+          {t('directory')}
         </h1>
         <p className="text-gray-400 mt-2">
-          Encuentra ONGs, empresas y entidades asociadas al programa Erasmus+ por toda Europa.
+          {t('findNgos')}
         </p>
       </div>
 
@@ -75,25 +77,25 @@ export default async function OrganizationsPage(props: {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-8">
         {organizations && organizations.length > 0 ? (
-          organizations.map((org: Record<string, unknown>) => (
+          organizations.map((org) => (
             <div key={org.id as string} className="bg-void-surface border border-void-border rounded-2xl p-6 hover:border-hyper-violet/50 transition-all duration-300 hover:shadow-[0_0_20px_rgba(99,102,241,0.1)] group flex flex-col h-full">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex-1">
-                  <h2 className="text-xl font-bold text-white group-hover:text-hyper-violet transition-colors">{(org.org_name as string) || "Organización Sin Nombre"}</h2>
+                  <h2 className="text-xl font-bold text-white group-hover:text-hyper-violet transition-colors">{(org.org_name as string) || t('unnamedOrg')}</h2>
                   <div className="flex items-center gap-2 mt-2">
                     <MapPin className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm text-gray-400">{(org.country_hq as string) || "País no especificado"}</span>
+                    <span className="text-sm text-gray-400">{(org.country_hq as string) || t('countryNotSpecified')}</span>
                   </div>
                 </div>
                 {org.verification_status === "verified" ? (
                   <div className="px-2 py-1 rounded-md bg-rup-emerald/10 border border-rup-emerald/30">
-                    <span className="text-[10px] font-bold text-rup-emerald uppercase tracking-wider">Verificada</span>
+                    <span className="text-[10px] font-bold text-rup-emerald uppercase tracking-wider">{t('verified')}</span>
                   </div>
                 ) : null}
               </div>
               
               <p className="text-sm text-gray-300 mb-6 flex-1 line-clamp-3">
-                {(org.description as string) || "Esta organización aún no ha añadido una descripción de su misión y valores."}
+                {(org.description as string) || t('noDescription')}
               </p>
 
               <div className="pt-4 border-t border-void-border flex flex-wrap items-center gap-4">
@@ -125,7 +127,7 @@ export default async function OrganizationsPage(props: {
                 {org.contact_email && (
                   <a href={`mailto:${org.contact_email as string}`} className="flex items-center gap-2 text-sm text-gray-400 hover:text-plasma-cyan transition-colors ml-auto bg-void-deep px-4 py-2 rounded-lg border border-void-border hover:border-plasma-cyan/30">
                     <Mail className="w-4 h-4" />
-                    Contactar
+                    {t('contact')}
                   </a>
                 )}
               </div>
@@ -134,8 +136,8 @@ export default async function OrganizationsPage(props: {
         ) : (
           <div className="col-span-full py-20 text-center border border-dashed border-void-border rounded-2xl bg-void-surface/50">
             <Building className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">No se encontraron organizaciones</h3>
-            <p className="text-gray-400">Prueba a ajustar los filtros para ver más resultados.</p>
+            <h3 className="text-xl font-bold text-white mb-2">{t('noOrgsFound')}</h3>
+            <p className="text-gray-400">{t('adjustFilters')}</p>
           </div>
         )}
       </div>

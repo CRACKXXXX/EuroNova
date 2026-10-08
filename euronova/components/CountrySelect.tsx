@@ -1,43 +1,19 @@
 import React from 'react';
 
-export const COUNTRIES = [
-  // 27 Estados Miembros de la UE
-  { code: 'AT', name: 'Austria', flag: '🇦🇹' },
-  { code: 'BE', name: 'Bélgica', flag: '🇧🇪' },
-  { code: 'BG', name: 'Bulgaria', flag: '🇧🇬' },
-  { code: 'HR', name: 'Croacia', flag: '🇭🇷' },
-  { code: 'CY', name: 'Chipre', flag: '🇨🇾' },
-  { code: 'CZ', name: 'Chequia', flag: '🇨🇿' },
-  { code: 'DK', name: 'Dinamarca', flag: '🇩🇰' },
-  { code: 'EE', name: 'Estonia', flag: '🇪🇪' },
-  { code: 'FI', name: 'Finlandia', flag: '🇫🇮' },
-  { code: 'FR', name: 'Francia', flag: '🇫🇷' },
-  { code: 'DE', name: 'Alemania', flag: '🇩🇪' },
-  { code: 'GR', name: 'Grecia', flag: '🇬🇷' },
-  { code: 'HU', name: 'Hungría', flag: '🇭🇺' },
-  { code: 'IE', name: 'Irlanda', flag: '🇮🇪' },
-  { code: 'IT', name: 'Italia', flag: '🇮🇹' },
-  { code: 'LV', name: 'Letonia', flag: '🇱🇻' },
-  { code: 'LT', name: 'Lituania', flag: '🇱🇹' },
-  { code: 'LU', name: 'Luxemburgo', flag: '🇱🇺' },
-  { code: 'MT', name: 'Malta', flag: '🇲🇹' },
-  { code: 'NL', name: 'Países Bajos', flag: '🇳🇱' },
-  { code: 'PL', name: 'Polonia', flag: '🇵🇱' },
-  { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
-  { code: 'RO', name: 'Rumanía', flag: '🇷🇴' },
-  { code: 'SK', name: 'Eslovaquia', flag: '🇸🇰' },
-  { code: 'SI', name: 'Eslovenia', flag: '🇸🇮' },
-  { code: 'ES', name: 'España', flag: '🇪🇸' },
-  { code: 'SE', name: 'Suecia', flag: '🇸🇪' },
-  // Países Asociados a Erasmus+ / CES
-  { code: 'MK', name: 'Macedonia del Norte', flag: '🇲🇰' },
-  { code: 'IS', name: 'Islandia', flag: '🇮🇸' },
-  { code: 'LI', name: 'Liechtenstein', flag: '🇱🇮' },
-  { code: 'NO', name: 'Noruega', flag: '🇳🇴' },
-  { code: 'RS', name: 'Serbia', flag: '🇷🇸' },
-  { code: 'TR', name: 'Turquía', flag: '🇹🇷' },
-  { code: 'GB', name: 'Reino Unido', flag: '🇬🇧' },
+const EUROPEAN_COUNTRY_CODES = [
+  'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE',
+  'MK', 'IS', 'LI', 'NO', 'RS', 'TR', 'GB'
 ];
+
+export const getFlag = (c: string) => c.toUpperCase().replace(/./g, char => String.fromCodePoint(char.charCodeAt(0) + 127397));
+
+const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+
+export const COUNTRIES = EUROPEAN_COUNTRY_CODES.map(code => ({
+  code,
+  name: regionNames.of(code) || code,
+  flag: getFlag(code)
+}));
 
 interface CountrySelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   value?: string;
@@ -50,16 +26,18 @@ interface CountrySelectProps extends React.SelectHTMLAttributes<HTMLSelectElemen
 export function CountrySelect({ value, onChange, defaultValue, name, placeholder = "Selecciona un país", className, ...props }: CountrySelectProps) {
   return (
     <div className="relative">
+      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-base">
+        {COUNTRIES.find(c => c.code === (value || defaultValue))?.flag}
+      </div>
       <select
         name={name}
         value={value}
         defaultValue={defaultValue}
         onChange={onChange}
-        className={`w-full bg-void-surface border border-void-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all appearance-none cursor-pointer ${className || ''}`}
+        className={`w-full bg-void-surface border border-void-border rounded-lg pl-10 pr-10 py-2.5 text-sm text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all appearance-none cursor-pointer ${className || ''}`}
         {...props}
       >
         <option value="" disabled className="text-gray-500">{placeholder}</option>
-        <option value="">Cualquier país / Todos</option>
         {COUNTRIES.map((country) => (
           <option key={country.code} value={country.code} className="text-white bg-void-deep">
             {country.flag} {country.name}
