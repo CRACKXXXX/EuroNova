@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { Suspense } from "react";
+import { ProjectCard } from "@/components/ProjectCard";
 
 export const dynamic = 'force-dynamic';
 
@@ -34,14 +35,14 @@ export default async function ProjectsPage(props: {
   const endDate = searchParams.end_date as string | undefined;
   const funding = searchParams.funding as string | undefined;
 
-  let query = supabase.from("projects").select("*");
+  let query = supabase.from("projects").select("*, users_org(org_name, verification_status)");
 
   if (q) query = query.ilike("title", `%${q}%`);
   
   // Array filters (if they are passed as comma-separated strings)
   if (dest) {
     const destArr = dest.split(",");
-    query = query.in("country", destArr);
+    query = query.in("dest_country", destArr);
   }
   
   if (eligible) {
@@ -51,7 +52,7 @@ export default async function ProjectsPage(props: {
 
   if (types) {
     const typesArr = types.split(",");
-    query = query.in("mission_type", typesArr);
+    query = query.in("project_type", typesArr);
   }
 
   if (targetProfile) {
@@ -64,11 +65,11 @@ export default async function ProjectsPage(props: {
   }
 
   if (duration) query = query.lte("duration_days", parseInt(duration));
-  if (minBudget) query = query.gte("travel_budget", parseInt(minBudget));
-  if (maxBudget) query = query.lte("travel_budget", parseInt(maxBudget));
-  if (maxFee) query = query.lte("max_fee", parseInt(maxFee));
+  if (minBudget) query = query.gte("travel_budget_min", parseInt(minBudget));
+  if (maxBudget) query = query.lte("travel_budget_max", parseInt(maxBudget));
+  if (maxFee) query = query.lte("participation_fee", parseInt(maxFee));
   if (accommodation) query = query.eq("accommodation_covered", true);
-  if (rup) query = query.eq("is_rup", true);
+  if (rup) query = query.eq("covers_rup_flights", true);
   if (lastMinute) query = query.eq("is_last_minute", true);
   if (minAge) query = query.lte("min_age", parseInt(minAge));
   if (maxAge) query = query.gte("max_age", parseInt(maxAge));
@@ -87,7 +88,7 @@ export default async function ProjectsPage(props: {
       <div className="mb-2">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm font-medium">Volver al Home</span>
+          <span className="text-sm font-medium">{t("backHome")}</span>
         </Link>
       </div>
 
@@ -97,7 +98,7 @@ export default async function ProjectsPage(props: {
             <Rocket className="w-8 h-8 text-plasma-cyan" /> 
             {t('transmissionsReceived')}
           </h2>
-          <p className="text-gray-400 mt-2">Explora misiones internacionales disponibles.</p>
+          <p className="text-gray-400 mt-2">{t("exploreMissions")}</p>
         </div>
       </div>
 
@@ -112,51 +113,19 @@ export default async function ProjectsPage(props: {
         {/* Resultados a la derecha */}
         <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-max">
         {projects && projects.length > 0 ? (
-          projects.map((project: Record<string, unknown>) => (
-            <div key={project.id as string} className="bg-void-surface border border-void-border rounded-2xl p-6 hover:border-plasma-cyan/50 transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,229,255,0.1)] group flex flex-col h-full relative overflow-hidden">
-              {project.is_last_minute && (
-                <div className="absolute top-4 right-4 px-2 py-1 bg-nova-flare/20 border border-nova-flare/50 rounded-md text-xs font-bold text-nova-flare uppercase tracking-wider">
-                  Last Minute
-                </div>
-              )}
-              {project.is_rup && (
-                <div className="absolute top-4 right-4 px-2 py-1 bg-rup-emerald/20 border border-rup-emerald/50 rounded-md text-xs font-bold text-rup-emerald uppercase tracking-wider">
-                  Vuelo RUP
-                </div>
-              )}
-              <h3 className="text-xl font-bold text-white mb-2 pr-24 group-hover:text-plasma-cyan transition-colors">{project.title}</h3>
-              <p className="text-sm text-gray-300 mb-6 flex-1 line-clamp-3">{project.description}</p>
-              
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center gap-3 text-sm text-gray-400">
-                  <MapPin className="w-4 h-4 text-gray-500" />
-                  <span>Destino: <strong className="text-white">{project.country}</strong></span>
-                </div>
-                {project.duration_days && (
-                  <div className="flex items-center gap-3 text-sm text-gray-400">
-                    <Calendar className="w-4 h-4 text-gray-500" />
-                    <span>Duración: <strong className="text-white">{project.duration_days} días</strong></span>
-                  </div>
-                )}
-                {project.travel_budget && (
-                  <div className="flex items-center gap-3 text-sm text-gray-400">
-                    <Euro className="w-4 h-4 text-gray-500" />
-                    <span>Presupuesto viaje: <strong className="text-white">{project.travel_budget}€</strong></span>
-                  </div>
-                )}
-                {project.accommodation_covered && (
-                  <div className="flex items-center gap-3 text-sm text-gray-400">
-                    <CheckCircle2 className="w-4 h-4 text-rup-emerald" />
-                    <span className="text-rup-emerald">Alojamiento cubierto</span>
-                  </div>
-                )}
+          projects.map((project: any) => {
+            const org = project.users_org || {};
+            const projectData = {
+              ...project,
+              org_name: org.org_name,
+              verification_status: org.verification_status,
+            };
+            return (
+              <div key={project.id} className="h-full">
+                <ProjectCard project={projectData} />
               </div>
-
-              <Link href={`/dashboard/projects/${project.id}`} className="w-full py-3 rounded-lg bg-plasma-cyan/10 hover:bg-plasma-cyan text-plasma-cyan hover:text-void-deep font-bold transition-all duration-300 text-center block mt-auto">
-                Ver Detalles
-              </Link>
-            </div>
-          ))
+            );
+          })
         ) : (
           <div className="col-span-full py-20 text-center border border-dashed border-void-border rounded-2xl bg-void-surface/50">
             <Search className="w-12 h-12 text-gray-500 mx-auto mb-4" />

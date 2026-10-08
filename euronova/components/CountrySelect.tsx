@@ -1,6 +1,6 @@
 import React from 'react';
 
-const COUNTRIES = [
+export const COUNTRIES = [
   // 27 Estados Miembros de la UE
   { code: 'AT', name: 'Austria', flag: '🇦🇹' },
   { code: 'BE', name: 'Bélgica', flag: '🇧🇪' },
