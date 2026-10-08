@@ -1,16 +1,18 @@
 import Link from "next/link";
 import { Search, Building, User } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 export default async function DashboardHome() {
+  const t = await getTranslations("Dashboard");
+
   return (
     <div className="max-w-4xl mx-auto mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">
-          Bienvenido a <span className="text-plasma-cyan">EuroNova</span>
+          {t('welcome')} <span className="text-plasma-cyan">EuroNova</span>
         </h1>
         <p className="text-xl text-gray-400 font-light max-w-2xl mx-auto">
-          Nuestra misión es conectar a jóvenes con oportunidades únicas en el espacio europeo. 
-          Elige tu próximo destino.
+          {t('mission')}
         </p>
       </div>
 
@@ -20,9 +22,9 @@ export default async function DashboardHome() {
           <div className="w-16 h-16 bg-plasma-cyan/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
             <Search className="w-8 h-8 text-plasma-cyan" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Buscar Proyectos</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">{t('searchProjects')}</h2>
           <p className="text-gray-400 text-sm">
-            Explora cientos de oportunidades de movilidad, voluntariado y prácticas en toda Europa.
+            {t('searchProjectsDesc')}
           </p>
         </Link>
 
@@ -31,9 +33,9 @@ export default async function DashboardHome() {
           <div className="w-16 h-16 bg-hyper-violet/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
             <Building className="w-8 h-8 text-hyper-violet" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Buscar Organizaciones</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">{t('searchOrgs')}</h2>
           <p className="text-gray-400 text-sm">
-            Descubre entidades verificadas, ONGs y empresas asociadas al programa Erasmus+.
+            {t('searchOrgsDesc')}
           </p>
         </Link>
 
@@ -42,9 +44,9 @@ export default async function DashboardHome() {
           <div className="w-16 h-16 bg-nova-flare/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
             <User className="w-8 h-8 text-nova-flare" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Mi Perfil</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">{t('myProfile')}</h2>
           <p className="text-gray-400 text-sm">
-            Completa tus datos, idiomas y región para conectar con las mejores misiones.
+            {t('myProfileDesc')}
           </p>
         </Link>
       </div>

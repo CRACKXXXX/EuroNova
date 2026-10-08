@@ -6,7 +6,7 @@ import { logout } from "@/app/[locale]/login/actions";
 
 import { useTranslations } from "next-intl";
 
-export function Header({ role }: { role: "youth" | "org" }) {
+export function Header({ role, isAdmin }: { role: "youth" | "org", isAdmin?: boolean }) {
   const t = useTranslations("Header");
   
   return (
@@ -27,6 +27,12 @@ export function Header({ role }: { role: "youth" | "org" }) {
           <Link href="/dashboard/projects/new" className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-plasma-cyan/10 hover:bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/20 transition-all text-sm font-semibold">
             <PlusCircle className="w-4 h-4" />
             <span>{t('publish')}</span>
+          </Link>
+        )}
+        
+        {isAdmin && (
+          <Link href="/dashboard/admin" className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-nova-flare/10 hover:bg-nova-flare/20 text-nova-flare border border-nova-flare/20 transition-all text-sm font-semibold">
+            <span>{t('adminPanel', { fallback: 'Admin Panel' })}</span>
           </Link>
         )}
         

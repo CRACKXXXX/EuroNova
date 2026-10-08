@@ -28,7 +28,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="min-h-screen bg-void-deep text-white flex flex-col">
-      <Header role={role} />
+      <Header role={role} isAdmin={user.email === 'euronovaofficial@gmail.com'} />
 
       {/* pt-16 para compensar el Header fijo */}
       <div className="flex-1 pt-16 flex flex-col min-h-screen">

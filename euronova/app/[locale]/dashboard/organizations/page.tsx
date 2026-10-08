@@ -28,7 +28,7 @@ export default async function OrganizationsPage(props: {
     query = query.in("country_hq", countriesArr);
   }
   if (verified) {
-    query = query.eq("verified", true);
+    query = query.eq("verification_status", "verified");
   }
   if (theme) {
     query = query.contains("themes", [theme]);
@@ -85,7 +85,7 @@ export default async function OrganizationsPage(props: {
                     <span className="text-sm text-gray-400">{(org.country_hq as string) || "País no especificado"}</span>
                   </div>
                 </div>
-                {org.verified ? (
+                {org.verification_status === "verified" ? (
                   <div className="px-2 py-1 rounded-md bg-rup-emerald/10 border border-rup-emerald/30">
                     <span className="text-[10px] font-bold text-rup-emerald uppercase tracking-wider">Verificada</span>
                   </div>
