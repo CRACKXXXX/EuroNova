@@ -1,7 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import { ShieldAlert, CheckCircle2, Globe, Mail } from "lucide-react";
-import { verifyOrganization } from "./actions";
+import { ShieldAlert, CheckCircle2, Globe, Mail, Camera, Video, Briefcase, Smartphone, XCircle, Trash2 } from "lucide-react";
+import { verifyOrganization, revokeOrganization, deleteOrganization } from "./actions";
 
 export const dynamic = 'force-dynamic';
 
@@ -59,6 +59,30 @@ export default async function AdminPage() {
                     </a>
                   </div>
                 )}
+                {org.social_instagram && (
+                  <div className="flex items-center gap-2">
+                    <Camera className="w-4 h-4 text-plasma-cyan" />
+                    <a href={org.social_instagram.startsWith('http') ? org.social_instagram : `https://${org.social_instagram}`} target="_blank" rel="noopener noreferrer" className="hover:text-plasma-cyan transition-colors truncate">Instagram</a>
+                  </div>
+                )}
+                {org.social_tiktok && (
+                  <div className="flex items-center gap-2">
+                    <Smartphone className="w-4 h-4 text-plasma-cyan" />
+                    <a href={org.social_tiktok.startsWith('http') ? org.social_tiktok : `https://${org.social_tiktok}`} target="_blank" rel="noopener noreferrer" className="hover:text-plasma-cyan transition-colors truncate">TikTok</a>
+                  </div>
+                )}
+                {org.social_youtube && (
+                  <div className="flex items-center gap-2">
+                    <Video className="w-4 h-4 text-plasma-cyan" />
+                    <a href={org.social_youtube.startsWith('http') ? org.social_youtube : `https://${org.social_youtube}`} target="_blank" rel="noopener noreferrer" className="hover:text-plasma-cyan transition-colors truncate">YouTube</a>
+                  </div>
+                )}
+                {org.social_linkedin && (
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="w-4 h-4 text-plasma-cyan" />
+                    <a href={org.social_linkedin.startsWith('http') ? org.social_linkedin : `https://${org.social_linkedin}`} target="_blank" rel="noopener noreferrer" className="hover:text-plasma-cyan transition-colors truncate">LinkedIn</a>
+                  </div>
+                )}
               </div>
 
               <form action={verifyOrganization.bind(null, org.id)}>
@@ -104,6 +128,43 @@ export default async function AdminPage() {
                     </a>
                   </div>
                 )}
+                {org.social_instagram && (
+                  <div className="flex items-center gap-2">
+                    <Camera className="w-4 h-4 text-plasma-cyan" />
+                    <a href={org.social_instagram.startsWith('http') ? org.social_instagram : `https://${org.social_instagram}`} target="_blank" rel="noopener noreferrer" className="hover:text-plasma-cyan transition-colors truncate">Instagram</a>
+                  </div>
+                )}
+                {org.social_tiktok && (
+                  <div className="flex items-center gap-2">
+                    <Smartphone className="w-4 h-4 text-plasma-cyan" />
+                    <a href={org.social_tiktok.startsWith('http') ? org.social_tiktok : `https://${org.social_tiktok}`} target="_blank" rel="noopener noreferrer" className="hover:text-plasma-cyan transition-colors truncate">TikTok</a>
+                  </div>
+                )}
+                {org.social_youtube && (
+                  <div className="flex items-center gap-2">
+                    <Video className="w-4 h-4 text-plasma-cyan" />
+                    <a href={org.social_youtube.startsWith('http') ? org.social_youtube : `https://${org.social_youtube}`} target="_blank" rel="noopener noreferrer" className="hover:text-plasma-cyan transition-colors truncate">YouTube</a>
+                  </div>
+                )}
+                {org.social_linkedin && (
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="w-4 h-4 text-plasma-cyan" />
+                    <a href={org.social_linkedin.startsWith('http') ? org.social_linkedin : `https://${org.social_linkedin}`} target="_blank" rel="noopener noreferrer" className="hover:text-plasma-cyan transition-colors truncate">LinkedIn</a>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex gap-3 mt-6 mt-auto pt-4 border-t border-void-border">
+                <form action={revokeOrganization.bind(null, org.id)} className="flex-1">
+                  <button type="submit" className="w-full py-2 rounded-lg bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 border border-yellow-500/30 font-bold transition-all text-sm flex items-center justify-center gap-2">
+                    <XCircle className="w-4 h-4" /> Revoke
+                  </button>
+                </form>
+                <form action={deleteOrganization.bind(null, org.id)} className="flex-1">
+                  <button type="submit" className="w-full py-2 rounded-lg bg-nova-flare/10 hover:bg-nova-flare/20 text-nova-flare border border-nova-flare/30 font-bold transition-all text-sm flex items-center justify-center gap-2">
+                    <Trash2 className="w-4 h-4" /> Delete
+                  </button>
+                </form>
               </div>
             </div>
           ))}

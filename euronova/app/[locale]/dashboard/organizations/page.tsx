@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
-import { Building, Globe, Mail, MapPin, ArrowLeft } from "lucide-react";
+import { Building, Globe, Mail, MapPin, ArrowLeft, Camera, Video, Briefcase } from "lucide-react";
 import Link from "next/link";
 import { OrganizationsClient } from "./OrganizationsClient";
 import { Suspense } from "react";
@@ -96,15 +96,34 @@ export default async function OrganizationsPage(props: {
                 {(org.description as string) || "Esta organización aún no ha añadido una descripción de su misión y valores."}
               </p>
 
-              <div className="pt-4 border-t border-void-border flex items-center gap-4">
+              <div className="pt-4 border-t border-void-border flex flex-wrap items-center gap-4">
                 {org.website && (
-                  <a href={(org.website as string).startsWith('http') ? (org.website as string) : `https://${org.website as string}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-gray-400 hover:text-plasma-cyan transition-colors">
+                  <a href={(org.website as string).startsWith('http') ? (org.website as string) : `https://${org.website as string}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all" title="Website">
                     <Globe className="w-4 h-4" />
-                    Web
+                  </a>
+                )}
+                {org.social_instagram && (
+                  <a href={org.social_instagram as string} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all" title="Instagram">
+                    <Camera className="w-4 h-4" />
+                  </a>
+                )}
+                {org.social_tiktok && (
+                  <a href={org.social_tiktok as string} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all" title="TikTok">
+                    <Video className="w-4 h-4" />
+                  </a>
+                )}
+                {org.social_youtube && (
+                  <a href={org.social_youtube as string} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all" title="YouTube">
+                    <Video className="w-4 h-4" />
+                  </a>
+                )}
+                {org.social_linkedin && (
+                  <a href={org.social_linkedin as string} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all" title="LinkedIn">
+                    <Briefcase className="w-4 h-4" />
                   </a>
                 )}
                 {org.contact_email && (
-                  <a href={`mailto:${org.contact_email as string}`} className="flex items-center gap-2 text-sm text-gray-400 hover:text-plasma-cyan transition-colors ml-auto">
+                  <a href={`mailto:${org.contact_email as string}`} className="flex items-center gap-2 text-sm text-gray-400 hover:text-plasma-cyan transition-colors ml-auto bg-void-deep px-4 py-2 rounded-lg border border-void-border hover:border-plasma-cyan/30">
                     <Mail className="w-4 h-4" />
                     Contactar
                   </a>

@@ -102,7 +102,21 @@
     "website": "Website",
     "contactEmail": "Contact Email",
     "editProfile": "Edit Profile",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "socialMedia": "Social Media",
+    "instagram": "Instagram URL",
+    "tiktok": "TikTok URL",
+    "youtube": "YouTube URL",
+    "linkedin": "LinkedIn URL",
+    "dangerZone": "Danger Zone",
+    "dangerZoneDesc": "Permanently delete your account and all associated data. This action cannot be undone.",
+    "deleteAccount": "Delete Account",
+    "deleteConfirm": "Are you absolutely sure you want to delete your account? This action is irreversible.",
+    "deleteConfirmBtn": "Are you sure? Click again to confirm",
+    "modalTitle": "Are you absolutely sure?",
+    "modalDesc": "This action is completely irreversible. All your data, active missions, and history will be permanently wiped from our servers. You will not be able to recover this account.",
+    "cancelDelete": "Cancel, keep my account",
+    "confirmDelete": "Yes, delete permanently"
   },
   "Projects": {
     "backHome": "Back to Home",
@@ -191,6 +205,8 @@
     "unnamed": "Unnamed",
     "noDescription": "No description provided.",
     "approve": "Approve Entity",
+    "revoke": "Revoke",
+    "deleteEntity": "Delete",
     "noPending": "No pending organizations.",
     "noVerified": "No verified entities yet."
   }
