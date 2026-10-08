@@ -1,52 +1,88 @@
-import React from 'react';
+"use client";
 
-const EUROPEAN_COUNTRY_CODES = [
-  'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE',
-  'MK', 'IS', 'LI', 'NO', 'RS', 'TR', 'GB'
-];
+import React, { useState, useRef, useEffect } from 'react';
+import { ChevronDown } from 'lucide-react';
 
-export const getFlag = (c: string) => c.toUpperCase().replace(/./g, char => String.fromCodePoint(char.charCodeAt(0) + 127397));
+import { COUNTRIES } from '@/lib/constants/countries';
 
-const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
-
-export const COUNTRIES = EUROPEAN_COUNTRY_CODES.map(code => ({
-  code,
-  name: regionNames.of(code) || code,
-  flag: getFlag(code)
-}));
-
-interface CountrySelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+interface CountrySelectProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
   value?: string;
-  onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  onChange?: (value: string) => void;
   defaultValue?: string;
   name?: string;
   placeholder?: string;
+  required?: boolean;
 }
 
-export function CountrySelect({ value, onChange, defaultValue, name, placeholder = "Selecciona un país", className, ...props }: CountrySelectProps) {
+export function CountrySelect({ value, onChange, defaultValue, name, placeholder = "Selecciona un país", className, required, ...props }: CountrySelectProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [internalValue, setInternalValue] = useState<string>(value || defaultValue || "");
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (value !== undefined) {
+      setInternalValue(value);
+    }
+  }, [value]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSelect = (code: string) => {
+    setInternalValue(code);
+    setIsOpen(false);
+    if (onChange) {
+      onChange(code);
+    }
+  };
+
+  const selectedCountry = COUNTRIES.find(c => c.code === internalValue);
+
   return (
-    <div className="relative">
-      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-base">
-        {COUNTRIES.find(c => c.code === (value || defaultValue))?.flag}
-      </div>
-      <select
-        name={name}
-        value={value}
-        defaultValue={defaultValue}
-        onChange={onChange}
-        className={`w-full bg-void-surface border border-void-border rounded-lg pl-10 pr-10 py-2.5 text-sm text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all appearance-none cursor-pointer ${className || ''}`}
-        {...props}
+    <div className={`relative ${className || ''}`} ref={containerRef} {...props}>
+      {/* Hidden native input for form submissions */}
+      {name && (
+        <input type="hidden" name={name} value={internalValue} required={required} />
+      )}
+      
+      <div 
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full bg-void-surface border border-void-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all cursor-pointer flex justify-between items-center ${!internalValue ? 'text-gray-500' : ''}`}
       >
-        <option value="" disabled className="text-gray-500">{placeholder}</option>
-        {COUNTRIES.map((country) => (
-          <option key={country.code} value={country.code} className="text-white bg-void-deep">
-            {country.flag} {country.name}
-          </option>
-        ))}
-      </select>
-      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
-        <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path></svg>
+        <span className="truncate flex items-center gap-2">
+          {selectedCountry ? (
+            <>
+              <img src={selectedCountry.flagUrl} alt={selectedCountry.name} className="w-5 h-auto rounded-[2px]" />
+              <span className="text-white">{selectedCountry.name}</span>
+            </>
+          ) : (
+            placeholder
+          )}
+        </span>
+        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </div>
+      
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-2 bg-void-deep border border-void-border rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar">
+          {COUNTRIES.map(country => (
+            <div 
+              key={country.code} 
+              onClick={() => handleSelect(country.code)}
+              className="flex items-center gap-3 px-4 py-2 hover:bg-void-surface cursor-pointer transition-colors"
+            >
+              <img src={country.flagUrl} alt={country.name} className="w-5 h-auto rounded-[2px]" />
+              <span className="text-white text-sm">{country.name}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

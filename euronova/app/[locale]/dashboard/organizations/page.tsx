@@ -1,9 +1,10 @@
 import { createClient } from "@/utils/supabase/server";
-import { Building, Globe, Mail, MapPin, ArrowLeft, Camera, Video, Briefcase } from "lucide-react";
+import { Building, Globe, Mail, MapPin, ArrowLeft, Camera, Video, Briefcase, PlaySquare, Music } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { OrganizationsClient } from "./OrganizationsClient";
 import { Suspense } from "react";
+import { COUNTRIES } from "@/lib/constants/countries";
 
 export const dynamic = 'force-dynamic';
 
@@ -82,9 +83,20 @@ export default async function OrganizationsPage(props: {
               <div className="flex justify-between items-start mb-4">
                 <div className="flex-1">
                   <h2 className="text-xl font-bold text-white group-hover:text-hyper-violet transition-colors">{(org.org_name as string) || t('unnamedOrg')}</h2>
-                  <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-1.5 mt-2">
                     <MapPin className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm text-gray-400">{(org.country_hq as string) || t('countryNotSpecified')}</span>
+                    {(() => {
+                      if (!org.country_hq) return <span className="text-sm text-gray-400">{t('countryNotSpecified')}</span>;
+                      const c = COUNTRIES.find(x => x.code === org.country_hq);
+                      return c ? (
+                        <span className="text-sm text-gray-400 flex items-center gap-1.5">
+                          <img src={c.flagUrl} alt={c.name} className="w-4 h-auto rounded-[2px]" title={c.name} />
+                          {c.name}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-gray-400">{org.country_hq}</span>
+                      );
+                    })()}
                   </div>
                 </div>
                 {org.verification_status === "verified" ? (
@@ -111,12 +123,12 @@ export default async function OrganizationsPage(props: {
                 )}
                 {org.social_tiktok && (
                   <a href={org.social_tiktok as string} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all" title="TikTok">
-                    <Video className="w-4 h-4" />
+                    <Music className="w-4 h-4" />
                   </a>
                 )}
                 {org.social_youtube && (
                   <a href={org.social_youtube as string} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all" title="YouTube">
-                    <Video className="w-4 h-4" />
+                    <PlaySquare className="w-4 h-4" />
                   </a>
                 )}
                 {org.social_linkedin && (

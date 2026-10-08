@@ -1,7 +1,7 @@
 import { MapPin, Users, Zap, PlaneTakeoff, AlertTriangle, Building, Clock, Euro, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { COUNTRIES } from "@/components/CountrySelect";
+import { COUNTRIES } from "@/lib/constants/countries";
 
 export interface ProjectData {
   id: string;
@@ -65,13 +65,18 @@ export function ProjectCard({ project }: { project: ProjectData }) {
         <div className="space-y-2 text-sm text-gray-400">
           <div className="flex items-center gap-2">
             <MapPin className="w-4 h-4 text-plasma-cyan" />
-            <span className="font-medium text-gray-300">
+            <span className="font-medium text-gray-300 flex items-center gap-1.5 flex-wrap">
               {(() => {
-                if (!project.dest_country) return t("europe");
+                if (!project.dest_country) return <span>{t("europe")}</span>;
                 const c = COUNTRIES.find(x => x.code === project.dest_country);
-                return c ? `${c.flag} ${c.name}` : project.dest_country;
+                return c ? (
+                  <>
+                    <img src={c.flagUrl} alt={c.name} className="w-4 h-auto rounded-[2px]" title={c.name} />
+                    <span>{c.name}</span>
+                  </>
+                ) : <span>{project.dest_country}</span>;
               })()}
-              {project.exact_location ? `, ${project.exact_location}` : ''}
+              {project.exact_location ? <span>, {project.exact_location}</span> : null}
             </span>
           </div>
           <div className="flex items-center gap-2">

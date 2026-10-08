@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import Image from "next/image";
 import { deleteProjectAction } from "./actions";
-import { COUNTRIES } from "@/components/CountrySelect";
+import { COUNTRIES } from "@/lib/constants/countries";
 
 export const dynamic = 'force-dynamic';
 
@@ -36,12 +36,28 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
 
   // Map dest_country and eligible_countries to full names
   const destCountryObj = COUNTRIES.find(c => c.code === (project.dest_country || project.country));
-  const destCountryName = destCountryObj ? `${destCountryObj.flag} ${destCountryObj.name}` : (project.dest_country || project.country);
+  const destCountryNode = destCountryObj ? (
+    <span className="flex items-center gap-1.5">
+      <img src={destCountryObj.flagUrl} alt={destCountryObj.name} className="w-4 h-auto rounded-[2px]" title={destCountryObj.name} />
+      <span>{destCountryObj.name}</span>
+    </span>
+  ) : (
+    <span>{project.dest_country || project.country}</span>
+  );
 
-  const eligibleCountriesNames = project.eligible_countries
+  const eligibleCountriesNodes = project.eligible_countries
     ? project.eligible_countries.map((code: string) => {
         const cObj = COUNTRIES.find(c => c.code === code);
-        return cObj ? `${cObj.flag} ${cObj.name}` : code;
+        return cObj ? (
+          <span key={code} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-void-deep border border-void-border text-sm">
+            <img src={cObj.flagUrl} alt={cObj.name} className="w-4 h-auto rounded-[2px]" title={cObj.name} />
+            <span>{cObj.name}</span>
+          </span>
+        ) : (
+          <span key={code} className="inline-flex items-center px-2.5 py-1 rounded-md bg-void-deep border border-void-border text-sm">
+            {code}
+          </span>
+        );
       })
     : [];
 
@@ -141,7 +157,7 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
                   <div>
                     <p className="text-sm text-gray-400 font-medium">{tGeneral("exactLocation")}</p>
                     <p className="text-white font-semibold">{project.exact_location || t("notSpecified")}</p>
-                    <p className="text-gray-400 text-sm">{destCountryName}</p>
+                    <div className="text-gray-400 text-sm">{destCountryNode}</div>
                   </div>
                 </div>
 
@@ -177,14 +193,14 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
                   </div>
                 </div>
 
-                {eligibleCountriesNames.length > 0 && (
+                {eligibleCountriesNodes.length > 0 && (
                   <div className="flex items-start gap-3">
                     <Globe2 className="w-5 h-5 text-plasma-cyan shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm text-gray-400 font-medium">Países Elegibles</p>
-                      <p className="text-white font-semibold text-sm leading-relaxed">
-                        {eligibleCountriesNames.join(", ")}
-                      </p>
+                      <p className="text-sm text-gray-400 font-medium">{tGeneral("eligibleCountries")}</p>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {eligibleCountriesNodes}
+                      </div>
                     </div>
                   </div>
                 )}

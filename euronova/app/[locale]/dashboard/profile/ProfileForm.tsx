@@ -4,6 +4,7 @@ import { useActionState, useState, useEffect, useTransition } from "react";
 import { updateProfile, deleteMyAccount } from "./actions";
 import { Save, Edit2, Building, Trash2, AlertTriangle, User, Upload } from "lucide-react";
 import { CountrySelect } from "@/components/CountrySelect";
+import { COUNTRIES } from "@/lib/constants/countries";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
@@ -74,7 +75,18 @@ export function ProfileForm({ initialData, role }: { initialData: Record<string,
               </div>
               <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wider">{t('countryResident')}</p>
-                <p className="font-semibold text-white mt-1">{initialData?.country_code || "—"}</p>
+                <p className="font-semibold text-white mt-1">
+                  {(() => {
+                    if (!initialData?.country_code) return "—";
+                    const c = COUNTRIES.find(x => x.code === initialData.country_code);
+                    return c ? (
+                      <span className="flex items-center gap-1.5">
+                        <img src={c.flagUrl} alt={c.name} className="w-5 h-auto rounded-[2px]" title={c.name} />
+                        {c.name}
+                      </span>
+                    ) : initialData.country_code;
+                  })()}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wider">{t('phone') || "Phone"}</p>
@@ -128,7 +140,18 @@ export function ProfileForm({ initialData, role }: { initialData: Record<string,
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-gray-500 uppercase tracking-wider">{t('countryHq')}</p>
-                  <p className="font-semibold text-white mt-1">{initialData?.country_hq || "—"}</p>
+                  <p className="font-semibold text-white mt-1">
+                    {(() => {
+                      if (!initialData?.country_hq) return "—";
+                      const c = COUNTRIES.find(x => x.code === initialData.country_hq);
+                      return c ? (
+                        <span className="flex items-center gap-1.5">
+                          <img src={c.flagUrl} alt={c.name} className="w-5 h-auto rounded-[2px]" title={c.name} />
+                          {c.name}
+                        </span>
+                      ) : initialData.country_hq;
+                    })()}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 uppercase tracking-wider">{t('contactEmail') || "Contact Email"}</p>
