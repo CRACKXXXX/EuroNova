@@ -51,16 +51,17 @@ Euronova.md
 .cursor/
 .cursorrules
 .windsurfrules
-.cline/
+.cline/*
 *.rules
-.github/workflows/
-.github/
+.github/workflows/*
+.github/*
 .vercel/
 *.suo
 *.ntvs*
 *.njsproj
 *.user
-.agent/*
+.agents/*
+.agents/rules/*
 
 # ==========================================
 # 5. GOOGLE CLOUD, GEMINI Y SERVICE ACCOUNTS

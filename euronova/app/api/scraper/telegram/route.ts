@@ -83,19 +83,14 @@ async function parseWithGemini(
 export async function GET(request: NextRequest) {
   try {
     // 1. Authorization check
-    const cronSecret = process.env.CRON_SECRET;
+    const cronSecret = process.env.CRON_SECRET || "euronova_secret";
     const secret = request.nextUrl.searchParams.get("secret");
     const authHeader = request.headers.get("authorization");
 
     const isAuthorized =
-      Boolean(cronSecret) &&
-      (secret === cronSecret || authHeader === `Bearer ${cronSecret}`);
+      secret === cronSecret || authHeader === `Bearer ${cronSecret}`;
 
-    const isDevFallback =
-      !cronSecret &&
-      (secret === "euronova_secret" || process.env.NODE_ENV === "development");
-
-    if (!isAuthorized && !isDevFallback) {
+    if (!isAuthorized) {
       return new Response("Unauthorized", { status: 401 });
     }
 
