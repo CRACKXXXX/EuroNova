@@ -2,6 +2,7 @@ import { MapPin, Users, Zap, PlaneTakeoff, AlertTriangle, Building, Clock, Euro,
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { COUNTRIES } from "@/lib/constants/countries";
+import { PROJECT_TYPE_COLORS } from "@/lib/constants/projectTypes";
 
 export interface ProjectData {
   id: string;
@@ -17,13 +18,14 @@ export interface ProjectData {
   verification_status?: string;
   exact_location?: string;
   duration_days?: number;
-  travel_budget_min?: number;
-  travel_budget_max?: number;
+  travel_budget_min?: number | null;
+  travel_budget_max?: number | null;
   financing_type?: string;
 }
 
 export function ProjectCard({ project }: { project: ProjectData }) {
   const t = useTranslations("ProjectCard");
+  const tTypes = useTranslations("ProjectTypes");
   return (
     <div className="bg-void-surface border border-void-border rounded-2xl overflow-hidden hover:border-plasma-cyan/50 hover:shadow-[0_0_30px_rgba(0,229,255,0.1)] transition-all duration-300 group flex flex-col h-full">
       
@@ -36,9 +38,23 @@ export function ProjectCard({ project }: { project: ProjectData }) {
               {t('unverifiedOrgWarning') || "Unverified Organization"}
             </span>
           )}
-          <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-void-border text-gray-300 uppercase tracking-wider">
-            {project.project_type}
-          </span>
+          {(() => {
+            const colorClass =
+              PROJECT_TYPE_COLORS[project.project_type] ||
+              "bg-void-border/80 text-gray-300 border-void-border";
+            const fullTitle = tTypes.has(project.project_type)
+              ? tTypes(project.project_type)
+              : project.project_type;
+
+            return (
+              <span
+                className={`px-2.5 py-1 text-xs font-bold rounded-full border uppercase tracking-wider ${colorClass}`}
+                title={fullTitle}
+              >
+                {project.project_type}
+              </span>
+            );
+          })()}
           {project.is_last_minute && (
             <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-nova-flare/20 text-nova-flare border border-nova-flare/30 flex items-center gap-1 animate-pulse">
               <Zap className="w-3 h-3" /> {t("lastMinute")}
@@ -89,14 +105,15 @@ export function ProjectCard({ project }: { project: ProjectData }) {
               <span>{project.duration_days} {t("days", { defaultValue: "days" })}</span>
             </div>
           )}
-          {(project.travel_budget_min !== undefined || project.travel_budget_max !== undefined) && (
-            <div className="flex items-center gap-2">
-              <Euro className="w-4 h-4 text-rup-emerald" />
-              <span>
-                {project.travel_budget_min !== undefined ? `€${project.travel_budget_min}` : "€0"} - {project.travel_budget_max !== undefined ? `€${project.travel_budget_max}` : "No limit"}
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <Euro className="w-4 h-4 text-rup-emerald shrink-0" />
+            <span className="truncate">
+              {(project.travel_budget_min != null || project.travel_budget_max != null)
+                ? `${project.travel_budget_min != null ? '€' + project.travel_budget_min : '€0'} - ${project.travel_budget_max != null ? '€' + project.travel_budget_max : t('noLimit', { defaultValue: 'No limit' })}`
+                : t('notSpecified', { defaultValue: 'Not specified' })
+              }
+            </span>
+          </div>
           {project.financing_type && (
             <div className="flex items-center gap-2">
               <Wallet className="w-4 h-4 text-plasma-cyan" />

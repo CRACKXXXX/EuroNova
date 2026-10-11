@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
-import { Building, Globe, Mail, MapPin, ArrowLeft, Camera, Video, Briefcase, PlaySquare, Music } from "lucide-react";
+import { Building, Globe, Mail, MapPin, ArrowLeft, Camera, Briefcase, PlaySquare, Music } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { OrganizationsClient } from "./OrganizationsClient";
@@ -110,39 +110,86 @@ export default async function OrganizationsPage(props: {
                 {(org.description as string) || t('noDescription')}
               </p>
 
-              <div className="pt-4 border-t border-void-border flex flex-wrap items-center gap-4">
-                {org.website && (
-                  <a href={(org.website as string).startsWith('http') ? (org.website as string) : `https://${org.website as string}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all" title="Website">
-                    <Globe className="w-4 h-4" />
-                  </a>
-                )}
-                {org.social_instagram && (
-                  <a href={org.social_instagram as string} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all" title="Instagram">
-                    <Camera className="w-4 h-4" />
-                  </a>
-                )}
-                {org.social_tiktok && (
-                  <a href={org.social_tiktok as string} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all" title="TikTok">
-                    <Music className="w-4 h-4" />
-                  </a>
-                )}
-                {org.social_youtube && (
-                  <a href={org.social_youtube as string} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all" title="YouTube">
-                    <PlaySquare className="w-4 h-4" />
-                  </a>
-                )}
-                {org.social_linkedin && (
-                  <a href={org.social_linkedin as string} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all" title="LinkedIn">
-                    <Briefcase className="w-4 h-4" />
-                  </a>
-                )}
-                {org.contact_email && (
-                  <a href={`mailto:${org.contact_email as string}`} className="flex items-center gap-2 text-sm text-gray-400 hover:text-plasma-cyan transition-colors ml-auto bg-void-deep px-4 py-2 rounded-lg border border-void-border hover:border-plasma-cyan/30">
-                    <Mail className="w-4 h-4" />
-                    {t('contact')}
-                  </a>
-                )}
-              </div>
+              {(() => {
+                const website = typeof org.website === "string" && org.website.trim().length > 0 ? org.website.trim() : null;
+                const instagram = typeof org.social_instagram === "string" && org.social_instagram.trim().length > 0 ? org.social_instagram.trim() : null;
+                const tiktok = typeof org.social_tiktok === "string" && org.social_tiktok.trim().length > 0 ? org.social_tiktok.trim() : null;
+                const youtube = typeof org.social_youtube === "string" && org.social_youtube.trim().length > 0 ? org.social_youtube.trim() : null;
+                const linkedin = typeof org.social_linkedin === "string" && org.social_linkedin.trim().length > 0 ? org.social_linkedin.trim() : null;
+                const email = typeof org.contact_email === "string" && org.contact_email.trim().length > 0 ? org.contact_email.trim() : null;
+
+                const hasAnyContact = website || instagram || tiktok || youtube || linkedin || email;
+                if (!hasAnyContact) return null;
+
+                return (
+                  <div className="pt-4 border-t border-void-border flex flex-wrap items-center gap-4">
+                    {website && (
+                      <a
+                        href={website.startsWith("http") ? website : `https://${website}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all"
+                        title="Website"
+                      >
+                        <Globe className="w-4 h-4" />
+                      </a>
+                    )}
+                    {instagram && (
+                      <a
+                        href={instagram.startsWith("http") ? instagram : `https://${instagram}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all"
+                        title="Instagram"
+                      >
+                        <Camera className="w-4 h-4" />
+                      </a>
+                    )}
+                    {tiktok && (
+                      <a
+                        href={tiktok.startsWith("http") ? tiktok : `https://${tiktok}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all"
+                        title="TikTok"
+                      >
+                        <Music className="w-4 h-4" />
+                      </a>
+                    )}
+                    {youtube && (
+                      <a
+                        href={youtube.startsWith("http") ? youtube : `https://${youtube}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all"
+                        title="YouTube"
+                      >
+                        <PlaySquare className="w-4 h-4" />
+                      </a>
+                    )}
+                    {linkedin && (
+                      <a
+                        href={linkedin.startsWith("http") ? linkedin : `https://${linkedin}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all"
+                        title="LinkedIn"
+                      >
+                        <Briefcase className="w-4 h-4" />
+                      </a>
+                    )}
+                    {email && (
+                      <a
+                        href={`mailto:${email}`}
+                        className="flex items-center gap-2 text-sm text-gray-400 hover:text-plasma-cyan transition-colors ml-auto bg-void-deep px-4 py-2 rounded-lg border border-void-border hover:border-plasma-cyan/30"
+                      >
+                        <Mail className="w-4 h-4" />
+                        {t("contact")}
+                      </a>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           ))
         ) : (

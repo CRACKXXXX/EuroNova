@@ -3,134 +3,288 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 
-export async function deleteMyAccount() {
+export type ProfileActionState = {
+  success?: string;
+  error?: string;
+  data?: Record<string, unknown> | null;
+} | null;
+
+const youthProfileSchema = z.object({
+  full_name: z.string().trim().optional().or(z.literal("")).nullable(),
+  birth_date: z.string().trim().optional().or(z.literal("")).nullable(),
+  country_code: z.string().trim().optional().or(z.literal("")).nullable(),
+  is_rup_region: z.boolean().default(false),
+  bio: z.string().trim().optional().or(z.literal("")).nullable(),
+  phone: z.string().trim().optional().or(z.literal("")).nullable(),
+  languages: z.string().trim().optional().or(z.literal("")).nullable(),
+});
+
+const orgProfileSchema = z.object({
+  org_name: z.string().trim().optional().or(z.literal("")).nullable(),
+  oid_number: z.string().trim().optional().or(z.literal("")).nullable(),
+  country_hq: z.string().trim().optional().or(z.literal("")).nullable(),
+  description: z.string().trim().optional().or(z.literal("")).nullable(),
+  website: z.string().trim().optional().or(z.literal("")).nullable(),
+  contact_email: z.string().trim().optional().or(z.literal("")).nullable(),
+  social_instagram: z.string().trim().optional().or(z.literal("")).nullable(),
+  social_tiktok: z.string().trim().optional().or(z.literal("")).nullable(),
+  social_youtube: z.string().trim().optional().or(z.literal("")).nullable(),
+  social_linkedin: z.string().trim().optional().or(z.literal("")).nullable(),
+});
+
+interface YouthUpdatePayload {
+  id: string;
+  full_name: string | null;
+  birth_date: string | null;
+  country_code: string | null;
+  is_rup_region: boolean;
+  bio: string | null;
+  phone: string | null;
+  languages: string[] | null;
+  avatar_url?: string;
+}
+
+interface OrgUpdatePayload {
+  id: string;
+  org_name: string | null;
+  oid_number: string | null;
+  country_hq: string | null;
+  description: string | null;
+  website: string | null;
+  contact_email: string | null;
+  social_instagram: string | null;
+  social_tiktok: string | null;
+  social_youtube: string | null;
+  social_linkedin: string | null;
+  verification_status?: string;
+  avatar_url?: string;
+}
+
+function sanitizeOptionalString(value: string | null | undefined): string | null {
+  if (value === null || value === undefined) return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function sanitizeLanguages(value: string | null | undefined): string[] | null {
+  if (!value) return null;
+  const items = value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  return items.length > 0 ? items : null;
+}
+
+export async function deleteMyAccount(): Promise<{ error?: string }> {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-    if (!user) {
+    if (userError || !user) {
       return { error: "No estás autenticado." };
     }
 
-    const { error } = await supabase.rpc('delete_user');
-    if (error) throw error;
+    const { error } = await supabase.rpc("delete_user");
+    if (error) {
+      return { error: error.message };
+    }
 
     await supabase.auth.signOut();
   } catch (error: unknown) {
     console.error("Failed to delete account:", error);
-    return { error: error instanceof Error ? error.message : "Failed to delete account." };
+    return {
+      error: error instanceof Error ? error.message : "Failed to delete account.",
+    };
   }
-  
+
   redirect("/login");
 }
 
-export async function updateProfile(prevState: unknown, formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+export async function updateProfile(
+  prevState: ProfileActionState,
+  formData: FormData
+): Promise<ProfileActionState> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (!user) {
-    return { error: "No estás autenticado." };
-  }
+    if (userError || !user) {
+      return { error: "No estás autenticado." };
+    }
 
-  const role = formData.get("role") as string;
+    const role = formData.get("role")?.toString();
+    if (role !== "youth" && role !== "org") {
+      return { error: "Rol no válido." };
+    }
 
-  let avatar_url = undefined;
-  const avatarFile = formData.get("avatar") as File | null;
-  
-  if (avatarFile && avatarFile.size > 0) {
-    const fileExt = avatarFile.name.split('.').pop();
-    const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-    
-    const { error: uploadError } = await supabase.storage
-      .from('avatars')
-      .upload(fileName, avatarFile, { upsert: true });
+    let avatar_url: string | undefined = undefined;
+    const avatarFile = formData.get("avatar") as File | null;
 
-    if (uploadError) return { error: `Error uploading avatar: ${uploadError.message}` };
-    
-    const { data: { publicUrl } } = supabase.storage
-      .from('avatars')
-      .getPublicUrl(fileName);
-      
-    avatar_url = publicUrl;
-  }
+    if (
+      avatarFile &&
+      typeof avatarFile === "object" &&
+      "size" in avatarFile &&
+      avatarFile.size > 0
+    ) {
+      const fileExt = avatarFile.name ? avatarFile.name.split(".").pop() || "png" : "png";
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
 
-  if (role === "youth") {
-    const full_name = formData.get("full_name") as string;
-    const birth_date = formData.get("birth_date") as string;
-    const country_code = formData.get("country_code") as string;
-    const is_rup_region = formData.get("is_rup_region") === "true"; // Viene como string del input hidden o "on" del checkbox
-    const bio = formData.get("bio") as string;
-    const phone = formData.get("phone") as string;
-    const languagesStr = formData.get("languages") as string;
-    const languages = languagesStr ? languagesStr.split(",").map(s => s.trim()).filter(Boolean) : [];
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(fileName, avatarFile, { upsert: true });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const payload: Record<string, any> = {
-      id: user.id,
-      full_name: full_name || null,
-      birth_date: birth_date || null,
-      country_code: country_code || null,
-      is_rup_region,
-      bio: bio || null,
-      phone: phone || null,
-      languages: languages.length > 0 ? languages : null
+      if (uploadError) {
+        return { error: `Error subiendo avatar: ${uploadError.message}` };
+      }
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(fileName);
+
+      avatar_url = publicUrl;
+    }
+
+    if (role === "youth") {
+      const rawData = {
+        full_name: formData.get("full_name")?.toString() ?? "",
+        birth_date: formData.get("birth_date")?.toString() ?? "",
+        country_code: formData.get("country_code")?.toString() ?? "",
+        is_rup_region: formData.get("is_rup_region") === "true",
+        bio: formData.get("bio")?.toString() ?? "",
+        phone: formData.get("phone")?.toString() ?? "",
+        languages: formData.get("languages")?.toString() ?? "",
+      };
+
+      const parsed = youthProfileSchema.safeParse(rawData);
+      if (!parsed.success) {
+        const errorMsg = parsed.error.issues.map((issue) => issue.message).join(", ");
+        return { error: errorMsg || "Datos de perfil no válidos." };
+      }
+
+      const {
+        full_name,
+        birth_date,
+        country_code,
+        is_rup_region,
+        bio,
+        phone,
+        languages: rawLanguages,
+      } = parsed.data;
+
+      const payload: YouthUpdatePayload = {
+        id: user.id,
+        full_name: sanitizeOptionalString(full_name),
+        birth_date: sanitizeOptionalString(birth_date),
+        country_code: sanitizeOptionalString(country_code),
+        is_rup_region: Boolean(is_rup_region),
+        bio: sanitizeOptionalString(bio),
+        phone: sanitizeOptionalString(phone),
+        languages: sanitizeLanguages(rawLanguages),
+      };
+
+      if (avatar_url) {
+        payload.avatar_url = avatar_url;
+      }
+
+      const { error } = await supabase.from("users_youth").upsert(payload);
+
+      if (error) {
+        return { error: error.message };
+      }
+    } else {
+      const rawData = {
+        org_name: formData.get("org_name")?.toString() ?? "",
+        oid_number: formData.get("oid_number")?.toString() ?? "",
+        country_hq: formData.get("country_hq")?.toString() ?? "",
+        description: formData.get("description")?.toString() ?? "",
+        website: formData.get("website")?.toString() ?? "",
+        contact_email: formData.get("contact_email")?.toString() ?? "",
+        social_instagram: formData.get("social_instagram")?.toString() ?? "",
+        social_tiktok: formData.get("social_tiktok")?.toString() ?? "",
+        social_youtube: formData.get("social_youtube")?.toString() ?? "",
+        social_linkedin: formData.get("social_linkedin")?.toString() ?? "",
+      };
+
+      const parsed = orgProfileSchema.safeParse(rawData);
+      if (!parsed.success) {
+        const errorMsg = parsed.error.issues.map((issue) => issue.message).join(", ");
+        return { error: errorMsg || "Datos de organización no válidos." };
+      }
+
+      const {
+        org_name,
+        oid_number,
+        country_hq,
+        description,
+        website,
+        contact_email,
+        social_instagram,
+        social_tiktok,
+        social_youtube,
+        social_linkedin,
+      } = parsed.data;
+
+      const payload: OrgUpdatePayload = {
+        id: user.id,
+        org_name: sanitizeOptionalString(org_name),
+        oid_number: sanitizeOptionalString(oid_number),
+        country_hq: sanitizeOptionalString(country_hq),
+        description: sanitizeOptionalString(description),
+        website: sanitizeOptionalString(website),
+        contact_email: sanitizeOptionalString(contact_email),
+        social_instagram: sanitizeOptionalString(social_instagram),
+        social_tiktok: sanitizeOptionalString(social_tiktok),
+        social_youtube: sanitizeOptionalString(social_youtube),
+        social_linkedin: sanitizeOptionalString(social_linkedin),
+        verification_status: "pending",
+      };
+
+      if (avatar_url) {
+        payload.avatar_url = avatar_url;
+      }
+
+      const { error } = await supabase.from("users_org").upsert(payload);
+
+      if (error) {
+        return { error: error.message };
+      }
+    }
+
+    let updatedData: Record<string, unknown> | null = null;
+
+    if (role === "youth") {
+      const { data } = await supabase
+        .from("users_youth")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+      updatedData = data as Record<string, unknown> | null;
+    } else {
+      const { data } = await supabase
+        .from("users_org")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+      updatedData = data as Record<string, unknown> | null;
+    }
+
+    revalidatePath("/dashboard/profile", "page");
+    return { success: "¡Perfil actualizado con éxito!", data: updatedData };
+  } catch (error: unknown) {
+    console.error("Profile update failed:", error);
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Ha ocurrido un error inesperado al guardar el perfil.",
     };
-    
-    if (avatar_url) payload.avatar_url = avatar_url;
-
-    const { error } = await supabase
-      .from("users_youth")
-      .upsert(payload);
-
-    if (error) return { error: error.message };
-  } else if (role === "org") {
-    const org_name = formData.get("org_name") as string;
-    const oid_number = formData.get("oid_number") as string;
-    const country_hq = formData.get("country_hq") as string;
-    const description = formData.get("description") as string;
-    const website = formData.get("website") as string;
-    const contact_email = formData.get("contact_email") as string;
-    const social_instagram = formData.get("social_instagram") as string;
-    const social_tiktok = formData.get("social_tiktok") as string;
-    const social_youtube = formData.get("social_youtube") as string;
-    const social_linkedin = formData.get("social_linkedin") as string;
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const payload: Record<string, any> = {
-      id: user.id,
-      org_name: org_name || null,
-      oid_number: oid_number || null,
-      country_hq: country_hq || null,
-      description: description || null,
-      website: website || null,
-      contact_email: contact_email || null,
-      social_instagram: social_instagram || null,
-      social_tiktok: social_tiktok || null,
-      social_youtube: social_youtube || null,
-      social_linkedin: social_linkedin || null,
-      verification_status: 'pending'
-    };
-    
-    if (avatar_url) payload.avatar_url = avatar_url;
-
-    const { error } = await supabase
-      .from("users_org")
-      .upsert(payload);
-
-    if (error) return { error: error.message };
   }
-
-  let updatedData = null;
-
-  if (role === "youth") {
-    const { data } = await supabase.from("users_youth").select("*").eq("id", user.id).single();
-    updatedData = data;
-  } else {
-    const { data } = await supabase.from("users_org").select("*").eq("id", user.id).single();
-    updatedData = data;
-  }
-
-  revalidatePath('/dashboard/profile', 'page');
-  return { success: "¡Perfil actualizado con éxito!", data: updatedData };
 }

@@ -10,9 +10,11 @@ import { useRouter } from "next/navigation";
 import { MultiSelectCountry } from "@/components/MultiSelectCountry";
 import { MultiSelectTheme } from "@/components/MultiSelectTheme";
 import { CountrySelect } from "@/components/CountrySelect";
+import { PROJECT_TYPES } from "@/lib/constants/projectTypes";
 
 export default function NewProjectPage() {
   const t = useTranslations("NewProject");
+  const tTypes = useTranslations("ProjectTypes");
   const router = useRouter();
   
   const [isPending, setIsPending] = useState(false);
@@ -84,10 +86,17 @@ export default function NewProjectPage() {
             
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300">{t("projectType")}</label>
-              <select name="project_type" required className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan">
-                <option value="Youth Exchange">Youth Exchange</option>
-                <option value="Training">Training Course</option>
-                <option value="ESC">Volunteering (ESC)</option>
+              <select
+                name="project_type"
+                required
+                defaultValue="YE"
+                className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan"
+              >
+                {PROJECT_TYPES.map((pt) => (
+                  <option key={pt.code} value={pt.code}>
+                    {pt.code} — {tTypes(pt.labelKey)}
+                  </option>
+                ))}
               </select>
             </div>
 

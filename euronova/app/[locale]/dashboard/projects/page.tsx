@@ -35,7 +35,10 @@ export default async function ProjectsPage(props: {
   const endDate = searchParams.end_date as string | undefined;
   const funding = searchParams.funding as string | undefined;
 
-  let query = supabase.from("projects").select("*, users_org(org_name, verification_status)");
+  let query = supabase
+    .from("projects")
+    .select("*, users_org(org_name, verification_status)")
+    .eq("status", "published");
 
   if (q) query = query.ilike("title", `%${q}%`);
   

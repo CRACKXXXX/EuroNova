@@ -116,7 +116,15 @@
     "modalTitle": "Are you absolutely sure?",
     "modalDesc": "This action is completely irreversible. All your data, active missions, and history will be permanently wiped from our servers. You will not be able to recover this account.",
     "cancelDelete": "Cancel, keep my account",
-    "confirmDelete": "Yes, delete permanently"
+    "confirmDelete": "Yes, delete permanently",
+    "yes": "Yes",
+    "no": "No",
+    "verifiedEntity": "Verified Entity",
+    "rejectedEntity": "Rejected",
+    "pendingEntity": "Pending verification",
+    "upload": "Upload",
+    "saveSuccess": "Profile updated successfully!",
+    "saveError": "An error occurred while saving profile."
   },
   "Projects": {
     "backHome": "Back to Home",
@@ -142,7 +150,9 @@
     "financingType": "Financing",
     "total": "Total",
     "partial": "Partial",
-    "none": "None"
+    "none": "None",
+    "noLimit": "No limit",
+    "notSpecified": "Not specified"
   },
   "Organizations": {
     "backHome": "Back to Home",
@@ -268,16 +278,41 @@
   },
   "AdminPanel": {
     "title": "God Mode: Command Center",
-    "subtitle": "Administrative panel to manage and verify entities.",
+    "subtitle": "Administrative control center to moderate entities, users, and mobility projects.",
+    "tabOrgs": "Organizations",
+    "tabYouth": "Youth Users",
+    "tabProjects": "Projects",
     "pending": "Pending Organizations",
     "verified": "Verified Entities",
     "unnamed": "Unnamed",
     "noDescription": "No description provided.",
-    "approve": "Approve Entity",
+    "approve": "Approve",
+    "rejectDelete": "Reject & Delete",
     "revoke": "Revoke",
     "deleteEntity": "Delete",
     "noPending": "No pending organizations.",
-    "noVerified": "No verified entities yet."
+    "noVerified": "No verified entities yet.",
+    "youthTitle": "Registered Youth Users",
+    "noYouthUsers": "No youth users registered yet.",
+    "deleteUser": "Delete User",
+    "pendingProjects": "Pending Review",
+    "publishedProjects": "Published Projects",
+    "noPendingProjects": "No projects currently pending review.",
+    "noPublishedProjects": "No published projects found.",
+    "approvePublish": "Approve & Publish",
+    "deleteProject": "Delete Project",
+    "rupBadge": "RUP Region",
+    "publishedBadge": "Published",
+    "pendingBadge": "Pending",
+    "verifiedBadge": "Verified",
+    "confirmDelete": "Are you sure you want to delete this?",
+    "dates": "Dates",
+    "org": "Organization",
+    "destination": "Destination",
+    "requestChanges": "Request Changes",
+    "bio": "Bio",
+    "languages": "Languages",
+    "phone": "Phone"
   },
   "Sidebar": {
     "search": "Search",
@@ -301,5 +336,15 @@
     "rupFlights": "RUP Flights",
     "lastMinute": "Last Minute",
     "addCustomTheme": "Add theme..."
+  },
+  "ProjectTypes": {
+    "YE": "Youth Exchange",
+    "TC": "Training Course",
+    "ESC": "European Solidarity Corps",
+    "PBA": "Partnership Building Activity",
+    "SV": "Study Visit",
+    "SE": "Seminar",
+    "VET": "Vocational Training",
+    "CBY": "Capacity Building in Youth"
   }
 }

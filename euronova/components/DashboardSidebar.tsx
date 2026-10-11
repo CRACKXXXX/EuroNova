@@ -7,11 +7,13 @@ import { MultiSelectCountry } from "@/components/MultiSelectCountry";
 import { useTranslations } from "next-intl";
 
 import { ERASMUS_THEMES } from "@/lib/constants/themes";
+import { PROJECT_TYPES } from "@/lib/constants/projectTypes";
 
 export function DashboardSidebar() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations("Sidebar");
+  const tTypes = useTranslations("ProjectTypes");
 
   // Estados locales para los filtros
   const [search, setSearch] = useState(searchParams.get("q") || "");
@@ -124,15 +126,34 @@ export function DashboardSidebar() {
           <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
             <Filter className="w-3 h-3" /> {t('missionType')}
           </h3>
-          <div className="flex flex-col gap-2">
-            {["ESC", "Youth Exchange", "Training"].map((mType) => (
-              <label key={mType} onClick={(e) => { e.preventDefault(); toggleType(mType); }} className={`flex items-center gap-3 px-3 py-2 rounded-lg border cursor-pointer group hover:bg-void-surface ${types.includes(mType) ? 'border-plasma-cyan bg-plasma-cyan/10' : 'border-void-border'}`}>
-                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${types.includes(mType) ? 'border-plasma-cyan bg-plasma-cyan' : 'border-gray-500'}`}>
-                  {types.includes(mType) && <div className="w-2 h-2 rounded-full bg-void-deep" />}
-                </div>
-                <span className={`text-sm ${types.includes(mType) ? 'text-white' : 'text-gray-400'}`}>{mType}</span>
-              </label>
-            ))}
+          <div className="grid grid-cols-2 gap-2">
+            {PROJECT_TYPES.map((pt) => {
+              const isSelected = types.includes(pt.code);
+              return (
+                <button
+                  key={pt.code}
+                  type="button"
+                  onClick={() => toggleType(pt.code)}
+                  className={`flex items-start gap-2 px-2.5 py-2 rounded-lg border text-left cursor-pointer transition-all ${
+                    isSelected
+                      ? 'border-plasma-cyan bg-plasma-cyan/15 text-white shadow-[0_0_12px_rgba(0,229,255,0.15)]'
+                      : 'border-void-border bg-void-surface/50 text-gray-400 hover:text-white hover:border-gray-700'
+                  }`}
+                >
+                  <div className={`w-3.5 h-3.5 mt-0.5 rounded border flex items-center justify-center shrink-0 ${
+                    isSelected ? 'border-plasma-cyan bg-plasma-cyan' : 'border-gray-500'
+                  }`}>
+                    {isSelected && <div className="w-1.5 h-1.5 bg-void-deep rounded-sm" />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-xs font-bold block">{pt.code}</span>
+                    <span className="text-[10px] text-gray-400 block whitespace-normal leading-tight line-clamp-2" title={tTypes(pt.labelKey)}>
+                      {tTypes(pt.labelKey)}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
