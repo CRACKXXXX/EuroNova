@@ -1,5 +1,20 @@
 # ==========================================
-# 1. VARIABLES DE ENTORNO Y SECRETOS (Global)
+# 1. NODE.JS Y NEXT.JS (Vital para el peso)
+# ==========================================
+node_modules/
+.pnp
+.pnp.js
+.next/
+out/
+build/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==========================================
+# 2. VARIABLES DE ENTORNO Y SECRETOS (Global)
 # ==========================================
 .env
 .env*.local
@@ -10,7 +25,7 @@
 *.env.*
 
 # ==========================================
-# 2. NOTAS PERSONALES Y ARCHIVOS DE CLAVES
+# 3. NOTAS PERSONALES Y ARCHIVOS DE CLAVES
 # ==========================================
 *llave*
 *llaves*
@@ -25,9 +40,30 @@
 *password*
 *.txt.bak
 *.log
+Llaves_Euronova.txt
+Euronova.md
 
 # ==========================================
-# 3. GOOGLE CLOUD, GEMINI Y SERVICE ACCOUNTS
+# 4. REGLAS DE IA, IDE Y GITHUB (Lo que pediste)
+# ==========================================
+.vscode/
+.idea/
+.cursor/
+.cursorrules
+.windsurfrules
+.cline/
+*.rules
+.github/workflows/
+.github/
+.vercel/
+*.suo
+*.ntvs*
+*.njsproj
+*.user
+.agent/*
+
+# ==========================================
+# 5. GOOGLE CLOUD, GEMINI Y SERVICE ACCOUNTS
 # ==========================================
 *service_account*.json
 *service-account*.json
@@ -37,7 +73,7 @@ gcp-key*.json
 firebase-adminsdk*.json
 
 # ==========================================
-# 4. TELEGRAM, TELETHON Y BOTS
+# 6. TELEGRAM Y BOTS
 # ==========================================
 *.session
 *.session-journal
@@ -51,7 +87,7 @@ temp_downloads/
 *.pdf
 
 # ==========================================
-# 5. PYTHON Y ENTORNO DEL SCRAPER
+# 7. PYTHON Y ENTORNO DEL SCRAPER
 # ==========================================
 __pycache__/
 *.py[cod]
@@ -64,19 +100,19 @@ env/
 pip-wheel-metadata/
 
 # ==========================================
-# 6. SUPABASE Y VOLCADOS DE BASE DE DATOS
+# 8. SUPABASE Y VOLCADOS DE BASE DE DATOS
 # ==========================================
 *.sql.gz
 *.sql.tar
 dump.sql
 supabase/.temp/
 supabase/.branches/
+# IMPORTANTE: NO bloqueamos supabase/migrations/ porque las migraciones SÍ deben subirse a Git.
 
 # ==========================================
-# 7. CERTIFICADOS, CLAVES PRIVADAS Y SSH
+# 9. CERTIFICADOS Y SISTEMA OPERATIVO
 # ==========================================
 *.pem
-*.key
 *.pub
 *.cert
 *.crt
@@ -84,17 +120,6 @@ supabase/.branches/
 *.pfx
 id_rsa
 id_ed25519
-
-# ==========================================
-# 8. SISTEMA OPERATIVO E IDE (Antigravity / VS Code)
-# ==========================================
-.vscode/
-.idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.user
+.DS_Store
 Thumbs.db
 [Dd]esktop.ini
-.DS_Store
-Euronova.md
