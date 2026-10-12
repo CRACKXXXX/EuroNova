@@ -1,8 +1,24 @@
-import { MapPin, Users, Zap, PlaneTakeoff, AlertTriangle, Building, Clock, Euro, Wallet } from "lucide-react";
+"use client";
+
+import { useState, useTransition } from "react";
+import { 
+  MapPin, 
+  Users, 
+  Zap, 
+  PlaneTakeoff, 
+  AlertTriangle, 
+  Building, 
+  Clock, 
+  Euro, 
+  Wallet,
+  Heart,
+  Briefcase
+} from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { COUNTRIES } from "@/lib/constants/countries";
 import { PROJECT_TYPE_COLORS } from "@/lib/constants/projectTypes";
+import { toggleProjectFavorite, toggleProjectApplied } from "@/actions/interactions";
 
 export interface ProjectData {
   id: string;
@@ -21,50 +37,154 @@ export interface ProjectData {
   travel_budget_min?: number | null;
   travel_budget_max?: number | null;
   financing_type?: string;
+  is_favorite?: boolean;
+  is_applied?: boolean;
 }
 
 export function ProjectCard({ project }: { project: ProjectData }) {
   const t = useTranslations("ProjectCard");
   const tTypes = useTranslations("ProjectTypes");
-  return (
-    <div className="bg-void-surface border border-void-border rounded-2xl overflow-hidden hover:border-plasma-cyan/50 hover:shadow-[0_0_30px_rgba(0,229,255,0.1)] transition-all duration-300 group flex flex-col h-full">
-      
-      {/* Header section with Badges */}
-      <div className="p-5 flex-grow relative">
-        <div className="flex flex-wrap gap-2 mb-3">
-          {project.verification_status !== 'verified' && (
-            <span className="bg-red-500/10 border border-red-500/30 text-red-400 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
-              <AlertTriangle className="w-3 h-3" />
-              {t('unverifiedOrgWarning') || "Unverified Organization"}
-            </span>
-          )}
-          {(() => {
-            const colorClass =
-              PROJECT_TYPE_COLORS[project.project_type] ||
-              "bg-void-border/80 text-gray-300 border-void-border";
-            const fullTitle = tTypes.has(project.project_type)
-              ? tTypes(project.project_type)
-              : project.project_type;
 
-            return (
-              <span
-                className={`px-2.5 py-1 text-xs font-bold rounded-full border uppercase tracking-wider ${colorClass}`}
-                title={fullTitle}
-              >
-                {project.project_type}
+  const [isFavorite, setIsFavorite] = useState(project.is_favorite ?? false);
+  const [isApplied, setIsApplied] = useState(project.is_applied ?? false);
+  const [isPendingFav, startFavTransition] = useTransition();
+  const [isPendingApp, startAppTransition] = useTransition();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const previousState = isFavorite;
+    const nextState = !previousState;
+    setIsFavorite(nextState);
+
+    startFavTransition(async () => {
+      const res = await toggleProjectFavorite(project.id);
+      if (res?.error) {
+        setIsFavorite(previousState);
+        setErrorMessage(res.error);
+        setTimeout(() => setErrorMessage(null), 3500);
+      } else if (res?.is_favorite !== undefined) {
+        setIsFavorite(res.is_favorite);
+      }
+    });
+  };
+
+  const handleToggleApplied = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const previousState = isApplied;
+    const nextState = !previousState;
+    setIsApplied(nextState);
+
+    startAppTransition(async () => {
+      const res = await toggleProjectApplied(project.id);
+      if (res?.error) {
+        setIsApplied(previousState);
+        setErrorMessage(res.error);
+        setTimeout(() => setErrorMessage(null), 3500);
+      } else if (res?.is_applied !== undefined) {
+        setIsApplied(res.is_applied);
+      }
+    });
+  };
+
+  return (
+    <div className="bg-void-surface border border-void-border rounded-2xl overflow-hidden hover:border-plasma-cyan/50 hover:shadow-[0_0_30px_rgba(0,229,255,0.1)] transition-all duration-300 group flex flex-col h-full relative">
+      {/* Notificación de error optimista */}
+      {errorMessage && (
+        <div className="absolute top-2 left-2 right-2 z-30 bg-nova-flare/95 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg border border-white/20 backdrop-blur-md animate-in fade-in">
+          {errorMessage}
+        </div>
+      )}
+
+      {/* Header section with Badges and Interactive Action Buttons */}
+      <div className="p-5 flex-grow relative">
+        <div className="flex items-start justify-between gap-3 mb-3">
+          {/* Badges de estado */}
+          <div className="flex flex-wrap gap-2 items-center flex-1">
+            {project.verification_status !== "verified" &&
+              project.org_name !== "EuroNova Auto-Scraper" &&
+              project.org_name !== "EuroNova" && (
+                <span className="bg-red-500/10 border border-red-500/30 text-red-400 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  {t("unverifiedOrgWarning")}
+                </span>
+              )}
+
+            {(() => {
+              const colorClass =
+                PROJECT_TYPE_COLORS[project.project_type] ||
+                "bg-void-border/80 text-gray-300 border-void-border";
+              const fullTitle = tTypes.has(project.project_type)
+                ? tTypes(project.project_type)
+                : project.project_type;
+
+              return (
+                <span
+                  className={`px-2.5 py-1 text-xs font-bold rounded-full border uppercase tracking-wider ${colorClass}`}
+                  title={fullTitle}
+                >
+                  {project.project_type}
+                </span>
+              );
+            })()}
+
+            {project.is_last_minute && (
+              <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-nova-flare/20 text-nova-flare border border-nova-flare/30 flex items-center gap-1 animate-pulse">
+                <Zap className="w-3 h-3" /> {t("lastMinute")}
               </span>
-            );
-          })()}
-          {project.is_last_minute && (
-            <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-nova-flare/20 text-nova-flare border border-nova-flare/30 flex items-center gap-1 animate-pulse">
-              <Zap className="w-3 h-3" /> {t("lastMinute")}
-            </span>
-          )}
-          {project.covers_rup_flights && (
-            <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-rup-emerald/20 text-rup-emerald border border-rup-emerald/30 flex items-center gap-1">
-              <PlaneTakeoff className="w-3 h-3" /> {t("rupFlights")}
-            </span>
-          )}
+            )}
+
+            {project.covers_rup_flights && (
+              <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-rup-emerald/20 text-rup-emerald border border-rup-emerald/30 flex items-center gap-1">
+                <PlaneTakeoff className="w-3 h-3" /> {t("rupFlights")}
+              </span>
+            )}
+          </div>
+
+          {/* Botones de acción interactiva: Guardar (Favorite) y Aplicar (Applied) */}
+          <div className="flex items-center gap-1.5 shrink-0 z-10">
+            {/* Botón Favorito */}
+            <button
+              type="button"
+              onClick={handleToggleFavorite}
+              disabled={isPendingFav}
+              title={isFavorite ? t("removeFromFavorites") : t("addToFavorites")}
+              className={`p-2 rounded-xl border transition-all duration-200 cursor-pointer ${
+                isFavorite
+                  ? "bg-nova-flare/20 border-nova-flare/60 text-nova-flare shadow-[0_0_12px_rgba(255,46,99,0.35)]"
+                  : "bg-void-deep/80 border-void-border text-gray-400 hover:text-white hover:border-gray-600"
+              }`}
+            >
+              <Heart
+                className={`w-4 h-4 transition-transform ${
+                  isFavorite ? "fill-nova-flare scale-110" : ""
+                }`}
+              />
+            </button>
+
+            {/* Botón Aplicado */}
+            <button
+              type="button"
+              onClick={handleToggleApplied}
+              disabled={isPendingApp}
+              title={isApplied ? t("applied") : t("markAsApplied")}
+              className={`p-2 rounded-xl border transition-all duration-200 cursor-pointer ${
+                isApplied
+                  ? "bg-hyper-violet/25 border-hyper-violet/60 text-hyper-violet shadow-[0_0_12px_rgba(99,102,241,0.35)]"
+                  : "bg-void-deep/80 border-void-border text-gray-400 hover:text-white hover:border-gray-600"
+              }`}
+            >
+              <Briefcase
+                className={`w-4 h-4 transition-transform ${
+                  isApplied ? "fill-hyper-violet/40 scale-110" : ""
+                }`}
+              />
+            </button>
+          </div>
         </div>
 
         <h3 className="text-xl font-bold text-white mb-2 line-clamp-2 group-hover:text-plasma-cyan transition-colors">
@@ -84,40 +204,53 @@ export function ProjectCard({ project }: { project: ProjectData }) {
             <span className="font-medium text-gray-300 flex items-center gap-1.5 flex-wrap">
               {(() => {
                 if (!project.dest_country) return <span>{t("europe")}</span>;
-                const c = COUNTRIES.find(x => x.code === project.dest_country);
+                const c = COUNTRIES.find((x) => x.code === project.dest_country);
                 return c ? (
                   <>
                     <img src={c.flagUrl} alt={c.name} className="w-4 h-auto rounded-[2px]" title={c.name} />
                     <span>{c.name}</span>
                   </>
-                ) : <span>{project.dest_country}</span>;
+                ) : (
+                  <span>{project.dest_country}</span>
+                );
               })()}
               {project.exact_location ? <span>, {project.exact_location}</span> : null}
             </span>
           </div>
+
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-hyper-violet" />
-            <span>{project.min_age} - {project.max_age} {t("years")}</span>
+            <span>
+              {project.min_age} - {project.max_age} {t("years")}
+            </span>
           </div>
-          {(project.duration_days) && (
+
+          {project.duration_days && (
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-gray-400" />
-              <span>{project.duration_days} {t("days", { defaultValue: "days" })}</span>
+              <span>
+                {project.duration_days} {t("days")}
+              </span>
             </div>
           )}
+
           <div className="flex items-center gap-2">
             <Euro className="w-4 h-4 text-rup-emerald shrink-0" />
             <span className="truncate">
-              {(project.travel_budget_min != null || project.travel_budget_max != null)
-                ? `${project.travel_budget_min != null ? '€' + project.travel_budget_min : '€0'} - ${project.travel_budget_max != null ? '€' + project.travel_budget_max : t('noLimit', { defaultValue: 'No limit' })}`
-                : t('notSpecified', { defaultValue: 'Not specified' })
-              }
+              {project.travel_budget_min != null || project.travel_budget_max != null
+                ? `${project.travel_budget_min != null ? "€" + project.travel_budget_min : "€0"} - ${
+                    project.travel_budget_max != null ? "€" + project.travel_budget_max : t("noLimit")
+                  }`
+                : t("notSpecified")}
             </span>
           </div>
+
           {project.financing_type && (
             <div className="flex items-center gap-2">
               <Wallet className="w-4 h-4 text-plasma-cyan" />
-              <span>{t("financingType", { defaultValue: "Financing" })}: {t(project.financing_type.toLowerCase(), { defaultValue: project.financing_type })}</span>
+              <span>
+                {t("financingType")}: {project.financing_type}
+              </span>
             </div>
           )}
         </div>
@@ -126,7 +259,10 @@ export function ProjectCard({ project }: { project: ProjectData }) {
         {project.themes && project.themes.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-1.5">
             {project.themes.slice(0, 3).map((theme, i) => (
-              <span key={i} className="px-2 py-0.5 text-[10px] uppercase font-medium bg-void-deep text-gray-400 rounded-md border border-void-border">
+              <span
+                key={i}
+                className="px-2 py-0.5 text-[10px] uppercase font-medium bg-void-deep text-gray-400 rounded-md border border-void-border"
+              >
                 {theme}
               </span>
             ))}
@@ -140,8 +276,11 @@ export function ProjectCard({ project }: { project: ProjectData }) {
       </div>
 
       <div className="p-4 border-t border-void-border bg-void-deep/50 mt-auto">
-        <Link href={`/dashboard/projects/${project.id}`} className="w-full py-2.5 rounded-lg bg-white/5 hover:bg-plasma-cyan/10 text-white font-medium text-sm transition-colors border border-transparent hover:border-plasma-cyan/30 flex justify-center items-center gap-2">
-          {t('viewDetails') || "View Details"}
+        <Link
+          href={`/dashboard/projects/${project.id}`}
+          className="w-full py-2.5 rounded-lg bg-white/5 hover:bg-plasma-cyan/10 text-white font-medium text-sm transition-colors border border-transparent hover:border-plasma-cyan/30 flex justify-center items-center gap-2"
+        >
+          {t("viewDetails")}
         </Link>
       </div>
     </div>

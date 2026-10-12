@@ -190,6 +190,16 @@ export default async function OrganizationsPage(props: {
                   </div>
                 );
               })()}
+
+              <div className="pt-4 mt-4 border-t border-void-border">
+                <Link
+                  href={`/dashboard/organizations/${org.id}`}
+                  className="w-full py-2.5 rounded-lg bg-hyper-violet/10 hover:bg-hyper-violet/20 text-hyper-violet border border-hyper-violet/30 font-medium text-sm transition-all flex justify-center items-center gap-2 group-hover:shadow-[0_0_15px_rgba(99,102,241,0.2)]"
+                >
+                  <Building className="w-4 h-4" />
+                  <span>{t('viewProfile')}</span>
+                </Link>
+              </div>
             </div>
           ))
         ) : (

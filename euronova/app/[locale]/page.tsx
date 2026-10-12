@@ -1,10 +1,10 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/server';
 import { Rocket } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
 export default async function Home() {
-  // Consulta asíncrona a Supabase para contar los proyectos
+  const supabase = await createClient();
   const { count, error } = await supabase
     .from('projects')
     .select('*', { count: 'exact', head: true });

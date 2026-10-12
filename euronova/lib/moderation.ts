@@ -38,17 +38,30 @@ export async function moderateContent(
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      systemInstruction: SYSTEM_PROMPT,
-      generationConfig: {
-        responseMimeType: "application/json",
-      },
-    });
-
+    const modelCandidates = ["gemini-1.5-flash", "gemini-3.8-flash", "gemini-flash-latest"];
     const prompt = `Title: ${title}\nDescription: ${description}`;
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
+    let responseText: string | null = null;
+
+    for (const modelName of modelCandidates) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          systemInstruction: SYSTEM_PROMPT,
+          generationConfig: {
+            responseMimeType: "application/json",
+          },
+        });
+        const result = await model.generateContent(prompt);
+        responseText = result.response.text();
+        if (responseText) break;
+      } catch (modelErr: unknown) {
+        const msg = modelErr instanceof Error ? modelErr.message : String(modelErr);
+        if (msg.includes("404") || msg.includes("not found") || msg.includes("no longer available")) {
+          continue;
+        }
+        console.error(`AI Moderation error with ${modelName}:`, msg);
+      }
+    }
 
     if (!responseText) {
       return {

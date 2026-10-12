@@ -32,8 +32,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       {/* pt-16 para compensar el Header fijo */}
       <div className="flex-1 pt-16 flex flex-col min-h-screen">
-        {/* Aquí ya no aplicamos el lg:pl-72, el sidebar se renderizará como un panel independiente en las páginas que lo necesiten */}
-        <main className="flex-1 p-6 md:p-8">
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 md:py-8">
           {children}
         </main>
       </div>

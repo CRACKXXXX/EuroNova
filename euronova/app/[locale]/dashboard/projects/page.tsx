@@ -1,12 +1,13 @@
 import { createClient } from "@/utils/supabase/server";
-import { Rocket, Search, ArrowLeft } from "lucide-react";
+import { Rocket, Search, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { Suspense } from "react";
 import { ProjectCard } from "@/components/ProjectCard";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function ProjectsPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -28,26 +29,52 @@ export default async function ProjectsPage(props: {
   const accommodation = searchParams.accommodation === "true";
   const rup = searchParams.rup === "true";
   const lastMinute = searchParams.last_minute === "true";
-  
+  const favorites = searchParams.favorites === "true";
+
+  // Check authentication if favorites filter is requested
+  const { data: { user } } = await supabase.auth.getUser();
+  if (favorites && !user) {
+    redirect("/login");
+  }
+
   const minAge = searchParams.min_age as string | undefined;
   const maxAge = searchParams.max_age as string | undefined;
   const startDate = searchParams.start_date as string | undefined;
   const endDate = searchParams.end_date as string | undefined;
   const funding = searchParams.funding as string | undefined;
 
-  let query = supabase
-    .from("projects")
-    .select("*, users_org(org_name, verification_status)")
-    .eq("status", "published");
+  // Pagination & Sorting parameters
+  const pageParam = Array.isArray(searchParams.page) ? searchParams.page[0] : searchParams.page;
+  const parsedPage = parseInt(pageParam || "1", 10);
+  const page = isNaN(parsedPage) || parsedPage < 1 ? 1 : parsedPage;
+
+  const sortParam = Array.isArray(searchParams.sort) ? searchParams.sort[0] : searchParams.sort;
+  const sort = sortParam || "newest";
+
+  const limit = 50;
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  let query = favorites && user
+    ? supabase
+        .from("projects")
+        .select("*, users_org(org_name, verification_status), user_project_interactions!inner(is_favorite, user_id)", { count: "exact" })
+        .eq("status", "published")
+        .eq("user_project_interactions.user_id", user.id)
+        .eq("user_project_interactions.is_favorite", true)
+    : supabase
+        .from("projects")
+        .select("*, users_org(org_name, verification_status)", { count: "exact" })
+        .eq("status", "published");
 
   if (q) query = query.ilike("title", `%${q}%`);
-  
+
   // Array filters (if they are passed as comma-separated strings)
   if (dest) {
     const destArr = dest.split(",");
     query = query.in("dest_country", destArr);
   }
-  
+
   if (eligible) {
     const eligibleArr = eligible.split(",");
     query = query.overlaps("eligible_countries", eligibleArr);
@@ -78,16 +105,66 @@ export default async function ProjectsPage(props: {
   if (maxAge) query = query.gte("max_age", parseInt(maxAge));
   if (startDate) query = query.gte("start_date", startDate);
   if (endDate) query = query.lte("end_date", endDate);
-  if (funding) query = query.eq("funding_type", funding);
+  if (funding) query = query.eq("financing_type", funding);
 
-  const { data: projects, error } = await query;
+  // Apply sorting logic
+  switch (sort) {
+    case "oldest":
+      query = query.order("created_at", { ascending: true });
+      break;
+    case "urgent":
+      query = query
+        .order("is_last_minute", { ascending: false })
+        .order("created_at", { ascending: false });
+      break;
+    case "rup_first":
+      query = query
+        .order("covers_rup_flights", { ascending: false })
+        .order("created_at", { ascending: false });
+      break;
+    case "longest":
+      query = query.order("duration_days", { ascending: false, nullsFirst: false });
+      break;
+    case "shortest":
+      query = query.order("duration_days", { ascending: true, nullsFirst: false });
+      break;
+    case "a_z":
+      query = query.order("title", { ascending: true });
+      break;
+    case "newest":
+    default:
+      query = query.order("created_at", { ascending: false });
+      break;
+  }
+
+  // Apply pagination range (max 50 per page)
+  query = query.range(from, to);
+
+  const { data: projects, count, error } = await query;
 
   if (error) {
     console.error("Error al obtener proyectos:", error);
   }
 
+  const totalCount = count || 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+
+  function buildPageUrl(targetPage: number): string {
+    const params = new URLSearchParams();
+    for (const [key, val] of Object.entries(searchParams)) {
+      if (val === undefined || val === null || key === "page") continue;
+      if (Array.isArray(val)) {
+        val.forEach((v) => params.append(key, v));
+      } else {
+        params.set(key, val);
+      }
+    }
+    params.set("page", targetPage.toString());
+    return `/dashboard/projects?${params.toString()}`;
+  }
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="mb-2">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
           <ArrowLeft className="w-4 h-4" />
@@ -99,7 +176,7 @@ export default async function ProjectsPage(props: {
         <div>
           <h2 className="text-3xl font-black tracking-tight flex items-center gap-3 text-white">
             <Rocket className="w-8 h-8 text-plasma-cyan" /> 
-            {t('transmissionsReceived')}
+            {t("transmissionsReceived")}
           </h2>
           <p className="text-gray-400 mt-2">{t("exploreMissions")}</p>
         </div>
@@ -113,29 +190,91 @@ export default async function ProjectsPage(props: {
           </Suspense>
         </div>
 
-        {/* Resultados a la derecha */}
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-max">
-        {projects && projects.length > 0 ? (
-          projects.map((project) => {
-            const org = project.users_org || {};
-            const projectData = {
-              ...project,
-              org_name: org.org_name,
-              verification_status: org.verification_status,
-            };
-            return (
-              <div key={project.id} className="h-full">
-                <ProjectCard project={projectData} />
+        {/* Resultados y Paginación a la derecha */}
+        <div className="flex-1 flex flex-col">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-max">
+            {projects && projects.length > 0 ? (
+              projects.map((project) => {
+                const org = project.users_org || {};
+                const projectData = {
+                  ...project,
+                  org_name: org.org_name,
+                  verification_status: org.verification_status,
+                };
+                return (
+                  <div key={project.id} className="h-full">
+                    <ProjectCard project={projectData} />
+                  </div>
+                );
+              })
+            ) : (
+              <div className="col-span-full py-20 text-center border border-dashed border-void-border rounded-2xl bg-void-surface/50">
+                <Search className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2">{t("waitingTransmissions")}</h3>
+                <p className="text-gray-400">{t("adjustFilters")}</p>
               </div>
-            );
-          })
-        ) : (
-          <div className="col-span-full py-20 text-center border border-dashed border-void-border rounded-2xl bg-void-surface/50">
-            <Search className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">{t('waitingTransmissions')}</h3>
-            <p className="text-gray-400">{t('adjustFilters')}</p>
+            )}
           </div>
-        )}
+
+          {/* Sección de Paginación */}
+          {projects && projects.length > 0 && (
+            <div className="mt-10 pt-6 border-t border-void-border flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-xs sm:text-sm text-gray-400 font-medium">
+                {t("showingResults", {
+                  from: totalCount === 0 ? 0 : from + 1,
+                  to: Math.min(to + 1, totalCount),
+                  total: totalCount,
+                })}
+              </div>
+
+              <div className="flex items-center gap-3">
+                {page <= 1 ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-void-border bg-void-surface/40 text-gray-600 text-sm font-medium cursor-not-allowed select-none"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span>{t("previous")}</span>
+                  </button>
+                ) : (
+                  <Link
+                    href={buildPageUrl(page - 1)}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-void-border bg-void-surface text-gray-200 hover:text-white hover:border-plasma-cyan hover:shadow-[0_0_12px_rgba(0,229,255,0.15)] text-sm font-medium transition-all"
+                  >
+                    <ChevronLeft className="w-4 h-4 text-plasma-cyan" />
+                    <span>{t("previous")}</span>
+                  </Link>
+                )}
+
+                <div className="px-4 py-2 rounded-lg border border-void-border bg-void-deep text-xs font-semibold text-plasma-cyan tracking-wider">
+                  {t("pageOf", {
+                    current: page,
+                    total: totalPages,
+                  })}
+                </div>
+
+                {page >= totalPages || projects.length === 0 ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-void-border bg-void-surface/40 text-gray-600 text-sm font-medium cursor-not-allowed select-none"
+                  >
+                    <span>{t("next")}</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <Link
+                    href={buildPageUrl(page + 1)}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-void-border bg-void-surface text-gray-200 hover:text-white hover:border-plasma-cyan hover:shadow-[0_0_12px_rgba(0,229,255,0.15)] text-sm font-medium transition-all"
+                  >
+                    <span>{t("next")}</span>
+                    <ChevronRight className="w-4 h-4 text-plasma-cyan" />
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
