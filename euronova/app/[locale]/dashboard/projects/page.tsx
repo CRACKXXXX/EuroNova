@@ -146,6 +146,23 @@ export default async function ProjectsPage(props: {
     console.error("Error al obtener proyectos:", error);
   }
 
+  // Hydrate user interactions (is_favorite & is_applied)
+  let userInteractions: { project_id: string; is_favorite: boolean; is_applied: boolean }[] = [];
+  if (user) {
+    const { data: interactions } = await supabase
+      .from("user_project_interactions")
+      .select("project_id, is_favorite, is_applied")
+      .eq("user_id", user.id);
+
+    if (interactions) {
+      userInteractions = interactions;
+    }
+  }
+
+  const interactionsMap = new Map(
+    userInteractions.map((item) => [item.project_id, item])
+  );
+
   const totalCount = count || 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / limit));
 
@@ -196,10 +213,13 @@ export default async function ProjectsPage(props: {
             {projects && projects.length > 0 ? (
               projects.map((project) => {
                 const org = project.users_org || {};
+                const interaction = interactionsMap.get(project.id);
                 const projectData = {
                   ...project,
                   org_name: org.org_name,
                   verification_status: org.verification_status,
+                  is_favorite: interaction?.is_favorite ?? false,
+                  is_applied: interaction?.is_applied ?? false,
                 };
                 return (
                   <div key={project.id} className="h-full">

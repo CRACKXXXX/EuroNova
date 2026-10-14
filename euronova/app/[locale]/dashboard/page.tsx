@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { Search, Building, User } from "lucide-react";
+import { Search, Building, User, Briefcase } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 export default async function DashboardHome() {
   const t = await getTranslations("Dashboard");
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 md:mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 md:mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="text-center mb-10 md:mb-12">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight mb-4">
           {t("welcome")} <span className="text-plasma-cyan">EuroNova</span>
@@ -16,7 +16,7 @@ export default async function DashboardHome() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <Link
           href="/dashboard/projects"
           className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-plasma-cyan transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,229,255,0.15)] flex flex-col items-center text-center overflow-hidden"
@@ -39,6 +39,18 @@ export default async function DashboardHome() {
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">{t("searchOrgs")}</h2>
           <p className="text-gray-400 text-sm">{t("searchOrgsDesc")}</p>
+        </Link>
+
+        <Link
+          href="/dashboard/my-missions"
+          className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-plasma-cyan transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,229,255,0.15)] flex flex-col items-center text-center overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-plasma-cyan/5 rounded-full blur-[40px] pointer-events-none group-hover:bg-plasma-cyan/10 transition-colors" />
+          <div className="w-16 h-16 bg-plasma-cyan/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+            <Briefcase className="w-8 h-8 text-plasma-cyan" />
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">{t("myMissions")}</h2>
+          <p className="text-gray-400 text-sm">{t("myMissionsDesc")}</p>
         </Link>
 
         <Link

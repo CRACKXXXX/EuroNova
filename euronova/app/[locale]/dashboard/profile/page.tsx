@@ -63,7 +63,7 @@ export default async function ProfilePage() {
   console.log('DATOS DB:', profileData);
 
   return (
-    <div className="max-w-2xl mx-auto mt-8">
+    <div className="max-w-2xl mx-auto mt-4 sm:mt-8 px-4 sm:px-6 lg:px-8 pb-12">
       <div className="mb-6">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
           <ArrowLeft className="w-4 h-4" />
@@ -71,7 +71,7 @@ export default async function ProfilePage() {
         </Link>
       </div>
       
-      <div className="bg-void-surface border border-void-border rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+      <div className="bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
         {/* Glow de fondo según rol */}
         {role === "youth" ? (
           <div className="absolute top-0 right-0 w-64 h-64 bg-plasma-cyan/5 rounded-full blur-[80px] pointer-events-none" />

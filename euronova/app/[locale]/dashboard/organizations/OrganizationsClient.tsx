@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Tag, Building } from "lucide-react";
 import { MultiSelectCountry } from "@/components/MultiSelectCountry";
+import { CustomSelect } from "@/components/CustomSelect";
 import { useTranslations } from "next-intl";
 
 import { ERASMUS_THEMES } from "@/lib/constants/themes";
@@ -58,32 +59,30 @@ export function OrganizationsClient({ initialQ, initialCountries, initialVerifie
       </div>
       
       <div className="flex flex-col md:flex-row gap-4">
-        <div className="w-full md:w-1/3 relative">
-          <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
-          <select
+        <div className="w-full md:w-1/3">
+          <CustomSelect
             value={entityType}
-            onChange={(e) => setEntityType(e.target.value)}
-            className="w-full bg-void-deep border border-void-border rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet transition-all appearance-none"
-          >
-            <option value="">{t("entityType")}</option>
-            {ENTITY_TYPES.map((type) => (
-              <option key={type} value={type}>{type}</option>
-            ))}
-          </select>
+            onChange={(val) => setEntityType(val)}
+            placeholder={t("entityType")}
+            icon={<Building className="w-4 h-4 text-gray-500" />}
+            options={[
+              { value: "", label: t("entityType") },
+              ...ENTITY_TYPES.map((type) => ({ value: type, label: type })),
+            ]}
+          />
         </div>
 
-        <div className="w-full md:w-1/3 relative">
-          <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
-          <select
+        <div className="w-full md:w-1/3">
+          <CustomSelect
             value={theme}
-            onChange={(e) => setTheme(e.target.value)}
-            className="w-full bg-void-deep border border-void-border rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet transition-all appearance-none"
-          >
-            <option value="">{t("allThemes")}</option>
-            {ERASMUS_THEMES.map((th) => (
-              <option key={th} value={th}>{th}</option>
-            ))}
-          </select>
+            onChange={(val) => setTheme(val)}
+            placeholder={t("allThemes")}
+            icon={<Tag className="w-4 h-4 text-gray-500" />}
+            options={[
+              { value: "", label: t("allThemes") },
+              ...ERASMUS_THEMES.map((th) => ({ value: th, label: th })),
+            ]}
+          />
         </div>
 
         <div className="w-full md:w-1/3 flex items-center justify-end">

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Building,
   Users,
@@ -20,6 +21,11 @@ import {
   AlertCircle,
   Phone,
   Languages,
+  Eye,
+  EyeOff,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
 } from "lucide-react";
 import { COUNTRIES } from "@/lib/constants/countries";
 import {
@@ -30,7 +36,6 @@ import {
   publishProject,
   deleteProject,
 } from "./actions";
-import { useRouter } from "next/navigation";
 
 export interface OrgItem {
   id: string;
@@ -86,10 +91,46 @@ interface AdminDashboardClientProps {
   youthUsers: YouthUserItem[];
   pendingProjects: ProjectItem[];
   publishedProjects: ProjectItem[];
+  totalProjects: number;
+  totalOrgs: number;
+  totalYouth: number;
+  totalPendingOrgs: number;
+  totalVerifiedOrgs: number;
+  totalPendingProjects: number;
+  totalPublishedProjects: number;
+  currentPage: number;
+  totalPages: number;
+  currentTab?: "orgs" | "youth" | "projects";
+  pageSize?: number;
 }
 
 function isFilled(val: unknown): val is string {
   return typeof val === "string" && val.trim().length > 0;
+}
+
+function maskEmail(email: string | null | undefined): string {
+  if (!email) return "—";
+  const parts = email.split("@");
+  if (parts.length !== 2) return "***";
+  const [local, domain] = parts;
+  const maskedLocal = local.length > 1 ? `${local[0]}***` : "*";
+  return `${maskedLocal}@${domain}`;
+}
+
+function maskPhone(phone: string | null | undefined): string {
+  if (!phone) return "—";
+  const trimmed = phone.trim();
+  if (trimmed.length <= 6) return "***";
+  const visible = trimmed.slice(0, 6);
+  return `${visible} *** ***`;
+}
+
+function formatId(id: string | null | undefined, showSensitive: boolean): string {
+  if (!id) return "—";
+  if (!showSensitive) {
+    return `${id.slice(0, 4)}...`;
+  }
+  return id;
 }
 
 export function AdminDashboardClient({
@@ -98,12 +139,46 @@ export function AdminDashboardClient({
   youthUsers,
   pendingProjects,
   publishedProjects,
+  totalProjects,
+  totalOrgs,
+  totalYouth,
+  totalPendingOrgs,
+  totalVerifiedOrgs,
+  totalPendingProjects,
+  totalPublishedProjects,
+  currentPage,
+  totalPages,
+  currentTab = "orgs",
+  pageSize = 50,
 }: AdminDashboardClientProps) {
   const t = useTranslations("AdminPanel");
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"orgs" | "youth" | "projects">("orgs");
+  const searchParams = useSearchParams();
+
+  // Active tab strictly bound to URL parameter for resilient state persistence
+  const tabFromUrl = searchParams.get("tab") as "orgs" | "youth" | "projects" | null;
+  const activeTab: "orgs" | "youth" | "projects" = tabFromUrl || currentTab || "orgs";
+
+  const [showSensitive, setShowSensitive] = useState(false);
+  const [isScraping, setIsScraping] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  const handleRunScraper = async () => {
+    if (isScraping) return;
+    setIsScraping(true);
+    setFeedback(null);
+    try {
+      const res = await fetch("/api/scraper/official?secret=Euronova.2007", { method: "GET" });
+      if (!res.ok) throw new Error("Scraper failed to run");
+      setFeedback({ type: "success", message: "Auto-Scraper executed successfully! Refreshing data..." });
+      router.refresh();
+    } catch {
+      setFeedback({ type: "error", message: "Error running scraper. Check console." });
+    } finally {
+      setIsScraping(false);
+    }
+  };
 
   // Custom Delete Modal Configuration State
   const [deleteConfig, setDeleteConfig] = useState<{
@@ -111,6 +186,15 @@ export function AdminDashboardClient({
     title: string;
     message: string;
   } | null>(null);
+
+  const handleTabChange = (tab: "orgs" | "youth" | "projects") => {
+    router.push(`?tab=${tab}&page=1`);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    router.push(`?tab=${activeTab}&page=${newPage}`);
+  };
 
   const handleAction = (actionFn: () => Promise<{ success?: boolean; error?: string }>) => {
     setFeedback(null);
@@ -138,25 +222,30 @@ export function AdminDashboardClient({
     const tiktok = isFilled(org.social_tiktok) ? org.social_tiktok.trim() : null;
     const youtube = isFilled(org.social_youtube) ? org.social_youtube.trim() : null;
     const linkedin = isFilled(org.social_linkedin) ? org.social_linkedin.trim() : null;
-    const email = isFilled(org.login_email)
+    const rawEmail = isFilled(org.login_email)
       ? org.login_email.trim()
       : isFilled(org.contact_email)
       ? org.contact_email.trim()
       : null;
+    const displayEmail = showSensitive ? rawEmail : maskEmail(rawEmail);
 
-    const hasAnyContact = website || instagram || tiktok || youtube || linkedin || email;
+    const hasAnyContact = website || instagram || tiktok || youtube || linkedin || rawEmail;
     if (!hasAnyContact) return null;
 
     return (
       <div className="flex flex-wrap items-center gap-2 mb-4 pt-3 border-t border-void-border/60">
-        {email && (
+        {rawEmail && (
           <a
-            href={`mailto:${email}`}
-            title={`Email: ${email}`}
-            className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-plasma-cyan bg-void-deep px-2.5 py-1 rounded-md border border-void-border transition-colors truncate max-w-[200px]"
+            href={`mailto:${rawEmail}`}
+            title={`Email: ${rawEmail}`}
+            className={`flex items-center gap-1.5 text-xs text-gray-300 hover:text-plasma-cyan bg-void-deep px-2.5 py-1 rounded-md border border-void-border transition-colors ${
+              showSensitive ? "break-all whitespace-normal" : "truncate max-w-[200px]"
+            }`}
           >
             <Mail className="w-3.5 h-3.5 text-plasma-cyan shrink-0" />
-            <span className="truncate">{email}</span>
+            <span className={showSensitive ? "break-all whitespace-normal" : "truncate"}>
+              {displayEmail}
+            </span>
           </a>
         )}
         {website && (
@@ -232,54 +321,140 @@ export function AdminDashboardClient({
     );
   };
 
+  const renderPagination = (totalItems: number) => {
+    if (totalPages <= 1 || totalItems === 0) return null;
+    const from = (currentPage - 1) * pageSize + 1;
+    const to = Math.min(currentPage * pageSize, totalItems);
+
+    return (
+      <div className="mt-8 pt-6 border-t border-void-border flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="text-xs sm:text-sm text-gray-400 font-medium">
+          {t("showingResults", {
+            from,
+            to,
+            total: totalItems,
+          })}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage <= 1 || isPending}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-void-border bg-void-surface text-gray-200 hover:text-white hover:border-plasma-cyan hover:shadow-[0_0_12px_rgba(0,229,255,0.15)] text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-void-border disabled:hover:shadow-none"
+          >
+            <ChevronLeft className="w-4 h-4 text-plasma-cyan" />
+            <span>{t("previous")}</span>
+          </button>
+
+          <div className="px-4 py-2 rounded-lg border border-void-border bg-void-deep text-xs font-semibold text-plasma-cyan tracking-wider">
+            {t("pageOf", {
+              current: currentPage,
+              total: totalPages,
+            })}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage >= totalPages || isPending}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-void-border bg-void-surface text-gray-200 hover:text-white hover:border-plasma-cyan hover:shadow-[0_0_12px_rgba(0,229,255,0.15)] text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-void-border disabled:hover:shadow-none"
+          >
+            <span>{t("next")}</span>
+            <ChevronRight className="w-4 h-4 text-plasma-cyan" />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-8">
-      {/* Navigation Tabs */}
-      <div className="flex flex-wrap gap-3 border-b border-void-border pb-4">
-        <button
-          onClick={() => setActiveTab("orgs")}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 border ${
-            activeTab === "orgs"
-              ? "bg-hyper-violet/20 border-hyper-violet text-white shadow-[0_0_20px_rgba(99,102,241,0.25)]"
-              : "bg-void-surface border-void-border text-gray-400 hover:text-white hover:border-gray-700"
-          }`}
-        >
-          <Building className="w-4 h-4 text-hyper-violet" />
-          <span>{t("tabOrgs")}</span>
-          <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-hyper-violet/30 text-white font-mono">
-            {pendingOrgs.length + verifiedOrgs.length}
-          </span>
-        </button>
+      {/* Top Header: Navigation Tabs & Privacy Toggle */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-void-border">
+        {/* Navigation Tabs with True Total Counts */}
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={() => handleTabChange("orgs")}
+            className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 border ${
+              activeTab === "orgs"
+                ? "bg-hyper-violet/20 border-hyper-violet text-white shadow-[0_0_20px_rgba(99,102,241,0.25)]"
+                : "bg-void-surface border-void-border text-gray-400 hover:text-white hover:border-gray-700"
+            }`}
+          >
+            <Building className="w-4 h-4 text-hyper-violet" />
+            <span>{t("tabOrgs")}</span>
+            <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-hyper-violet/30 text-white font-mono">
+              {totalOrgs}
+            </span>
+          </button>
 
-        <button
-          onClick={() => setActiveTab("youth")}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 border ${
-            activeTab === "youth"
-              ? "bg-plasma-cyan/20 border-plasma-cyan text-white shadow-[0_0_20px_rgba(0,229,255,0.25)]"
-              : "bg-void-surface border-void-border text-gray-400 hover:text-white hover:border-gray-700"
-          }`}
-        >
-          <Users className="w-4 h-4 text-plasma-cyan" />
-          <span>{t("tabYouth")}</span>
-          <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-plasma-cyan/30 text-white font-mono">
-            {youthUsers.length}
-          </span>
-        </button>
+          <button
+            onClick={() => handleTabChange("youth")}
+            className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 border ${
+              activeTab === "youth"
+                ? "bg-plasma-cyan/20 border-plasma-cyan text-white shadow-[0_0_20px_rgba(0,229,255,0.25)]"
+                : "bg-void-surface border-void-border text-gray-400 hover:text-white hover:border-gray-700"
+            }`}
+          >
+            <Users className="w-4 h-4 text-plasma-cyan" />
+            <span>{t("tabYouth")}</span>
+            <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-plasma-cyan/30 text-white font-mono">
+              {totalYouth}
+            </span>
+          </button>
 
-        <button
-          onClick={() => setActiveTab("projects")}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 border ${
-            activeTab === "projects"
-              ? "bg-nova-flare/20 border-nova-flare text-white shadow-[0_0_20px_rgba(255,46,99,0.25)]"
-              : "bg-void-surface border-void-border text-gray-400 hover:text-white hover:border-gray-700"
-          }`}
-        >
-          <FolderGit2 className="w-4 h-4 text-nova-flare" />
-          <span>{t("tabProjects")}</span>
-          <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-nova-flare/30 text-white font-mono">
-            {pendingProjects.length + publishedProjects.length}
-          </span>
-        </button>
+          <button
+            onClick={() => handleTabChange("projects")}
+            className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 border ${
+              activeTab === "projects"
+                ? "bg-nova-flare/20 border-nova-flare text-white shadow-[0_0_20px_rgba(255,46,99,0.25)]"
+                : "bg-void-surface border-void-border text-gray-400 hover:text-white hover:border-gray-700"
+            }`}
+          >
+            <FolderGit2 className="w-4 h-4 text-nova-flare" />
+            <span>{t("tabProjects")}</span>
+            <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-nova-flare/30 text-white font-mono">
+              {totalProjects}
+            </span>
+          </button>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 shrink-0 self-start sm:self-auto">
+          {/* Run Auto-Scraper Trigger Button */}
+          <button
+            type="button"
+            onClick={handleRunScraper}
+            disabled={isScraping || isPending}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-xs transition-all shadow-sm bg-void-surface border-plasma-cyan/40 text-plasma-cyan hover:bg-plasma-cyan/10 hover:border-plasma-cyan hover:shadow-[0_0_15px_rgba(0,229,255,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <RefreshCw className={`w-4 h-4 text-plasma-cyan shrink-0 ${isScraping ? "animate-spin" : ""}`} />
+            <span>{isScraping ? "Running Scraper..." : "Run Auto-Scraper"}</span>
+          </button>
+
+          {/* Privacy Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setShowSensitive((prev) => !prev)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-xs transition-all shadow-sm ${
+              showSensitive
+                ? "bg-nova-flare/15 border-nova-flare/40 text-nova-flare hover:bg-nova-flare/25 shadow-[0_0_15px_rgba(255,46,99,0.2)]"
+                : "bg-void-surface border-void-border text-gray-300 hover:text-white hover:border-plasma-cyan"
+            }`}
+          >
+            {showSensitive ? (
+              <>
+                <EyeOff className="w-4 h-4 text-nova-flare shrink-0" />
+                <span>Hide Sensitive Data</span>
+              </>
+            ) : (
+              <>
+                <Eye className="w-4 h-4 text-plasma-cyan shrink-0" />
+                <span>Show Sensitive Data</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Visual Feedback Banner */}
@@ -311,7 +486,7 @@ export function AdminDashboardClient({
                 <span className="w-3 h-3 rounded-full bg-yellow-400 animate-pulse" />
                 {t("pending")}
                 <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-yellow-400/20 text-yellow-400 border border-yellow-400/30">
-                  {pendingOrgs.length}
+                  {totalPendingOrgs}
                 </span>
               </h2>
             </div>
@@ -320,10 +495,10 @@ export function AdminDashboardClient({
               {pendingOrgs.map((org) => (
                 <div
                   key={org.id}
-                  className="bg-void-surface border border-yellow-400/30 rounded-2xl p-6 flex flex-col shadow-lg shadow-yellow-400/5 relative overflow-hidden"
+                  className="bg-void-surface border border-yellow-400/30 rounded-2xl p-6 sm:p-7 flex flex-col shadow-lg shadow-yellow-400/5 relative overflow-hidden"
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-bold text-white truncate flex-1">
+                    <h3 className="text-lg font-bold text-white break-all whitespace-normal flex-1">
                       {org.org_name || t("unnamed")}
                     </h3>
                     <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-yellow-400/10 text-yellow-400 border border-yellow-400/30 uppercase tracking-wider shrink-0 ml-2">
@@ -331,9 +506,15 @@ export function AdminDashboardClient({
                     </span>
                   </div>
 
+                  {/* Org ID with privacy mask & full view */}
+                  <div className={`text-[11px] text-gray-500 font-mono mb-2 ${showSensitive ? "break-all whitespace-normal" : ""}`}>
+                    ID: {formatId(org.id, showSensitive)}
+                    {org.oid_number ? ` • OID: ${showSensitive ? org.oid_number : `${org.oid_number.slice(0, 4)}...`}` : ""}
+                  </div>
+
                   <div className="mb-3">{renderCountry(org.country_hq)}</div>
 
-                  <p className="text-sm text-gray-400 mb-4 flex-1 line-clamp-3">
+                  <p className="text-sm text-gray-300 mb-4 flex-1 whitespace-pre-wrap leading-relaxed break-words">
                     {org.description || t("noDescription")}
                   </p>
 
@@ -388,7 +569,7 @@ export function AdminDashboardClient({
                 <CheckCircle2 className="w-5 h-5 text-rup-emerald" />
                 {t("verified")}
                 <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-rup-emerald/20 text-rup-emerald border border-rup-emerald/30">
-                  {verifiedOrgs.length}
+                  {totalVerifiedOrgs}
                 </span>
               </h2>
             </div>
@@ -397,10 +578,10 @@ export function AdminDashboardClient({
               {verifiedOrgs.map((org) => (
                 <div
                   key={org.id}
-                  className="bg-void-surface border border-rup-emerald/30 rounded-2xl p-6 flex flex-col shadow-lg shadow-rup-emerald/5"
+                  className="bg-void-surface border border-rup-emerald/30 rounded-2xl p-6 sm:p-7 flex flex-col shadow-lg shadow-rup-emerald/5"
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-bold text-white truncate flex-1">
+                    <h3 className="text-lg font-bold text-white break-all whitespace-normal flex-1">
                       {org.org_name || t("unnamed")}
                     </h3>
                     <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/40 uppercase tracking-wider shrink-0 ml-2">
@@ -408,9 +589,15 @@ export function AdminDashboardClient({
                     </span>
                   </div>
 
+                  {/* Org ID with privacy mask & full view */}
+                  <div className={`text-[11px] text-gray-500 font-mono mb-2 ${showSensitive ? "break-all whitespace-normal" : ""}`}>
+                    ID: {formatId(org.id, showSensitive)}
+                    {org.oid_number ? ` • OID: ${showSensitive ? org.oid_number : `${org.oid_number.slice(0, 4)}...`}` : ""}
+                  </div>
+
                   <div className="mb-3">{renderCountry(org.country_hq)}</div>
 
-                  <p className="text-sm text-gray-400 mb-4 flex-1 line-clamp-3">
+                  <p className="text-sm text-gray-300 mb-4 flex-1 whitespace-pre-wrap leading-relaxed break-words">
                     {org.description || t("noDescription")}
                   </p>
 
@@ -449,6 +636,8 @@ export function AdminDashboardClient({
                 </div>
               )}
             </div>
+
+            {renderPagination(totalVerifiedOrgs)}
           </div>
         </div>
       )}
@@ -461,7 +650,7 @@ export function AdminDashboardClient({
               <Users className="w-5 h-5 text-plasma-cyan" />
               {t("youthTitle")}
               <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/30">
-                {youthUsers.length}
+                {totalYouth}
               </span>
             </h2>
           </div>
@@ -470,7 +659,7 @@ export function AdminDashboardClient({
             {youthUsers.map((user) => (
               <div
                 key={user.id}
-                className="bg-void-surface border border-void-border hover:border-plasma-cyan/40 rounded-2xl p-6 flex flex-col transition-all shadow-md"
+                className="bg-void-surface border border-void-border hover:border-plasma-cyan/40 rounded-2xl p-6 sm:p-7 flex flex-col transition-all shadow-md"
               >
                 <div className="flex items-center gap-4 mb-4">
                   <div className="w-14 h-14 rounded-full border-2 border-plasma-cyan/60 overflow-hidden flex items-center justify-center bg-void-deep shrink-0 shadow-[0_0_15px_rgba(0,229,255,0.2)]">
@@ -482,11 +671,11 @@ export function AdminDashboardClient({
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-bold text-white truncate">
+                    <h3 className="text-base font-bold text-white break-all whitespace-normal">
                       {user.full_name || t("unnamed")}
                     </h3>
-                    <p className="text-xs text-gray-400 truncate font-mono mt-0.5">
-                      {user.email || "No email"}
+                    <p className={`text-xs text-gray-400 font-mono mt-0.5 ${showSensitive ? "break-all whitespace-normal" : "truncate"}`}>
+                      {user.email ? (showSensitive ? user.email : maskEmail(user.email)) : "No email"}
                     </p>
                     <div className="mt-1 flex items-center gap-2">
                       {renderCountry(user.country_code)}
@@ -505,25 +694,29 @@ export function AdminDashboardClient({
                     <div className="flex items-center gap-2 text-gray-300">
                       <Phone className="w-3.5 h-3.5 text-plasma-cyan shrink-0" />
                       <span className="text-gray-400 font-medium">{t("phone")}:</span>
-                      <span className="font-mono text-gray-200">{user.phone}</span>
+                      <span className={`font-mono text-gray-200 ${showSensitive ? "break-all whitespace-normal" : ""}`}>
+                        {showSensitive ? user.phone : maskPhone(user.phone)}
+                      </span>
                     </div>
                   )}
                   {user.languages && user.languages.length > 0 && (
                     <div className="flex items-center gap-2 text-gray-300">
                       <Languages className="w-3.5 h-3.5 text-hyper-violet shrink-0" />
                       <span className="text-gray-400 font-medium">{t("languages")}:</span>
-                      <span className="text-gray-200 truncate">{user.languages.join(", ")}</span>
+                      <span className={`text-gray-200 ${showSensitive ? "break-all whitespace-normal" : "truncate"}`}>
+                        {user.languages.join(", ")}
+                      </span>
                     </div>
                   )}
                 </div>
 
                 {/* Youth Details: Bio */}
                 {user.bio ? (
-                  <div className="mb-4 bg-void-deep/60 p-2.5 rounded-lg border border-void-border/40">
+                  <div className="mb-4 bg-void-deep/60 p-3 rounded-lg border border-void-border/40">
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
                       {t("bio")}
                     </span>
-                    <p className="text-xs text-gray-300 line-clamp-3">
+                    <p className="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed break-words">
                       {user.bio}
                     </p>
                   </div>
@@ -534,8 +727,8 @@ export function AdminDashboardClient({
                 )}
 
                 <div className="mt-auto pt-4 border-t border-void-border/60 flex items-center justify-between">
-                  <span className="text-[11px] text-gray-500 font-mono">
-                    ID: {user.id.slice(0, 8)}...
+                  <span className={`text-[11px] text-gray-500 font-mono ${showSensitive ? "break-all whitespace-normal" : ""}`}>
+                    ID: {formatId(user.id, showSensitive)}
                   </span>
                   <button
                     disabled={isPending}
@@ -561,6 +754,8 @@ export function AdminDashboardClient({
               </div>
             )}
           </div>
+
+          {renderPagination(totalYouth)}
         </div>
       )}
 
@@ -574,7 +769,7 @@ export function AdminDashboardClient({
                 <span className="w-3 h-3 rounded-full bg-nova-flare animate-pulse" />
                 {t("pendingProjects")}
                 <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-nova-flare/20 text-nova-flare border border-nova-flare/30">
-                  {pendingProjects.length}
+                  {totalPendingProjects}
                 </span>
               </h2>
             </div>
@@ -583,10 +778,10 @@ export function AdminDashboardClient({
               {pendingProjects.map((project) => (
                 <div
                   key={project.id}
-                  className="bg-void-surface border border-nova-flare/30 rounded-2xl p-6 flex flex-col shadow-lg shadow-nova-flare/5"
+                  className="bg-void-surface border border-nova-flare/30 rounded-2xl p-6 sm:p-7 flex flex-col shadow-lg shadow-nova-flare/5"
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-bold text-white line-clamp-2 flex-1">
+                    <h3 className="text-lg font-bold text-white break-all whitespace-normal flex-1">
                       {project.title}
                     </h3>
                     <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-nova-flare/15 text-nova-flare border border-nova-flare/40 uppercase tracking-wider shrink-0 ml-2">
@@ -594,9 +789,20 @@ export function AdminDashboardClient({
                     </span>
                   </div>
 
-                  <p className="text-xs text-plasma-cyan font-medium mb-3">
+                  {/* Project ID with privacy mask & full view */}
+                  <div className={`text-[11px] text-gray-500 font-mono mb-2 ${showSensitive ? "break-all whitespace-normal" : ""}`}>
+                    ID: {formatId(project.id, showSensitive)}
+                  </div>
+
+                  <p className="text-xs text-plasma-cyan font-medium mb-1">
                     {project.users_org?.org_name || t("unnamed")}
                   </p>
+
+                  {(project.login_email || project.users_org?.contact_email) && (
+                    <p className={`text-xs text-gray-400 font-mono mb-3 ${showSensitive ? "break-all whitespace-normal" : "truncate"}`}>
+                      Contact: {showSensitive ? (project.login_email || project.users_org?.contact_email) : maskEmail(project.login_email || project.users_org?.contact_email)}
+                    </p>
+                  )}
 
                   <div className="flex items-center gap-3 text-xs text-gray-400 mb-4">
                     <div className="flex items-center gap-1">
@@ -607,7 +813,7 @@ export function AdminDashboardClient({
                     <div>{renderCountry(project.dest_country)}</div>
                   </div>
 
-                  <p className="text-sm text-gray-400 mb-6 flex-1 line-clamp-3">
+                  <p className="text-sm text-gray-300 mb-6 flex-1 whitespace-pre-wrap leading-relaxed break-words">
                     {project.description || t("noDescription")}
                   </p>
 
@@ -660,7 +866,7 @@ export function AdminDashboardClient({
                 <CheckCircle2 className="w-5 h-5 text-rup-emerald" />
                 {t("publishedProjects")}
                 <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-rup-emerald/20 text-rup-emerald border border-rup-emerald/30">
-                  {publishedProjects.length}
+                  {totalPublishedProjects}
                 </span>
               </h2>
             </div>
@@ -669,10 +875,10 @@ export function AdminDashboardClient({
               {publishedProjects.map((project) => (
                 <div
                   key={project.id}
-                  className="bg-void-surface border border-void-border hover:border-rup-emerald/30 rounded-2xl p-6 flex flex-col transition-all shadow-md"
+                  className="bg-void-surface border border-void-border hover:border-rup-emerald/30 rounded-2xl p-6 sm:p-7 flex flex-col transition-all shadow-md"
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-bold text-white line-clamp-2 flex-1">
+                    <h3 className="text-lg font-bold text-white break-all whitespace-normal flex-1">
                       {project.title}
                     </h3>
                     <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/30 uppercase tracking-wider shrink-0 ml-2">
@@ -680,9 +886,20 @@ export function AdminDashboardClient({
                     </span>
                   </div>
 
-                  <p className="text-xs text-plasma-cyan font-medium mb-3">
+                  {/* Project ID with privacy mask & full view */}
+                  <div className={`text-[11px] text-gray-500 font-mono mb-2 ${showSensitive ? "break-all whitespace-normal" : ""}`}>
+                    ID: {formatId(project.id, showSensitive)}
+                  </div>
+
+                  <p className="text-xs text-plasma-cyan font-medium mb-1">
                     {project.users_org?.org_name || t("unnamed")}
                   </p>
+
+                  {(project.login_email || project.users_org?.contact_email) && (
+                    <p className={`text-xs text-gray-400 font-mono mb-3 ${showSensitive ? "break-all whitespace-normal" : "truncate"}`}>
+                      Contact: {showSensitive ? (project.login_email || project.users_org?.contact_email) : maskEmail(project.login_email || project.users_org?.contact_email)}
+                    </p>
+                  )}
 
                   <div className="flex items-center gap-3 text-xs text-gray-400 mb-4">
                     <div className="flex items-center gap-1">
@@ -693,7 +910,7 @@ export function AdminDashboardClient({
                     <div>{renderCountry(project.dest_country)}</div>
                   </div>
 
-                  <p className="text-sm text-gray-400 mb-6 flex-1 line-clamp-3">
+                  <p className="text-sm text-gray-300 mb-6 flex-1 whitespace-pre-wrap leading-relaxed break-words">
                     {project.description || t("noDescription")}
                   </p>
 
@@ -722,6 +939,8 @@ export function AdminDashboardClient({
                 </div>
               )}
             </div>
+
+            {renderPagination(totalPublishedProjects)}
           </div>
         </div>
       )}

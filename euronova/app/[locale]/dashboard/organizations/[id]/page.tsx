@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -15,7 +16,6 @@ import {
   ArrowLeft, 
   ShieldCheck, 
   Calendar, 
-  UserCheck, 
   MessageSquare, 
   Rocket 
 } from "lucide-react";
@@ -96,10 +96,29 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
     .eq("status", "published")
     .order("created_at", { ascending: false });
 
+  // 4. Obtener interacciones del usuario autenticado si existe
+  const { data: { user } } = await supabase.auth.getUser();
+  let userInteractions: { project_id: string; is_favorite: boolean; is_applied: boolean }[] = [];
+  if (user) {
+    const { data: interactions } = await supabase
+      .from("user_project_interactions")
+      .select("project_id, is_favorite, is_applied")
+      .eq("user_id", user.id);
+
+    if (interactions) {
+      userInteractions = interactions;
+    }
+  }
+
+  const interactionsMap = new Map(
+    userInteractions.map((item) => [item.project_id, item])
+  );
+
   const countryInfo = COUNTRIES.find((c) => c.code === org.country_hq);
+  const logoUrl = org.logo_url || org.avatar_url;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 px-4 sm:px-6 lg:px-8">
+    <div className="max-w-6xl mx-auto space-y-8 px-4 sm:px-6 lg:px-8 overflow-hidden sm:overflow-visible">
       {/* Botón de retorno */}
       <div className="mb-2">
         <Link
@@ -116,11 +135,16 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
         <div className="absolute top-0 right-0 w-96 h-96 bg-hyper-violet/10 rounded-full blur-3xl pointer-events-none" />
         
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-3">
+          <div className="space-y-4 min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-bold px-3 py-1 rounded-full bg-hyper-violet/20 border border-hyper-violet/40 text-hyper-violet uppercase tracking-wider">
-                PIC: {org.pic_number}
+                PIC: {org.pic_number || "N/A"}
               </span>
+              {org.oid_number && (
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-plasma-cyan/20 border border-plasma-cyan/40 text-plasma-cyan uppercase tracking-wider">
+                  OID: {org.oid_number || "N/A"}
+                </span>
+              )}
               {org.verification_status === "verified" && (
                 <span className="text-xs font-bold px-3 py-1 rounded-full bg-rup-emerald/20 border border-rup-emerald/40 text-rup-emerald flex items-center gap-1.5 uppercase tracking-wider">
                   <ShieldCheck className="w-3.5 h-3.5" />
@@ -129,13 +153,25 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
               )}
             </div>
 
-            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight flex items-center gap-3">
-              <Building className="w-8 h-8 text-hyper-violet shrink-0" />
-              <span>{org.org_name || tOrg("unnamedOrg")}</span>
-            </h1>
+            <div className="flex items-center gap-4">
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt={org.org_name || "Organization Logo"}
+                  className="w-16 h-16 rounded-xl object-cover bg-void-deep border border-void-border shrink-0"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-xl bg-void-deep border border-void-border flex items-center justify-center shrink-0">
+                  <Building className="w-8 h-8 text-hyper-violet" />
+                </div>
+              )}
+              <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight break-words">
+                {org.org_name || tOrg("unnamedOrg")}
+              </h1>
+            </div>
 
             <div className="flex items-center gap-2 text-gray-300 text-sm">
-              <MapPin className="w-4 h-4 text-plasma-cyan" />
+              <MapPin className="w-4 h-4 text-plasma-cyan shrink-0" />
               {countryInfo ? (
                 <span className="flex items-center gap-2">
                   <img
@@ -150,13 +186,13 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
               )}
             </div>
 
-            <p className="text-gray-300 text-sm sm:text-base max-w-3xl leading-relaxed pt-2">
+            <p className="text-gray-300 text-sm sm:text-base max-w-3xl leading-relaxed pt-2 break-words">
               {org.description || tOrg("noDescription")}
             </p>
           </div>
 
           {/* Tarjeta de Calificación y Reputación */}
-          <div className="shrink-0 bg-void-deep/90 border border-void-border rounded-2xl p-5 flex flex-col items-center justify-center min-w-[200px] text-center shadow-inner">
+          <div className="shrink-0 bg-void-deep/90 border border-void-border rounded-2xl p-5 flex flex-col items-center justify-center min-w-[200px] text-center shadow-inner self-stretch md:self-auto w-full md:w-auto">
             <div className="text-4xl font-black text-white tracking-tight flex items-center gap-1">
               <span>{averageRating}</span>
               <span className="text-xl text-gray-500 font-medium">/ 5.0</span>
@@ -252,7 +288,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
               {email && (
                 <a
                   href={`mailto:${email}`}
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all ml-auto"
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all"
                 >
                   <Mail className="w-3.5 h-3.5" />
                   <span>{email}</span>
@@ -303,12 +339,15 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-bold text-white text-sm">{authorName}</span>
                           {authorCountry && (
-                            <span className="text-xs" title={authorCountry.name}>
-                              {authorCountry.flag}
-                            </span>
+                            <img
+                              src={authorCountry.flagUrl}
+                              alt={authorCountry.name}
+                              title={authorCountry.name}
+                              className="w-4 h-auto rounded-[2px]"
+                            />
                           )}
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/30">
                             {t("verifiedYouthBadge")}
@@ -321,7 +360,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                       </div>
 
                       {/* Estrellas de la reseña */}
-                      <div className="flex items-center gap-0.5 bg-void-deep px-2.5 py-1 rounded-lg border border-void-border">
+                      <div className="flex items-center gap-0.5 bg-void-deep px-2.5 py-1 rounded-lg border border-void-border shrink-0">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <Star
                             key={star}
@@ -335,7 +374,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                       </div>
                     </div>
 
-                    <p className="text-sm text-gray-300 leading-relaxed pt-1">
+                    <p className="text-sm text-gray-300 leading-relaxed pt-1 break-words">
                       {rev.review_text}
                     </p>
                   </div>
@@ -364,6 +403,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {rawProjects.map((proj) => {
+              const interaction = interactionsMap.get(proj.id);
               const projectData: ProjectData = {
                 id: proj.id,
                 title: proj.title,
@@ -380,6 +420,8 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                 financing_type: proj.financing_type,
                 org_name: org.org_name,
                 verification_status: org.verification_status,
+                is_favorite: interaction?.is_favorite ?? false,
+                is_applied: interaction?.is_applied ?? false,
               };
 
               return (

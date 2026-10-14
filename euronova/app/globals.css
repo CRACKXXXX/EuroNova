@@ -20,3 +20,28 @@ body {
   font-family: system-ui, -apple-system, sans-serif;
   background-color: var(--color-void-deep);
 }
+
+/* Universal sleek dark scrollbars across all containers */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #1F2937 #05050A;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #05050A;
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #1F2937;
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #00E5FF;
+}

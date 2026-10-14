@@ -126,6 +126,23 @@ id_ed25519
 Thumbs.db
 [Dd]esktop.ini
 
+# ==========================================
+# 10. SCRIPTS DE TESTEO Y PRUEBAS LOCALES (NUEVO)
+# ==========================================
+test_*.mjs
+test_*.js
+omni_test_suite.mjs
+chaos_stress_test.mjs
+verify_regex.mjs
+scratch/
+*.scratch
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+output.txt
+list_tables.json
+
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
@@ -140,6 +157,7 @@ Thumbs.db
 
 # testing
 /coverage
+**
 
 # next.js
 /.next/

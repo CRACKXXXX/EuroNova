@@ -32,14 +32,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-void-deep flex flex-col items-center justify-center p-6 text-white relative overflow-hidden">
+    <div className="min-h-screen bg-void-deep flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 text-white relative overflow-hidden">
       {/* Efectos Cósmicos */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-hyper-violet/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-plasma-cyan/10 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="z-10 w-full max-w-md bg-void-surface border border-void-border rounded-2xl p-8 shadow-2xl backdrop-blur-sm">
+      <div className="z-10 w-full max-w-md bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-sm">
         <div className="flex flex-col items-center mb-8">
-          <Image src="/logo-big.png" alt="EuroNova Logo" width={300} height={80} priority />
+          <Image src="/logo-big.png" alt="EuroNova Logo" width={300} height={80} priority className="w-auto h-auto max-w-full" />
           <h2 className="sr-only">EuroNova</h2>
           <p className="text-gray-400 mt-2">
             {isViewLogin ? t('welcome') : t('join')}

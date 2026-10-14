@@ -62,7 +62,7 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
     : [];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 px-4 sm:px-6 lg:px-8">
       <div className="mb-2">
         <Link href="/dashboard/projects" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
           <ArrowLeft className="w-4 h-4" />
@@ -82,7 +82,7 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
           <div className="w-full h-32 md:h-48 bg-gradient-to-r from-void-deep to-void-surface relative" />
         )}
 
-        <div className="p-8 md:p-12 relative -mt-20 md:-mt-32 z-10">
+        <div className="p-6 sm:p-8 md:p-12 relative -mt-20 md:-mt-32 z-10">
           
           {/* BADGES */}
           <div className="flex flex-wrap gap-2 mb-6">
@@ -106,7 +106,7 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
           </h1>
 
           {/* PUBLISHER PROFILE CARD */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-xl bg-void-deep/80 border border-void-border backdrop-blur-sm mb-10 w-fit">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-xl bg-void-deep/80 border border-void-border backdrop-blur-sm mb-10 w-full sm:w-fit">
             <div className="w-12 h-12 rounded-full bg-plasma-cyan/10 flex items-center justify-center border border-plasma-cyan/20 shrink-0">
               <Building className="w-6 h-6 text-plasma-cyan" />
             </div>

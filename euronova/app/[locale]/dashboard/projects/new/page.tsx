@@ -50,7 +50,7 @@ export default function NewProjectPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-20">
+    <div className="max-w-4xl mx-auto space-y-6 pb-20 px-4 sm:px-6 lg:px-8">
       <div className="mb-2">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
           <ArrowLeft className="w-4 h-4" />
@@ -72,7 +72,7 @@ export default function NewProjectPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-void-surface border border-void-border rounded-2xl p-8 space-y-8">
+      <form onSubmit={handleSubmit} className="bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 space-y-8">
         
         {/* Basic Info */}
         <div className="space-y-4">

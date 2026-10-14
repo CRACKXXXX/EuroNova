@@ -3,6 +3,7 @@
     "home": "Home",
     "searchProjects": "Search Projects",
     "searchOrgs": "Search Organizations",
+    "myMissions": "My Missions",
     "publish": "Publish",
     "myOrg": "My Organization",
     "myProfile": "My Profile",
@@ -55,7 +56,9 @@
     "searchOrgs": "Search Organizations",
     "searchOrgsDesc": "Discover verified entities, NGOs, and companies associated with the Erasmus+ program.",
     "myProfile": "My Profile",
-    "myProfileDesc": "Complete your details, languages, and region to connect with the best missions."
+    "myProfileDesc": "Complete your details, languages, and region to connect with the best missions.",
+    "myMissions": "My Missions",
+    "myMissionsDesc": "Track your saved favorites, active applications, and accepted European missions."
   },
   "Login": {
     "welcome": "Access your command center",
@@ -317,7 +320,11 @@
     "requestChanges": "Request Changes",
     "bio": "Bio",
     "languages": "Languages",
-    "phone": "Phone"
+    "phone": "Phone",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {current} of {total}",
+    "showingResults": "Showing {from} - {to} of {total} items"
   },
   "ProjectTypes": {
     "YE": "Youth Exchange",

@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { ShieldAlert, ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -12,7 +13,38 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminPage() {
+const PAGE_SIZE = 50;
+
+function getAdminDb() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error(
+      "Missing SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_URL environment variables."
+    );
+  }
+
+  return createSupabaseClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+}
+
+function parsePage(param: string | number | string[] | undefined): number {
+  if (typeof param === "number") {
+    return isNaN(param) || param < 1 ? 1 : Math.floor(param);
+  }
+  const val = Array.isArray(param) ? param[0] : param;
+  const num = parseInt(val || "1", 10);
+  return isNaN(num) || num < 1 ? 1 : num;
+}
+
+export default async function AdminPage(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -22,53 +54,103 @@ export default async function AdminPage() {
     redirect("/dashboard");
   }
 
+  const adminDb = getAdminDb();
+
+  const searchParams = await props.searchParams;
   const t = await getTranslations("AdminPanel");
 
-  // Parallel data fetching for all 3 categories
+  const currentTab = (searchParams.tab as "orgs" | "youth" | "projects") || "orgs";
+  const currentPage = parsePage(searchParams.page);
+
+  // 1. Dedicated count queries BEFORE fetching paginated data
   const [
-    pendingOrgsResult,
-    verifiedOrgsResult,
-    youthUsersResult,
-    pendingProjectsResult,
-    publishedProjectsResult,
+    totalProjectsCountRes,
+    totalPublishedProjectsCountRes,
+    totalPendingProjectsCountRes,
+    totalOrgsCountRes,
+    totalPendingOrgsCountRes,
+    totalVerifiedOrgsCountRes,
+    totalYouthCountRes,
   ] = await Promise.all([
-    supabase
+    adminDb.from("projects").select("*", { count: "exact", head: true }),
+    adminDb.from("projects").select("*", { count: "exact", head: true }).eq("status", "published"),
+    adminDb.from("projects").select("*", { count: "exact", head: true }).eq("status", "pending_review"),
+    adminDb.from("users_org").select("*", { count: "exact", head: true }),
+    adminDb
+      .from("users_org")
+      .select("*", { count: "exact", head: true })
+      .or("verification_status.eq.pending,verification_status.is.null,verification_status.eq.rejected"),
+    adminDb.from("users_org").select("*", { count: "exact", head: true }).eq("verification_status", "verified"),
+    adminDb.from("users_youth").select("*", { count: "exact", head: true }),
+  ]);
+
+  const totalProjects = totalProjectsCountRes.count ?? 0;
+  const totalPublishedProjects = totalPublishedProjectsCountRes.count ?? 0;
+  const totalPendingProjects = totalPendingProjectsCountRes.count ?? 0;
+  const totalOrgs = totalOrgsCountRes.count ?? 0;
+  const totalPendingOrgs = totalPendingOrgsCountRes.count ?? 0;
+  const totalVerifiedOrgs = totalVerifiedOrgsCountRes.count ?? 0;
+  const totalYouth = totalYouthCountRes.count ?? 0;
+
+  const activeTabTotal =
+    currentTab === "projects"
+      ? totalPublishedProjects
+      : currentTab === "youth"
+      ? totalYouth
+      : totalVerifiedOrgs;
+
+  const totalPages = Math.max(1, Math.ceil(activeTabTotal / PAGE_SIZE));
+
+  // 2. Calculate 0-indexed range bounds for 50 items per page
+  const from = (currentPage - 1) * PAGE_SIZE;
+  const to = currentPage * PAGE_SIZE - 1;
+
+  // 3. Fetch paginated data slices using adminDb
+  const [
+    pendingOrgsDataRes,
+    verifiedOrgsDataRes,
+    youthUsersDataRes,
+    pendingProjectsDataRes,
+    publishedProjectsDataRes,
+  ] = await Promise.all([
+    adminDb
       .from("users_org")
       .select("*")
       .or("verification_status.eq.pending,verification_status.is.null,verification_status.eq.rejected")
-      .order("created_at", { ascending: false }),
-
-    supabase
+      .order("created_at", { ascending: false })
+      .limit(PAGE_SIZE),
+    adminDb
       .from("users_org")
       .select("*")
       .eq("verification_status", "verified")
-      .order("created_at", { ascending: false }),
-
-    supabase
+      .order("created_at", { ascending: false })
+      .range(currentTab === "orgs" ? from : 0, currentTab === "orgs" ? to : PAGE_SIZE - 1),
+    adminDb
       .from("users_youth")
       .select("*")
-      .order("created_at", { ascending: false }),
-
-    supabase
+      .order("created_at", { ascending: false })
+      .range(currentTab === "youth" ? from : 0, currentTab === "youth" ? to : PAGE_SIZE - 1),
+    adminDb
       .from("projects")
       .select("*, users_org(org_name, contact_email)")
       .eq("status", "pending_review")
-      .order("created_at", { ascending: false }),
-
-    supabase
+      .order("created_at", { ascending: false })
+      .limit(PAGE_SIZE),
+    adminDb
       .from("projects")
       .select("*, users_org(org_name, contact_email)")
       .eq("status", "published")
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .range(currentTab === "projects" ? from : 0, currentTab === "projects" ? to : PAGE_SIZE - 1),
   ]);
 
-  const rawPendingOrgs = (pendingOrgsResult.data as OrgItem[]) || [];
-  const rawVerifiedOrgs = (verifiedOrgsResult.data as OrgItem[]) || [];
-  const rawYouthUsers = (youthUsersResult.data as YouthUserItem[]) || [];
-  const rawPendingProjects = (pendingProjectsResult.data as ProjectItem[]) || [];
-  const rawPublishedProjects = (publishedProjectsResult.data as ProjectItem[]) || [];
+  const rawPendingOrgs = (pendingOrgsDataRes.data as OrgItem[]) || [];
+  const rawVerifiedOrgs = (verifiedOrgsDataRes.data as OrgItem[]) || [];
+  const rawYouthUsers = (youthUsersDataRes.data as YouthUserItem[]) || [];
+  const rawPendingProjects = (pendingProjectsDataRes.data as ProjectItem[]) || [];
+  const rawPublishedProjects = (publishedProjectsDataRes.data as ProjectItem[]) || [];
 
-  // Extract all unique organization and user IDs
+  // Extract unique organization and youth user IDs for admin email resolution
   const uniqueOrgIds = Array.from(
     new Set([
       ...rawPendingOrgs.map((o) => o.id),
@@ -81,7 +163,7 @@ export default async function AdminPage() {
 
   const emailsMap = new Map<string, string>();
   if (uniqueOrgIds.length > 0) {
-    const { data: emailsData, error: emailsError } = await supabase.rpc(
+    const { data: emailsData, error: emailsError } = await adminDb.rpc(
       "get_admin_user_emails",
       { user_ids: uniqueOrgIds }
     );
@@ -95,7 +177,7 @@ export default async function AdminPage() {
     }
   }
 
-  // Map login_email into items before passing to client
+  // Hydrate login_email into items
   const pendingOrgs: OrgItem[] = rawPendingOrgs.map((org) => ({
     ...org,
     login_email: emailsMap.get(org.id) || null,
@@ -122,7 +204,7 @@ export default async function AdminPage() {
   }));
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-16">
+    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-16 px-4 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between border-b border-void-border pb-6">
         <div>
           <div className="mb-2">
@@ -159,6 +241,17 @@ export default async function AdminPage() {
         youthUsers={youthUsers}
         pendingProjects={pendingProjects}
         publishedProjects={publishedProjects}
+        totalProjects={totalProjects}
+        totalOrgs={totalOrgs}
+        totalYouth={totalYouth}
+        totalPendingOrgs={totalPendingOrgs}
+        totalVerifiedOrgs={totalVerifiedOrgs}
+        totalPendingProjects={totalPendingProjects}
+        totalPublishedProjects={totalPublishedProjects}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        currentTab={currentTab}
+        pageSize={PAGE_SIZE}
       />
     </div>
   );

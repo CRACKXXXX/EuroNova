@@ -7,7 +7,7 @@ export default async function SupportPage() {
   const t = await getTranslations("SupportForm");
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
       <div className="mb-2">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
           <ArrowLeft className="w-4 h-4" />

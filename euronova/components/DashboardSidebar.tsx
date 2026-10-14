@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, MapPin, Filter, DollarSign, Tag, Calendar, User, ArrowUpDown, ChevronDown } from "lucide-react";
 import { MultiSelectCountry } from "@/components/MultiSelectCountry";
+import { CustomSelect } from "@/components/CustomSelect";
 import { useTranslations } from "next-intl";
 
 import { ERASMUS_THEMES } from "@/lib/constants/themes";
@@ -39,7 +40,6 @@ export function DashboardSidebar() {
   const [accommodation, setAccommodation] = useState(searchParams.get("accommodation") === "true");
   const [rup, setRup] = useState(searchParams.get("rup") === "true");
   const [lastMinute, setLastMinute] = useState(searchParams.get("last_minute") === "true");
-  const [favorites, setFavorites] = useState(searchParams.get("favorites") === "true");
 
   const toggleTheme = (theme: string) => setThemes(prev => prev.includes(theme) ? prev.filter(t => t !== theme) : [...prev, theme]);
   const toggleType = (missionType: string) => setTypes(prev => prev.includes(missionType) ? prev.filter(t => t !== missionType) : [...prev, missionType]);
@@ -69,13 +69,12 @@ export function DashboardSidebar() {
       if (accommodation) params.set("accommodation", "true");
       if (rup) params.set("rup", "true");
       if (lastMinute) params.set("last_minute", "true");
-      if (favorites) params.set("favorites", "true");
 
       router.push(`/dashboard/projects?${params.toString()}`);
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [sort, search, types, minAge, maxAge, countries, targetProfile, themes, eligible, startDate, endDate, funding, minBudget, maxBudget, accommodation, rup, lastMinute, favorites, router]);
+  }, [sort, search, types, minAge, maxAge, countries, targetProfile, themes, eligible, startDate, endDate, funding, minBudget, maxBudget, accommodation, rup, lastMinute, router]);
 
   return (
     <div className="bg-void-deep border border-void-border rounded-xl flex flex-col lg:h-[calc(100vh-8rem)] lg:sticky lg:top-24">
@@ -102,19 +101,19 @@ export function DashboardSidebar() {
           <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
             <ArrowUpDown className="w-3 h-3 text-plasma-cyan" /> {t('sortBy')}
           </h3>
-          <select
+          <CustomSelect
             value={sort || "newest"}
-            onChange={(e) => setSort(e.target.value)}
-            className="w-full bg-void-surface border border-void-border rounded-lg px-4 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all cursor-pointer appearance-none"
-          >
-            <option value="newest">{t('sortNewest')}</option>
-            <option value="oldest">{t('sortOldest')}</option>
-            <option value="urgent">{t('sortUrgent')}</option>
-            <option value="rup_first">{t('sortRup')}</option>
-            <option value="longest">{t('sortLongest')}</option>
-            <option value="shortest">{t('sortShortest')}</option>
-            <option value="a_z">{t('sortAZ')}</option>
-          </select>
+            onChange={(val) => setSort(val)}
+            options={[
+              { value: "newest", label: t('sortNewest') },
+              { value: "oldest", label: t('sortOldest') },
+              { value: "urgent", label: t('sortUrgent') },
+              { value: "rup_first", label: t('sortRup') },
+              { value: "longest", label: t('sortLongest') },
+              { value: "shortest", label: t('sortShortest') },
+              { value: "a_z", label: t('sortAZ') },
+            ]}
+          />
         </div>
 
         {/* Search */}
@@ -209,12 +208,17 @@ export function DashboardSidebar() {
           <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
             <DollarSign className="w-3 h-3" /> {t('financing')}
           </h3>
-          <select value={funding} onChange={(e) => setFunding(e.target.value)} className="w-full bg-void-surface border border-void-border rounded-lg px-4 py-2.5 text-sm focus:border-plasma-cyan appearance-none">
-            <option value="">{t('any')}</option>
-            <option value="Total">{t('total')}</option>
-            <option value="Partial">{t('partial')}</option>
-            <option value="None">{t('none')}</option>
-          </select>
+          <CustomSelect
+            value={funding}
+            onChange={(val) => setFunding(val)}
+            placeholder={t('any')}
+            options={[
+              { value: "", label: t('any') },
+              { value: "Total", label: t('total') },
+              { value: "Partial", label: t('partial') },
+              { value: "None", label: t('none') },
+            ]}
+          />
         </div>
 
         {/* Themes */}
@@ -229,30 +233,26 @@ export function DashboardSidebar() {
               </button>
             ))}
           </div>
-          <select
-            onChange={(e) => {
-              const val = e.target.value;
+          <CustomSelect
+            value=""
+            onChange={(val) => {
               if (val && !themes.includes(val)) toggleTheme(val);
-              e.target.value = "";
             }}
-            className="w-full bg-void-surface border border-void-border rounded-lg px-3 py-2 text-sm focus:border-plasma-cyan mt-2 focus:outline-none appearance-none"
-          >
-            <option value="">{t('addCustomTheme')}</option>
-            {ERASMUS_THEMES.map(th => (
-              <option key={th} value={th} disabled={themes.includes(th)}>{th}</option>
-            ))}
-          </select>
+            placeholder={t('addCustomTheme')}
+            className="mt-2"
+            options={[
+              { value: "", label: t('addCustomTheme') },
+              ...ERASMUS_THEMES.map((th) => ({
+                value: th,
+                label: th,
+                disabled: themes.includes(th),
+              })),
+            ]}
+          />
         </div>
 
         {/* Toggle Switches */}
         <div className="space-y-4 pt-2 border-t border-void-border">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input type="checkbox" className="sr-only" checked={favorites} onChange={(e) => setFavorites(e.target.checked)} />
-            <div className={`w-10 h-6 rounded-full transition-colors relative ${favorites ? 'bg-plasma-cyan' : 'bg-void-surface border border-void-border'}`}>
-              <div className={`absolute w-4 h-4 rounded-full bg-white top-1 transition-transform ${favorites ? 'translate-x-5' : 'translate-x-1'}`}></div>
-            </div>
-            <span className="text-sm font-medium text-gray-300">{t('showFavorites')}</span>
-          </label>
           <label className="flex items-center gap-3 cursor-pointer">
             <input type="checkbox" className="sr-only" checked={accommodation} onChange={(e) => setAccommodation(e.target.checked)} />
             <div className={`w-10 h-6 rounded-full transition-colors relative ${accommodation ? 'bg-plasma-cyan' : 'bg-void-surface border border-void-border'}`}>

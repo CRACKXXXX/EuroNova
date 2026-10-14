@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -10,9 +11,7 @@ import {
   Compass, 
   CheckCircle2, 
   Sparkles,
-  Search,
-  MapPin,
-  Filter
+  Search
 } from "lucide-react";
 import { ProjectCard, ProjectData } from "@/components/ProjectCard";
 import { COUNTRIES } from "@/lib/constants/countries";
@@ -275,13 +274,22 @@ export default async function MyMissionsPage(props: MyMissionsPageProps) {
               <Link
                 key={countryCode}
                 href={buildFilterUrl({ dest: isSelected ? "" : countryCode })}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all ${
                   isSelected
                     ? "bg-plasma-cyan/20 border-plasma-cyan text-white shadow-[0_0_10px_rgba(0,229,255,0.15)]"
                     : "bg-void-surface border-void-border text-gray-400 hover:text-white"
                 }`}
               >
-                {countryInfo?.flag || "🌍"} {countryCode}
+                {countryInfo ? (
+                  <img
+                    src={countryInfo.flagUrl}
+                    alt={countryInfo.name}
+                    className="w-4 h-auto rounded-[2px]"
+                  />
+                ) : (
+                  <span>🌍</span>
+                )}
+                <span>{countryCode}</span>
               </Link>
             );
           })}
@@ -289,7 +297,7 @@ export default async function MyMissionsPage(props: MyMissionsPageProps) {
           {/* Filtro Todos los Tipos */}
           <Link
             href={buildFilterUrl({ type: "" })}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ml-auto ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ml-0 sm:ml-auto ${
               !selectedType
                 ? "bg-void-surface border-hyper-violet/60 text-hyper-violet"
                 : "bg-void-deep border-void-border text-gray-400 hover:text-white"

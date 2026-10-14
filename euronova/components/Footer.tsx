@@ -4,9 +4,10 @@ import { useTranslations } from "next-intl";
 
 export function Footer() {
   const t = useTranslations("Footer");
+
   return (
-    <footer className="bg-void-deep border-t border-void-border mt-12 py-8 px-4 md:px-8">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+    <footer className="bg-void-deep border-t border-void-border mt-12 py-8 w-full">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center text-center md:text-left w-full px-4 sm:px-6 lg:px-8 gap-4">
         <div className="text-gray-400 text-sm">
           &copy; {new Date().getFullYear()} EuroNova. {t("rights")}
         </div>
