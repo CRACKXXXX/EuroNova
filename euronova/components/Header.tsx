@@ -13,7 +13,8 @@ import {
   PlusCircle, 
   Menu, 
   X, 
-  ShieldAlert 
+  ShieldAlert,
+  Map as MapIcon
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { logout } from "@/app/[locale]/login/actions";
@@ -82,6 +83,13 @@ export function Header({ role, isAdmin }: { role: "youth" | "org"; isAdmin?: boo
           >
             <Briefcase className="w-4 h-4" />
             <span>{t("myMissions")}</span>
+          </Link>
+          <Link
+            href="/map"
+            className="flex items-center gap-2 text-sm font-medium text-plasma-cyan hover:text-plasma-cyan/80 border-b-2 border-plasma-cyan/50 hover:border-plasma-cyan py-1 transition-all"
+          >
+            <MapIcon className="w-4 h-4" />
+            <span>{t("map")}</span>
           </Link>
         </nav>
 
@@ -211,6 +219,15 @@ export function Header({ role, isAdmin }: { role: "youth" | "org"; isAdmin?: boo
             >
               <Briefcase className="w-6 h-6 text-gray-500 group-hover:text-plasma-cyan transition-colors" />
               <span>{t("myMissions")}</span>
+            </Link>
+
+            <Link
+              href="/map"
+              onClick={() => setIsOpen(false)}
+              className="text-2xl sm:text-3xl font-extrabold tracking-tight text-plasma-cyan hover:scale-105 transition-all flex items-center gap-3.5 group"
+            >
+              <MapIcon className="w-6 h-6 text-plasma-cyan transition-colors" />
+              <span>{t("map")}</span>
             </Link>
 
             {role === "org" && (

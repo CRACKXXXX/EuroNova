@@ -2,24 +2,34 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Tag, Building } from "lucide-react";
+import { Search, Building } from "lucide-react";
 import { MultiSelectCountry } from "@/components/MultiSelectCountry";
 import { CustomSelect } from "@/components/CustomSelect";
 import { useTranslations } from "next-intl";
 
-import { ERASMUS_THEMES } from "@/lib/constants/themes";
-
 const ENTITY_TYPES = [
-  "NGO / Association", "Private Company", "Public Body", "Educational Institution"
+  "NGO / Association",
+  "Private Company",
+  "Public Body",
+  "Educational Institution",
 ];
 
-export function OrganizationsClient({ initialQ, initialCountries, initialVerified, initialTheme, initialEntityType }: { initialQ: string, initialCountries: string[], initialVerified: boolean, initialTheme: string, initialEntityType: string }) {
+export function OrganizationsClient({
+  initialQ,
+  initialCountries,
+  initialVerified,
+  initialEntityType,
+}: {
+  initialQ: string;
+  initialCountries: string[];
+  initialVerified: boolean;
+  initialEntityType: string;
+}) {
   const t = useTranslations("OrgFilters");
   const router = useRouter();
   const [q, setQ] = useState(initialQ);
   const [countries, setCountries] = useState<string[]>(initialCountries);
   const [verified, setVerified] = useState(initialVerified);
-  const [theme, setTheme] = useState(initialTheme);
   const [entityType, setEntityType] = useState(initialEntityType);
 
   useEffect(() => {
@@ -28,21 +38,20 @@ export function OrganizationsClient({ initialQ, initialCountries, initialVerifie
       if (q) params.set("q", q);
       if (countries.length > 0) params.set("countries", countries.join(","));
       if (verified) params.set("verified", "true");
-      if (theme) params.set("theme", theme);
       if (entityType) params.set("entityType", entityType);
-      
+
       router.push(`/dashboard/organizations?${params.toString()}`);
     }, 500);
     return () => clearTimeout(timer);
-  }, [q, countries, verified, theme, entityType, router]);
+  }, [q, countries, verified, entityType, router]);
 
   return (
     <div className="bg-void-surface border border-void-border rounded-xl p-6 flex flex-col gap-4">
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-          <input 
-            type="text" 
+          <input
+            type="text"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t("searchPlaceholder")}
@@ -50,16 +59,16 @@ export function OrganizationsClient({ initialQ, initialCountries, initialVerifie
           />
         </div>
         <div className="w-full md:w-64">
-          <MultiSelectCountry 
-            selected={countries} 
-            onChange={setCountries} 
-            placeholder={t("countryPlaceholder")} 
+          <MultiSelectCountry
+            selected={countries}
+            onChange={setCountries}
+            placeholder={t("countryPlaceholder")}
           />
         </div>
       </div>
-      
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="w-full md:w-1/3">
+
+      <div className="flex flex-col sm:flex-row items-center gap-4">
+        <div className="flex-1 w-full">
           <CustomSelect
             value={entityType}
             onChange={(val) => setEntityType(val)}
@@ -72,27 +81,33 @@ export function OrganizationsClient({ initialQ, initialCountries, initialVerifie
           />
         </div>
 
-        <div className="w-full md:w-1/3">
-          <CustomSelect
-            value={theme}
-            onChange={(val) => setTheme(val)}
-            placeholder={t("allThemes")}
-            icon={<Tag className="w-4 h-4 text-gray-500" />}
-            options={[
-              { value: "", label: t("allThemes") },
-              ...ERASMUS_THEMES.map((th) => ({ value: th, label: th })),
-            ]}
-          />
-        </div>
-
-        <div className="w-full md:w-1/3 flex items-center justify-end">
-          <label className="flex items-center gap-3 cursor-pointer group bg-void-deep px-4 py-2.5 rounded-lg border border-void-border w-full md:w-auto">
+        <div className="w-full sm:w-auto shrink-0 flex items-center justify-end">
+          <label className="flex items-center gap-3 cursor-pointer group bg-void-deep px-4 py-2.5 rounded-lg border border-void-border w-full sm:w-auto">
             <div className="relative">
-              <input type="checkbox" className="sr-only" checked={verified} onChange={(e) => setVerified(e.target.checked)} />
-              <div className={`w-10 h-6 rounded-full transition-colors ${verified ? 'bg-rup-emerald' : 'bg-void-surface border border-void-border'}`}></div>
-              <div className={`absolute w-4 h-4 rounded-full bg-white top-1 transition-transform ${verified ? 'translate-x-5' : 'translate-x-1'}`}></div>
+              <input
+                type="checkbox"
+                className="sr-only"
+                checked={verified}
+                onChange={(e) => setVerified(e.target.checked)}
+              />
+              <div
+                className={`w-10 h-6 rounded-full transition-colors ${
+                  verified ? "bg-rup-emerald" : "bg-void-surface border border-void-border"
+                }`}
+              ></div>
+              <div
+                className={`absolute w-4 h-4 rounded-full bg-white top-1 transition-transform ${
+                  verified ? "translate-x-5" : "translate-x-1"
+                }`}
+              ></div>
             </div>
-            <span className={`text-sm font-medium transition-colors ${verified ? 'text-rup-emerald' : 'text-gray-400 group-hover:text-gray-300'}`}>{t("onlyVerified")}</span>
+            <span
+              className={`text-sm font-medium transition-colors ${
+                verified ? "text-rup-emerald" : "text-gray-400 group-hover:text-gray-300"
+              }`}
+            >
+              {t("onlyVerified")}
+            </span>
           </label>
         </div>
       </div>

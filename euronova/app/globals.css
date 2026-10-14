@@ -45,3 +45,90 @@ body {
 *::-webkit-scrollbar-thumb:hover {
   background: #00E5FF;
 }
+
+/* ============================================================================
+   MAPLIBRE GL — COSMIC DARK THEME OVERRIDES (Zero Generic White Boxes)
+   ============================================================================ */
+
+.maplibregl-popup {
+  z-index: 50;
+  filter: drop-shadow(0 0 20px rgba(0, 229, 255, 0.2));
+}
+
+.maplibregl-popup-content {
+  background: #111420 !important;
+  color: #FFFFFF !important;
+  border: 1px solid #1E2640 !important;
+  border-radius: 16px !important;
+  padding: 16px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 229, 255, 0.15) !important;
+}
+
+/* Color matched pointer tips for all popup anchors */
+.maplibregl-popup-anchor-top .maplibregl-popup-tip {
+  border-bottom-color: #111420 !important;
+}
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+  border-top-color: #111420 !important;
+}
+.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: #111420 !important;
+}
+.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: #111420 !important;
+}
+.maplibregl-popup-anchor-top-left .maplibregl-popup-tip {
+  border-bottom-color: #111420 !important;
+}
+.maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+  border-bottom-color: #111420 !important;
+}
+.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip {
+  border-top-color: #111420 !important;
+}
+.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+  border-top-color: #111420 !important;
+}
+
+/* Close button custom styling */
+.maplibregl-popup-close-button {
+  color: #9CA3AF !important;
+  font-size: 18px !important;
+  padding: 6px 10px !important;
+  border-radius: 8px !important;
+  line-height: 1 !important;
+  transition: all 0.2s ease !important;
+}
+
+.maplibregl-popup-close-button:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #00E5FF !important;
+}
+
+/* MapLibre Navigation Controls (Zoom in / out) dark theme */
+.maplibregl-ctrl-group {
+  background-color: #111420 !important;
+  border: 1px solid #1E2640 !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+}
+
+.maplibregl-ctrl-group button {
+  border-bottom: 1px solid #1E2640 !important;
+  background-color: transparent !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.maplibregl-ctrl-group button:last-child {
+  border-bottom: none !important;
+}
+
+.maplibregl-ctrl-group button:hover {
+  background-color: rgba(0, 229, 255, 0.1) !important;
+}
+
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  filter: invert(1) brightness(1.2) !important;
+}
+

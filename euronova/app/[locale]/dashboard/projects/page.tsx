@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { Suspense } from "react";
 import { ProjectCard } from "@/components/ProjectCard";
+import { RandomMissionButton } from "@/components/RandomMissionButton";
 
 export const dynamic = "force-dynamic";
 
@@ -189,13 +190,16 @@ export default async function ProjectsPage(props: {
         </Link>
       </div>
 
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <h2 className="text-3xl font-black tracking-tight flex items-center gap-3 text-white">
             <Rocket className="w-8 h-8 text-plasma-cyan" /> 
             {t("transmissionsReceived")}
           </h2>
           <p className="text-gray-400 mt-2">{t("exploreMissions")}</p>
+        </div>
+        <div className="shrink-0">
+          <RandomMissionButton projectIds={projects?.map((p) => p.id) || []} />
         </div>
       </div>
 

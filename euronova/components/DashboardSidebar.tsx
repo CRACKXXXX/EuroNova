@@ -44,10 +44,53 @@ export function DashboardSidebar() {
   const toggleTheme = (theme: string) => setThemes(prev => prev.includes(theme) ? prev.filter(t => t !== theme) : [...prev, theme]);
   const toggleType = (missionType: string) => setTypes(prev => prev.includes(missionType) ? prev.filter(t => t !== missionType) : [...prev, missionType]);
 
+  // Sync state from URL search params whenever they change (e.g., cleared by user or back navigation)
   useEffect(() => {
-    const s = searchParams.get("sort") || "";
-    setSort(s);
+    setSort(searchParams.get("sort") || "");
+    setSearch(searchParams.get("q") || "");
+    setTypes(searchParams.get("types") ? searchParams.get("types")!.split(",") : []);
+    setMinAge(searchParams.get("min_age") || "");
+    setMaxAge(searchParams.get("max_age") || "");
+    setCountries(searchParams.get("dest") ? searchParams.get("dest")!.split(",") : []);
+    setThemes(searchParams.get("themes") ? searchParams.get("themes")!.split(",") : []);
+    setEligible(searchParams.get("eligible") ? searchParams.get("eligible")!.split(",") : []);
+    setStartDate(searchParams.get("start_date") || "");
+    setEndDate(searchParams.get("end_date") || "");
+    setFunding(searchParams.get("funding") || "");
+    setAccommodation(searchParams.get("accommodation") === "true");
+    setRup(searchParams.get("rup") === "true");
+    setLastMinute(searchParams.get("last_minute") === "true");
   }, [searchParams]);
+
+  // Clear specific date filters immediately and trigger clean re-fetch
+  const handleClearDates = () => {
+    setStartDate("");
+    setEndDate("");
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("start_date");
+    params.delete("end_date");
+    params.delete("page");
+    router.push(`/dashboard/projects?${params.toString()}`);
+  };
+
+  // Clear all filters completely
+  const handleClearAllFilters = () => {
+    setSort("");
+    setSearch("");
+    setTypes([]);
+    setMinAge("");
+    setMaxAge("");
+    setCountries([]);
+    setThemes([]);
+    setEligible([]);
+    setStartDate("");
+    setEndDate("");
+    setFunding("");
+    setAccommodation(false);
+    setRup(false);
+    setLastMinute(false);
+    router.push("/dashboard/projects");
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -70,28 +113,51 @@ export function DashboardSidebar() {
       if (rup) params.set("rup", "true");
       if (lastMinute) params.set("last_minute", "true");
 
-      router.push(`/dashboard/projects?${params.toString()}`);
+      const newQuery = params.toString();
+      const currentQuery = searchParams.toString();
+      if (newQuery !== currentQuery) {
+        router.push(`/dashboard/projects?${newQuery}`);
+      }
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [sort, search, types, minAge, maxAge, countries, targetProfile, themes, eligible, startDate, endDate, funding, minBudget, maxBudget, accommodation, rup, lastMinute, router]);
+  }, [sort, search, types, minAge, maxAge, countries, targetProfile, themes, eligible, startDate, endDate, funding, minBudget, maxBudget, accommodation, rup, lastMinute, router, searchParams]);
+
+  const hasActiveFilters = Boolean(
+    search || types.length > 0 || minAge || maxAge || countries.length > 0 ||
+    themes.length > 0 || eligible.length > 0 || startDate || endDate || funding ||
+    accommodation || rup || lastMinute
+  );
 
   return (
     <div className="bg-void-deep border border-void-border rounded-xl flex flex-col lg:h-[calc(100vh-8rem)] lg:sticky lg:top-24">
-      {/* Encabezado con botón de despliegue móvil */}
-      <div className="p-4 border-b border-void-border flex items-center justify-between">
+      {/* Encabezado con botón de despliegue móvil y Clear All */}
+      <div className="p-4 border-b border-void-border flex items-center justify-between gap-2">
         <h2 className="text-lg font-bold text-white flex items-center gap-2">
           <Filter className="w-5 h-5 text-plasma-cyan" /> {t('filters')}
         </h2>
-        <button
-          type="button"
-          onClick={() => setIsMobileOpen((prev) => !prev)}
-          className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-void-border bg-void-surface text-xs font-semibold text-plasma-cyan hover:border-plasma-cyan transition-colors"
-          aria-label="Toggle Filters"
-        >
-          <span>{isMobileOpen ? "Hide" : "Show"}</span>
-          <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isMobileOpen ? 'rotate-180' : ''}`} />
-        </button>
+
+        <div className="flex items-center gap-2">
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={handleClearAllFilters}
+              className="text-xs text-plasma-cyan hover:underline font-semibold cursor-pointer"
+            >
+              {t('clearAll')}
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setIsMobileOpen((prev) => !prev)}
+            className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-void-border bg-void-surface text-xs font-semibold text-plasma-cyan hover:border-plasma-cyan transition-colors"
+            aria-label="Toggle Filters"
+          >
+            <span>{isMobileOpen ? "Hide" : "Show"}</span>
+            <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isMobileOpen ? 'rotate-180' : ''}`} />
+          </button>
+        </div>
       </div>
 
       {/* Cuerpo de filtros con visibilidad responsiva */}
@@ -148,12 +214,33 @@ export function DashboardSidebar() {
 
         {/* Dates */}
         <div className="space-y-4">
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-            <Calendar className="w-3 h-3" /> {t('dates')}
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+              <Calendar className="w-3 h-3" /> {t('dates')}
+            </h3>
+            {(startDate || endDate) && (
+              <button
+                type="button"
+                onClick={handleClearDates}
+                className="text-[11px] text-plasma-cyan hover:underline font-bold transition-colors cursor-pointer"
+              >
+                {t('clearDates')}
+              </button>
+            )}
+          </div>
           <div className="flex gap-2">
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full bg-void-surface border border-void-border rounded-lg px-2 py-2 text-xs focus:border-plasma-cyan" />
-            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full bg-void-surface border border-void-border rounded-lg px-2 py-2 text-xs focus:border-plasma-cyan" />
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full bg-void-surface border border-void-border rounded-lg px-2 py-2 text-xs focus:border-plasma-cyan text-white"
+            />
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full bg-void-surface border border-void-border rounded-lg px-2 py-2 text-xs focus:border-plasma-cyan text-white"
+            />
           </div>
         </div>
 

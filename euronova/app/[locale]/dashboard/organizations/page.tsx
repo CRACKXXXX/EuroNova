@@ -18,7 +18,6 @@ export default async function OrganizationsPage(props: {
   const q = searchParams.q as string | undefined;
   const countriesParam = searchParams.countries as string | undefined;
   const verified = searchParams.verified === "true";
-  const theme = searchParams.theme as string | undefined;
   const entityType = searchParams.entityType as string | undefined;
 
   let query = supabase.from("users_org").select("*");
@@ -32,9 +31,6 @@ export default async function OrganizationsPage(props: {
   }
   if (verified) {
     query = query.eq("verification_status", "verified");
-  }
-  if (theme) {
-    query = query.contains("themes", [theme]);
   }
   if (entityType) {
     query = query.eq("entity_type", entityType);
@@ -71,7 +67,6 @@ export default async function OrganizationsPage(props: {
           initialQ={q || ""} 
           initialCountries={countriesParam ? countriesParam.split(",") : []} 
           initialVerified={verified} 
-          initialTheme={theme || ""} 
           initialEntityType={entityType || ""}
         />
       </Suspense>

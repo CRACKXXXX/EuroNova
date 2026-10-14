@@ -4,6 +4,7 @@
     "searchProjects": "Search Projects",
     "searchOrgs": "Search Organizations",
     "myMissions": "My Missions",
+    "map": "Mission Radar",
     "publish": "Publish",
     "myOrg": "My Organization",
     "myProfile": "My Profile",
@@ -40,7 +41,9 @@
     "sortLongest": "Longest Duration",
     "sortShortest": "Shortest Duration",
     "sortAZ": "Alphabetical (A-Z)",
-    "showFavorites": "Show my Favorites"
+    "showFavorites": "Show my Favorites",
+    "clearAll": "Clear All",
+    "clearDates": "Clear Dates"
   },
   "Dashboard": {
     "title": "Transmissions Received",
@@ -252,7 +255,9 @@
     "previous": "Previous",
     "next": "Next",
     "pageOf": "Page {current} of {total}",
-    "showingResults": "Showing {from} - {to} of {total} missions"
+    "showingResults": "Showing {from} - {to} of {total} missions",
+    "randomMission": "Random Mission",
+    "rolling": "Selecting Mission..."
   },
   "SupportForm": {
     "title": "Support and Assistance",
@@ -370,7 +375,24 @@
     "signInToReview": "Sign in to leave a review",
     "successMessage": "Your review has been successfully submitted!",
     "verifiedYouthBadge": "Verified Participant",
-    "activeMissions": "Active Missions by this Organization",
-    "noMissionsFound": "No active missions published by this organization at the moment."
+    "activeMissions": "Active Missions by this Organization"
+  },
+  "Map": {
+    "title": "Cosmic Mission Radar",
+    "subtitle": "Interactive geospatial grid of all verified European opportunities in orbit.",
+    "loading": "Calibrating orbital sensors...",
+    "projectsOnMap": "Missions in Orbit",
+    "legend": "Sensor Legend",
+    "regularProject": "Active Mission",
+    "lastMinute": "Urgent Transmission (Last Minute)",
+    "cluster": "Mission Cluster",
+    "days": "days",
+    "viewMission": "View Mission",
+    "errorTitle": "Telemetry Signal Lost",
+    "resetView": "Reset View",
+    "filterByType": "Filter by Type",
+    "allTypes": "All Types",
+    "searchLocation": "Search location...",
+    "noCoordinates": "Geospatial data currently unavailable for this transmission."
   }
 }

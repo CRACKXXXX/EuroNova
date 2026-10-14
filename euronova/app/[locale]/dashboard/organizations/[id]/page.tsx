@@ -117,6 +117,10 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
   const countryInfo = COUNTRIES.find((c) => c.code === org.country_hq);
   const logoUrl = org.logo_url || org.avatar_url;
 
+  const orgRecord = org as unknown as Record<string, unknown>;
+  const picValue = (orgRecord.pic as string | null | undefined) || (orgRecord.pic_number as string | null | undefined) || null;
+  const oidValue = (orgRecord.oid as string | null | undefined) || (orgRecord.oid_number as string | null | undefined) || null;
+
   return (
     <div className="max-w-6xl mx-auto space-y-8 px-4 sm:px-6 lg:px-8 overflow-hidden sm:overflow-visible">
       {/* Botón de retorno */}
@@ -137,12 +141,14 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-4 min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-bold px-3 py-1 rounded-full bg-hyper-violet/20 border border-hyper-violet/40 text-hyper-violet uppercase tracking-wider">
-                PIC: {org.pic_number || "N/A"}
-              </span>
-              {org.oid_number && (
+              {picValue && (
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-hyper-violet/20 border border-hyper-violet/40 text-hyper-violet uppercase tracking-wider">
+                  PIC: {picValue}
+                </span>
+              )}
+              {oidValue && (
                 <span className="text-xs font-bold px-3 py-1 rounded-full bg-plasma-cyan/20 border border-plasma-cyan/40 text-plasma-cyan uppercase tracking-wider">
-                  OID: {org.oid_number || "N/A"}
+                  OID: {oidValue}
                 </span>
               )}
               {org.verification_status === "verified" && (
