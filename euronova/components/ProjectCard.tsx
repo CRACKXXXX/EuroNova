@@ -19,6 +19,7 @@ import { useTranslations } from "next-intl";
 import { COUNTRIES } from "@/lib/constants/countries";
 import { PROJECT_TYPE_COLORS } from "@/lib/constants/projectTypes";
 import { toggleProjectFavorite, toggleProjectApplied } from "@/actions/interactions";
+import { TermTooltip } from "@/components/TermTooltip";
 
 export interface ProjectData {
   id: string;
@@ -31,6 +32,7 @@ export interface ProjectData {
   is_last_minute: boolean;
   themes: string[] | null;
   org_name?: string;
+  org_logo_url?: string;
   verification_status?: string;
   exact_location?: string;
   duration_days?: number;
@@ -39,6 +41,7 @@ export interface ProjectData {
   financing_type?: string;
   is_favorite?: boolean;
   is_applied?: boolean;
+  created_at?: string;
 }
 
 export function ProjectCard({ project }: { project: ProjectData }) {
@@ -50,6 +53,11 @@ export function ProjectCard({ project }: { project: ProjectData }) {
   const [isPendingFav, startFavTransition] = useTransition();
   const [isPendingApp, startAppTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Calcula si el proyecto fue creado en las últimas 24 horas
+  const isNew = project.created_at
+    ? Date.now() - new Date(project.created_at).getTime() < 24 * 60 * 60 * 1000
+    : false;
 
   const handleToggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -93,6 +101,13 @@ export function ProjectCard({ project }: { project: ProjectData }) {
 
   return (
     <div className="bg-void-surface border border-void-border rounded-2xl overflow-hidden hover:border-plasma-cyan/50 hover:shadow-[0_0_30px_rgba(0,229,255,0.1)] transition-all duration-300 group flex flex-col h-full relative">
+      {/* Badge "NEW" 24h con pulso y brillo neón */}
+      {isNew && (
+        <span className="absolute top-3 right-3 px-2 py-1 text-[10px] font-bold bg-nova-flare/20 text-nova-flare border border-nova-flare/40 rounded-full animate-pulse shadow-[0_0_10px_rgba(255,46,99,0.3)] z-20">
+          NEW
+        </span>
+      )}
+
       {/* Notificación de error optimista */}
       {errorMessage && (
         <div className="absolute top-2 left-2 right-2 z-30 bg-nova-flare/95 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg border border-white/20 backdrop-blur-md animate-in fade-in">
@@ -122,7 +137,7 @@ export function ProjectCard({ project }: { project: ProjectData }) {
                 ? tTypes(project.project_type)
                 : project.project_type;
 
-              return (
+              const badge = (
                 <span
                   className={`px-2.5 py-1 text-xs font-bold rounded-full border uppercase tracking-wider ${colorClass}`}
                   title={fullTitle}
@@ -130,6 +145,16 @@ export function ProjectCard({ project }: { project: ProjectData }) {
                   {project.project_type}
                 </span>
               );
+
+              if (project.project_type === "ESC") {
+                return (
+                  <TermTooltip key="esc-type" term="ESC">
+                    {badge}
+                  </TermTooltip>
+                );
+              }
+
+              return badge;
             })()}
 
             {project.is_last_minute && (
@@ -139,14 +164,16 @@ export function ProjectCard({ project }: { project: ProjectData }) {
             )}
 
             {project.covers_rup_flights && (
-              <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-rup-emerald/20 text-rup-emerald border border-rup-emerald/30 flex items-center gap-1">
-                <PlaneTakeoff className="w-3 h-3" /> {t("rupFlights")}
-              </span>
+              <TermTooltip term="ORs">
+                <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-rup-emerald/20 text-rup-emerald border border-rup-emerald/30 flex items-center gap-1">
+                  <PlaneTakeoff className="w-3 h-3" /> {t("rupFlights")}
+                </span>
+              </TermTooltip>
             )}
           </div>
 
           {/* Botones de acción interactiva: Guardar (Favorite) y Aplicar (Applied) */}
-          <div className="flex items-center gap-1.5 shrink-0 z-10">
+          <div className={`flex items-center gap-1.5 shrink-0 z-10 transition-all ${isNew ? "mt-6" : ""}`}>
             {/* Botón Favorito */}
             <button
               type="button"
@@ -191,10 +218,22 @@ export function ProjectCard({ project }: { project: ProjectData }) {
           {project.title}
         </h3>
 
+        {/* Fallback de logo o avatar de la organización */}
         {project.org_name && (
-          <div className="flex items-center gap-1.5 text-sm text-gray-400 mb-4">
-            <Building className="w-4 h-4" />
-            <span className="line-clamp-1">{project.org_name}</span>
+          <div className="flex items-center gap-2 text-sm text-gray-300 mb-4">
+            {project.org_logo_url ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={project.org_logo_url}
+                alt={project.org_name}
+                className="w-5 h-5 rounded-full object-cover border border-void-border shrink-0"
+              />
+            ) : (
+              <div className="w-5 h-5 rounded-full bg-gradient-to-br from-void-surface to-plasma-cyan/20 border border-plasma-cyan/30 flex items-center justify-center shrink-0">
+                <Building className="w-3 h-3 text-plasma-cyan" />
+              </div>
+            )}
+            <span className="line-clamp-1 font-medium">{project.org_name}</span>
           </div>
         )}
 
@@ -207,6 +246,7 @@ export function ProjectCard({ project }: { project: ProjectData }) {
                 const c = COUNTRIES.find((x) => x.code === project.dest_country);
                 return c ? (
                   <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={c.flagUrl} alt={c.name} className="w-4 h-auto rounded-[2px]" title={c.name} />
                     <span>{c.name}</span>
                   </>

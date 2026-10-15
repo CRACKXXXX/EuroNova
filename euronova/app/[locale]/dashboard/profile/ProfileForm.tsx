@@ -124,9 +124,9 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
         <div className="bg-void-deep border border-void-border rounded-xl p-6 space-y-4">
           <div className="flex flex-col items-center justify-center mb-6">
             <div
-              className={`w-24 h-24 rounded-full border-2 overflow-hidden flex items-center justify-center bg-void-surface ${
-                role === "youth" ? "border-plasma-cyan" : "border-hyper-violet"
-              }`}
+              className={`w-24 h-24 rounded-full border-2 overflow-hidden flex items-center justify-center shadow-lg ${
+                role === "youth" ? "border-plasma-cyan shadow-[0_0_20px_rgba(0,229,255,0.2)]" : "border-hyper-violet shadow-[0_0_20px_rgba(99,102,241,0.2)]"
+              } ${displayedAvatar ? "bg-void-surface" : "bg-gradient-to-br from-void-surface to-plasma-cyan/20"}`}
             >
               {displayedAvatar ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
@@ -136,9 +136,9 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
                   className="w-full h-full object-cover"
                 />
               ) : role === "youth" ? (
-                <User className="w-10 h-10 text-plasma-cyan/50" />
+                <User className="w-10 h-10 text-plasma-cyan" />
               ) : (
-                <Building className="w-10 h-10 text-hyper-violet/50" />
+                <Building className="w-10 h-10 text-plasma-cyan" />
               )}
             </div>
           </div>
@@ -523,9 +523,9 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
 
       <div className="flex flex-col items-center justify-center space-y-4 mb-8">
         <div
-          className={`w-24 h-24 rounded-full border-2 overflow-hidden flex items-center justify-center relative group bg-void-surface ${
-            role === "youth" ? "border-plasma-cyan" : "border-hyper-violet"
-          }`}
+          className={`w-24 h-24 rounded-full border-2 overflow-hidden flex items-center justify-center relative group shadow-lg ${
+            role === "youth" ? "border-plasma-cyan shadow-[0_0_20px_rgba(0,229,255,0.2)]" : "border-hyper-violet shadow-[0_0_20px_rgba(99,102,241,0.2)]"
+          } ${displayedAvatar ? "bg-void-surface" : "bg-gradient-to-br from-void-surface to-plasma-cyan/20"}`}
         >
           {displayedAvatar ? (
             /* eslint-disable-next-line @next/next/no-img-element */
@@ -535,9 +535,9 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
               className="w-full h-full object-cover"
             />
           ) : role === "youth" ? (
-            <User className="w-10 h-10 text-plasma-cyan/50" />
+            <User className="w-10 h-10 text-plasma-cyan" />
           ) : (
-            <Building className="w-10 h-10 text-hyper-violet/50" />
+            <Building className="w-10 h-10 text-plasma-cyan" />
           )}
           <label className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
             <Upload className="w-6 h-6 text-white mb-1" />

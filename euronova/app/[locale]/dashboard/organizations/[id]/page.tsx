@@ -19,11 +19,13 @@ import {
   MessageSquare, 
   Rocket,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  User
 } from "lucide-react";
 import { COUNTRIES } from "@/lib/constants/countries";
 import { ReviewForm } from "@/components/ReviewForm";
 import { ProjectCard, ProjectData } from "@/components/ProjectCard";
+import { TermTooltip } from "@/components/TermTooltip";
 
 export const dynamic = "force-dynamic";
 
@@ -193,14 +195,18 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
           <div className="space-y-4 min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               {picValue && (
-                <span className="text-xs font-bold px-3 py-1 rounded-full bg-hyper-violet/20 border border-hyper-violet/40 text-hyper-violet uppercase tracking-wider">
-                  PIC: {picValue}
-                </span>
+                <TermTooltip term="PIC">
+                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-hyper-violet/20 border border-hyper-violet/40 text-hyper-violet uppercase tracking-wider">
+                    PIC: {picValue}
+                  </span>
+                </TermTooltip>
               )}
               {oidValue && (
-                <span className="text-xs font-bold px-3 py-1 rounded-full bg-plasma-cyan/20 border border-plasma-cyan/40 text-plasma-cyan uppercase tracking-wider">
-                  OID: {oidValue}
-                </span>
+                <TermTooltip term="OID">
+                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-plasma-cyan/20 border border-plasma-cyan/40 text-plasma-cyan uppercase tracking-wider">
+                    OID: {oidValue}
+                  </span>
+                </TermTooltip>
               )}
               {org.verification_status === "verified" && (
                 <span className="text-xs font-bold px-3 py-1 rounded-full bg-rup-emerald/20 border border-rup-emerald/40 text-rup-emerald flex items-center gap-1.5 uppercase tracking-wider">
@@ -215,11 +221,11 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                 <img
                   src={logoUrl}
                   alt={org.org_name || "Organization Logo"}
-                  className="w-16 h-16 rounded-xl object-cover bg-void-deep border border-void-border shrink-0"
+                  className="w-16 h-16 rounded-xl object-cover bg-void-deep border border-void-border shrink-0 shadow-[0_0_15px_rgba(99,102,241,0.2)]"
                 />
               ) : (
-                <div className="w-16 h-16 rounded-xl bg-void-deep border border-void-border flex items-center justify-center shrink-0">
-                  <Building className="w-8 h-8 text-hyper-violet" />
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-void-surface to-plasma-cyan/20 border border-plasma-cyan/30 flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(0,229,255,0.2)]">
+                  <Building className="w-8 h-8 text-plasma-cyan" />
                 </div>
               )}
               <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight break-words">
@@ -395,24 +401,29 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                     className="bg-void-surface border border-void-border rounded-2xl p-5 space-y-3 hover:border-hyper-violet/40 transition-colors"
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-bold text-white text-sm">{authorName}</span>
-                          {authorCountry && (
-                            <img
-                              src={authorCountry.flagUrl}
-                              alt={authorCountry.name}
-                              title={authorCountry.name}
-                              className="w-4 h-auto rounded-[2px]"
-                            />
-                          )}
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/30">
-                            {t("verifiedYouthBadge")}
-                          </span>
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-void-surface to-plasma-cyan/20 border border-plasma-cyan/30 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(0,229,255,0.15)]">
+                          <User className="w-4 h-4 text-plasma-cyan" />
                         </div>
-                        <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1">
-                          <Calendar className="w-3 h-3" />
-                          <span>{formattedDate}</span>
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-white text-sm">{authorName}</span>
+                            {authorCountry && (
+                              <img
+                                src={authorCountry.flagUrl}
+                                alt={authorCountry.name}
+                                title={authorCountry.name}
+                                className="w-4 h-auto rounded-[2px]"
+                              />
+                            )}
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/30">
+                              {t("verifiedYouthBadge")}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1">
+                            <Calendar className="w-3 h-3" />
+                            <span>{formattedDate}</span>
+                          </div>
                         </div>
                       </div>
 

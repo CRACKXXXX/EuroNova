@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import Image from "next/image";
 import { deleteProjectAction } from "./actions";
 import { COUNTRIES } from "@/lib/constants/countries";
+import { TermTooltip } from "@/components/TermTooltip";
 
 export const dynamic = 'force-dynamic';
 
@@ -86,18 +87,28 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
           
           {/* BADGES */}
           <div className="flex flex-wrap gap-2 mb-6">
-            <span className="px-3 py-1.5 text-xs font-bold rounded-full bg-void-border text-gray-200 uppercase tracking-wider shadow-lg">
-              {project.project_type || project.mission_type}
-            </span>
+            {(project.project_type === "ESC" || project.mission_type === "ESC") ? (
+              <TermTooltip term="ESC">
+                <span className="px-3 py-1.5 text-xs font-bold rounded-full bg-void-border text-gray-200 uppercase tracking-wider shadow-lg">
+                  {project.project_type || project.mission_type}
+                </span>
+              </TermTooltip>
+            ) : (
+              <span className="px-3 py-1.5 text-xs font-bold rounded-full bg-void-border text-gray-200 uppercase tracking-wider shadow-lg">
+                {project.project_type || project.mission_type}
+              </span>
+            )}
             {project.is_last_minute && (
               <span className="px-3 py-1.5 text-xs font-bold rounded-full bg-nova-flare/20 text-nova-flare border border-nova-flare/30 shadow-lg">
                 ÚLTIMA HORA
               </span>
             )}
             {project.covers_rup_flights && (
-              <span className="px-3 py-1.5 text-xs font-bold rounded-full bg-rup-emerald/20 text-rup-emerald border border-rup-emerald/30 shadow-lg">
-                ORs FLIGHTS
-              </span>
+              <TermTooltip term="ORs">
+                <span className="px-3 py-1.5 text-xs font-bold rounded-full bg-rup-emerald/20 text-rup-emerald border border-rup-emerald/30 shadow-lg">
+                  ORs FLIGHTS
+                </span>
+              </TermTooltip>
             )}
           </div>
 
@@ -107,7 +118,7 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
 
           {/* PUBLISHER PROFILE CARD */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-xl bg-void-deep/80 border border-void-border backdrop-blur-sm mb-10 w-full sm:w-fit">
-            <div className="w-12 h-12 rounded-full bg-plasma-cyan/10 flex items-center justify-center border border-plasma-cyan/20 shrink-0">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-void-surface to-plasma-cyan/20 flex items-center justify-center border border-plasma-cyan/30 shrink-0 shadow-[0_0_15px_rgba(0,229,255,0.15)]">
               <Building className="w-6 h-6 text-plasma-cyan" />
             </div>
             <div>

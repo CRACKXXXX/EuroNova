@@ -221,6 +221,8 @@ export default async function ProjectsPage(props: {
                 const projectData = {
                   ...project,
                   org_name: org.org_name,
+                  org_logo_url: org.logo_url || org.avatar_url,
+                  created_at: project.created_at,
                   verification_status: org.verification_status,
                   is_favorite: interaction?.is_favorite ?? false,
                   is_applied: interaction?.is_applied ?? false,

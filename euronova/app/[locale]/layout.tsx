@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
+import { BackToTop } from "@/components/BackToTop";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,8 +38,10 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col bg-void-deep text-white">
         <NextIntlClientProvider messages={messages}>
           {children}
+          <BackToTop />
         </NextIntlClientProvider>
       </body>
     </html>
   );
 }
+
