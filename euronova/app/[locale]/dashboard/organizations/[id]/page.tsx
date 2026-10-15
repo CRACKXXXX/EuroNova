@@ -17,7 +17,9 @@ import {
   ShieldCheck, 
   Calendar, 
   MessageSquare, 
-  Rocket 
+  Rocket,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { COUNTRIES } from "@/lib/constants/countries";
 import { ReviewForm } from "@/components/ReviewForm";
@@ -27,13 +29,33 @@ export const dynamic = "force-dynamic";
 
 interface OrganizationDetailPageProps {
   params: Promise<{ id: string; locale: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export default async function OrganizationDetailPage(props: OrganizationDetailPageProps) {
   const { id } = await props.params;
+  const searchParams = (await props.searchParams) || {};
   const supabase = await createClient();
   const t = await getTranslations("OrgReviews");
   const tOrg = await getTranslations("Organizations");
+
+  // Paginación independiente para reseñas y proyectos (50 elementos por página)
+  const REVIEWS_PER_PAGE = 50;
+  const PROJECTS_PER_PAGE = 50;
+
+  const rPageParam = searchParams.r_page ?? searchParams.reviews_page;
+  const parsedRevPage = parseInt(Array.isArray(rPageParam) ? rPageParam[0] : (rPageParam || "1"), 10);
+  const revPage = isNaN(parsedRevPage) || parsedRevPage < 1 ? 1 : parsedRevPage;
+
+  const pPageParam = searchParams.p_page ?? searchParams.projects_page;
+  const parsedProjPage = parseInt(Array.isArray(pPageParam) ? pPageParam[0] : (pPageParam || "1"), 10);
+  const projPage = isNaN(parsedProjPage) || parsedProjPage < 1 ? 1 : parsedProjPage;
+
+  const revFrom = (revPage - 1) * REVIEWS_PER_PAGE;
+  const revTo = revFrom + REVIEWS_PER_PAGE - 1;
+
+  const projFrom = (projPage - 1) * PROJECTS_PER_PAGE;
+  const projTo = projFrom + PROJECTS_PER_PAGE - 1;
 
   // 1. Obtener la Organización
   const { data: org, error: orgError } = await supabase
@@ -46,8 +68,19 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
     notFound();
   }
 
-  // 2. Obtener las reseñas con datos del autor
-  const { data: rawReviews, error: reviewsError } = await supabase
+  // 2. Obtener todas las calificaciones de reseñas para cálculo global de promedio
+  const { data: allReviewsRatings } = await supabase
+    .from("org_reviews")
+    .select("rating")
+    .eq("org_id", id);
+
+  const totalReviews = allReviewsRatings?.length || 0;
+  const averageRating = totalReviews > 0
+    ? (allReviewsRatings!.reduce((acc, r) => acc + (r.rating || 0), 0) / totalReviews).toFixed(1)
+    : "0.0";
+
+  // Obtener las reseñas paginadas (50 items max) con información del autor
+  const { data: rawReviews, count: paginatedReviewsCount, error: reviewsError } = await supabase
     .from("org_reviews")
     .select(`
       id,
@@ -59,9 +92,10 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
         full_name,
         country_code
       )
-    `)
+    `, { count: "exact" })
     .eq("org_id", id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(revFrom, revTo);
 
   if (reviewsError) {
     console.error("Error fetching org reviews:", reviewsError);
@@ -83,18 +117,24 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
   };
 
   const reviews = (rawReviews as unknown as ReviewItem[] | null) || [];
-  const totalReviews = reviews.length;
-  const averageRating = totalReviews > 0
-    ? (reviews.reduce((acc, r) => acc + r.rating, 0) / totalReviews).toFixed(1)
-    : "0.0";
+  const totalReviewsCount = paginatedReviewsCount ?? totalReviews;
+  const totalReviewPages = Math.max(1, Math.ceil(totalReviewsCount / REVIEWS_PER_PAGE));
 
-  // 3. Obtener proyectos activos de la organización
-  const { data: rawProjects } = await supabase
+  // 3. Obtener proyectos activos de la organización paginados (50 items max)
+  const { data: rawProjects, count: paginatedProjectsCount, error: projectsError } = await supabase
     .from("projects")
-    .select("*, users_org(org_name, verification_status)")
+    .select("*, users_org(org_name, verification_status)", { count: "exact" })
     .eq("org_id", id)
     .eq("status", "published")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(projFrom, projTo);
+
+  if (projectsError) {
+    console.error("Error fetching org projects:", projectsError);
+  }
+
+  const totalProjects = paginatedProjectsCount || 0;
+  const totalProjectPages = Math.max(1, Math.ceil(totalProjects / PROJECTS_PER_PAGE));
 
   // 4. Obtener interacciones del usuario autenticado si existe
   const { data: { user } } = await supabase.auth.getUser();
@@ -120,6 +160,17 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
   const orgRecord = org as unknown as Record<string, unknown>;
   const picValue = (orgRecord.pic as string | null | undefined) || (orgRecord.pic_number as string | null | undefined) || null;
   const oidValue = (orgRecord.oid as string | null | undefined) || (orgRecord.oid_number as string | null | undefined) || null;
+
+  // Generador de URLs preservando páginas independientes
+  function buildOrgUrl(paramsToUpdate: { p_page?: number; r_page?: number }) {
+    const params = new URLSearchParams();
+    const nextP = paramsToUpdate.p_page !== undefined ? paramsToUpdate.p_page : projPage;
+    const nextR = paramsToUpdate.r_page !== undefined ? paramsToUpdate.r_page : revPage;
+    if (nextP > 1) params.set("p_page", nextP.toString());
+    if (nextR > 1) params.set("r_page", nextR.toString());
+    const qs = params.toString();
+    return `/dashboard/organizations/${id}${qs ? `?${qs}` : ""}`;
+  }
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 px-4 sm:px-6 lg:px-8 overflow-hidden sm:overflow-visible">
@@ -235,13 +286,22 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
           if (!website && !instagram && !tiktok && !youtube && !linkedin && !email) return null;
 
           return (
-            <div className="mt-6 pt-6 border-t border-void-border flex flex-wrap items-center gap-3">
+            <div className="mt-4 pt-4 border-t border-void-border/70 flex flex-row items-center gap-2 sm:gap-3 flex-wrap">
+              {email && (
+                <a
+                  href={`mailto:${email}`}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-plasma-cyan/10 border border-plasma-cyan/30 text-plasma-cyan hover:bg-plasma-cyan hover:text-void-deep text-xs font-semibold transition-all shadow-[0_0_10px_rgba(0,229,255,0.1)] shrink-0"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>{email}</span>
+                </a>
+              )}
               {website && (
                 <a
                   href={website.startsWith("http") ? website : `https://${website}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all shrink-0"
                 >
                   <Globe className="w-3.5 h-3.5" />
                   <span>Website</span>
@@ -252,7 +312,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                   href={instagram.startsWith("http") ? instagram : `https://${instagram}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all shrink-0"
                 >
                   <Camera className="w-3.5 h-3.5" />
                   <span>Instagram</span>
@@ -263,7 +323,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                   href={tiktok.startsWith("http") ? tiktok : `https://${tiktok}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all shrink-0"
                 >
                   <Music className="w-3.5 h-3.5" />
                   <span>TikTok</span>
@@ -274,7 +334,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                   href={youtube.startsWith("http") ? youtube : `https://${youtube}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all shrink-0"
                 >
                   <PlaySquare className="w-3.5 h-3.5" />
                   <span>YouTube</span>
@@ -285,19 +345,10 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                   href={linkedin.startsWith("http") ? linkedin : `https://${linkedin}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all shrink-0"
                 >
                   <Briefcase className="w-3.5 h-3.5" />
                   <span>LinkedIn</span>
-                </a>
-              )}
-              {email && (
-                <a
-                  href={`mailto:${email}`}
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all"
-                >
-                  <Mail className="w-3.5 h-3.5" />
-                  <span>{email}</span>
                 </a>
               )}
             </div>
@@ -386,6 +437,66 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                   </div>
                 );
               })}
+
+              {/* Controles de Paginación para Reseñas (>50 items) */}
+              {totalReviewPages > 1 && (
+                <div className="pt-6 border-t border-void-border flex flex-col items-center justify-center gap-3">
+                  <div className="flex items-center gap-3">
+                    {revPage <= 1 ? (
+                      <button
+                        type="button"
+                        disabled
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-void-border bg-void-surface/40 text-gray-600 text-sm font-medium cursor-not-allowed select-none"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                        <span>{t("previous")}</span>
+                      </button>
+                    ) : (
+                      <Link
+                        href={buildOrgUrl({ r_page: revPage - 1 })}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-void-border bg-void-surface text-gray-200 hover:text-white hover:border-plasma-cyan hover:shadow-[0_0_12px_rgba(0,229,255,0.15)] text-sm font-medium transition-all"
+                      >
+                        <ChevronLeft className="w-4 h-4 text-plasma-cyan" />
+                        <span>{t("previous")}</span>
+                      </Link>
+                    )}
+
+                    <div className="px-4 py-2 rounded-lg border border-void-border bg-void-deep text-xs font-semibold text-plasma-cyan tracking-wider">
+                      {t("pageOf", {
+                        current: revPage,
+                        total: totalReviewPages,
+                      })}
+                    </div>
+
+                    {revPage >= totalReviewPages ? (
+                      <button
+                        type="button"
+                        disabled
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-void-border bg-void-surface/40 text-gray-600 text-sm font-medium cursor-not-allowed select-none"
+                      >
+                        <span>{t("next")}</span>
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <Link
+                        href={buildOrgUrl({ r_page: revPage + 1 })}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-void-border bg-void-surface text-gray-200 hover:text-white hover:border-plasma-cyan hover:shadow-[0_0_12px_rgba(0,229,255,0.15)] text-sm font-medium transition-all"
+                      >
+                        <span>{t("next")}</span>
+                        <ChevronRight className="w-4 h-4 text-plasma-cyan" />
+                      </Link>
+                    )}
+                  </div>
+
+                  <span className="text-xs text-gray-500 font-medium">
+                    {t("showingResults", {
+                      from: totalReviewsCount === 0 ? 0 : revFrom + 1,
+                      to: Math.min(revTo + 1, totalReviewsCount),
+                      total: totalReviewsCount,
+                    })}
+                  </span>
+                </div>
+              )}
             </div>
           ) : (
             <div className="py-16 text-center border border-dashed border-void-border rounded-2xl bg-void-surface/40 p-6">
@@ -398,17 +509,22 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
       </div>
 
       {/* Sección de Misiones Activas de esta Organización */}
-      {rawProjects && rawProjects.length > 0 && (
+      {totalProjects > 0 && (
         <div className="space-y-6 pt-6 border-t border-void-border">
-          <div className="flex items-center gap-2">
-            <Rocket className="w-6 h-6 text-plasma-cyan" />
-            <h2 className="text-2xl font-black text-white tracking-tight">
-              {t("activeMissions")}
-            </h2>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Rocket className="w-6 h-6 text-plasma-cyan" />
+              <h2 className="text-2xl font-black text-white tracking-tight">
+                {t("activeMissions")}
+              </h2>
+            </div>
+            <span className="text-xs font-semibold text-gray-400">
+              {totalProjects} {totalProjects === 1 ? "mission" : "missions"}
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {rawProjects.map((proj) => {
+            {rawProjects?.map((proj) => {
               const interaction = interactionsMap.get(proj.id);
               const projectData: ProjectData = {
                 id: proj.id,
@@ -437,6 +553,66 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
               );
             })}
           </div>
+
+          {/* Controles de Paginación para Proyectos (>50 items) */}
+          {totalProjectPages > 1 && (
+            <div className="pt-6 border-t border-void-border flex flex-col items-center justify-center gap-3">
+              <div className="flex items-center gap-3">
+                {projPage <= 1 ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-void-border bg-void-surface/40 text-gray-600 text-sm font-medium cursor-not-allowed select-none"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span>{t("previous")}</span>
+                  </button>
+                ) : (
+                  <Link
+                    href={buildOrgUrl({ p_page: projPage - 1 })}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-void-border bg-void-surface text-gray-200 hover:text-white hover:border-plasma-cyan hover:shadow-[0_0_12px_rgba(0,229,255,0.15)] text-sm font-medium transition-all"
+                  >
+                    <ChevronLeft className="w-4 h-4 text-plasma-cyan" />
+                    <span>{t("previous")}</span>
+                  </Link>
+                )}
+
+                <div className="px-4 py-2 rounded-lg border border-void-border bg-void-deep text-xs font-semibold text-plasma-cyan tracking-wider">
+                  {t("pageOf", {
+                    current: projPage,
+                    total: totalProjectPages,
+                  })}
+                </div>
+
+                {projPage >= totalProjectPages ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-void-border bg-void-surface/40 text-gray-600 text-sm font-medium cursor-not-allowed select-none"
+                  >
+                    <span>{t("next")}</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <Link
+                    href={buildOrgUrl({ p_page: projPage + 1 })}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-void-border bg-void-surface text-gray-200 hover:text-white hover:border-plasma-cyan hover:shadow-[0_0_12px_rgba(0,229,255,0.15)] text-sm font-medium transition-all"
+                  >
+                    <span>{t("next")}</span>
+                    <ChevronRight className="w-4 h-4 text-plasma-cyan" />
+                  </Link>
+                )}
+              </div>
+
+              <span className="text-xs text-gray-500 font-medium">
+                {t("showingProjects", {
+                  from: totalProjects === 0 ? 0 : projFrom + 1,
+                  to: Math.min(projTo + 1, totalProjects),
+                  total: totalProjects,
+                })}
+              </span>
+            </div>
+          )}
         </div>
       )}
     </div>

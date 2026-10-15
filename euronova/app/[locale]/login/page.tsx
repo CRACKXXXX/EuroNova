@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useActionState } from "react";
-import { User, Building } from "lucide-react";
+import { User, Building, Globe } from "lucide-react";
 import { login, signup } from "./actions";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
+import { PublicHeader } from "@/components/PublicHeader";
 
 export default function LoginPage() {
   const t = useTranslations("Login");
@@ -32,16 +33,27 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-void-deep flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 text-white relative overflow-hidden">
-      {/* Efectos Cósmicos */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-hyper-violet/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-plasma-cyan/10 rounded-full blur-[120px] pointer-events-none" />
+    <div className="min-h-screen bg-void-deep flex flex-col items-center justify-center pt-24 pb-12 px-4 sm:px-6 lg:px-8 text-white relative overflow-hidden">
+      {/* Header Público Fijo */}
+      <PublicHeader />
 
-      <div className="z-10 w-full max-w-md bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-sm">
+      {/* Efectos Cósmicos de Fondo */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-hyper-violet/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-plasma-cyan/10 rounded-full blur-[140px] pointer-events-none" />
+
+      {/* Tarjeta de Acceso con Deep Glassmorphism */}
+      <div className="z-10 w-full max-w-md bg-void-surface/60 backdrop-blur-3xl shadow-[0_0_40px_rgba(0,0,0,0.8)] border border-void-border rounded-2xl p-6 sm:p-8 transition-all duration-300">
         <div className="flex flex-col items-center mb-8">
-          <Image src="/logo-big.png" alt="EuroNova Logo" width={300} height={80} priority className="w-auto h-auto max-w-full" />
+          <Image 
+            src="/logo-big.png" 
+            alt="EuroNova Logo" 
+            width={300} 
+            height={80} 
+            priority 
+            className="w-auto h-auto max-w-full drop-shadow-[0_0_25px_rgba(0,229,255,0.15)]" 
+          />
           <h2 className="sr-only">EuroNova</h2>
-          <p className="text-gray-400 mt-2">
+          <p className="text-gray-400 mt-2 text-sm sm:text-base font-light">
             {isViewLogin ? t('welcome') : t('join')}
           </p>
         </div>
@@ -61,12 +73,12 @@ export default function LoginPage() {
                   className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${
                     role === "youth"
                       ? "border-plasma-cyan bg-plasma-cyan/10 text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.15)]"
-                      : "border-void-border bg-void-deep text-gray-400 hover:border-gray-500 hover:bg-void-surface"
+                      : "border-void-border bg-void-deep/80 text-gray-400 hover:border-gray-500 hover:bg-void-surface"
                   }`}
                 >
                   <User className="w-6 h-6 mb-2" />
                   <span className="text-sm font-semibold">{t('volunteer')}</span>
-                  <span className="text-xs opacity-70">(Joven)</span>
+                  <span className="text-xs opacity-70">{t('youthSubtitle')}</span>
                 </button>
                 <button
                   type="button"
@@ -74,12 +86,12 @@ export default function LoginPage() {
                   className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${
                     role === "org"
                       ? "border-hyper-violet bg-hyper-violet/10 text-hyper-violet shadow-[0_0_15px_rgba(99,102,241,0.15)]"
-                      : "border-void-border bg-void-deep text-gray-400 hover:border-gray-500 hover:bg-void-surface"
+                      : "border-void-border bg-void-deep/80 text-gray-400 hover:border-gray-500 hover:bg-void-surface"
                   }`}
                 >
                   <Building className="w-6 h-6 mb-2" />
                   <span className="text-sm font-semibold">{t('org')}</span>
-                  <span className="text-xs opacity-70">(Entidad)</span>
+                  <span className="text-xs opacity-70">{t('orgSubtitle')}</span>
                 </button>
               </div>
             </div>
@@ -91,8 +103,8 @@ export default function LoginPage() {
               type="email"
               name="email"
               required
-              className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all"
-              placeholder="tu@email.com"
+              className="w-full bg-void-deep/80 border border-void-border rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan focus:shadow-[0_0_15px_rgba(0,229,255,0.2)] transition-all"
+              placeholder={t('emailPlaceholder')}
             />
           </div>
 
@@ -102,8 +114,8 @@ export default function LoginPage() {
               type="password"
               name="password"
               required
-              className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all"
-              placeholder="••••••••"
+              className="w-full bg-void-deep/80 border border-void-border rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan focus:shadow-[0_0_15px_rgba(0,229,255,0.2)] transition-all"
+              placeholder={t('passwordPlaceholder')}
             />
           </div>
 
@@ -116,7 +128,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-plasma-cyan hover:bg-plasma-cyan/90 text-void-deep font-bold py-3 px-4 rounded-lg transition-all shadow-[0_0_15px_rgba(0,229,255,0.3)] hover:shadow-[0_0_25px_rgba(0,229,255,0.5)] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-plasma-cyan hover:bg-plasma-cyan/90 text-void-deep font-bold py-3.5 px-4 rounded-lg transition-all shadow-[0_0_20px_rgba(0,229,255,0.3)] hover:shadow-[0_0_30px_rgba(0,229,255,0.5)] hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "..." : isViewLogin ? t('loginBtn') : t('signupBtn')}
           </button>
@@ -126,15 +138,15 @@ export default function LoginPage() {
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t border-void-border"></span>
           </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-void-surface px-2 text-gray-500">O continuar con</span>
+          <div className="relative flex justify-center text-xs uppercase tracking-wider">
+            <span className="bg-void-surface px-2.5 text-gray-400 font-medium">{t('orContinueWith')}</span>
           </div>
         </div>
 
         <button
           type="button"
           onClick={handleGoogleLogin}
-          className="w-full bg-void-deep border border-void-border hover:border-gray-500 hover:bg-void-deep/80 text-white font-semibold py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-3"
+          className="w-full bg-void-deep/80 border border-void-border hover:border-gray-400 hover:bg-void-deep text-white font-semibold py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-3 shadow-md"
         >
           <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -149,12 +161,27 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => setIsViewLogin(!isViewLogin)}
-            className="text-gray-400 hover:text-white text-sm transition-colors"
+            className="text-gray-400 hover:text-plasma-cyan text-sm transition-colors cursor-pointer"
           >
             {isViewLogin
               ? t('noAccount')
               : t('hasAccount')}
           </button>
+        </div>
+      </div>
+
+      {/* Expanded Browser Translation Tip (2-Line Dedicated Card) */}
+      <div className="z-10 w-full max-w-md mt-6 p-4 rounded-xl bg-void-surface/60 border border-void-border/80 backdrop-blur-2xl flex items-start gap-3.5 shadow-2xl">
+        <div className="w-9 h-9 rounded-xl bg-plasma-cyan/10 border border-plasma-cyan/30 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(0,229,255,0.2)] mt-0.5">
+          <Globe className="w-4 h-4 text-plasma-cyan animate-pulse" />
+        </div>
+        <div className="flex-1 min-w-0 space-y-1">
+          <p className="text-xs sm:text-sm font-bold text-white leading-snug">
+            {t("translationTipTitle")}
+          </p>
+          <p className="text-[11px] sm:text-xs text-gray-400 leading-relaxed font-mono">
+            {t("translationTipDesc")}
+          </p>
         </div>
       </div>
     </div>

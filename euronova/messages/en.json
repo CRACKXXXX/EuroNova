@@ -1,4 +1,44 @@
 {
+  "Landing": {
+    "betaPhase": "BETA PHASE",
+    "title": "Your passport to the European space.",
+    "subtitle": "Discover mobility projects, volunteering, and unique opportunities across the European Union.",
+    "projectsInOrbit": "PROJECTS IN ORBIT",
+    "exploreBtn": "Login to see everything",
+    "radarBtn": "Mission Radar",
+    "whyTitle": "Why EuroNova?",
+    "whySubtitle": "The centralized platform designed to connect young people with verified European opportunities.",
+    "feat1Title": "Centralized Hub for Erasmus+ & ESC",
+    "feat1Desc": "Instant aggregation of youth exchanges, training courses, and European Solidarity Corps missions without broken links or noise.",
+    "feat2Title": "Interactive Mission Radar",
+    "feat2Desc": "Explore European destinations through our interactive radar map and find opportunities tailored to your country and age.",
+    "feat3Title": "Outermost Regions (ORs) First",
+    "feat3Desc": "Dedicated tags and filters for Canary Islands and outermost youth, highlighting projects covering extra travel expenses.",
+    "capabilitiesTitle": "Everything you need in one place",
+    "capProjectsTitle": "European Projects Search Engine",
+    "capProjectsText": "Easily search, filter, and discover hundreds of Erasmus+ and ESC opportunities. Stop wasting time on scattered and outdated websites.",
+    "capOrgsTitle": "Verified Organizations Directory",
+    "capOrgsText": "Discover and connect with verified European NGOs and entities to build your international network safely.",
+    "capFastFreeTitle": "Fast, Free & Personalized",
+    "capFastFreeText": "A completely free platform tailored to your profile. Find the perfect mission quickly and easily based on your age and country.",
+    "forOrgsTitle": "For Organizations & NGOs",
+    "orgPublishTitle": "Publish & Promote",
+    "orgPublishText": "Give your Erasmus+ and ESC projects the visibility they deserve. Instantly reach thousands of motivated young people across Europe.",
+    "orgReviewsTitle": "Build Reputation & Reviews",
+    "orgReviewsText": "Collect ratings and reviews from past participants. Build a solid, verified reputation to attract the best volunteers for your future missions.",
+    "orgProfileTitle": "Custom Organization Profile",
+    "orgProfileText": "Showcase your entity's mission, link all your social media channels, and manage everything from a centralized, modern dashboard.",
+    "aboutTitle": "About EuroNova",
+    "aboutText1": "EuroNova is designed to be the ultimate recognized hub for European mobility. Born from the need to simplify the chaotic landscape of international volunteering, our mission is to provide a single, reliable search engine for all youth.",
+    "aboutText2": "We aggregate high-quality training courses, youth exchanges, and volunteering missions, ensuring that every young person has equal, free, and fast access to life-changing international experiences.",
+    "missionBadge": "OUR INITIATIVE",
+    "missionTitle": "Built for youth, powered by solidarity",
+    "missionText": "EuroNova is an independent youth initiative and digital organization dedicated to democratizing European mobility. We realized how difficult and frustrating it was for young people to find verified Erasmus+ and European Solidarity Corps projects scattered across the internet. Our organization's mission is to centralize these life-changing opportunities into a single, easy-to-use platform, breaking down digital and geographical barriers to ensure equal access to international volunteering for everyone."
+  },
+  "PublicHeader": {
+    "support": "Support",
+    "login": "Login"
+  },
   "Header": {
     "home": "Home",
     "searchProjects": "Search Projects",
@@ -30,14 +70,14 @@
     "partial": "Partial",
     "none": "None",
     "accommodationIncluded": "Accommodation Included",
-    "rupFlights": "RUP Flights",
+    "rupFlights": "ORs Flights",
     "lastMinute": "Last Minute",
     "addCustomTheme": "Add theme...",
     "sortBy": "Sort By",
     "sortNewest": "Most Recent",
     "sortOldest": "Oldest",
     "sortUrgent": "Urgent / Last Minute First",
-    "sortRup": "RUP Flights (Canary/Outermost) First",
+    "sortRup": "ORs Flights (Canary/Outermost) First",
     "sortLongest": "Longest Duration",
     "sortShortest": "Shortest Duration",
     "sortAZ": "Alphabetical (A-Z)",
@@ -61,20 +101,30 @@
     "myProfile": "My Profile",
     "myProfileDesc": "Complete your details, languages, and region to connect with the best missions.",
     "myMissions": "My Missions",
-    "myMissionsDesc": "Track your saved favorites, active applications, and accepted European missions."
+    "myMissionsDesc": "Track your saved favorites, active applications, and accepted European missions.",
+    "missionRadar": "Mission Radar",
+    "missionRadarDesc": "Explore a fully interactive 3D map of all active European opportunities."
   },
   "Login": {
     "welcome": "Access your command center",
     "join": "Join the mission",
     "role": "What is your role?",
     "volunteer": "I am a Volunteer",
+    "youthSubtitle": "(Youth)",
     "org": "I am an Organization",
+    "orgSubtitle": "(Entity)",
     "email": "Email",
+    "emailPlaceholder": "you@email.com",
     "password": "Password",
+    "passwordPlaceholder": "••••••••",
     "loginBtn": "Login",
     "signupBtn": "Create Account",
+    "orContinueWith": "OR CONTINUE WITH",
     "noAccount": "Don't have an account? Sign up",
-    "hasAccount": "Already have an account? Login"
+    "hasAccount": "Already have an account? Login",
+    "translationTip": "💡 Tip: You can translate this entire platform to your language using your browser's built-in 'Translate' feature.",
+    "translationTipTitle": "💡 You can translate this entire platform into your native language.",
+    "translationTipDesc": "🖥️ PC: Right-click -> 'Translate' | 📱 Mobile: Browser Menu -> 'Translate'"
   },
   "Profile": {
     "title": "Profile Configuration",
@@ -84,7 +134,7 @@
     "fullNamePlaceholder": "Ex: Laura Garcia",
     "birthDate": "Date of Birth",
     "countryResident": "Country of Residence",
-    "rup": "Resident in Outermost Region (RUP)",
+    "rup": "Resident in Outermost Region (ORs)",
     "rupDesc": "Canary Islands, Madeira, Azores, etc.",
     "orgName": "Organization Name",
     "orgNamePlaceholder": "Ex: Youth Association EuroNova",
@@ -139,7 +189,7 @@
   },
   "ProjectCard": {
     "lastMinute": "LAST MINUTE",
-    "rupFlights": "RUP FLIGHTS",
+    "rupFlights": "ORs FLIGHTS",
     "viewDetails": "View Details",
     "years": "years",
     "days": "days",
@@ -202,7 +252,7 @@
     "requiredFieldsWarning": "Please fill all required fields correctly.",
     "participationFee": "Participation Fee (€)",
     "accommodationCovered": "Accommodation Covered",
-    "rupFlights": "Covers RUP Flights",
+    "rupFlights": "Covers ORs Flights",
     "exactLocation": "Exact Location (City/Region)",
     "lastMinute": "Last Minute",
     "themes": "Themes",
@@ -244,7 +294,11 @@
   },
   "Footer": {
     "rights": "EuroNova. All rights reserved.",
-    "support": "Support / Create Ticket"
+    "support": "Support / Create Ticket",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "notice": "Legal Notice",
+    "translationTip": "💡 Tip: You can translate this entire platform to your language using your browser's built-in 'Translate' feature."
   },
   "DashboardContent": {
     "transmissionsReceived": "International Missions",
@@ -314,7 +368,7 @@
     "noPublishedProjects": "No published projects found.",
     "approvePublish": "Approve & Publish",
     "deleteProject": "Delete Project",
-    "rupBadge": "RUP Region",
+    "rupBadge": "Outermost Region (ORs)",
     "publishedBadge": "Published",
     "pendingBadge": "Pending",
     "verifiedBadge": "Verified",
@@ -358,7 +412,15 @@
     "noAppliedDesc": "You haven't tracked any applications yet. Mark missions as applied to follow your progress.",
     "exploreMissions": "Explore Missions",
     "savedOn": "Saved on",
-    "appliedOn": "Applied on"
+    "appliedOn": "Applied on",
+    "backCommandCenter": "Back to Command Center",
+    "searchPlaceholder": "Search in this list...",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {current} of {total}",
+    "showingResults": "Showing {from} - {to} of {total} missions",
+    "noFilteredTitle": "No Missions Match Filter",
+    "noFilteredDesc": "There are no missions matching your current filter criteria. Try selecting 'ALL' or clearing search."
   },
   "OrgReviews": {
     "title": "Organization Reviews & Reputation",
@@ -375,7 +437,12 @@
     "signInToReview": "Sign in to leave a review",
     "successMessage": "Your review has been successfully submitted!",
     "verifiedYouthBadge": "Verified Participant",
-    "activeMissions": "Active Missions by this Organization"
+    "activeMissions": "Active Missions by this Organization",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {current} of {total}",
+    "showingResults": "Showing {from} - {to} of {total} reviews",
+    "showingProjects": "Showing {from} - {to} of {total} missions"
   },
   "Map": {
     "title": "Cosmic Mission Radar",
@@ -394,5 +461,11 @@
     "allTypes": "All Types",
     "searchLocation": "Search location...",
     "noCoordinates": "Geospatial data currently unavailable for this transmission."
+  },
+  "Pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {current} of {total}",
+    "showingResults": "Showing {from} - {to} of {total} items"
   }
 }

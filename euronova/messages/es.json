@@ -1,4 +1,44 @@
 {
+  "Landing": {
+    "betaPhase": "FASE BETA",
+    "title": "Tu pasaporte al espacio europeo.",
+    "subtitle": "Descubre proyectos de movilidad, voluntariado y oportunidades únicas en toda la Unión Europea.",
+    "projectsInOrbit": "PROYECTOS EN ÓRBITA",
+    "exploreBtn": "Inicia sesión para ver todo",
+    "radarBtn": "Radar de Misiones",
+    "whyTitle": "¿Por qué EuroNova?",
+    "whySubtitle": "La plataforma centralizada diseñada para conectar a la juventud con oportunidades europeas verificadas.",
+    "feat1Title": "Centro Centralizado Erasmus+ y CES",
+    "feat1Desc": "Agregación directa de intercambios juveniles, cursos de formación y voluntariado del Cuerpo Europeo de Solidaridad sin enlaces caídos ni ruido.",
+    "feat2Title": "Radar de Misiones Interactivo",
+    "feat2Desc": "Explora destinos europeos a través de nuestro mapa interactivo y encuentra oportunidades adaptadas a tu país de residencia y edad.",
+    "feat3Title": "Prioridad Regiones Ultraperiféricas (ORs)",
+    "feat3Desc": "Filtros y etiquetas exclusivas para jóvenes de Canarias y regiones ultraperiféricas, destacando proyectos que cubren gastos de viaje insulares.",
+    "capabilitiesTitle": "Todo lo que necesitas en un solo lugar",
+    "capProjectsTitle": "Buscador de Proyectos Europeos",
+    "capProjectsText": "Busca, filtra y descubre fácilmente cientos de oportunidades de Erasmus+ y CES. Deja de perder el tiempo en webs dispersas y desactualizadas.",
+    "capOrgsTitle": "Directorio de Organizaciones Verificadas",
+    "capOrgsText": "Descubre y conecta con ONG y entidades europeas verificadas para construir tu red internacional de forma segura.",
+    "capFastFreeTitle": "Rápido, Gratuito y Personalizado",
+    "capFastFreeText": "Una plataforma totalmente gratuita y adaptada a tu perfil. Encuentra la misión perfecta de forma rápida y sencilla según tu edad y país.",
+    "forOrgsTitle": "Para Organizaciones y ONG",
+    "orgPublishTitle": "Publica y Promociona",
+    "orgPublishText": "Dale a tus proyectos de Erasmus+ y CES la visibilidad que merecen. Llega al instante a miles de jóvenes motivados en toda Europa.",
+    "orgReviewsTitle": "Construye Reputación y Reseñas",
+    "orgReviewsText": "Recopila valoraciones y reseñas de antiguos participantes. Construye una reputación sólida y verificada para atraer a los mejores voluntarios.",
+    "orgProfileTitle": "Perfil de Organización Personalizado",
+    "orgProfileText": "Muestra la misión de tu entidad, enlaza todas tus redes sociales y gestiónalo todo desde un panel de control centralizado y moderno.",
+    "aboutTitle": "Sobre EuroNova",
+    "aboutText1": "EuroNova está diseñada para ser la plataforma de referencia para la movilidad europea. Nacida de la necesidad de simplificar el caótico panorama del voluntariado internacional, nuestra misión es proporcionar un buscador único y fiable para todos los jóvenes.",
+    "aboutText2": "Agregamos cursos de formación, intercambios juveniles y misiones de voluntariado de alta calidad, garantizando que todos los jóvenes tengan un acceso igualitario, gratuito y rápido a experiencias internacionales que cambian la vida.",
+    "missionBadge": "NUESTRA INICIATIVA",
+    "missionTitle": "Creado para los jóvenes, impulsado por la solidaridad",
+    "missionText": "EuroNova es una iniciativa juvenil independiente y una organización digital dedicada a democratizar la movilidad europea. Nos dimos cuenta de lo frustrante que era encontrar proyectos verificados de Erasmus+ y del Cuerpo Europeo de Solidaridad dispersos por todo internet. La misión de nuestra organización es centralizar estas oportunidades en una única plataforma fácil de usar, derribando barreras digitales y geográficas para asegurar un acceso igualitario al voluntariado internacional para todos."
+  },
+  "PublicHeader": {
+    "support": "Soporte",
+    "login": "Acceso"
+  },
   "Header": {
     "home": "Inicio",
     "searchProjects": "Buscar Proyectos",
@@ -55,20 +95,32 @@
     "searchOrgs": "Buscar Organizaciones",
     "searchOrgsDesc": "Descubre entidades verificadas, ONGs y empresas asociadas al programa Erasmus+.",
     "myProfile": "Mi Perfil",
-    "myProfileDesc": "Completa tus datos, idiomas y región para conectar con las mejores misiones."
+    "myProfileDesc": "Completa tus datos, idiomas y región para conectar con las mejores misiones.",
+    "myMissions": "Mis Misiones",
+    "myMissionsDesc": "Sigue tus favoritas guardadas, postulaciones activas y misiones aceptadas.",
+    "missionRadar": "Radar de Misiones",
+    "missionRadarDesc": "Explora un mapa 3D totalmente interactivo con todas las oportunidades europeas activas."
   },
   "Login": {
     "welcome": "Accede a tu centro de mando",
     "join": "Únete a la misión",
     "role": "¿Cuál es tu rol?",
     "volunteer": "Soy Voluntario",
-    "org": "Soy Organización",
-    "email": "Email",
+    "youthSubtitle": "(Joven)",
+    "org": "Soy una Organización",
+    "orgSubtitle": "(Entidad)",
+    "email": "Correo electrónico",
+    "emailPlaceholder": "tu@email.com",
     "password": "Contraseña",
+    "passwordPlaceholder": "••••••••",
     "loginBtn": "Iniciar Sesión",
     "signupBtn": "Crear Cuenta",
+    "orContinueWith": "O CONTINUAR CON",
     "noAccount": "¿No tienes cuenta? Regístrate",
-    "hasAccount": "¿Ya tienes cuenta? Inicia sesión"
+    "hasAccount": "¿Ya tienes cuenta? Inicia sesión",
+    "translationTip": "💡 Consejo: Puedes traducir toda esta plataforma a tu idioma usando la función 'Traducir' de tu navegador.",
+    "translationTipTitle": "💡 Puedes traducir toda esta plataforma a tu idioma nativo.",
+    "translationTipDesc": "🖥️ PC: Clic derecho -> 'Traducir' | 📱 Móvil: Menú del navegador -> 'Traducir'"
   },
   "Profile": {
     "title": "Configuración de Perfil",
@@ -232,7 +284,11 @@
   },
   "Footer": {
     "rights": "EuroNova. Todos los derechos reservados.",
-    "support": "Soporte / Crear Ticket"
+    "support": "Soporte / Crear Ticket",
+    "privacy": "Política de Privacidad",
+    "terms": "Términos y Condiciones",
+    "notice": "Aviso Legal",
+    "translationTip": "💡 Consejo: Puedes traducir toda esta plataforma a tu idioma usando la función 'Traducir' de tu navegador."
   },
   "DashboardContent": {
     "transmissionsReceived": "Misiones Internacionales",
