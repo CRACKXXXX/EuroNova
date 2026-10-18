@@ -13,19 +13,23 @@ import {
   PlaySquare, 
   Briefcase, 
   Star, 
-  ArrowLeft, 
   ShieldCheck, 
   Calendar, 
   MessageSquare, 
   Rocket,
   ChevronLeft,
   ChevronRight,
-  User
+  User,
+  PlusCircle,
+  Edit3
 } from "lucide-react";
 import { COUNTRIES } from "@/lib/constants/countries";
 import { ReviewForm } from "@/components/ReviewForm";
 import { ProjectCard, ProjectData } from "@/components/ProjectCard";
 import { TermTooltip } from "@/components/TermTooltip";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { OrganizationNavTabs } from "@/components/OrganizationNavTabs";
+import { ReportOrgButton } from "@/components/ReportOrgButton";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +39,7 @@ interface OrganizationDetailPageProps {
 }
 
 export default async function OrganizationDetailPage(props: OrganizationDetailPageProps) {
-  const { id } = await props.params;
+  const { id, locale } = await props.params;
   const searchParams = (await props.searchParams) || {};
   const supabase = await createClient();
   const t = await getTranslations("OrgReviews");
@@ -138,8 +142,28 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
   const totalProjects = paginatedProjectsCount || 0;
   const totalProjectPages = Math.max(1, Math.ceil(totalProjects / PROJECTS_PER_PAGE));
 
-  // 4. Obtener interacciones del usuario autenticado si existe
+  // 4. Obtener interacciones del usuario autenticado si existe y verificar propiedad
   const { data: { user } } = await supabase.auth.getUser();
+  let isOwner = false;
+  if (user) {
+    if (user.id === org.id || user.email === "euronovaofficial@gmail.com") {
+      isOwner = true;
+    } else {
+      try {
+        const { data: youthProfile } = await supabase
+          .from("users_youth")
+          .select("role")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (youthProfile?.role === "admin") {
+          isOwner = true;
+        }
+      } catch (e) {
+        console.warn("Could not check admin role in users_youth:", e);
+      }
+    }
+  }
+
   let userInteractions: { project_id: string; is_favorite: boolean; is_applied: boolean }[] = [];
   if (user) {
     const { data: interactions } = await supabase
@@ -171,49 +195,53 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
     if (nextP > 1) params.set("p_page", nextP.toString());
     if (nextR > 1) params.set("r_page", nextR.toString());
     const qs = params.toString();
-    return `/dashboard/organizations/${id}${qs ? `?${qs}` : ""}`;
+    return `/${locale}/dashboard/organizations/${id}${qs ? `?${qs}` : ""}`;
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 px-4 sm:px-6 lg:px-8 overflow-hidden sm:overflow-visible">
-      {/* Botón de retorno */}
+    <div className="max-w-6xl mx-auto space-y-8 px-4 sm:px-6 lg:px-8 overflow-visible">
+      {/* Migas de pan de navegación */}
       <div className="mb-2">
-        <Link
-          href="/dashboard/organizations"
-          className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm font-medium">{tOrg("directory")}</span>
-        </Link>
+        <Breadcrumbs
+          items={[
+            { label: tOrg("directory") || "Organizations", href: `/${locale}/dashboard/organizations` },
+            { label: org.org_name || "Organization" }
+          ]}
+        />
       </div>
 
       {/* Cabecera Principal de la Organización */}
-      <div className="relative overflow-hidden rounded-3xl border border-void-border bg-void-surface/80 p-6 sm:p-8 backdrop-blur-xl shadow-2xl">
+      <div className="relative overflow-visible rounded-3xl border border-void-border bg-void-surface/80 p-6 sm:p-8 backdrop-blur-xl shadow-2xl">
         <div className="absolute top-0 right-0 w-96 h-96 bg-hyper-violet/10 rounded-full blur-3xl pointer-events-none" />
         
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-4 min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              {picValue && (
-                <TermTooltip term="PIC">
-                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-hyper-violet/20 border border-hyper-violet/40 text-hyper-violet uppercase tracking-wider">
-                    PIC: {picValue}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                {picValue && (
+                  <TermTooltip term="PIC">
+                    <span className="text-xs font-bold px-3 py-1 rounded-full bg-hyper-violet/20 border border-hyper-violet/40 text-hyper-violet uppercase tracking-wider">
+                      PIC: {picValue}
+                    </span>
+                  </TermTooltip>
+                )}
+                {oidValue && (
+                  <TermTooltip term="OID">
+                    <span className="text-xs font-bold px-3 py-1 rounded-full bg-plasma-cyan/20 border border-plasma-cyan/40 text-plasma-cyan uppercase tracking-wider">
+                      OID: {oidValue}
+                    </span>
+                  </TermTooltip>
+                )}
+                {org.verification_status === "verified" && (
+                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-rup-emerald/20 border border-rup-emerald/40 text-rup-emerald flex items-center gap-1.5 uppercase tracking-wider">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    {tOrg("verified")}
                   </span>
-                </TermTooltip>
-              )}
-              {oidValue && (
-                <TermTooltip term="OID">
-                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-plasma-cyan/20 border border-plasma-cyan/40 text-plasma-cyan uppercase tracking-wider">
-                    OID: {oidValue}
-                  </span>
-                </TermTooltip>
-              )}
-              {org.verification_status === "verified" && (
-                <span className="text-xs font-bold px-3 py-1 rounded-full bg-rup-emerald/20 border border-rup-emerald/40 text-rup-emerald flex items-center gap-1.5 uppercase tracking-wider">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  {tOrg("verified")}
-                </span>
-              )}
+                )}
+              </div>
+
+              {/* Botón 360º de Reportar Organización */}
+              <ReportOrgButton orgId={id} orgName={org.org_name || "Organization"} />
             </div>
 
             <div className="flex items-center gap-4">
@@ -221,7 +249,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                 <img
                   src={logoUrl}
                   alt={org.org_name || "Organization Logo"}
-                  className="w-16 h-16 rounded-xl object-cover bg-void-deep border border-void-border shrink-0 shadow-[0_0_15px_rgba(99,102,241,0.2)]"
+                  className="w-16 h-16 rounded-full object-cover bg-void-deep border border-void-border shrink-0 shadow-[0_0_15px_rgba(99,102,241,0.2)]"
                 />
               ) : (
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-void-surface to-plasma-cyan/20 border border-plasma-cyan/30 flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(0,229,255,0.2)]">
@@ -360,7 +388,38 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
             </div>
           );
         })()}
+
+        {/* Barra de Acciones del Comandante de la Organización */}
+        {isOwner && (
+          <div className="mt-6 pt-5 border-t border-void-border/80 flex flex-wrap items-center justify-between gap-4 w-full">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-rup-emerald animate-pulse" />
+              <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">
+                Organization Command Center
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href={`/${locale}/dashboard/projects/new`}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-plasma-cyan to-hyper-violet hover:from-plasma-cyan/90 hover:to-hyper-violet/90 text-void-deep font-black text-xs sm:text-sm shadow-[0_0_20px_rgba(0,229,255,0.35)] transition-all transform hover:-translate-y-0.5 cursor-pointer"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Publish New Mission</span>
+              </Link>
+              <Link
+                href={`/${locale}/dashboard/profile`}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-void-deep/90 border border-void-border hover:border-hyper-violet/60 text-gray-200 hover:text-white font-semibold text-xs sm:text-sm transition-all shadow-md cursor-pointer"
+              >
+                <Edit3 className="w-4 h-4 text-hyper-violet" />
+                <span>Edit Profile</span>
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Tabs de Navegación de la Organización */}
+      <OrganizationNavTabs orgId={id} isOwner={isOwner} />
 
       {/* Sección de Reputación y Reseñas */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -552,6 +611,8 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                 travel_budget_max: proj.travel_budget_max,
                 financing_type: proj.financing_type,
                 org_name: org.org_name,
+                org_logo_url: org.avatar_url,
+                created_at: proj.created_at,
                 verification_status: org.verification_status,
                 is_favorite: interaction?.is_favorite ?? false,
                 is_applied: interaction?.is_applied ?? false,

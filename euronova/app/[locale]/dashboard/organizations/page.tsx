@@ -1,10 +1,10 @@
 import { createClient } from "@/utils/supabase/server";
-import { Building, ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { Building } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { OrganizationsClient } from "./OrganizationsClient";
 import { OrganizationCard } from "@/components/OrganizationCard";
 import { Suspense } from "react";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 
 export const dynamic = 'force-dynamic';
@@ -46,10 +46,7 @@ export default async function OrganizationsPage(props: {
   return (
     <div className="max-w-7xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
       <div className="mb-2">
-        <Link href="/dashboard" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm font-medium">{t('backHome')}</span>
-        </Link>
+        <Breadcrumbs items={[{ label: t('directory') || "Organizations" }]} />
       </div>
       
       <div>

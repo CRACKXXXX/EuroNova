@@ -26,6 +26,15 @@ import {
   ChevronLeft,
   ChevronRight,
   RefreshCw,
+  Flag,
+  ShieldCheck,
+  ShieldAlert,
+  ExternalLink,
+  RotateCcw,
+  Edit3,
+  Layers,
+  Bot,
+  X,
 } from "lucide-react";
 import { COUNTRIES } from "@/lib/constants/countries";
 import {
@@ -35,6 +44,13 @@ import {
   deleteYouthUser,
   publishProject,
   deleteProject,
+  dismissReport,
+  hideProject,
+  requestChanges,
+  reopenReport,
+  suspendOrganization,
+  updateProjectByAdmin,
+  type AdminProjectEditPayload,
 } from "./actions";
 
 export interface OrgItem {
@@ -70,17 +86,50 @@ export interface YouthUserItem {
 
 export interface ProjectItem {
   id: string;
-  org_id?: string;
+  org_id?: string | null;
   title: string;
   description: string | null;
   project_type: string;
   dest_country: string;
   duration_days?: number | null;
+  official_url?: string | null;
+  covers_rup_flights?: boolean;
+  is_last_minute?: boolean;
+  is_scraped?: boolean | null;
   status: string;
   login_email?: string | null;
   created_at: string;
   users_org?: {
     org_name: string | null;
+    contact_email?: string | null;
+  } | null;
+}
+
+export interface ReportItem {
+  id: string;
+  target_type?: "project" | "organization" | "user" | string;
+  project_id?: string | null;
+  org_id?: string | null;
+  target_user_id?: string | null;
+  target_name?: string | null;
+  reporter_id: string | null;
+  reason: string;
+  description: string | null;
+  status: string;
+  created_at: string;
+  resolved_at?: string | null;
+  reporter_email?: string | null;
+  projects?: {
+    id: string;
+    title: string;
+    status: string;
+    dest_country?: string | null;
+    project_type?: string | null;
+  } | null;
+  users_org?: {
+    id: string;
+    org_name: string | null;
+    verification_status?: string | null;
     contact_email?: string | null;
   } | null;
 }
@@ -91,6 +140,7 @@ interface AdminDashboardClientProps {
   youthUsers: YouthUserItem[];
   pendingProjects: ProjectItem[];
   publishedProjects: ProjectItem[];
+  reports?: ReportItem[];
   totalProjects: number;
   totalOrgs: number;
   totalYouth: number;
@@ -98,9 +148,11 @@ interface AdminDashboardClientProps {
   totalVerifiedOrgs: number;
   totalPendingProjects: number;
   totalPublishedProjects: number;
+  totalReports?: number;
+  totalPendingReports?: number;
   currentPage: number;
   totalPages: number;
-  currentTab?: "orgs" | "youth" | "projects";
+  currentTab?: "orgs" | "youth" | "projects" | "reports";
   pageSize?: number;
 }
 
@@ -133,12 +185,44 @@ function formatId(id: string | null | undefined, showSensitive: boolean): string
   return id;
 }
 
+export const AUTO_SCRAPER_ORG_ID = "0610184a-a16e-4dcc-a8f6-b9ddef963bf5";
+
+export function isProjectScraped(project: ProjectItem): boolean {
+  if (project.is_scraped === true) return true;
+  if (!project.org_id) return true;
+  if (project.org_id === AUTO_SCRAPER_ORG_ID) return true;
+
+  const orgName = (project.users_org?.org_name || "").trim().toLowerCase();
+  if (
+    orgName.includes("scraper") ||
+    orgName.includes("auto-scraper") ||
+    orgName.includes("euronova auto-scraper") ||
+    orgName.includes("automated portal")
+  ) {
+    return true;
+  }
+
+  const contactEmail = (project.users_org?.contact_email || "").toLowerCase();
+  const loginEmail = (project.login_email || "").toLowerCase();
+  if (
+    contactEmail.includes("scraper") ||
+    loginEmail.includes("scraper") ||
+    contactEmail.includes("cron@") ||
+    loginEmail.includes("cron@")
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 export function AdminDashboardClient({
   pendingOrgs,
   verifiedOrgs,
   youthUsers,
   pendingProjects,
   publishedProjects,
+  reports = [],
   totalProjects,
   totalOrgs,
   totalYouth,
@@ -146,6 +230,8 @@ export function AdminDashboardClient({
   totalVerifiedOrgs,
   totalPendingProjects,
   totalPublishedProjects,
+  totalReports = 0,
+  totalPendingReports = 0,
   currentPage,
   totalPages,
   currentTab = "orgs",
@@ -156,8 +242,8 @@ export function AdminDashboardClient({
   const searchParams = useSearchParams();
 
   // Active tab strictly bound to URL parameter for resilient state persistence
-  const tabFromUrl = searchParams.get("tab") as "orgs" | "youth" | "projects" | null;
-  const activeTab: "orgs" | "youth" | "projects" = tabFromUrl || currentTab || "orgs";
+  const tabFromUrl = searchParams.get("tab") as "orgs" | "youth" | "projects" | "reports" | null;
+  const activeTab: "orgs" | "youth" | "projects" | "reports" = tabFromUrl || currentTab || "orgs";
 
   const [showSensitive, setShowSensitive] = useState(false);
   const [isScraping, setIsScraping] = useState(false);
@@ -187,7 +273,49 @@ export function AdminDashboardClient({
     message: string;
   } | null>(null);
 
-  const handleTabChange = (tab: "orgs" | "youth" | "projects") => {
+  // Split queue filtering for Projects: "all", "organic" (NGO), "scraper" (Auto-Scraper)
+  const [projectOriginFilter, setProjectOriginFilter] = useState<"all" | "organic" | "scraper">("all");
+
+  // God Mode Project Edit State
+  const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
+  const [editForm, setEditForm] = useState<AdminProjectEditPayload>({
+    title: "",
+    dest_country: "ES",
+    project_type: "YE",
+    duration_days: null,
+    description: "",
+    official_url: "",
+    covers_rup_flights: false,
+    is_last_minute: false,
+  });
+
+  const handleOpenEditProject = (proj: ProjectItem) => {
+    setEditingProject(proj);
+    setEditForm({
+      title: proj.title || "",
+      dest_country: proj.dest_country || "ES",
+      project_type: proj.project_type || "YE",
+      duration_days: proj.duration_days ?? null,
+      description: proj.description || "",
+      official_url: proj.official_url || "",
+      covers_rup_flights: proj.covers_rup_flights ?? false,
+      is_last_minute: proj.is_last_minute ?? false,
+    });
+  };
+
+  const handleSaveProjectEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProject) return;
+    handleAction(async () => {
+      const res = await updateProjectByAdmin(editingProject.id, editForm);
+      if (res.success) {
+        setEditingProject(null);
+      }
+      return res;
+    });
+  };
+
+  const handleTabChange = (tab: "orgs" | "youth" | "projects" | "reports") => {
     router.push(`?tab=${tab}&page=1`);
   };
 
@@ -416,6 +544,24 @@ export function AdminDashboardClient({
             <span>{t("tabProjects")}</span>
             <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-nova-flare/30 text-white font-mono">
               {totalProjects}
+            </span>
+          </button>
+
+          <button
+            onClick={() => handleTabChange("reports")}
+            className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 border ${
+              activeTab === "reports"
+                ? "bg-nova-flare/20 border-nova-flare text-white shadow-[0_0_20px_rgba(255,46,99,0.25)]"
+                : "bg-void-surface border-void-border text-gray-400 hover:text-white hover:border-gray-700"
+            }`}
+          >
+            <Flag className="w-4 h-4 text-nova-flare" />
+            <span>{t("tabReports")}</span>
+            <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-nova-flare/30 text-white font-mono flex items-center gap-1.5">
+              {totalReports}
+              {totalPendingReports > 0 && (
+                <span className="w-2 h-2 rounded-full bg-nova-flare animate-ping inline-block" />
+              )}
             </span>
           </button>
         </div>
@@ -760,187 +906,880 @@ export function AdminDashboardClient({
       )}
 
       {/* TAB 3: PROJECTS */}
-      {activeTab === "projects" && (
-        <div className="space-y-12 animate-in fade-in duration-300">
-          {/* Section 1: Pending Review */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between border-b border-void-border pb-3">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2.5">
-                <span className="w-3 h-3 rounded-full bg-nova-flare animate-pulse" />
-                {t("pendingProjects")}
-                <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-nova-flare/20 text-nova-flare border border-nova-flare/30">
-                  {totalPendingProjects}
-                </span>
-              </h2>
+      {activeTab === "projects" && (() => {
+        const filteredPending = pendingProjects.filter((p) => {
+          const isScraped = isProjectScraped(p);
+          if (projectOriginFilter === "organic") return !isScraped;
+          if (projectOriginFilter === "scraper") return isScraped;
+          return true;
+        });
+
+        const filteredPublished = publishedProjects.filter((p) => {
+          const isScraped = isProjectScraped(p);
+          if (projectOriginFilter === "organic") return !isScraped;
+          if (projectOriginFilter === "scraper") return isScraped;
+          return true;
+        });
+
+        const organicCount =
+          pendingProjects.filter((p) => !isProjectScraped(p)).length +
+          publishedProjects.filter((p) => !isProjectScraped(p)).length;
+        const scrapedCount =
+          pendingProjects.filter((p) => isProjectScraped(p)).length +
+          publishedProjects.filter((p) => isProjectScraped(p)).length;
+
+        return (
+          <div className="space-y-10 animate-in fade-in duration-300">
+            {/* Origin Switcher (Split Views: All vs Organic vs Auto-Scraper) */}
+            <div className="bg-void-surface border border-void-border rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-plasma-cyan" />
+                  <span>Project Origin Filter</span>
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Filter queues between direct NGO publications and automated scraper feeds.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setProjectOriginFilter("all")}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    projectOriginFilter === "all"
+                      ? "bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/40 shadow-[0_0_12px_rgba(0,229,255,0.2)]"
+                      : "bg-void-deep text-gray-400 hover:text-white border border-void-border"
+                  }`}
+                >
+                  <span>All ({pendingProjects.length + publishedProjects.length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProjectOriginFilter("organic")}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    projectOriginFilter === "organic"
+                      ? "bg-rup-emerald/20 text-rup-emerald border border-rup-emerald/40 shadow-[0_0_12px_rgba(0,230,118,0.2)]"
+                      : "bg-void-deep text-gray-400 hover:text-white border border-void-border"
+                  }`}
+                >
+                  <Building className="w-3.5 h-3.5" />
+                  <span>Organic NGO ({organicCount})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProjectOriginFilter("scraper")}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    projectOriginFilter === "scraper"
+                      ? "bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-[0_0_12px_rgba(168,85,247,0.2)]"
+                      : "bg-void-deep text-gray-400 hover:text-white border border-void-border"
+                  }`}
+                >
+                  <Bot className="w-3.5 h-3.5" />
+                  <span>Auto-Scraper ({scrapedCount})</span>
+                </button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {pendingProjects.map((project) => (
-                <div
-                  key={project.id}
-                  className="bg-void-surface border border-nova-flare/30 rounded-2xl p-6 sm:p-7 flex flex-col shadow-lg shadow-nova-flare/5"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-bold text-white break-all whitespace-normal flex-1">
-                      {project.title}
-                    </h3>
-                    <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-nova-flare/15 text-nova-flare border border-nova-flare/40 uppercase tracking-wider shrink-0 ml-2">
-                      {t("pendingBadge")}
-                    </span>
-                  </div>
+            {/* Section 1: Pending Review */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b border-void-border pb-3">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2.5">
+                  <span className="w-3 h-3 rounded-full bg-nova-flare animate-pulse" />
+                  {t("pendingProjects")}
+                  <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-nova-flare/20 text-nova-flare border border-nova-flare/30">
+                    {projectOriginFilter === "all" ? totalPendingProjects : `${filteredPending.length} of ${totalPendingProjects}`}
+                  </span>
+                </h2>
+              </div>
 
-                  {/* Project ID with privacy mask & full view */}
-                  <div className={`text-[11px] text-gray-500 font-mono mb-2 ${showSensitive ? "break-all whitespace-normal" : ""}`}>
-                    ID: {formatId(project.id, showSensitive)}
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {filteredPending.map((project) => {
+                  const isScraped = isProjectScraped(project);
 
-                  <p className="text-xs text-plasma-cyan font-medium mb-1">
-                    {project.users_org?.org_name || t("unnamed")}
-                  </p>
+                  return (
+                    <div
+                      key={project.id}
+                      className="bg-void-surface border border-nova-flare/30 rounded-2xl p-6 sm:p-7 flex flex-col shadow-lg shadow-nova-flare/5"
+                    >
+                      <div className="flex justify-between items-start gap-2 mb-2">
+                        <h3 className="text-lg font-bold text-white break-all whitespace-normal flex-1">
+                          {project.title}
+                        </h3>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-nova-flare/15 text-nova-flare border border-nova-flare/40 uppercase tracking-wider">
+                            {t("pendingBadge")}
+                          </span>
+                          {isScraped ? (
+                            <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-purple-500/15 text-purple-300 border border-purple-500/30 flex items-center gap-1 shadow-[0_0_10px_rgba(168,85,247,0.15)]">
+                              <Bot className="w-3 h-3" />
+                              Auto-Scraped
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/30 flex items-center gap-1">
+                              <Building className="w-3 h-3" />
+                              NGO Direct
+                            </span>
+                          )}
+                        </div>
+                      </div>
 
-                  {(project.login_email || project.users_org?.contact_email) && (
-                    <p className={`text-xs text-gray-400 font-mono mb-3 ${showSensitive ? "break-all whitespace-normal" : "truncate"}`}>
-                      Contact: {showSensitive ? (project.login_email || project.users_org?.contact_email) : maskEmail(project.login_email || project.users_org?.contact_email)}
-                    </p>
-                  )}
+                      {/* Project ID with privacy mask & full view */}
+                      <div className={`text-[11px] text-gray-500 font-mono mb-2 ${showSensitive ? "break-all whitespace-normal" : ""}`}>
+                        ID: {formatId(project.id, showSensitive)}
+                      </div>
 
-                  <div className="flex items-center gap-3 text-xs text-gray-400 mb-4">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-gray-500" />
-                      <span>{project.duration_days ? `${project.duration_days} days` : "—"}</span>
+                      <p className="text-xs text-plasma-cyan font-medium mb-1">
+                        {isScraped ? (project.users_org?.org_name || "EuroNova Auto-Scraper") : (project.users_org?.org_name || t("unnamed"))}
+                      </p>
+
+                      {(project.login_email || project.users_org?.contact_email) && (
+                        <p className={`text-xs text-gray-400 font-mono mb-3 ${showSensitive ? "break-all whitespace-normal" : "truncate"}`}>
+                          Contact: {showSensitive ? (project.login_email || project.users_org?.contact_email) : maskEmail(project.login_email || project.users_org?.contact_email)}
+                        </p>
+                      )}
+
+                      <div className="flex items-center gap-3 text-xs text-gray-400 mb-4">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5 text-gray-500" />
+                          <span>{project.duration_days ? `${project.duration_days} days` : "—"}</span>
+                        </div>
+                        <span>•</span>
+                        <div>{renderCountry(project.dest_country)}</div>
+                        <span>•</span>
+                        <span className="font-mono text-gray-300">{project.project_type || "YE"}</span>
+                      </div>
+
+                      {/* Full description without truncation for Admin review */}
+                      <p className="text-sm text-gray-300 mb-6 flex-1 whitespace-pre-wrap leading-relaxed break-words">
+                        {project.description || t("noDescription")}
+                      </p>
+
+                      <div className="flex flex-wrap gap-2 mt-auto pt-3 border-t border-void-border/50">
+                        <button
+                          disabled={isPending}
+                          onClick={() => handleAction(() => publishProject(project.id))}
+                          className="flex-1 min-w-[100px] py-2 px-2.5 rounded-lg bg-rup-emerald/15 hover:bg-rup-emerald/25 text-rup-emerald border border-rup-emerald/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                          <span>{t("approvePublish")}</span>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isPending}
+                          onClick={() => handleOpenEditProject(project)}
+                          className="py-2 px-3 rounded-lg bg-plasma-cyan/15 hover:bg-plasma-cyan/25 text-plasma-cyan border border-plasma-cyan/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-[0_0_10px_rgba(0,229,255,0.15)]"
+                          title="God Mode: Edit project details before approval"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 shrink-0" />
+                          <span>Edit</span>
+                        </button>
+                        <a
+                          href={`mailto:${project.login_email || project.users_org?.contact_email || ""}?subject=EuroNova%20-%20Project%20Review:%20${encodeURIComponent(project.title)}&body=Hello,%20your%20project%20was%20flagged.%20Please%20modify%20it%20so%20we%20can%20publish:%0A%0A-%20...`}
+                          className="py-2 px-2.5 rounded-lg bg-yellow-400/15 hover:bg-yellow-400/25 text-yellow-400 border border-yellow-400/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 text-center"
+                        >
+                          <Mail className="w-3.5 h-3.5 shrink-0" />
+                          <span>{t("requestChanges")}</span>
+                        </a>
+                        <button
+                          disabled={isPending}
+                          onClick={() => {
+                            setDeleteConfig({
+                              action: () => deleteProject(project.id),
+                              title: "Delete Pending Project",
+                              message: `Are you sure you want to delete "${project.title}"?`,
+                            });
+                          }}
+                          className="py-2 px-2.5 rounded-lg bg-nova-flare/15 hover:bg-nova-flare/25 text-nova-flare border border-nova-flare/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                        </button>
+                      </div>
                     </div>
-                    <span>•</span>
-                    <div>{renderCountry(project.dest_country)}</div>
+                  );
+                })}
+
+                {filteredPending.length === 0 && (
+                  <div className="col-span-full py-12 text-center border border-dashed border-void-border rounded-2xl bg-void-surface/40">
+                    <p className="text-gray-400 text-sm">{t("noPendingProjects")}</p>
                   </div>
+                )}
+              </div>
+            </div>
 
-                  <p className="text-sm text-gray-300 mb-6 flex-1 whitespace-pre-wrap leading-relaxed break-words">
-                    {project.description || t("noDescription")}
-                  </p>
+            {/* Section 2: Published Projects */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b border-void-border pb-3">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2.5">
+                  <CheckCircle2 className="w-5 h-5 text-rup-emerald" />
+                  {t("publishedProjects")}
+                  <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-rup-emerald/20 text-rup-emerald border border-rup-emerald/30">
+                    {filteredPublished.length}
+                  </span>
+                </h2>
+              </div>
 
-                  <div className="flex flex-wrap sm:flex-nowrap gap-2 mt-auto pt-2">
-                    <button
-                      disabled={isPending}
-                      onClick={() => handleAction(() => publishProject(project.id))}
-                      className="flex-1 py-2 px-2.5 rounded-lg bg-rup-emerald/15 hover:bg-rup-emerald/25 text-rup-emerald border border-rup-emerald/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {filteredPublished.map((project) => {
+                  const isScraped = isProjectScraped(project);
+
+                  return (
+                    <div
+                      key={project.id}
+                      className="bg-void-surface border border-void-border hover:border-rup-emerald/30 rounded-2xl p-6 sm:p-7 flex flex-col transition-all shadow-md"
                     >
-                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                      <span>{t("approvePublish")}</span>
-                    </button>
-                    <a
-                      href={`mailto:${project.login_email || project.users_org?.contact_email || ""}?subject=EuroNova%20-%20Project%20Review:%20${encodeURIComponent(project.title)}&body=Hello,%20your%20project%20was%20flagged.%20Please%20modify%20it%20so%20we%20can%20publish:%0A%0A-%20...`}
-                      className="flex-1 py-2 px-2.5 rounded-lg bg-yellow-400/15 hover:bg-yellow-400/25 text-yellow-400 border border-yellow-400/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 text-center"
-                    >
-                      <Mail className="w-3.5 h-3.5 shrink-0" />
-                      <span>{t("requestChanges")}</span>
-                    </a>
-                    <button
-                      disabled={isPending}
-                      onClick={() => {
-                        setDeleteConfig({
-                          action: () => deleteProject(project.id),
-                          title: "Delete Pending Project",
-                          message: `Are you sure you want to delete "${project.title}"?`,
-                        });
-                      }}
-                      className="flex-1 py-2 px-2.5 rounded-lg bg-nova-flare/15 hover:bg-nova-flare/25 text-nova-flare border border-nova-flare/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
-                    >
-                      <Trash2 className="w-3.5 h-3.5 shrink-0" />
-                      <span>{t("deleteProject")}</span>
-                    </button>
+                      <div className="flex justify-between items-start gap-2 mb-2">
+                        <h3 className="text-lg font-bold text-white break-all whitespace-normal flex-1">
+                          {project.title}
+                        </h3>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/30 uppercase tracking-wider">
+                            {t("publishedBadge")}
+                          </span>
+                          {isScraped ? (
+                            <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-purple-500/15 text-purple-300 border border-purple-500/30 flex items-center gap-1 shadow-[0_0_10px_rgba(168,85,247,0.15)]">
+                              <Bot className="w-3 h-3" />
+                              Auto-Scraped
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/30 flex items-center gap-1">
+                              <Building className="w-3 h-3" />
+                              NGO Direct
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Project ID with privacy mask & full view */}
+                      <div className={`text-[11px] text-gray-500 font-mono mb-2 ${showSensitive ? "break-all whitespace-normal" : ""}`}>
+                        ID: {formatId(project.id, showSensitive)}
+                      </div>
+
+                      <p className="text-xs text-plasma-cyan font-medium mb-1">
+                        {isScraped ? (project.users_org?.org_name || "EuroNova Auto-Scraper") : (project.users_org?.org_name || t("unnamed"))}
+                      </p>
+
+                      {(project.login_email || project.users_org?.contact_email) && (
+                        <p className={`text-xs text-gray-400 font-mono mb-3 ${showSensitive ? "break-all whitespace-normal" : "truncate"}`}>
+                          Contact: {showSensitive ? (project.login_email || project.users_org?.contact_email) : maskEmail(project.login_email || project.users_org?.contact_email)}
+                        </p>
+                      )}
+
+                      <div className="flex items-center gap-3 text-xs text-gray-400 mb-4">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5 text-gray-500" />
+                          <span>{project.duration_days ? `${project.duration_days} days` : "—"}</span>
+                        </div>
+                        <span>•</span>
+                        <div>{renderCountry(project.dest_country)}</div>
+                        <span>•</span>
+                        <span className="font-mono text-gray-300">{project.project_type || "YE"}</span>
+                      </div>
+
+                      {/* Full description without truncation for Admin review */}
+                      <p className="text-sm text-gray-300 mb-6 flex-1 whitespace-pre-wrap leading-relaxed break-words">
+                        {project.description || t("noDescription")}
+                      </p>
+
+                      <div className="mt-auto pt-3 border-t border-void-border/50 flex items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={isPending}
+                          onClick={() => handleOpenEditProject(project)}
+                          className="flex-1 py-2 px-3 rounded-lg bg-plasma-cyan/15 hover:bg-plasma-cyan/25 text-plasma-cyan border border-plasma-cyan/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 shrink-0" />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          disabled={isPending}
+                          onClick={() => {
+                            setDeleteConfig({
+                              action: () => deleteProject(project.id),
+                              title: "Delete Published Project",
+                              message: `Are you sure you want to delete "${project.title}"? It will be permanently removed from public view.`,
+                            });
+                          }}
+                          className="flex-1 py-2 px-3 rounded-lg bg-nova-flare/10 hover:bg-nova-flare/20 text-nova-flare border border-nova-flare/30 font-bold text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                          <span>{t("deleteProject")}</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {filteredPublished.length === 0 && (
+                  <div className="col-span-full py-12 text-center border border-dashed border-void-border rounded-2xl bg-void-surface/40">
+                    <p className="text-gray-400 text-sm">{t("noPublishedProjects")}</p>
                   </div>
-                </div>
-              ))}
+                )}
+              </div>
 
-              {pendingProjects.length === 0 && (
-                <div className="col-span-full py-12 text-center border border-dashed border-void-border rounded-2xl bg-void-surface/40">
-                  <p className="text-gray-400 text-sm">{t("noPendingProjects")}</p>
-                </div>
-              )}
+              {renderPagination(totalPublishedProjects)}
             </div>
           </div>
+        );
+      })()}
 
-          {/* Section 2: Published Projects */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between border-b border-void-border pb-3">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2.5">
-                <CheckCircle2 className="w-5 h-5 text-rup-emerald" />
-                {t("publishedProjects")}
-                <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-rup-emerald/20 text-rup-emerald border border-rup-emerald/30">
-                  {totalPublishedProjects}
-                </span>
-              </h2>
-            </div>
+      {/* TAB 4: MODERATION REPORTS */}
+      {activeTab === "reports" && (() => {
+        const activeReports = reports.filter(
+          (r) => r.status === "pending" || r.status === "reviewed"
+        );
+        const resolvedReports = reports.filter((r) => r.status === "resolved");
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {publishedProjects.map((project) => (
-                <div
-                  key={project.id}
-                  className="bg-void-surface border border-void-border hover:border-rup-emerald/30 rounded-2xl p-6 sm:p-7 flex flex-col transition-all shadow-md"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-bold text-white break-all whitespace-normal flex-1">
-                      {project.title}
-                    </h3>
-                    <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/30 uppercase tracking-wider shrink-0 ml-2">
-                      {t("publishedBadge")}
-                    </span>
+        return (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            {/* 1. TOP BOX: Active Transmissions */}
+            <div className="bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 shadow-xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-void-border">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-nova-flare/15 border border-nova-flare/30 flex items-center justify-center text-nova-flare shrink-0 shadow-[0_0_15px_rgba(255,46,99,0.25)]">
+                    <ShieldAlert className="w-5 h-5" />
                   </div>
-
-                  {/* Project ID with privacy mask & full view */}
-                  <div className={`text-[11px] text-gray-500 font-mono mb-2 ${showSensitive ? "break-all whitespace-normal" : ""}`}>
-                    ID: {formatId(project.id, showSensitive)}
-                  </div>
-
-                  <p className="text-xs text-plasma-cyan font-medium mb-1">
-                    {project.users_org?.org_name || t("unnamed")}
-                  </p>
-
-                  {(project.login_email || project.users_org?.contact_email) && (
-                    <p className={`text-xs text-gray-400 font-mono mb-3 ${showSensitive ? "break-all whitespace-normal" : "truncate"}`}>
-                      Contact: {showSensitive ? (project.login_email || project.users_org?.contact_email) : maskEmail(project.login_email || project.users_org?.contact_email)}
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                      <span>{t("activeReportsTitle")}</span>
+                      {activeReports.length > 0 && (
+                        <span className="w-2.5 h-2.5 rounded-full bg-nova-flare animate-ping inline-block" />
+                      )}
+                    </h2>
+                    <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                      {t("activeReportsSubtitle")}
                     </p>
-                  )}
-
-                  <div className="flex items-center gap-3 text-xs text-gray-400 mb-4">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-gray-500" />
-                      <span>{project.duration_days ? `${project.duration_days} days` : "—"}</span>
-                    </div>
-                    <span>•</span>
-                    <div>{renderCountry(project.dest_country)}</div>
-                  </div>
-
-                  <p className="text-sm text-gray-300 mb-6 flex-1 whitespace-pre-wrap leading-relaxed break-words">
-                    {project.description || t("noDescription")}
-                  </p>
-
-                  <div className="mt-auto pt-2 border-t border-void-border/50">
-                    <button
-                      disabled={isPending}
-                      onClick={() => {
-                        setDeleteConfig({
-                          action: () => deleteProject(project.id),
-                          title: "Delete Published Project",
-                          message: `Are you sure you want to delete "${project.title}"? It will be permanently removed from public view.`,
-                        });
-                      }}
-                      className="w-full py-2.5 px-3 rounded-lg bg-nova-flare/10 hover:bg-nova-flare/20 text-nova-flare border border-nova-flare/30 font-bold text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
-                    >
-                      <Trash2 className="w-3.5 h-3.5 shrink-0" />
-                      <span>{t("deleteProject")}</span>
-                    </button>
                   </div>
                 </div>
-              ))}
 
-              {publishedProjects.length === 0 && (
-                <div className="col-span-full py-12 text-center border border-dashed border-void-border rounded-2xl bg-void-surface/40">
-                  <p className="text-gray-400 text-sm">{t("noPublishedProjects")}</p>
+                {/* Triage Summary Badges */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-3 py-1.5 rounded-lg bg-nova-flare/15 border border-nova-flare/30 text-xs font-bold text-nova-flare">
+                    Active: {activeReports.length}
+                  </span>
+                  <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border text-xs font-semibold text-gray-300">
+                    Total: <strong className="text-white">{totalReports}</strong>
+                  </span>
+                </div>
+              </div>
+
+              {/* Active Reports List */}
+              {activeReports.length === 0 ? (
+                <div className="py-14 text-center border border-dashed border-void-border rounded-2xl bg-void-deep/40">
+                  <ShieldCheck className="w-12 h-12 text-rup-emerald/70 mx-auto mb-3" />
+                  <p className="text-gray-200 font-bold text-base">{t("noActiveReports")}</p>
+                  <p className="text-gray-500 text-xs mt-1">No pending reports require moderator intervention.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {activeReports.map((report) => {
+                    const targetType = report.target_type || (report.project_id ? "project" : report.org_id ? "organization" : "user");
+
+                    const reasonColor =
+                      report.reason === "scam"
+                        ? "bg-nova-flare/15 text-nova-flare border-nova-flare/30"
+                        : report.reason === "fee"
+                        ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                        : report.reason === "broken"
+                        ? "bg-plasma-cyan/15 text-plasma-cyan border-plasma-cyan/30"
+                        : "bg-hyper-violet/15 text-hyper-violet border-hyper-violet/30";
+
+                    const statusColor =
+                      report.status === "pending"
+                        ? "bg-nova-flare/20 text-nova-flare border-nova-flare/40"
+                        : "bg-hyper-violet/20 text-hyper-violet border-hyper-violet/40";
+
+                    return (
+                      <div
+                        key={report.id}
+                        className="p-5 rounded-2xl bg-void-deep/90 border border-void-border hover:border-plasma-cyan/30 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-6 shadow-sm"
+                      >
+                        <div className="space-y-3 flex-1 min-w-0">
+                          {/* Top metadata row with 360 Target Badges */}
+                          <div className="flex flex-wrap items-center gap-2.5">
+                            {targetType === "project" && (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-plasma-cyan/15 text-plasma-cyan border border-plasma-cyan/40 flex items-center gap-1 shadow-[0_0_10px_rgba(0,229,255,0.15)]">
+                                <FolderGit2 className="w-3 h-3" />
+                                [PROJECT]
+                              </span>
+                            )}
+                            {targetType === "organization" && (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-hyper-violet/15 text-hyper-violet border border-hyper-violet/40 flex items-center gap-1 shadow-[0_0_10px_rgba(99,102,241,0.15)]">
+                                <Building className="w-3 h-3" />
+                                [ORGANIZATION]
+                              </span>
+                            )}
+                            {targetType === "user" && (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-amber-500/15 text-amber-400 border border-amber-500/40 flex items-center gap-1 shadow-[0_0_10px_rgba(245,158,11,0.15)]">
+                                <User className="w-3 h-3" />
+                                [USER]
+                              </span>
+                            )}
+
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border ${statusColor}`}>
+                              {report.status}
+                            </span>
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${reasonColor}`}>
+                              {report.reason}
+                            </span>
+                            <span className="text-xs text-gray-500 font-mono">
+                              {new Date(report.created_at).toLocaleDateString()} {new Date(report.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            <span className="text-xs text-gray-600">•</span>
+                            <span className="text-xs text-gray-400">
+                              {t("reporter")}:{" "}
+                              <span className="text-gray-200 font-mono">
+                                {report.reporter_email
+                                  ? showSensitive
+                                    ? report.reporter_email
+                                    : maskEmail(report.reporter_email)
+                                  : t("anonymousReporter")}
+                              </span>
+                            </span>
+                          </div>
+
+                          {/* Target Details Reference */}
+                          <div>
+                            <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-0.5">
+                              {targetType === "organization" ? "Reported Organization:" : targetType === "user" ? "Reported User:" : "Reported Mission:"}
+                            </p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {targetType === "project" && (
+                                <>
+                                  <h3 className="text-base font-bold text-white hover:text-plasma-cyan transition-colors">
+                                    {report.projects?.title || `Project ID: ${report.project_id}`}
+                                  </h3>
+                                  {report.project_id && (
+                                    <a
+                                      href={`/dashboard/projects/${report.project_id}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-plasma-cyan hover:text-white p-1 rounded hover:bg-void-surface transition-colors inline-flex items-center gap-1 text-xs"
+                                      title={t("viewProject")}
+                                    >
+                                      <ExternalLink className="w-3.5 h-3.5" />
+                                      <span className="text-[11px] underline">Open Mission</span>
+                                    </a>
+                                  )}
+                                  {report.projects?.status && (
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-void-surface border border-void-border text-gray-400">
+                                      Status: {report.projects.status}
+                                    </span>
+                                  )}
+                                </>
+                              )}
+
+                              {targetType === "organization" && (
+                                <>
+                                  <h3 className="text-base font-bold text-white hover:text-hyper-violet transition-colors">
+                                    {report.users_org?.org_name || report.target_name || `Org ID: ${report.org_id}`}
+                                  </h3>
+                                  {report.org_id && (
+                                    <a
+                                      href={`/dashboard/organizations/${report.org_id}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-hyper-violet hover:text-white p-1 rounded hover:bg-void-surface transition-colors inline-flex items-center gap-1 text-xs"
+                                      title="View Public Organization Profile"
+                                    >
+                                      <ExternalLink className="w-3.5 h-3.5" />
+                                      <span className="text-[11px] underline">Open Profile</span>
+                                    </a>
+                                  )}
+                                  {report.users_org?.verification_status && (
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-void-surface border border-void-border text-gray-400">
+                                      Verification: {report.users_org.verification_status}
+                                    </span>
+                                  )}
+                                </>
+                              )}
+
+                              {targetType === "user" && (
+                                <h3 className="text-base font-bold text-white">
+                                  {report.target_name || `User ID: ${report.target_user_id}`}
+                                </h3>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Description */}
+                          {report.description && (
+                            <div className="p-3 rounded-xl bg-void-surface border border-void-border/70 text-xs text-gray-300 leading-relaxed whitespace-pre-wrap">
+                              {report.description}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Quick Action Buttons */}
+                        <div className="flex sm:flex-row lg:flex-col items-stretch gap-2 shrink-0 lg:w-48">
+                          {report.project_id && (
+                            <>
+                              <button
+                                type="button"
+                                disabled={isPending}
+                                onClick={() => {
+                                  setDeleteConfig({
+                                    action: () => hideProject(report.project_id!, report.id),
+                                    title: "Hide & Reject Reported Project",
+                                    message: `This will withdraw the project "${report.projects?.title || report.project_id}" from public view, mark this report as resolved, and schedule it for auto-cleanup after 72h.`,
+                                  });
+                                }}
+                                className="flex-1 py-2 px-3 rounded-xl bg-nova-flare/15 hover:bg-nova-flare/25 text-nova-flare border border-nova-flare/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(255,46,99,0.15)] disabled:opacity-50"
+                              >
+                                <EyeOff className="w-3.5 h-3.5 shrink-0" />
+                                <span>{t("hideProject")}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                disabled={isPending}
+                                onClick={() =>
+                                  handleAction(() =>
+                                    requestChanges(
+                                      report.project_id!,
+                                      report.id,
+                                      `Moderator request: volunteer report flagged (${report.reason})`
+                                    )
+                                  )
+                                }
+                                className="flex-1 py-2 px-3 rounded-xl bg-hyper-violet/15 hover:bg-hyper-violet/25 text-hyper-violet border border-hyper-violet/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                              >
+                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                <span>{t("requestChanges")}</span>
+                              </button>
+                            </>
+                          )}
+
+                          {report.org_id && (
+                            <button
+                              type="button"
+                              disabled={isPending}
+                              onClick={() => {
+                                setDeleteConfig({
+                                  action: () => suspendOrganization(report.org_id!, report.id),
+                                  title: "Suspend Reported Organization",
+                                  message: `Are you sure you want to suspend this organization? It will be marked as rejected and revoked from publishing.`,
+                                });
+                              }}
+                              className="flex-1 py-2 px-3 rounded-xl bg-nova-flare/15 hover:bg-nova-flare/25 text-nova-flare border border-nova-flare/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(255,46,99,0.15)] disabled:opacity-50"
+                            >
+                              <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
+                              <span>Suspend Org</span>
+                            </button>
+                          )}
+
+                          <button
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => handleAction(() => dismissReport(report.id))}
+                            className="flex-1 py-2 px-3 rounded-xl bg-void-surface hover:bg-void-border/60 text-gray-300 hover:text-white border border-void-border font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5 text-rup-emerald shrink-0" />
+                            <span>{t("dismissReport")}</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
 
-            {renderPagination(totalPublishedProjects)}
+            {/* 2. BOTTOM BOX: Resolved Log with Undo/Reopen Action */}
+            <div className="bg-void-surface/50 border border-void-border/60 rounded-2xl p-6 sm:p-8 opacity-75 grayscale-[15%] transition-all hover:opacity-90 hover:grayscale-0 shadow-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-void-border/60">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-rup-emerald/10 border border-rup-emerald/30 flex items-center justify-center text-rup-emerald shrink-0">
+                    <CheckCircle2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-black text-gray-200 tracking-tight flex items-center gap-2">
+                      <span>{t("resolvedReportsTitle")}</span>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-rup-emerald/10 text-rup-emerald border border-rup-emerald/20 font-mono">
+                        {resolvedReports.length}
+                      </span>
+                    </h2>
+                    <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                      {t("resolvedReportsSubtitle")}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1.5 rounded-lg bg-void-deep/80 border border-void-border/60 text-xs text-gray-400 font-mono">
+                    Auto-purged via pg_cron (72h)
+                  </span>
+                </div>
+              </div>
+
+              {/* Resolved Reports List */}
+              {resolvedReports.length === 0 ? (
+                <div className="py-12 text-center border border-dashed border-void-border/60 rounded-2xl bg-void-deep/30">
+                  <p className="text-gray-400 text-sm font-medium">{t("noResolvedReports")}</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {resolvedReports.map((report) => {
+                    const targetType = report.target_type || (report.project_id ? "project" : report.org_id ? "organization" : "user");
+
+                    return (
+                      <div
+                        key={report.id}
+                        className="p-4 rounded-xl bg-void-deep/60 border border-void-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                      >
+                        <div className="space-y-1.5 flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-void-surface border border-void-border text-plasma-cyan font-mono">
+                              [{targetType.toUpperCase()}]
+                            </span>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/30">
+                              Resolved
+                            </span>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-void-surface border border-void-border text-gray-400 uppercase">
+                              {report.reason}
+                            </span>
+                            <span className="text-[11px] text-gray-500 font-mono">
+                              Filed: {new Date(report.created_at).toLocaleDateString()}
+                            </span>
+                            {report.resolved_at && (
+                              <span className="text-[11px] text-rup-emerald/80 font-mono">
+                                • Resolved: {new Date(report.resolved_at).toLocaleDateString()} {new Date(report.resolved_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-bold text-gray-200">
+                              {targetType === "organization"
+                                ? (report.users_org?.org_name || report.target_name || `Org: ${report.org_id}`)
+                                : targetType === "user"
+                                ? (report.target_name || `User: ${report.target_user_id}`)
+                                : (report.projects?.title || `Project: ${report.project_id}`)}
+                            </span>
+                            {report.project_id && (
+                              <a
+                                href={`/dashboard/projects/${report.project_id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-gray-400 hover:text-plasma-cyan p-0.5 transition-colors"
+                                title={t("viewProject")}
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            )}
+                            {report.org_id && (
+                              <a
+                                href={`/dashboard/organizations/${report.org_id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-gray-400 hover:text-hyper-violet p-0.5 transition-colors"
+                                title="View Organization Profile"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            )}
+                          </div>
+
+                          {report.description && (
+                            <p className="text-xs text-gray-400 italic line-clamp-2">
+                              &ldquo;{report.description}&rdquo;
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Undo / Reopen Button & Status confirmation */}
+                        <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+                          <button
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => handleAction(() => reopenReport(report.id))}
+                            className="py-1.5 px-3 rounded-lg bg-hyper-violet/15 hover:bg-hyper-violet/25 text-hyper-violet border border-hyper-violet/40 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                            title="Reopen this report back to pending queue"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            <span>Undo / Reopen</span>
+                          </button>
+
+                          <div className="flex items-center gap-1.5 text-xs text-rup-emerald/90 font-medium px-3 py-1.5 rounded-lg bg-rup-emerald/10 border border-rup-emerald/20">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-rup-emerald" />
+                            <span className="hidden sm:inline">Closed</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {renderPagination(totalReports)}
+          </div>
+        );
+      })()}
+
+      {/* God Mode Edit Project Modal */}
+      {editingProject && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-void-deep/90 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-void-surface border border-plasma-cyan/40 rounded-2xl p-6 sm:p-8 max-w-2xl w-full shadow-[0_0_50px_rgba(0,229,255,0.2)] animate-in zoom-in-95 duration-200 my-8">
+            <div className="flex items-center justify-between pb-4 border-b border-void-border mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-plasma-cyan/15 border border-plasma-cyan/30 flex items-center justify-center text-plasma-cyan">
+                  <Edit3 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                    <span>God Mode: Edit Mission</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/30">
+                      ADMIN
+                    </span>
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Modify mission metadata directly before approving or updating live details.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingProject(null)}
+                className="text-gray-400 hover:text-white p-2 rounded-lg hover:bg-void-deep transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProjectEdit} className="space-y-4">
+              {/* Title */}
+              <div>
+                <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
+                  Mission Title <span className="text-nova-flare">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editForm.title}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, title: e.target.value }))}
+                  className="w-full px-4 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-plasma-cyan focus:outline-none focus:ring-1 focus:ring-plasma-cyan"
+                  placeholder="Enter full project title..."
+                />
+              </div>
+
+              {/* Two-column metadata */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
+                    Dest Country
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={2}
+                    value={editForm.dest_country || ""}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, dest_country: e.target.value.toUpperCase() }))}
+                    className="w-full px-4 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm uppercase font-mono focus:border-plasma-cyan focus:outline-none"
+                    placeholder="e.g. ES, DE, IT"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
+                    Project Type
+                  </label>
+                  <select
+                    value={editForm.project_type || "YE"}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, project_type: e.target.value }))}
+                    className="w-full px-4 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-plasma-cyan focus:outline-none"
+                  >
+                    <option value="YE">Youth Exchange (YE)</option>
+                    <option value="TC">Training Course (TC)</option>
+                    <option value="ESC">European Solidarity Corps (ESC)</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
+                    Duration (Days)
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={editForm.duration_days ?? ""}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, duration_days: e.target.value ? parseInt(e.target.value) : null }))}
+                    className="w-full px-4 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-plasma-cyan focus:outline-none"
+                    placeholder="e.g. 14"
+                  />
+                </div>
+              </div>
+
+              {/* Application URL (External redirect) */}
+              <div>
+                <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
+                  External Application URL
+                </label>
+                <input
+                  type="url"
+                  value={editForm.official_url || ""}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, official_url: e.target.value }))}
+                  className="w-full px-4 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm font-mono focus:border-plasma-cyan focus:outline-none"
+                  placeholder="https://forms.gle/... or official website"
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
+                  Description
+                </label>
+                <textarea
+                  rows={5}
+                  value={editForm.description || ""}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, description: e.target.value }))}
+                  className="w-full px-4 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-plasma-cyan focus:outline-none resize-y"
+                  placeholder="Detailed description of the Erasmus+ mission..."
+                />
+              </div>
+
+              {/* Checkbox Flags */}
+              <div className="flex items-center gap-6 pt-2">
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-gray-300">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(editForm.covers_rup_flights)}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, covers_rup_flights: e.target.checked }))}
+                    className="w-4 h-4 rounded border-void-border bg-void-deep text-rup-emerald focus:ring-rup-emerald"
+                  />
+                  <span>Covers RUP / Canary Islands Flights</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-gray-300">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(editForm.is_last_minute)}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, is_last_minute: e.target.checked }))}
+                    className="w-4 h-4 rounded border-void-border bg-void-deep text-nova-flare focus:ring-nova-flare"
+                  />
+                  <span>Last Minute Urgent</span>
+                </label>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="flex items-center justify-end gap-3 pt-6 border-t border-void-border mt-6">
+                <button
+                  type="button"
+                  onClick={() => setEditingProject(null)}
+                  disabled={isPending}
+                  className="px-5 py-2.5 rounded-xl bg-void-deep hover:bg-gray-800 text-gray-300 text-sm font-bold border border-void-border transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="px-6 py-2.5 rounded-xl bg-plasma-cyan hover:bg-plasma-cyan/90 text-void-deep font-bold text-sm transition-all shadow-[0_0_20px_rgba(0,229,255,0.35)] disabled:opacity-50 flex items-center gap-2"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>{isPending ? "Saving..." : "Save Changes"}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

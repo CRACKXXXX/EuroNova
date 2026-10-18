@@ -12,18 +12,22 @@ export async function login(prevState: unknown, formData: FormData) {
     return { error: "Por favor, introduce email y contraseña." };
   }
 
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-  if (error) {
-    return { error: error.message };
+    if (error) {
+      return { error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: unknown) {
+    return { error: err instanceof Error ? err.message : "Error inesperado en inicio de sesión." };
   }
-
-  redirect("/dashboard");
 }
 
 export async function signup(prevState: unknown, formData: FormData) {
@@ -35,44 +39,52 @@ export async function signup(prevState: unknown, formData: FormData) {
     return { error: "Faltan campos obligatorios para el registro." };
   }
 
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
 
-  // Paso 1: Autenticación base
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        role: role,
+    // Paso 1: Autenticación base
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          role: role,
+        }
+      }
+    });
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    if (data.user) {
+      if (role === "youth") {
+        const { error: profileError } = await supabase.from("users_youth").upsert({ id: data.user.id });
+        if (profileError) {
+          console.error("Error creating youth profile:", profileError);
+        }
+      } else if (role === "org") {
+        const { error: profileError } = await supabase.from("users_org").upsert({ id: data.user.id });
+        if (profileError) {
+          console.error("Error creating org profile:", profileError);
+        }
       }
     }
-  });
 
-  if (error) {
-    return { error: error.message };
+    return { success: true };
+  } catch (err: unknown) {
+    return { error: err instanceof Error ? err.message : "Error inesperado en registro." };
   }
-
-  if (data.user) {
-    if (role === "youth") {
-      const { error: profileError } = await supabase.from("users_youth").upsert({ id: data.user.id });
-      if (profileError) {
-        console.error("Error creating youth profile:", profileError);
-      }
-    } else if (role === "org") {
-      const { error: profileError } = await supabase.from("users_org").upsert({ id: data.user.id });
-      if (profileError) {
-        console.error("Error creating org profile:", profileError);
-      }
-    }
-  }
-
-  redirect("/dashboard");
 }
 
 export async function logout() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
-  redirect("/login");
+  try {
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+    return { success: true };
+  } catch (err: unknown) {
+    return { error: err instanceof Error ? err.message : "Error al cerrar sesión." };
+  }
 }
 
 export async function signInWithGoogle() {

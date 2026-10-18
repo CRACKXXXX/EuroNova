@@ -9,6 +9,7 @@ import {
   OrgItem,
   YouthUserItem,
   ProjectItem,
+  ReportItem,
 } from "./AdminDashboardClient";
 
 export const dynamic = "force-dynamic";
@@ -50,7 +51,29 @@ export default async function AdminPage(props: {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user || user.email !== "euronovaofficial@gmail.com") {
+  if (!user) {
+    redirect("/dashboard");
+  }
+
+  // 1. Role-based verification with fallback to primary administrator email
+  let isAuthorized = user.email === "euronovaofficial@gmail.com";
+  if (!isAuthorized) {
+    try {
+      const { data: youthProfile } = await supabase
+        .from("users_youth")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (youthProfile?.role === "admin") {
+        isAuthorized = true;
+      }
+    } catch (err) {
+      console.warn("Could not check role in users_youth:", err);
+    }
+  }
+
+  if (!isAuthorized) {
     redirect("/dashboard");
   }
 
@@ -59,10 +82,11 @@ export default async function AdminPage(props: {
   const searchParams = await props.searchParams;
   const t = await getTranslations("AdminPanel");
 
-  const currentTab = (searchParams.tab as "orgs" | "youth" | "projects") || "orgs";
+  const currentTab =
+    (searchParams.tab as "orgs" | "youth" | "projects" | "reports") || "orgs";
   const currentPage = parsePage(searchParams.page);
 
-  // 1. Dedicated count queries BEFORE fetching paginated data
+  // 2. Dedicated count queries BEFORE fetching paginated data
   const [
     totalProjectsCountRes,
     totalPublishedProjectsCountRes,
@@ -92,8 +116,24 @@ export default async function AdminPage(props: {
   const totalVerifiedOrgs = totalVerifiedOrgsCountRes.count ?? 0;
   const totalYouth = totalYouthCountRes.count ?? 0;
 
+  // Defensive queries for project_reports table
+  let totalReports = 0;
+  let totalPendingReports = 0;
+  try {
+    const [reportsCountRes, pendingReportsCountRes] = await Promise.all([
+      adminDb.from("project_reports").select("*", { count: "exact", head: true }),
+      adminDb.from("project_reports").select("*", { count: "exact", head: true }).eq("status", "pending"),
+    ]);
+    totalReports = reportsCountRes.count ?? 0;
+    totalPendingReports = pendingReportsCountRes.count ?? 0;
+  } catch (err) {
+    console.warn("Could not count project_reports:", err);
+  }
+
   const activeTabTotal =
-    currentTab === "projects"
+    currentTab === "reports"
+      ? totalReports
+      : currentTab === "projects"
       ? totalPublishedProjects
       : currentTab === "youth"
       ? totalYouth
@@ -101,17 +141,18 @@ export default async function AdminPage(props: {
 
   const totalPages = Math.max(1, Math.ceil(activeTabTotal / PAGE_SIZE));
 
-  // 2. Calculate 0-indexed range bounds for 50 items per page
+  // 3. Calculate 0-indexed range bounds for 50 items per page
   const from = (currentPage - 1) * PAGE_SIZE;
   const to = currentPage * PAGE_SIZE - 1;
 
-  // 3. Fetch paginated data slices using adminDb
+  // 4. Fetch paginated data slices using adminDb
   const [
     pendingOrgsDataRes,
     verifiedOrgsDataRes,
     youthUsersDataRes,
     pendingProjectsDataRes,
     publishedProjectsDataRes,
+    reportsDataRes,
   ] = await Promise.all([
     adminDb
       .from("users_org")
@@ -132,16 +173,21 @@ export default async function AdminPage(props: {
       .range(currentTab === "youth" ? from : 0, currentTab === "youth" ? to : PAGE_SIZE - 1),
     adminDb
       .from("projects")
-      .select("*, users_org(org_name, contact_email)")
+      .select("*, users_org(id, org_name, contact_email)")
       .eq("status", "pending_review")
       .order("created_at", { ascending: false })
       .limit(PAGE_SIZE),
     adminDb
       .from("projects")
-      .select("*, users_org(org_name, contact_email)")
+      .select("*, users_org(id, org_name, contact_email)")
       .eq("status", "published")
       .order("created_at", { ascending: false })
       .range(currentTab === "projects" ? from : 0, currentTab === "projects" ? to : PAGE_SIZE - 1),
+    adminDb
+      .from("project_reports")
+      .select("*, projects(id, title, status, dest_country, project_type), users_org(id, org_name, verification_status, contact_email)")
+      .order("created_at", { ascending: false })
+      .range(currentTab === "reports" ? from : 0, currentTab === "reports" ? to : PAGE_SIZE - 1),
   ]);
 
   const rawPendingOrgs = (pendingOrgsDataRes.data as OrgItem[]) || [];
@@ -149,8 +195,9 @@ export default async function AdminPage(props: {
   const rawYouthUsers = (youthUsersDataRes.data as YouthUserItem[]) || [];
   const rawPendingProjects = (pendingProjectsDataRes.data as ProjectItem[]) || [];
   const rawPublishedProjects = (publishedProjectsDataRes.data as ProjectItem[]) || [];
+  const rawReports = (reportsDataRes.data as ReportItem[]) || [];
 
-  // Extract unique organization and youth user IDs for admin email resolution
+  // Extract unique organization, youth user, and reporter IDs for admin email resolution
   const uniqueOrgIds = Array.from(
     new Set([
       ...rawPendingOrgs.map((o) => o.id),
@@ -158,6 +205,7 @@ export default async function AdminPage(props: {
       ...rawPendingProjects.map((p) => p.org_id).filter((id): id is string => Boolean(id)),
       ...rawPublishedProjects.map((p) => p.org_id).filter((id): id is string => Boolean(id)),
       ...rawYouthUsers.map((y) => y.id),
+      ...rawReports.map((r) => r.reporter_id).filter((id): id is string => Boolean(id)),
     ])
   );
 
@@ -203,6 +251,11 @@ export default async function AdminPage(props: {
     login_email: project.org_id ? emailsMap.get(project.org_id) || null : null,
   }));
 
+  const reports: ReportItem[] = rawReports.map((report) => ({
+    ...report,
+    reporter_email: report.reporter_id ? emailsMap.get(report.reporter_id) || null : null,
+  }));
+
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-16 px-4 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between border-b border-void-border pb-6">
@@ -241,6 +294,7 @@ export default async function AdminPage(props: {
         youthUsers={youthUsers}
         pendingProjects={pendingProjects}
         publishedProjects={publishedProjects}
+        reports={reports}
         totalProjects={totalProjects}
         totalOrgs={totalOrgs}
         totalYouth={totalYouth}
@@ -248,6 +302,8 @@ export default async function AdminPage(props: {
         totalVerifiedOrgs={totalVerifiedOrgs}
         totalPendingProjects={totalPendingProjects}
         totalPublishedProjects={totalPublishedProjects}
+        totalReports={totalReports}
+        totalPendingReports={totalPendingReports}
         currentPage={currentPage}
         totalPages={totalPages}
         currentTab={currentTab}

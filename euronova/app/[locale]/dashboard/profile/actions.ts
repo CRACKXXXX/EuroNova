@@ -152,6 +152,10 @@ export async function updateProfile(
       avatar_url = publicUrl;
     }
 
+    let xpGained = 0;
+    let leveledUp = false;
+    let newLevel: number | undefined;
+
     if (role === "youth") {
       const rawData = {
         full_name: formData.get("full_name")?.toString() ?? "",
@@ -198,6 +202,33 @@ export async function updateProfile(
 
       if (error) {
         return { error: error.message };
+      }
+
+      // Recompensa única de XP por completar el dossier de perfil (Anti-farming blindado)
+      try {
+        const { awardUserXp } = await import("@/actions/gamification");
+        const { XP_CONFIG } = await import("@/lib/gamification");
+        const hasCoreData = Boolean(
+          payload.full_name && 
+          (payload.country_code || payload.bio || (payload.languages && payload.languages.length > 0))
+        );
+
+        if (hasCoreData) {
+          const xpResult = await awardUserXp({
+            amount: XP_CONFIG.PROFILE_COMPLETION.amount,
+            reason: XP_CONFIG.PROFILE_COMPLETION.reason,
+            actionType: XP_CONFIG.PROFILE_COMPLETION.actionType,
+            targetId: XP_CONFIG.PROFILE_COMPLETION.targetId,
+          });
+
+          if (xpResult.success && xpResult.gained) {
+            xpGained = xpResult.gained;
+            leveledUp = xpResult.leveledUp || false;
+            newLevel = xpResult.level;
+          }
+        }
+      } catch (xpErr) {
+        console.warn("Could not award XP for profile completion:", xpErr);
       }
     } else {
       const rawData = {
@@ -266,7 +297,12 @@ export async function updateProfile(
         .select("*")
         .eq("id", user.id)
         .single();
-      updatedData = data as Record<string, unknown> | null;
+      updatedData = {
+        ...(data as Record<string, unknown> | null),
+        xpGained,
+        leveledUp,
+        newLevel,
+      };
     } else {
       const { data } = await supabase
         .from("users_org")

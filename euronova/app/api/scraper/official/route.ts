@@ -996,7 +996,8 @@ export async function GET(request: NextRequest) {
 
         // Foreign key fallback: retry without org_id if 23503 error occurs
         if (insertError && insertError.code === "23503") {
-          const { org_id: _ignored, ...payloadWithoutOrg } = projectPayload;
+          const { org_id: _, ...payloadWithoutOrg } = projectPayload;
+          void _;
           const retry = await adminDb
             .from("projects")
             .insert(payloadWithoutOrg)

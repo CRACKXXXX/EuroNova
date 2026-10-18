@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { ChevronDown } from 'lucide-react';
 
 import { COUNTRIES } from '@/lib/constants/countries';
@@ -16,14 +17,10 @@ interface CountrySelectProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 
 
 export function CountrySelect({ value, onChange, defaultValue, name, placeholder = "Selecciona un país", className, required, ...props }: CountrySelectProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [internalValue, setInternalValue] = useState<string>(value || defaultValue || "");
+  const [internalValue, setInternalValue] = useState<string>(defaultValue || "");
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (value !== undefined) {
-      setInternalValue(value);
-    }
-  }, [value]);
+  const currentValue = value !== undefined ? value : internalValue;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -43,23 +40,30 @@ export function CountrySelect({ value, onChange, defaultValue, name, placeholder
     }
   };
 
-  const selectedCountry = COUNTRIES.find(c => c.code === internalValue);
+  const selectedCountry = COUNTRIES.find(c => c.code === currentValue);
 
   return (
     <div className={`relative ${className || ''}`} ref={containerRef} {...props}>
       {/* Hidden native input for form submissions */}
       {name && (
-        <input type="hidden" name={name} value={internalValue} required={required} />
+        <input type="hidden" name={name} value={currentValue} required={required} />
       )}
       
       <div 
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full bg-void-surface border border-void-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all cursor-pointer flex justify-between items-center ${!internalValue ? 'text-gray-500' : ''}`}
+        className={`w-full bg-void-surface border border-void-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all cursor-pointer flex justify-between items-center ${!currentValue ? 'text-gray-500' : ''}`}
       >
         <span className="truncate flex items-center gap-2">
           {selectedCountry ? (
             <>
-              <img src={selectedCountry.flagUrl} alt={selectedCountry.name} className="w-5 h-auto rounded-[2px]" />
+              <Image 
+                src={selectedCountry.flagUrl} 
+                alt={selectedCountry.name} 
+                width={20} 
+                height={15} 
+                unoptimized 
+                className="w-5 h-auto rounded-[2px]" 
+              />
               <span className="text-white">{selectedCountry.name}</span>
             </>
           ) : (
@@ -77,7 +81,14 @@ export function CountrySelect({ value, onChange, defaultValue, name, placeholder
               onClick={() => handleSelect(country.code)}
               className="flex items-center gap-3 px-4 py-2 hover:bg-void-surface cursor-pointer transition-colors"
             >
-              <img src={country.flagUrl} alt={country.name} className="w-5 h-auto rounded-[2px]" />
+              <Image 
+                src={country.flagUrl} 
+                alt={country.name} 
+                width={20} 
+                height={15} 
+                unoptimized 
+                className="w-5 h-auto rounded-[2px]" 
+              />
               <span className="text-white text-sm">{country.name}</span>
             </div>
           ))}

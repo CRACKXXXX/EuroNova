@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState, useEffect, useTransition } from "react";
+import { useActionState, useState, useEffect, useTransition, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import { updateProfile, deleteMyAccount, ProfileActionState } from "./actions";
 import {
   Save,
@@ -17,6 +18,9 @@ import { CountrySelect } from "@/components/CountrySelect";
 import { COUNTRIES } from "@/lib/constants/countries";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+
+const emptySubscribe = () => () => {};
 
 function getString(
   data: Record<string, unknown> | null | undefined,
@@ -65,6 +69,47 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
   const [isDeleting, startTransition] = useTransition();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [confirmDeleteInput, setConfirmDeleteInput] = useState("");
+  const [isDisintegrating, setIsDisintegrating] = useState(false);
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+
+  const [prevSuccess, setPrevSuccess] = useState<string | null>(null);
+  if (state?.success && state.success !== prevSuccess) {
+    setPrevSuccess(state.success);
+    setIsEditing(false);
+  }
+
+  useEffect(() => {
+    if (state?.success) {
+      toast.success(state.success);
+      if (role === "youth") {
+        const xpGained = typeof state.data?.xpGained === "number" ? state.data.xpGained : 0;
+        const newLevel = typeof state.data?.newLevel === "number" ? state.data.newLevel : undefined;
+        const leveledUp = Boolean(state.data?.leveledUp);
+
+        if (xpGained > 0) {
+          toast.success(`Profile Dossier Completed! +${xpGained} XP awarded.`, { icon: "⚡" });
+          if (leveledUp && newLevel) {
+            toast.success(`LEVEL UP! You reached Level ${newLevel}!`, { icon: "🚀" });
+          }
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(
+              new CustomEvent("euronova:xp-updated", { 
+                detail: { xpGained, level: newLevel } 
+              })
+            );
+          }
+        }
+      }
+      router.refresh();
+    } else if (state?.error) {
+      toast.error(state.error);
+    }
+  }, [state, role, router]);
 
   const [avatarLocalPreview, setAvatarLocalPreview] = useState<string | null>(null);
 
@@ -79,14 +124,117 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
     }
   };
 
-  const executeDelete = () => {
+  const handleConfirmDelete = () => {
+    if (confirmDeleteInput.trim() !== "DELETE") return;
+    setIsDisintegrating(true);
     startTransition(async () => {
       setDeleteError(null);
       const result = await deleteMyAccount();
       if (result?.error) {
         setDeleteError(result.error);
+        setIsDisintegrating(false);
       }
     });
+  };
+
+  const renderDangerZone = () => (
+    <div className="mt-10 p-6 rounded-xl border border-red-900/30 bg-red-950/10 space-y-4">
+      <div>
+        <h3 className="text-xl font-bold text-red-400 flex items-center gap-2">
+          <AlertTriangle className="w-5 h-5 text-red-500" />
+          <span>{t("dangerZone")}</span>
+        </h3>
+        <p className="text-sm text-gray-400 mt-1">{t("dangerZoneDesc")}</p>
+      </div>
+      <button
+        onClick={() => {
+          setConfirmDeleteInput("");
+          setDeleteError(null);
+          setIsModalOpen(true);
+        }}
+        type="button"
+        className="w-full sm:w-auto px-6 py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:shadow-[0_0_20px_rgba(239,68,68,0.2)] transition-all border border-red-500/30 cursor-pointer"
+      >
+        <Trash2 className="w-4 h-4" />
+        <span>{t("deleteAccount")}</span>
+      </button>
+    </div>
+  );
+
+  const renderDeleteModal = () => {
+    if (!isModalOpen || !mounted) return null;
+    return createPortal(
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-void-deep/90 backdrop-blur-2xl px-4 animate-in fade-in duration-300">
+        <div className="bg-void-deep/95 border border-red-500/50 rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-[0_0_60px_rgba(239,68,68,0.25)] animate-in zoom-in-95 duration-300">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <div className="w-16 h-16 bg-red-500/15 border border-red-500/30 rounded-2xl flex items-center justify-center mb-1 shadow-[0_0_25px_rgba(239,68,68,0.3)]">
+              <AlertTriangle className="w-8 h-8 text-red-500" />
+            </div>
+            <h3 className="text-2xl font-black text-white tracking-tight">
+              {t("modalTitle")}
+            </h3>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              {t("modalDesc")}
+            </p>
+
+            {/* Type DELETE to confirm requirement */}
+            <div className="w-full text-left space-y-2 pt-2">
+              <label className="text-xs font-semibold text-gray-300 uppercase tracking-wider block">
+                {t("typeDeleteToConfirm") || "Type DELETE to confirm account deletion"}
+              </label>
+              <input
+                type="text"
+                value={confirmDeleteInput}
+                onChange={(e) => setConfirmDeleteInput(e.target.value)}
+                placeholder="DELETE"
+                className="w-full bg-void-surface border border-red-500/40 rounded-lg px-4 py-3 text-white text-center font-mono font-bold tracking-widest placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+              />
+            </div>
+
+            {deleteError && (
+              <div
+                role="alert"
+                className="w-full p-3 rounded-lg bg-red-500/15 border border-red-500/40 text-red-400 text-xs text-left flex items-center gap-2"
+              >
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            <div className="w-full flex flex-col gap-3 mt-4">
+              <button
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setConfirmDeleteInput("");
+                  setDeleteError(null);
+                }}
+                disabled={isDeleting || isDisintegrating}
+                type="button"
+                className="w-full py-3 rounded-lg font-bold bg-void-surface hover:bg-void-border text-gray-300 hover:text-white transition-colors border border-void-border disabled:opacity-50 cursor-pointer"
+              >
+                {t("cancelDelete")}
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={isDeleting || isDisintegrating || confirmDeleteInput.trim() !== "DELETE"}
+                type="button"
+                className="w-full py-3 rounded-lg font-bold bg-red-600 hover:bg-red-500 text-white transition-all shadow-[0_0_20px_rgba(239,68,68,0.4)] disabled:opacity-40 disabled:hover:bg-red-600 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {isDeleting || isDisintegrating ? (
+                  <div className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>{t("disintegrating") || "Disintegrating into cosmic void..."}</span>
+                  </div>
+                ) : (
+                  t("confirmDelete")
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
   };
 
   useEffect(() => {
@@ -120,7 +268,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
     const orgVerificationStatus = getString(currentData, "verification_status");
 
     return (
-      <div className="space-y-6">
+      <div className={`space-y-6 transition-all duration-700 ${isDisintegrating ? "animate-out fade-out zoom-out filter blur-sm scale-95 pointer-events-none" : ""}`}>
         <div className="bg-void-deep border border-void-border rounded-xl p-6 space-y-4">
           <div className="flex flex-col items-center justify-center mb-6">
             <div
@@ -404,74 +552,8 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
           {t("editProfile") || "Edit Profile"}
         </button>
 
-        <div className="mt-8 p-6 rounded-xl border border-red-500/30 bg-red-500/10 space-y-4">
-          <div>
-            <h3 className="text-xl font-bold text-red-400">{t("dangerZone")}</h3>
-            <p className="text-sm text-gray-400 mt-1">{t("dangerZoneDesc")}</p>
-          </div>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            type="button"
-            className="w-full sm:w-auto px-6 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 bg-red-500/20 hover:bg-red-500/40 text-red-400 border border-red-500/50"
-          >
-            <Trash2 className="w-5 h-5" />
-            {t("deleteAccount")}
-          </button>
-        </div>
-
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-void-deep/90 backdrop-blur-sm px-4">
-            <div className="bg-void-surface border border-red-500/50 rounded-2xl p-8 max-w-md w-full shadow-[0_0_40px_rgba(255,0,0,0.15)] animate-in zoom-in-95 duration-300">
-              <div className="flex flex-col items-center text-center space-y-4">
-                <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-2">
-                  <AlertTriangle className="w-8 h-8 text-red-500" />
-                </div>
-                <h3 className="text-2xl font-bold text-white">
-                  {t("modalTitle")}
-                </h3>
-                <p className="text-gray-400 text-sm leading-relaxed">
-                  {t("modalDesc")}
-                </p>
-
-                {deleteError && (
-                  <div
-                    role="alert"
-                    className="w-full p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm mt-4 flex items-center gap-2"
-                  >
-                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                    <span>{deleteError}</span>
-                  </div>
-                )}
-
-                <div className="w-full flex flex-col gap-3 mt-8">
-                  <button
-                    onClick={() => {
-                      setIsModalOpen(false);
-                      setDeleteError(null);
-                    }}
-                    disabled={isDeleting}
-                    type="button"
-                    className="w-full py-3 rounded-lg font-bold bg-gray-800 hover:bg-gray-700 text-white transition-colors border border-gray-600 disabled:opacity-50"
-                  >
-                    {t("cancelDelete")}
-                  </button>
-                  <button
-                    onClick={executeDelete}
-                    disabled={isDeleting}
-                    type="button"
-                    className="w-full py-3 rounded-lg font-bold bg-red-600 hover:bg-red-700 text-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    {isDeleting ? (
-                      <span className="animate-pulse">...</span>
-                    ) : (
-                      t("confirmDelete")
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {renderDangerZone()}
+        {renderDeleteModal()}
       </div>
     );
   }
@@ -497,7 +579,11 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
   return (
     <form
       action={action}
-      className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300"
+      className={`space-y-6 transition-all duration-700 ${
+        isDisintegrating
+          ? "animate-out fade-out zoom-out filter blur-sm scale-95 pointer-events-none"
+          : "animate-in fade-in slide-in-from-bottom-4 duration-300"
+      }`}
     >
       <input type="hidden" name="role" value={role} />
 
@@ -803,74 +889,8 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
         </button>
       </div>
 
-      <div className="mt-8 p-6 rounded-xl border border-red-500/30 bg-red-500/10 space-y-4">
-        <div>
-          <h3 className="text-xl font-bold text-red-400">{t("dangerZone")}</h3>
-          <p className="text-sm text-gray-400 mt-1">{t("dangerZoneDesc")}</p>
-        </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          type="button"
-          className="w-full sm:w-auto px-6 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 bg-red-500/20 hover:bg-red-500/40 text-red-400 border border-red-500/50"
-        >
-          <Trash2 className="w-5 h-5" />
-          {t("deleteAccount")}
-        </button>
-      </div>
-
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-void-deep/90 backdrop-blur-sm px-4">
-          <div className="bg-void-surface border border-red-500/50 rounded-2xl p-8 max-w-md w-full shadow-[0_0_40px_rgba(255,0,0,0.15)] animate-in zoom-in-95 duration-300">
-            <div className="flex flex-col items-center text-center space-y-4">
-              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-2">
-                <AlertTriangle className="w-8 h-8 text-red-500" />
-              </div>
-              <h3 className="text-2xl font-bold text-white">
-                {t("modalTitle")}
-              </h3>
-              <p className="text-gray-400 text-sm leading-relaxed">
-                {t("modalDesc")}
-              </p>
-
-              {deleteError && (
-                <div
-                  role="alert"
-                  className="w-full p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm mt-4 flex items-center gap-2"
-                >
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                  <span>{deleteError}</span>
-                </div>
-              )}
-
-              <div className="w-full flex flex-col gap-3 mt-8">
-                <button
-                  onClick={() => {
-                    setIsModalOpen(false);
-                    setDeleteError(null);
-                  }}
-                  disabled={isDeleting}
-                  type="button"
-                  className="w-full py-3 rounded-lg font-bold bg-gray-800 hover:bg-gray-700 text-white transition-colors border border-gray-600 disabled:opacity-50"
-                >
-                  {t("cancelDelete")}
-                </button>
-                <button
-                  onClick={executeDelete}
-                  disabled={isDeleting}
-                  type="button"
-                  className="w-full py-3 rounded-lg font-bold bg-red-600 hover:bg-red-700 text-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {isDeleting ? (
-                    <span className="animate-pulse">...</span>
-                  ) : (
-                    t("confirmDelete")
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {renderDangerZone()}
+      {renderDeleteModal()}
     </form>
   );
 }

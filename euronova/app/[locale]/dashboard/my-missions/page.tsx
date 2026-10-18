@@ -4,11 +4,11 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { 
   Rocket, 
-  ArrowLeft, 
   Compass, 
   Sparkles
 } from "lucide-react";
 import { MyMissionsClient, MissionInteraction } from "./MyMissionsClient";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const dynamic = "force-dynamic";
 
@@ -68,9 +68,11 @@ export default async function MyMissionsPage(props: MyMissionsPageProps) {
         travel_budget_min,
         travel_budget_max,
         financing_type,
+        created_at,
         users_org (
           org_name,
-          verification_status
+          verification_status,
+          avatar_url
         )
       )
     `)
@@ -85,15 +87,9 @@ export default async function MyMissionsPage(props: MyMissionsPageProps) {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      {/* Navegación de retorno */}
+      {/* Navegación de migas de pan y accesos */}
       <div className="flex items-center justify-between">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm font-medium">{t("backCommandCenter")}</span>
-        </Link>
+        <Breadcrumbs items={[{ label: t("title") || "My Missions" }]} />
 
         <Link
           href="/dashboard/projects"
@@ -124,6 +120,7 @@ export default async function MyMissionsPage(props: MyMissionsPageProps) {
 
       {/* Cliente interactivo con filtros rápidos por tipo y paginación independiente de 50 items */}
       <MyMissionsClient
+        userId={user.id}
         initialInteractions={interactions}
         initialTab={activeTab}
         initialType={selectedType}

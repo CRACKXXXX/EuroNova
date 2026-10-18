@@ -8,6 +8,9 @@ export interface InteractionResult {
   is_favorite?: boolean;
   is_applied?: boolean;
   error?: string;
+  xpGained?: number;
+  leveledUp?: boolean;
+  newLevel?: number;
 }
 
 /**
@@ -61,6 +64,30 @@ export async function toggleProjectFavorite(projectId: string): Promise<Interact
 
     revalidatePath("/dashboard/projects");
     revalidatePath("/dashboard/my-missions");
+
+    // Hito de tracción para la ONG organizadora cuando un voluntario guarda el proyecto
+    if (newFavorite) {
+      try {
+        const { data: projData } = await supabase
+          .from("projects")
+          .select("org_id, title")
+          .eq("id", projectId)
+          .maybeSingle();
+
+        if (projData?.org_id && projData.org_id !== user.id) {
+          const { dispatchNotification } = await import("@/actions/notifications");
+          await dispatchNotification({
+            userId: projData.org_id,
+            type: "alert",
+            title: "Mission Traction Milestone",
+            message: `Your project "${projData.title || "Mission"}" was bookmarked by a new volunteer!`,
+            actionUrl: `/dashboard/organizations/${projData.org_id}/analytics`,
+          });
+        }
+      } catch (notifErr) {
+        console.warn("Could not dispatch favorite traction notification:", notifErr);
+      }
+    }
 
     return { success: true, is_favorite: newFavorite };
   } catch (err: unknown) {
@@ -121,7 +148,72 @@ export async function toggleProjectApplied(projectId: string): Promise<Interacti
     revalidatePath("/dashboard/projects");
     revalidatePath("/dashboard/my-missions");
 
-    return { success: true, is_applied: newApplied };
+    let xpGained = 0;
+    let leveledUp = false;
+    let newLevel: number | undefined = undefined;
+
+    if (newApplied) {
+      try {
+        const { awardUserXp } = await import("@/actions/gamification");
+        const { XP_CONFIG } = await import("@/lib/gamification");
+        const xpResult = await awardUserXp({
+          amount: XP_CONFIG.APPLY_MISSION.amount,
+          reason: XP_CONFIG.APPLY_MISSION.reason,
+          actionType: XP_CONFIG.APPLY_MISSION.actionType,
+          targetId: projectId,
+        });
+
+        if (xpResult.success && xpResult.gained) {
+          xpGained = xpResult.gained;
+          leveledUp = xpResult.leveledUp || false;
+          newLevel = xpResult.level;
+        }
+      } catch (xpErr) {
+        console.warn("Could not award XP for application:", xpErr);
+      }
+
+      // Recordatorio de intención para el voluntario y notificación de tracción para la ONG (EuroNova no es ATS)
+      try {
+        const { data: projData } = await supabase
+          .from("projects")
+          .select("org_id, title")
+          .eq("id", projectId)
+          .maybeSingle();
+
+        const projectTitle = projData?.title || "Erasmus+ Mission";
+        const { dispatchNotification } = await import("@/actions/notifications");
+
+        // 1. Recordatorio para el joven voluntario
+        await dispatchNotification({
+          userId: user.id,
+          type: "alert",
+          title: "External Application Reminder",
+          message: `You showed interest in "${projectTitle}". Make sure to complete the official external application form!`,
+          actionUrl: `/dashboard/projects/${projectId}`,
+        });
+
+        // 2. Hito de tracción para la ONG responsable del proyecto
+        if (projData?.org_id && projData.org_id !== user.id) {
+          await dispatchNotification({
+            userId: projData.org_id,
+            type: "alert",
+            title: "Mission Traction Milestone",
+            message: `Your project "${projectTitle}" gained new traction! A volunteer expressed intent to apply externally.`,
+            actionUrl: `/dashboard/organizations/${projData.org_id}/analytics`,
+          });
+        }
+      } catch (notifErr) {
+        console.warn("Could not dispatch application reminder notifications:", notifErr);
+      }
+    }
+
+    return { 
+      success: true, 
+      is_applied: newApplied,
+      xpGained,
+      leveledUp,
+      newLevel
+    };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "An unexpected error occurred.";
     return { error: message };

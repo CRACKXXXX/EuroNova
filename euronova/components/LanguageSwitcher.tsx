@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/routing";
 import { ChevronDown } from "lucide-react";
@@ -45,9 +46,12 @@ export function LanguageSwitcher() {
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-void-surface hover:bg-void-surface/90 border border-void-border hover:border-plasma-cyan text-xs font-bold text-gray-200 transition-all shrink-0 cursor-pointer"
         aria-label="Select Language"
       >
-        <img
+        <Image
           src={currentLang.flagUrl}
           alt={currentLang.short}
+          width={16}
+          height={12}
+          unoptimized
           className="w-4 h-auto rounded-[2px]"
         />
         <span>{currentLang.short}</span>
@@ -71,9 +75,12 @@ export function LanguageSwitcher() {
                   : "text-gray-300 hover:bg-void-deep hover:text-white"
               }`}
             >
-              <img
+              <Image
                 src={lang.flagUrl}
                 alt={lang.label}
+                width={16}
+                height={12}
+                unoptimized
                 className="w-4 h-auto rounded-[2px]"
               />
               <span className="flex-1">{lang.label}</span>

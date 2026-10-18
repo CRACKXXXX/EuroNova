@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
 import { ERASMUS_THEMES } from '@/lib/constants/themes';
 

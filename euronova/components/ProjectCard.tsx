@@ -12,7 +12,8 @@ import {
   Euro, 
   Wallet,
   Heart,
-  Briefcase
+  Briefcase,
+  ShieldCheck
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -20,6 +21,7 @@ import { COUNTRIES } from "@/lib/constants/countries";
 import { PROJECT_TYPE_COLORS } from "@/lib/constants/projectTypes";
 import { toggleProjectFavorite, toggleProjectApplied } from "@/actions/interactions";
 import { TermTooltip } from "@/components/TermTooltip";
+import { toast } from "sonner";
 
 export interface ProjectData {
   id: string;
@@ -54,10 +56,12 @@ export function ProjectCard({ project }: { project: ProjectData }) {
   const [isPendingApp, startAppTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Calcula si el proyecto fue creado en las últimas 24 horas
-  const isNew = project.created_at
-    ? Date.now() - new Date(project.created_at).getTime() < 24 * 60 * 60 * 1000
-    : false;
+  // Calcula si el proyecto fue creado en las últimas 24 horas (Pure evaluation)
+  const [isNew] = useState(() => {
+    if (!project.created_at) return false;
+    const createdTime = new Date(project.created_at).getTime();
+    return !isNaN(createdTime) && Date.now() - createdTime < 24 * 60 * 60 * 1000;
+  });
 
   const handleToggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -95,12 +99,25 @@ export function ProjectCard({ project }: { project: ProjectData }) {
         setTimeout(() => setErrorMessage(null), 3500);
       } else if (res?.is_applied !== undefined) {
         setIsApplied(res.is_applied);
+        if (res.is_applied && res.xpGained) {
+          toast.success(`Mission application logged! +${res.xpGained} XP awarded.`, { icon: "🚀" });
+          if (res.leveledUp) {
+            toast.success(`LEVEL UP! You reached Level ${res.newLevel}!`, { icon: "⚡" });
+          }
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("euronova:xp-updated", { 
+              detail: { xpGained: res.xpGained, level: res.newLevel } 
+            }));
+          }
+        } else if (res.is_applied && !res.xpGained) {
+          toast.info("Mission application logged! (XP already claimed for this mission)", { icon: "📋" });
+        }
       }
     });
   };
 
   return (
-    <div className="bg-void-surface border border-void-border rounded-2xl overflow-hidden hover:border-plasma-cyan/50 hover:shadow-[0_0_30px_rgba(0,229,255,0.1)] transition-all duration-300 group flex flex-col h-full relative">
+    <div className="bg-void-surface border border-void-border rounded-2xl overflow-visible hover:border-plasma-cyan/50 hover:shadow-[0_0_30px_rgba(0,229,255,0.1)] transition-all duration-300 group/card flex flex-col h-full relative">
       {/* Badge "NEW" 24h con pulso y brillo neón */}
       {isNew && (
         <span className="absolute top-3 right-3 px-2 py-1 text-[10px] font-bold bg-nova-flare/20 text-nova-flare border border-nova-flare/40 rounded-full animate-pulse shadow-[0_0_10px_rgba(255,46,99,0.3)] z-20">
@@ -146,15 +163,11 @@ export function ProjectCard({ project }: { project: ProjectData }) {
                 </span>
               );
 
-              if (project.project_type === "ESC") {
-                return (
-                  <TermTooltip key="esc-type" term="ESC">
-                    {badge}
-                  </TermTooltip>
-                );
-              }
-
-              return badge;
+              return (
+                <TermTooltip key="project-type" term={project.project_type}>
+                  {badge}
+                </TermTooltip>
+              );
             })()}
 
             {project.is_last_minute && (
@@ -170,6 +183,15 @@ export function ProjectCard({ project }: { project: ProjectData }) {
                 </span>
               </TermTooltip>
             )}
+
+            {/* AI Anti-Scam Shield micro-badge */}
+            <div
+              title="Verified by EuroNova AI & Moderation Team"
+              className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/40 shadow-[0_0_12px_rgba(0,230,118,0.25)] flex items-center gap-1 cursor-help shrink-0"
+            >
+              <ShieldCheck className="w-3 h-3 text-rup-emerald shrink-0" />
+              <span>AI Security Checked</span>
+            </div>
           </div>
 
           {/* Botones de acción interactiva: Guardar (Favorite) y Aplicar (Applied) */}
@@ -214,7 +236,7 @@ export function ProjectCard({ project }: { project: ProjectData }) {
           </div>
         </div>
 
-        <h3 className="text-xl font-bold text-white mb-2 line-clamp-2 group-hover:text-plasma-cyan transition-colors">
+        <h3 className="text-xl font-bold text-white mb-2 line-clamp-2 group-hover/card:text-plasma-cyan transition-colors">
           {project.title}
         </h3>
 

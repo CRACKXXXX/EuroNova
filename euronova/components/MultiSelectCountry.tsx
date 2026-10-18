@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { Check, ChevronDown } from 'lucide-react';
 
 import { COUNTRIES } from '@/lib/constants/countries';
@@ -48,7 +49,18 @@ export function MultiSelectCountry({ selected, onChange, placeholder = "Select c
                   {selected.slice(0, 3).map(code => {
                     const c = COUNTRIES.find(x => x.code === code);
                     if (!c) return null;
-                    return <img key={code} src={c.flagUrl} alt={c.name} className="w-5 h-auto rounded-[2px]" title={c.name} />;
+                    return (
+                      <Image 
+                        key={code} 
+                        src={c.flagUrl} 
+                        alt={c.name} 
+                        width={20} 
+                        height={15} 
+                        unoptimized 
+                        className="w-5 h-auto rounded-[2px]" 
+                        title={c.name} 
+                      />
+                    );
                   })}
                 </span>
                 <span>{selected.length > 3 ? `+${selected.length - 3} selected` : `(${selected.length})`}</span>
@@ -78,7 +90,14 @@ export function MultiSelectCountry({ selected, onChange, placeholder = "Select c
               >
                 {selected.includes(country.code) && <Check className="w-3 h-3" />}
               </div>
-              <img src={country.flagUrl} alt={country.name} className="w-5 h-auto rounded-[2px] shrink-0" />
+              <Image 
+                src={country.flagUrl} 
+                alt={country.name} 
+                width={20} 
+                height={15} 
+                unoptimized 
+                className="w-5 h-auto rounded-[2px] shrink-0" 
+              />
               <span className="text-white text-sm">{country.name}</span>
             </label>
           ))}

@@ -6,6 +6,9 @@ import { revalidatePath } from "next/cache";
 export interface ReviewResult {
   success?: boolean;
   error?: string;
+  xpGained?: number;
+  leveledUp?: boolean;
+  newLevel?: number;
 }
 
 /**
@@ -105,7 +108,35 @@ export async function submitOrgReview(
     revalidatePath("/dashboard/organizations");
     revalidatePath(`/dashboard/organizations/${orgId}`);
 
-    return { success: true };
+    let xpGained = 0;
+    let leveledUp = false;
+    let newLevel: number | undefined;
+
+    try {
+      const { awardUserXp } = await import("@/actions/gamification");
+      const { XP_CONFIG } = await import("@/lib/gamification");
+      const xpResult = await awardUserXp({
+        amount: XP_CONFIG.NGO_REVIEW.amount,
+        reason: XP_CONFIG.NGO_REVIEW.reason,
+        actionType: XP_CONFIG.NGO_REVIEW.actionType,
+        targetId: orgId,
+      });
+
+      if (xpResult.success && xpResult.gained) {
+        xpGained = xpResult.gained;
+        leveledUp = xpResult.leveledUp || false;
+        newLevel = xpResult.level;
+      }
+    } catch (xpErr) {
+      console.warn("Could not award XP for NGO review:", xpErr);
+    }
+
+    return { 
+      success: true,
+      xpGained,
+      leveledUp,
+      newLevel,
+    };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "An unexpected error occurred.";
     return { error: message };

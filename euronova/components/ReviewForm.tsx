@@ -4,12 +4,13 @@ import { useState, useTransition } from "react";
 import { Star, Send, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { submitOrgReview } from "@/actions/reviews";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 interface ReviewFormProps {
   orgId: string;
 }
 
-export function ReviewForm({ orgId }: { orgId: string }) {
+export function ReviewForm({ orgId }: ReviewFormProps) {
   const t = useTranslations("OrgReviews");
   const [rating, setRating] = useState<number>(5);
   const [hoverRating, setHoverRating] = useState<number>(0);
@@ -41,6 +42,19 @@ export function ReviewForm({ orgId }: { orgId: string }) {
         setSuccessMsg(t("successMessage"));
         setReviewText("");
         setRating(5);
+        if (res.xpGained) {
+          toast.success(`Verified Review Submitted! +${res.xpGained} XP awarded.`, { icon: "⭐" });
+          if (res.leveledUp && res.newLevel) {
+            toast.success(`LEVEL UP! You reached Level ${res.newLevel}!`, { icon: "🚀" });
+          }
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(
+              new CustomEvent("euronova:xp-updated", { 
+                detail: { xpGained: res.xpGained, level: res.newLevel } 
+              })
+            );
+          }
+        }
         setTimeout(() => setSuccessMsg(null), 5000);
       }
     });

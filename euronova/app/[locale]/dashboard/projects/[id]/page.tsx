@@ -1,14 +1,63 @@
 import { createClient } from "@/utils/supabase/server";
-import { ArrowLeft, Euro, MapPin, Building, AlertTriangle, Trash2, ExternalLink, Users, Globe2, Clock } from "lucide-react";
+import { ArrowLeft, Euro, MapPin, Building, AlertTriangle, Trash2, ExternalLink, Users, Globe2, Clock, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import Image from "next/image";
+import type { Metadata } from "next";
 import { deleteProjectAction } from "./actions";
 import { COUNTRIES } from "@/lib/constants/countries";
 import { TermTooltip } from "@/components/TermTooltip";
+import { DistanceCalculator } from "@/components/DistanceCalculator";
+import { ShareProject } from "@/components/ShareProject";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { ReportMissionButton } from "@/components/ReportMissionButton";
+import { MissionCompanionsSection } from "@/components/MissionCompanionsSection";
+import { TrackRecentlyViewed } from "@/components/TrackRecentlyViewed";
+import { ProjectForum } from "@/components/ProjectForum";
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata(
+  props: { params: Promise<{ id: string }> }
+): Promise<Metadata> {
+  const params = await props.params;
+  const supabase = await createClient();
+  const { data: project } = await supabase
+    .from("projects")
+    .select("title, description, image_url, dest_country, project_type")
+    .eq("id", params.id)
+    .maybeSingle();
+
+  if (!project) {
+    return {
+      title: "Mission Details | EuroNova",
+    };
+  }
+
+  const title = `${project.title} | EuroNova`;
+  const description = project.description
+    ? project.description.slice(0, 160)
+    : "Discover Erasmus+ & ESC opportunities across Europe on EuroNova.";
+  const imageUrl = project.image_url || "/logo-big.png";
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [{ url: imageUrl }],
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [imageUrl],
+    },
+  };
+}
 
 export default async function ProjectDetailsPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -18,9 +67,22 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
   
   const { data: { user } } = await supabase.auth.getUser();
 
+  // Fetch user country of residence if logged in, default to ES
+  let userCountry = "ES";
+  if (user) {
+    const { data: youthProfile } = await supabase
+      .from("users_youth")
+      .select("country_residence")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (youthProfile?.country_residence) {
+      userCountry = youthProfile.country_residence;
+    }
+  }
+
   const { data: project, error } = await supabase
     .from("projects")
-    .select("*, users_org(org_name, verification_status)")
+    .select("*, users_org(org_name, verification_status, avatar_url, oid_number)")
     .eq("id", params.id)
     .single();
 
@@ -32,14 +94,17 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
   const isAdmin = user?.email === "euronovaofficial@gmail.com";
   const canDelete = isOwner || isAdmin;
 
-  const orgName = project.users_org?.org_name || "Unknown Organization";
-  const isUnverified = project.users_org?.verification_status !== "verified";
+  const orgData = Array.isArray(project.users_org) ? project.users_org[0] : project.users_org;
+  const orgName = orgData?.org_name || "Unknown Organization";
+  const orgLogo = orgData?.avatar_url || null;
+  const orgOid = orgData?.oid_number || null;
+  const isUnverified = orgData?.verification_status !== "verified";
 
   // Map dest_country and eligible_countries to full names
   const destCountryObj = COUNTRIES.find(c => c.code === (project.dest_country || project.country));
   const destCountryNode = destCountryObj ? (
     <span className="flex items-center gap-1.5">
-      <img src={destCountryObj.flagUrl} alt={destCountryObj.name} className="w-4 h-auto rounded-[2px]" title={destCountryObj.name} />
+      <Image src={destCountryObj.flagUrl} alt={destCountryObj.name} width={16} height={12} unoptimized className="w-4 h-auto rounded-[2px]" title={destCountryObj.name} />
       <span>{destCountryObj.name}</span>
     </span>
   ) : (
@@ -51,7 +116,7 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
         const cObj = COUNTRIES.find(c => c.code === code);
         return cObj ? (
           <span key={code} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-void-deep border border-void-border text-sm">
-            <img src={cObj.flagUrl} alt={cObj.name} className="w-4 h-auto rounded-[2px]" title={cObj.name} />
+            <Image src={cObj.flagUrl} alt={cObj.name} width={16} height={12} unoptimized className="w-4 h-auto rounded-[2px]" title={cObj.name} />
             <span>{cObj.name}</span>
           </span>
         ) : (
@@ -64,43 +129,64 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 px-4 sm:px-6 lg:px-8">
-      <div className="mb-2">
-        <Link href="/dashboard/projects" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm font-medium">{t("backToProjects")}</span>
-        </Link>
+      {/* Telemetry tracker for recently viewed missions */}
+      <TrackRecentlyViewed
+        userId={user?.id}
+        project={{
+          id: project.id,
+          title: project.title,
+          dest_country: project.dest_country || project.country,
+          project_type: project.project_type || project.mission_type,
+          duration_days: project.duration_days,
+          org_name: orgName,
+          image_url: project.image_url,
+        }}
+      />
+
+      {/* Top Header: Breadcrumbs & Report Button */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+        <Breadcrumbs
+          items={[
+            { label: "Missions", href: "/dashboard/projects" },
+            { label: project.title },
+          ]}
+        />
+        <div className="flex items-center gap-3">
+          <ReportMissionButton projectId={project.id} projectTitle={project.title} />
+          <Link
+            href="/dashboard/projects"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-white transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>{t("backToProjects")}</span>
+          </Link>
+        </div>
       </div>
 
-      <div className="bg-void-surface border border-void-border rounded-3xl overflow-hidden shadow-2xl">
+      <div className="bg-void-surface border border-void-border rounded-3xl overflow-visible relative shadow-2xl">
         
         {/* HERO IMAGE */}
         {project.image_url ? (
-          <div className="w-full h-64 md:h-80 relative bg-void-deep">
+          <div className="w-full h-64 md:h-80 relative bg-void-deep rounded-t-3xl overflow-hidden">
             <Image src={project.image_url} alt={project.title} fill className="object-cover opacity-80" />
             <div className="absolute inset-0 bg-gradient-to-t from-void-surface to-transparent" />
           </div>
         ) : (
-          <div className="w-full h-32 md:h-48 bg-gradient-to-r from-void-deep to-void-surface relative" />
+          <div className="w-full h-32 md:h-48 bg-gradient-to-r from-void-deep to-void-surface relative rounded-t-3xl overflow-hidden" />
         )}
 
         <div className="p-6 sm:p-8 md:p-12 relative -mt-20 md:-mt-32 z-10">
           
           {/* BADGES */}
           <div className="flex flex-wrap gap-2 mb-6">
-            {(project.project_type === "ESC" || project.mission_type === "ESC") ? (
-              <TermTooltip term="ESC">
-                <span className="px-3 py-1.5 text-xs font-bold rounded-full bg-void-border text-gray-200 uppercase tracking-wider shadow-lg">
-                  {project.project_type || project.mission_type}
-                </span>
-              </TermTooltip>
-            ) : (
+            <TermTooltip term={project.project_type || project.mission_type || "Erasmus+"}>
               <span className="px-3 py-1.5 text-xs font-bold rounded-full bg-void-border text-gray-200 uppercase tracking-wider shadow-lg">
                 {project.project_type || project.mission_type}
               </span>
-            )}
+            </TermTooltip>
             {project.is_last_minute && (
               <span className="px-3 py-1.5 text-xs font-bold rounded-full bg-nova-flare/20 text-nova-flare border border-nova-flare/30 shadow-lg">
-                ÚLTIMA HORA
+                LAST MINUTE
               </span>
             )}
             {project.covers_rup_flights && (
@@ -110,6 +196,14 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
                 </span>
               </TermTooltip>
             )}
+            {/* AI Anti-Scam Shield micro-badge */}
+            <div 
+              title="Verified by EuroNova AI & Moderation Team"
+              className="px-3 py-1.5 text-xs font-bold rounded-full bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/40 shadow-[0_0_15px_rgba(0,230,118,0.25)] flex items-center gap-1.5 cursor-help"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-rup-emerald" />
+              <span>AI Anti-Scam Verified</span>
+            </div>
           </div>
 
           <h1 className="text-4xl md:text-5xl font-black text-white mb-6 leading-tight drop-shadow-md">
@@ -118,14 +212,34 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
 
           {/* PUBLISHER PROFILE CARD */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-xl bg-void-deep/80 border border-void-border backdrop-blur-sm mb-10 w-full sm:w-fit">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-void-surface to-plasma-cyan/20 flex items-center justify-center border border-plasma-cyan/30 shrink-0 shadow-[0_0_15px_rgba(0,229,255,0.15)]">
-              <Building className="w-6 h-6 text-plasma-cyan" />
-            </div>
+            {orgLogo ? (
+              <Image
+                src={orgLogo}
+                alt={orgName}
+                width={48}
+                height={48}
+                unoptimized
+                className="w-12 h-12 rounded-full object-cover border border-void-border bg-void-deep shrink-0 shadow-[0_0_15px_rgba(0,229,255,0.15)]"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-void-surface to-plasma-cyan/20 flex items-center justify-center border border-plasma-cyan/30 shrink-0 shadow-[0_0_15px_rgba(0,229,255,0.15)]">
+                <Building className="w-6 h-6 text-plasma-cyan" />
+              </div>
+            )}
             <div>
               <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-1">{t("publisherProfile")}</p>
-              <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                {orgName}
-              </h3>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h3 className="text-white font-bold text-lg">
+                  {orgName}
+                </h3>
+                {orgOid && (
+                  <TermTooltip term="OID">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-plasma-cyan/15 border border-plasma-cyan/30 text-plasma-cyan uppercase tracking-wider">
+                      OID: {orgOid}
+                    </span>
+                  </TermTooltip>
+                )}
+              </div>
             </div>
             {isUnverified && (
               <div className="ml-0 sm:ml-4 bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold px-3 py-1.5 rounded-md flex items-center gap-1.5">
@@ -139,7 +253,7 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
             
             {/* MAIN CONTENT - 2 COLUMNS */}
             <div className="lg:col-span-2 space-y-10">
-              
+
               <div className="prose prose-invert max-w-none">
                 <h3 className="text-2xl font-bold text-white mb-4">{t("projectDescription")}</h3>
                 <p className="text-gray-300 leading-relaxed whitespace-pre-wrap text-lg">{project.description}</p>
@@ -155,11 +269,23 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
                   </div>
                 </div>
               )}
+
+              {/* Mission Companions Community Scaffolding */}
+              <MissionCompanionsSection projectTitle={project.title} />
+
+              {/* Community Auto-Moderated Q&A Forum */}
+              <ProjectForum projectId={project.id} projectTitle={project.title} />
             </div>
 
             {/* SIDEBAR DETAILS - 1 COLUMN */}
             <div className="space-y-6">
               
+              {/* Distance Calculator */}
+              <DistanceCalculator
+                userCountryCode={userCountry}
+                destCountryCode={project.dest_country || project.country}
+              />
+
               <div className="bg-void-deep p-6 rounded-2xl border border-void-border space-y-5">
                 <h4 className="text-gray-400 font-bold uppercase text-xs tracking-wider border-b border-void-border pb-3">{t("missionDetails")}</h4>
                 
@@ -235,12 +361,28 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
                   </button>
                 )}
 
+                {/* Omnichannel Share Component */}
+                <ShareProject
+                  project={{
+                    id: project.id,
+                    title: project.title,
+                    dest_country: project.dest_country || project.country,
+                    project_type: project.project_type || project.mission_type,
+                    exact_location: project.exact_location,
+                    duration_days: project.duration_days,
+                    min_age: project.min_age,
+                    max_age: project.max_age,
+                    image_url: project.image_url,
+                    org_name: orgName,
+                  }}
+                />
+
                 {canDelete && (
                   <form action={async () => {
                     "use server";
                     await deleteProjectAction(project.id);
                   }}>
-                    <button type="submit" className="w-full px-6 py-3 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-sm">
+                    <button type="submit" className="w-full px-6 py-3 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-sm cursor-pointer">
                       <Trash2 className="w-4 h-4" />
                       {t("deleteProject")}
                     </button>

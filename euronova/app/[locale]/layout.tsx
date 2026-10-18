@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import { NextIntlClientProvider } from "next-intl";
@@ -15,9 +15,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  themeColor: "#0A0D18",
+};
+
 export const metadata: Metadata = {
   title: "EuroNova | Tu pasaporte al espacio europeo",
   description: "Encuentra proyectos de voluntariado y movilidad en Europa.",
+  manifest: "/manifest.json",
 };
 
 export default async function RootLayout({
@@ -35,6 +40,10 @@ export default async function RootLayout({
       lang={locale}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#0A0D18" />
+      </head>
       <body className="min-h-full flex flex-col bg-void-deep text-white">
         <NextIntlClientProvider messages={messages}>
           {children}
@@ -44,4 +53,3 @@ export default async function RootLayout({
     </html>
   );
 }
-

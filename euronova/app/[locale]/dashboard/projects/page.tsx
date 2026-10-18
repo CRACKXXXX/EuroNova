@@ -1,12 +1,14 @@
 import { createClient } from "@/utils/supabase/server";
-import { Rocket, Search, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { Rocket, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { Suspense } from "react";
-import { ProjectCard } from "@/components/ProjectCard";
 import { RandomMissionButton } from "@/components/RandomMissionButton";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { ProjectsViewManager } from "@/components/ProjectsViewManager";
+import { ScrollRestorationHelper } from "@/components/ScrollRestorationHelper";
 
 export const dynamic = "force-dynamic";
 
@@ -59,13 +61,13 @@ export default async function ProjectsPage(props: {
   let query = favorites && user
     ? supabase
         .from("projects")
-        .select("*, users_org(org_name, verification_status), user_project_interactions!inner(is_favorite, user_id)", { count: "exact" })
+        .select("*, users_org(org_name, verification_status, avatar_url), user_project_interactions!inner(is_favorite, user_id)", { count: "exact" })
         .eq("status", "published")
         .eq("user_project_interactions.user_id", user.id)
         .eq("user_project_interactions.is_favorite", true)
     : supabase
         .from("projects")
-        .select("*, users_org(org_name, verification_status)", { count: "exact" })
+        .select("*, users_org(org_name, verification_status, avatar_url)", { count: "exact" })
         .eq("status", "published");
 
   if (q) query = query.ilike("title", `%${q}%`);
@@ -181,13 +183,26 @@ export default async function ProjectsPage(props: {
     return `/dashboard/projects?${params.toString()}`;
   }
 
+  const formattedProjects = (projects || []).map((project) => {
+    const org = project.users_org || {};
+    const interaction = interactionsMap.get(project.id);
+    return {
+      ...project,
+      org_name: org.org_name,
+      org_logo_url: org.logo_url || org.avatar_url,
+      created_at: project.created_at,
+      verification_status: org.verification_status,
+      is_favorite: interaction?.is_favorite ?? false,
+      is_applied: interaction?.is_applied ?? false,
+    };
+  });
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="mb-2">
-        <Link href="/dashboard" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm font-medium">{t("backHome")}</span>
-        </Link>
+      <ScrollRestorationHelper storageKey="euronova_projects_scroll_position" />
+      {/* Breadcrumb Navigation */}
+      <div className="flex items-center justify-between">
+        <Breadcrumbs />
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -211,36 +226,9 @@ export default async function ProjectsPage(props: {
           </Suspense>
         </div>
 
-        {/* Resultados y Paginación a la derecha */}
+        {/* Resultados con toggle Grid/List y Paginación a la derecha */}
         <div className="flex-1 flex flex-col">
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-max">
-            {projects && projects.length > 0 ? (
-              projects.map((project) => {
-                const org = project.users_org || {};
-                const interaction = interactionsMap.get(project.id);
-                const projectData = {
-                  ...project,
-                  org_name: org.org_name,
-                  org_logo_url: org.logo_url || org.avatar_url,
-                  created_at: project.created_at,
-                  verification_status: org.verification_status,
-                  is_favorite: interaction?.is_favorite ?? false,
-                  is_applied: interaction?.is_applied ?? false,
-                };
-                return (
-                  <div key={project.id} className="h-full">
-                    <ProjectCard project={projectData} />
-                  </div>
-                );
-              })
-            ) : (
-              <div className="col-span-full py-20 text-center border border-dashed border-void-border rounded-2xl bg-void-surface/50">
-                <Search className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-white mb-2">{t("waitingTransmissions")}</h3>
-                <p className="text-gray-400">{t("adjustFilters")}</p>
-              </div>
-            )}
-          </div>
+          <ProjectsViewManager projects={formattedProjects} />
 
           {/* Sección de Paginación */}
           {projects && projects.length > 0 && (
