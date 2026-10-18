@@ -13,7 +13,8 @@ import {
   Menu, 
   X, 
   ShieldAlert,
-  Map as MapIcon
+  Map as MapIcon,
+  Users
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { LogoutButton } from "@/components/LogoutButton";
@@ -154,6 +155,13 @@ export function Header({
             <span>{t("myMissions")}</span>
           </Link>
           <Link
+            href={`/${locale}/community`}
+            className="flex items-center gap-2 text-sm font-medium text-gray-300 hover:text-plasma-cyan border-b-2 border-transparent hover:border-plasma-cyan py-1 transition-all"
+          >
+            <Users className="w-4 h-4" />
+            <span>{t("community")}</span>
+          </Link>
+          <Link
             href={`/${locale}/map`}
             className="flex items-center gap-2 text-sm font-medium text-plasma-cyan hover:text-plasma-cyan/80 border-b-2 border-plasma-cyan/50 hover:border-plasma-cyan py-1 transition-all"
           >
@@ -287,6 +295,15 @@ export function Header({
             >
               <Briefcase className="w-6 h-6 text-gray-500 group-hover:text-plasma-cyan transition-colors" />
               <span>{t("myMissions")}</span>
+            </Link>
+
+            <Link
+              href={`/${locale}/community`}
+              onClick={() => setIsOpen(false)}
+              className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-300 hover:text-plasma-cyan transition-all flex items-center gap-3.5 group"
+            >
+              <Users className="w-6 h-6 text-gray-500 group-hover:text-plasma-cyan transition-colors" />
+              <span>{t("community")}</span>
             </Link>
 
             <Link

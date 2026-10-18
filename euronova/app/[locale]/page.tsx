@@ -10,7 +10,9 @@ import {
   ShieldCheck,
   PlusCircle,
   Star,
-  Building2
+  Building2,
+  Users,
+  Radio
 } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import Image from 'next/image';
@@ -89,8 +91,8 @@ export default async function Home() {
             </p>
           </div>
 
-          {/* Botón Único de Acción: Login to see everything */}
-          <div className="pt-2 w-full flex justify-center">
+          {/* Botones de Acción Hero */}
+          <div className="pt-2 w-full flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link 
               href="/login" 
               className="group relative inline-flex items-center justify-center px-9 py-4 font-bold text-void-deep bg-plasma-cyan rounded-full overflow-hidden transition-all duration-300 hover:scale-105 hover:bg-plasma-cyan/90 hover:shadow-[0_0_30px_rgba(0,229,255,0.5)] focus:outline-none w-full sm:w-auto"
@@ -99,6 +101,14 @@ export default async function Home() {
                 {t("exploreBtn")} 
                 <Rocket className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               </span>
+            </Link>
+
+            <Link 
+              href="/community" 
+              className="group inline-flex items-center justify-center px-8 py-4 font-bold text-white bg-void-surface/80 hover:bg-void-surface border border-void-border hover:border-plasma-cyan/50 rounded-full transition-all duration-300 hover:scale-105 shadow-[0_0_20px_rgba(0,0,0,0.5)] focus:outline-none w-full sm:w-auto gap-2.5 text-base"
+            >
+              <Users className="w-5 h-5 text-plasma-cyan group-hover:scale-110 transition-transform" />
+              <span>Community Hub & FAQ</span>
             </Link>
           </div>
         </section>
@@ -158,7 +168,7 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* SECCIÓN 3: CAPACIDADES DE LA PLATAFORMA (PLATFORM CAPABILITIES) */}
+        {/* SECCIÓN 3: CAPACIDADES DE LA PLATAFORMA (PLATFORM CAPABILITIES - 6 TILES SYMMETRIC GRID) */}
         <section className="w-full animate-in fade-in slide-in-from-bottom-6 duration-1000">
           <div className="text-center space-y-3 mb-12 sm:mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold bg-plasma-cyan/10 text-plasma-cyan border border-plasma-cyan/25 uppercase tracking-wider mb-1">
@@ -169,46 +179,133 @@ export default async function Home() {
             </h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             
             {/* Capability 1: Buscador de Proyectos */}
-            <div className="bg-gradient-to-b from-void-surface/80 to-void-surface/40 border border-void-border/80 hover:border-plasma-cyan/50 rounded-2xl p-6 sm:p-8 backdrop-blur-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_35px_rgba(0,229,255,0.12)] group">
-              <div className="w-12 h-12 rounded-xl bg-plasma-cyan/15 border border-plasma-cyan/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(0,229,255,0.2)]">
-                <Search className="w-6 h-6 text-plasma-cyan" />
+            <Link
+              href="/dashboard/projects"
+              className="bg-gradient-to-b from-void-surface/80 to-void-surface/40 border border-void-border/80 hover:border-plasma-cyan/50 rounded-2xl p-6 sm:p-8 backdrop-blur-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_35px_rgba(0,229,255,0.12)] group flex flex-col justify-between"
+            >
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-plasma-cyan/15 border border-plasma-cyan/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(0,229,255,0.2)]">
+                  <Search className="w-6 h-6 text-plasma-cyan" />
+                </div>
+                <h4 className="text-lg sm:text-xl font-bold text-white mb-3 group-hover:text-plasma-cyan transition-colors">
+                  {t("capProjectsTitle")}
+                </h4>
+                <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">
+                  {t("capProjectsText")}
+                </p>
               </div>
-              <h4 className="text-lg sm:text-xl font-bold text-white mb-3">
-                {t("capProjectsTitle")}
-              </h4>
-              <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">
-                {t("capProjectsText")}
-              </p>
-            </div>
+              <div className="pt-4 flex items-center gap-1.5 text-xs font-semibold text-plasma-cyan group-hover:translate-x-1 transition-transform">
+                <span>Search Missions &rarr;</span>
+              </div>
+            </Link>
 
             {/* Capability 2: Directorio de Organizaciones */}
-            <div className="bg-gradient-to-b from-void-surface/80 to-void-surface/40 border border-void-border/80 hover:border-hyper-violet/50 rounded-2xl p-6 sm:p-8 backdrop-blur-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_35px_rgba(99,102,241,0.12)] group">
-              <div className="w-12 h-12 rounded-xl bg-hyper-violet/15 border border-hyper-violet/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(99,102,241,0.2)]">
-                <Building className="w-6 h-6 text-hyper-violet" />
+            <Link
+              href="/dashboard/organizations"
+              className="bg-gradient-to-b from-void-surface/80 to-void-surface/40 border border-void-border/80 hover:border-hyper-violet/50 rounded-2xl p-6 sm:p-8 backdrop-blur-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_35px_rgba(99,102,241,0.12)] group flex flex-col justify-between"
+            >
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-hyper-violet/15 border border-hyper-violet/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(99,102,241,0.2)]">
+                  <Building className="w-6 h-6 text-hyper-violet" />
+                </div>
+                <h4 className="text-lg sm:text-xl font-bold text-white mb-3 group-hover:text-hyper-violet transition-colors">
+                  {t("capOrgsTitle")}
+                </h4>
+                <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">
+                  {t("capOrgsText")}
+                </p>
               </div>
-              <h4 className="text-lg sm:text-xl font-bold text-white mb-3">
-                {t("capOrgsTitle")}
-              </h4>
-              <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">
-                {t("capOrgsText")}
-              </p>
+              <div className="pt-4 flex items-center gap-1.5 text-xs font-semibold text-hyper-violet group-hover:translate-x-1 transition-transform">
+                <span>View Directory &rarr;</span>
+              </div>
+            </Link>
+
+            {/* Capability 3: Radar Interactivo de Misiones */}
+            <Link
+              href="/map"
+              className="bg-gradient-to-b from-void-surface/80 to-void-surface/40 border border-void-border/80 hover:border-plasma-cyan/50 rounded-2xl p-6 sm:p-8 backdrop-blur-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_35px_rgba(0,229,255,0.12)] group flex flex-col justify-between"
+            >
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-plasma-cyan/15 border border-plasma-cyan/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(0,229,255,0.2)]">
+                  <Radio className="w-6 h-6 text-plasma-cyan" />
+                </div>
+                <h4 className="text-lg sm:text-xl font-bold text-white mb-3 group-hover:text-plasma-cyan transition-colors">
+                  {t("capRadarTitle")}
+                </h4>
+                <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">
+                  {t("capRadarText")}
+                </p>
+              </div>
+              <div className="pt-4 flex items-center gap-1.5 text-xs font-semibold text-plasma-cyan group-hover:translate-x-1 transition-transform">
+                <span>Open Radar Map &rarr;</span>
+              </div>
+            </Link>
+
+            {/* Capability 4: Regiones Ultraperiféricas (RUP) */}
+            <Link
+              href="/dashboard/projects?rup=true"
+              className="bg-gradient-to-b from-void-surface/80 to-void-surface/40 border border-void-border/80 hover:border-rup-emerald/50 rounded-2xl p-6 sm:p-8 backdrop-blur-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_35px_rgba(0,230,118,0.12)] group flex flex-col justify-between"
+            >
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-rup-emerald/15 border border-rup-emerald/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(0,230,118,0.2)]">
+                  <Sparkles className="w-6 h-6 text-rup-emerald" />
+                </div>
+                <h4 className="text-lg sm:text-xl font-bold text-white mb-3 group-hover:text-rup-emerald transition-colors">
+                  {t("capRupTitle")}
+                </h4>
+                <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">
+                  {t("capRupText")}
+                </p>
+              </div>
+              <div className="pt-4 flex items-center gap-1.5 text-xs font-semibold text-rup-emerald group-hover:translate-x-1 transition-transform">
+                <span>View RUP Missions &rarr;</span>
+              </div>
+            </Link>
+
+            {/* Capability 5: Rápido, Gratuito y Personalizado */}
+            <div className="bg-gradient-to-b from-void-surface/80 to-void-surface/40 border border-void-border/80 hover:border-rup-emerald/50 rounded-2xl p-6 sm:p-8 backdrop-blur-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_35px_rgba(0,230,118,0.12)] group flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-rup-emerald/15 border border-rup-emerald/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(0,230,118,0.2)]">
+                  <Zap className="w-6 h-6 text-rup-emerald" />
+                </div>
+                <h4 className="text-lg sm:text-xl font-bold text-white mb-3">
+                  {t("capFastFreeTitle")}
+                </h4>
+                <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">
+                  {t("capFastFreeText")}
+                </p>
+              </div>
+              <div className="pt-4 flex items-center gap-1.5 text-xs font-semibold text-gray-400">
+                <span>Verified Quality</span>
+              </div>
             </div>
 
-            {/* Capability 3: Rápido, Gratuito y Personalizado */}
-            <div className="bg-gradient-to-b from-void-surface/80 to-void-surface/40 border border-void-border/80 hover:border-rup-emerald/50 rounded-2xl p-6 sm:p-8 backdrop-blur-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_35px_rgba(0,230,118,0.12)] group">
-              <div className="w-12 h-12 rounded-xl bg-rup-emerald/15 border border-rup-emerald/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(0,230,118,0.2)]">
-                <Zap className="w-6 h-6 text-rup-emerald" />
+            {/* Capability 6: Global Community Hub & FAQ */}
+            <Link
+              href="/community"
+              className="bg-gradient-to-b from-void-surface/80 to-void-surface/40 border border-void-border/80 hover:border-plasma-cyan/50 rounded-2xl p-6 sm:p-8 backdrop-blur-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_35px_rgba(0,229,255,0.15)] group flex flex-col justify-between"
+            >
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-plasma-cyan/15 border border-plasma-cyan/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(0,229,255,0.2)]">
+                  <Users className="w-6 h-6 text-plasma-cyan" />
+                </div>
+                <h4 className="text-lg sm:text-xl font-bold text-white mb-3 group-hover:text-plasma-cyan transition-colors flex items-center justify-between">
+                  <span>{t("capCommunityTitle")}</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-plasma-cyan/10 text-plasma-cyan border border-plasma-cyan/30 uppercase tracking-wider">
+                    New
+                  </span>
+                </h4>
+                <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">
+                  {t("capCommunityText")}
+                </p>
               </div>
-              <h4 className="text-lg sm:text-xl font-bold text-white mb-3">
-                {t("capFastFreeTitle")}
-              </h4>
-              <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">
-                {t("capFastFreeText")}
-              </p>
-            </div>
+              <div className="pt-4 flex items-center gap-1.5 text-xs font-semibold text-plasma-cyan group-hover:translate-x-1 transition-transform">
+                <span>Enter Community Hub &rarr;</span>
+              </div>
+            </Link>
 
           </div>
         </section>

@@ -4,7 +4,8 @@ import {
   ShieldCheck, 
   Scale, 
   FileText, 
-  LifeBuoy 
+  LifeBuoy,
+  Users
 } from "lucide-react";
 
 export function Footer() {
@@ -74,10 +75,19 @@ export function Footer() {
             <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
               <li>
                 <Link
+                  href="/community"
+                  className="flex items-center justify-center sm:justify-start gap-2 transition-colors hover:text-plasma-cyan group"
+                >
+                  <Users className="w-3.5 h-3.5 text-plasma-cyan/70 group-hover:text-plasma-cyan transition-colors" />
+                  <span>Community Hub & FAQ</span>
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/dashboard/support"
                   className="flex items-center justify-center sm:justify-start gap-2 transition-colors hover:text-plasma-cyan group"
                 >
-                  <LifeBuoy className="w-3.5 h-3.5 text-plasma-cyan/70 group-hover:text-plasma-cyan transition-colors" />
+                  <LifeBuoy className="w-3.5 h-3.5 text-hyper-violet/70 group-hover:text-hyper-violet transition-colors" />
                   <span>{t("support")}</span>
                 </Link>
               </li>
