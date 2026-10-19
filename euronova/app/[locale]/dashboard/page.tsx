@@ -1,5 +1,5 @@
 import { Link } from "@/i18n/routing";
-import { Search, Building, User, Briefcase, Globe } from "lucide-react";
+import { Search, Building, User, Briefcase, Globe, Users } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 export default async function DashboardHome() {
@@ -75,6 +75,18 @@ export default async function DashboardHome() {
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">{t("myProfile")}</h2>
           <p className="text-gray-400 text-sm">{t("myProfileDesc")}</p>
+        </Link>
+
+        <Link
+          href="/community"
+          className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-rup-emerald transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,230,118,0.15)] flex flex-col items-center text-center overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-rup-emerald/5 rounded-full blur-[40px] pointer-events-none group-hover:bg-rup-emerald/10 transition-colors" />
+          <div className="w-16 h-16 bg-rup-emerald/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+            <Users className="w-8 h-8 text-rup-emerald" />
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">{t("communityHub")}</h2>
+          <p className="text-gray-400 text-sm">{t("communityHubDesc")}</p>
         </Link>
       </div>
     </div>

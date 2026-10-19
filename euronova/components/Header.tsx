@@ -108,99 +108,109 @@ export function Header({
       <ConsoleEasterEgg />
       <PassiveXpTracker userId={currentUserId} role={role} />
       <div className="max-w-7xl mx-auto h-full flex justify-between items-center w-full px-4 md:px-8">
-        {/* Logo */}
-        <Link
-          href={`/${locale}/dashboard`}
-          onClick={() => setIsOpen(false)}
-          className="flex items-center gap-2 group shrink-0"
-        >
-          <Image
-            src="/logo-small.png"
-            alt="EuroNova"
-            width={32}
-            height={32}
-            className="group-hover:scale-110 transition-transform"
-          />
-          <span className="font-black text-white text-xl tracking-tight">EuroNova</span>
-        </Link>
-
-        {/* Desktop Navigation Links */}
-        <nav className="hidden xl:flex items-center gap-6">
+        {/* Left: Logo & Desktop Navigation Spaced Out */}
+        <div className="flex items-center gap-6 xl:gap-8 min-w-0 flex-nowrap shrink-0">
+          {/* Logo */}
           <Link
             href={`/${locale}/dashboard`}
-            className="flex items-center gap-2 text-sm font-medium text-gray-300 hover:text-plasma-cyan border-b-2 border-transparent hover:border-plasma-cyan py-1 transition-all"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-2.5 group shrink-0"
           >
-            <Home className="w-4 h-4" />
-            <span>{t("home")}</span>
+            <Image
+              src="/logo-small.png"
+              alt="EuroNova"
+              width={32}
+              height={32}
+              className="group-hover:scale-110 transition-transform"
+            />
+            <span className="font-black text-white text-xl tracking-tight">EuroNova</span>
           </Link>
-          <Link
-            href={`/${locale}/dashboard/projects`}
-            className="flex items-center gap-2 text-sm font-medium text-gray-300 hover:text-plasma-cyan border-b-2 border-transparent hover:border-plasma-cyan py-1 transition-all"
-          >
-            <Compass className="w-4 h-4" />
-            <span>{t("searchProjects")}</span>
-          </Link>
-          <Link
-            href={`/${locale}/dashboard/organizations`}
-            className="flex items-center gap-2 text-sm font-medium text-gray-300 hover:text-plasma-cyan border-b-2 border-transparent hover:border-plasma-cyan py-1 transition-all"
-          >
-            <Building className="w-4 h-4" />
-            <span>{t("searchOrgs")}</span>
-          </Link>
-          <Link
-            href={`/${locale}/dashboard/my-missions`}
-            className="flex items-center gap-2 text-sm font-medium text-gray-300 hover:text-plasma-cyan border-b-2 border-transparent hover:border-plasma-cyan py-1 transition-all"
-          >
-            <Briefcase className="w-4 h-4" />
-            <span>{t("myMissions")}</span>
-          </Link>
-          <Link
-            href={`/${locale}/community`}
-            className="flex items-center gap-2 text-sm font-medium text-gray-300 hover:text-plasma-cyan border-b-2 border-transparent hover:border-plasma-cyan py-1 transition-all"
-          >
-            <Users className="w-4 h-4" />
-            <span>{t("community")}</span>
-          </Link>
-          <Link
-            href={`/${locale}/map`}
-            className="flex items-center gap-2 text-sm font-medium text-plasma-cyan hover:text-plasma-cyan/80 border-b-2 border-plasma-cyan/50 hover:border-plasma-cyan py-1 transition-all"
-          >
-            <MapIcon className="w-4 h-4" />
-            <span>{t("map")}</span>
-          </Link>
-        </nav>
 
-        {/* Desktop Actions / Auth */}
-        <div className="hidden xl:flex items-center gap-3 shrink-0">
-          {isOrg && (
+          {/* Desktop Navigation Links - Strict single line */}
+          <nav className="hidden xl:flex items-center gap-4 2xl:gap-6 flex-nowrap shrink-0 whitespace-nowrap">
             <Link
-              href={`/${locale}/dashboard/projects/new`}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-plasma-cyan/10 hover:bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/20 transition-all text-sm font-semibold shrink-0"
+              href={`/${locale}/dashboard`}
+              className="flex items-center gap-1.5 text-sm font-medium text-gray-300 hover:text-plasma-cyan border-b-2 border-transparent hover:border-plasma-cyan py-1 transition-all whitespace-nowrap shrink-0"
             >
-              <PlusCircle className="w-4 h-4" />
-              <span>{t("publish")}</span>
+              <Home className="w-4 h-4" />
+              <span>{t("home")}</span>
             </Link>
-          )}
-
-          {isAdmin && (
             <Link
-              href={`/${locale}/dashboard/admin`}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-nova-flare/10 hover:bg-nova-flare/20 text-nova-flare border border-nova-flare/20 transition-all text-sm font-semibold shrink-0"
+              href={`/${locale}/dashboard/projects`}
+              className="flex items-center gap-1.5 text-sm font-medium text-gray-300 hover:text-plasma-cyan border-b-2 border-transparent hover:border-plasma-cyan py-1 transition-all whitespace-nowrap shrink-0"
             >
-              <span>{t("adminPanel")}</span>
+              <Compass className="w-4 h-4" />
+              <span>{t("searchProjects")}</span>
             </Link>
-          )}
+            <Link
+              href={`/${locale}/dashboard/organizations`}
+              className="flex items-center gap-1.5 text-sm font-medium text-gray-300 hover:text-plasma-cyan border-b-2 border-transparent hover:border-plasma-cyan py-1 transition-all whitespace-nowrap shrink-0"
+            >
+              <Building className="w-4 h-4" />
+              <span>{t("searchOrgs")}</span>
+            </Link>
+            <Link
+              href={`/${locale}/dashboard/my-missions`}
+              className="flex items-center gap-1.5 text-sm font-medium text-gray-300 hover:text-plasma-cyan border-b-2 border-transparent hover:border-plasma-cyan py-1 transition-all whitespace-nowrap shrink-0"
+            >
+              <Briefcase className="w-4 h-4" />
+              <span>{t("myMissions")}</span>
+            </Link>
+            <Link
+              href={`/${locale}/community`}
+              className="flex items-center gap-1.5 text-sm font-medium text-gray-300 hover:text-plasma-cyan border-b-2 border-transparent hover:border-plasma-cyan py-1 transition-all whitespace-nowrap shrink-0"
+            >
+              <Users className="w-4 h-4" />
+              <span>{t("community")}</span>
+            </Link>
+            <Link
+              href={`/${locale}/map`}
+              className="flex items-center gap-1.5 text-sm font-medium text-plasma-cyan hover:text-plasma-cyan/80 border-b-2 border-plasma-cyan/50 hover:border-plasma-cyan py-1 transition-all whitespace-nowrap shrink-0"
+            >
+              <MapIcon className="w-4 h-4" />
+              <span>{t("map")}</span>
+            </Link>
+          </nav>
+        </div>
 
+        {/* Desktop Actions / Auth - Strict single line with comfortable spacing */}
+        <div className="hidden xl:flex items-center gap-3 2xl:gap-3.5 shrink-0 flex-nowrap ml-8 2xl:ml-12">
+          {/* Language Selector */}
           <div className="shrink-0 flex items-center">
             <LanguageSwitcher />
           </div>
 
+          {/* Notification Bell */}
           <NotificationBell />
+
+          {/* Clean Elegant Icon Button: Publish Mission (For NGOs/Organizations) */}
+          {isOrg && (
+            <Link
+              href={`/${locale}/dashboard/projects/new`}
+              title={t("publish") || "Publish Mission"}
+              aria-label={t("publish") || "Publish Mission"}
+              className="p-2 rounded-lg bg-plasma-cyan/10 hover:bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/30 hover:border-plasma-cyan transition-all shrink-0 flex items-center justify-center shadow-[0_0_10px_rgba(0,229,255,0.15)]"
+            >
+              <PlusCircle className="w-4 h-4" />
+            </Link>
+          )}
+
+          {/* Clean Elegant Icon Button: Admin Shield (Immediately to the left of Profile) */}
+          {isAdmin && (
+            <Link
+              href={`/${locale}/dashboard/admin`}
+              title={t("adminPanel") || "Admin Panel"}
+              aria-label={t("adminPanel") || "Admin Panel"}
+              className="p-2 rounded-lg bg-nova-flare/10 hover:bg-nova-flare/20 text-nova-flare border border-nova-flare/30 hover:border-nova-flare transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(255,46,99,0.15)]"
+            >
+              <ShieldAlert className="w-4 h-4" />
+            </Link>
+          )}
 
           {/* Botón My Organization / My Profile con enrutamiento estricto */}
           <Link
             href={orgOrProfileHref}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-void-surface hover:bg-hyper-violet/10 border border-void-border hover:border-hyper-violet/30 text-gray-300 hover:text-hyper-violet transition-all text-sm font-semibold shrink-0"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-void-surface hover:bg-hyper-violet/10 border border-void-border hover:border-hyper-violet/30 text-gray-300 hover:text-hyper-violet transition-all text-xs 2xl:text-sm font-semibold shrink-0 whitespace-nowrap"
           >
             {isOrg ? <Building className="w-4 h-4" /> : <User className="w-4 h-4" />}
             <span>{isOrg ? t("myOrg") : t("myProfile")}</span>

@@ -112,7 +112,9 @@
     "myMissions": "My Missions",
     "myMissionsDesc": "Track your saved favorites, active applications, and accepted European missions.",
     "missionRadar": "Mission Radar",
-    "missionRadarDesc": "Explore a fully interactive 3D map of all active European opportunities."
+    "missionRadarDesc": "Explore a fully interactive 3D map of all active European opportunities.",
+    "communityHub": "Community Hub & FAQ",
+    "communityHubDesc": "Connect with fellow European volunteers, share experiences, and access Erasmus+ guides."
   },
   "Login": {
     "welcome": "Access your command center",
@@ -780,8 +782,8 @@
     "tooltip": "Verified by EuroNova AI & Moderation Team"
   },
   "ProjectForum": {
-    "title": "Mission Squad Q&A Forum",
-    "subtitle": "Public mission discussion channel. Ask questions about flight booking, group travel, and accommodation.",
+    "title": "Project Q&A Forum",
+    "subtitle": "A space for logistics and questions. Ask experienced users or the project organizers.",
     "rulesWarning": "Strict Erasmus+ Rules apply. Malicious links and inappropriate content are auto-blocked.",
     "placeholder": "Ask about travel logistics, dietary accommodations, visa assistance, or schedule...",
     "sendBtn": "Transmit Question",
@@ -791,8 +793,18 @@
     "emptyMessage": "Please write a message before transmitting.",
     "postSuccess": "Question verified by auto-moderation and posted successfully!",
     "noMessages": "No questions in orbit yet. Be the first to start the conversation!",
-    "coordinatorBadge": "Mission Coordinator",
-    "verifiedPeer": "Verified Volunteer"
+    "coordinatorBadge": "Organization Coordinator",
+    "adminBadge": "EuroNova Admin",
+    "verifiedVolunteer": "Verified Volunteer",
+    "levelGatedNotice": "Reach Level 2 (100 XP) to participate in project Q&A to prevent spam.",
+    "levelGatedHint": "Complete your profile dossier (+50 XP) or apply to a mission (+50 XP) to unlock Q&A transmissions.",
+    "lockedPlaceholder": "Reach Level 2 (100 XP) to unlock Q&A transmissions...",
+    "editBtn": "Edit",
+    "deleteBtn": "Delete",
+    "saveBtn": "Save Changes",
+    "cancelBtn": "Cancel",
+    "editSuccess": "Message updated successfully!",
+    "deleteSuccess": "Message deleted from forum."
   },
   "MissionPassport": {
     "title": "European Mobility Passport & Scrapbook",
@@ -959,22 +971,5 @@
     "savePreferences": "Save Preferences",
     "saving": "Saving...",
     "savedSuccess": "Preferences updated successfully."
-  },
-  "ProjectForum": {
-    "title": "Mission Squad Q&A Forum",
-    "subtitle": "Public mission discussion channel. Ask questions about flight booking, group travel, and accommodation.",
-    "rulesWarning": "Strict Erasmus+ Rules apply. Malicious links, offensive language, and spam are auto-blocked.",
-    "placeholder": "Ask about travel logistics, dietary accommodations, visa assistance, or schedule...",
-    "namePlaceholder": "Your name or pseudonym (optional)",
-    "sendBtn": "Transmit Question",
-    "sending": "Transmitting...",
-    "emptyMessage": "Please write a message before transmitting.",
-    "postSuccess": "Message verified by auto-moderation and posted successfully!",
-    "verifiedVolunteer": "Verified Volunteer",
-    "coordinatorRole": "Project Coordinator",
-    "adminRole": "EuroNova Admin",
-    "noMessages": "No questions posted yet. Be the first to ask the organizers and fellow volunteers!",
-    "justNow": "Just now",
-    "moderationBlocked": "Transmission Blocked: Your message was flagged by the Auto-Moderation Engine."
   }
 }

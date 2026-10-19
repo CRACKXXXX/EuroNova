@@ -5,6 +5,8 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { sendEmailAction } from "@/actions/sendEmail";
 
+import { getUserRole, type UserRole } from "@/lib/roles";
+
 const ADMIN_EMAIL = "euronovaofficial@gmail.com";
 
 export type AdminActionResult = {
@@ -35,8 +37,8 @@ function getServiceRoleClient() {
 }
 
 /**
- * Verifies that the current session belongs to an authorized administrator.
- * Supports explicit admin email or 'admin' role in users_youth.
+ * Verifies that the current session belongs strictly to an authorized system administrator.
+ * Only 'admin' role can access full God Mode and role assignments.
  */
 async function verifyAdmin() {
   const supabase = await createClient();
@@ -46,30 +48,32 @@ async function verifyAdmin() {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { supabase, isAuthorized: false, user: null };
+    return { supabase, isAuthorized: false, user: null, role: "user" as UserRole };
   }
 
-  // 1. Primary email match
-  if (user.email === ADMIN_EMAIL) {
-    return { supabase, isAuthorized: true, user };
+  const role = await getUserRole(user.id, user.email);
+  return { supabase, isAuthorized: role === "admin", user, role };
+}
+
+/**
+ * Verifies that the current session belongs to a Moderator or Administrator.
+ * Can resolve reports, delete comments, warn/mute/ban users.
+ * Support staff is strictly blocked.
+ */
+async function verifyModeratorOrAdmin() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return { supabase, isAuthorized: false, user: null, role: "user" as UserRole };
   }
 
-  // 2. Role-based check on users_youth
-  try {
-    const { data: youthProfile } = await supabase
-      .from("users_youth")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (youthProfile?.role === "admin") {
-      return { supabase, isAuthorized: true, user };
-    }
-  } catch (err) {
-    console.warn("Could not verify youth role:", err);
-  }
-
-  return { supabase, isAuthorized: false, user };
+  const role = await getUserRole(user.id, user.email);
+  const isAuthorized = role === "admin" || role === "moderator";
+  return { supabase, isAuthorized, user, role };
 }
 
 export async function approveOrganization(orgId: string): Promise<AdminActionResult> {
@@ -293,9 +297,9 @@ export async function deleteProject(projectId: string): Promise<AdminActionResul
  */
 export async function dismissReport(reportId: string): Promise<AdminActionResult> {
   try {
-    const { isAuthorized } = await verifyAdmin();
+    const { isAuthorized } = await verifyModeratorOrAdmin();
     if (!isAuthorized) {
-      return { error: "Unauthorized: Admin access required." };
+      return { error: "Unauthorized: Moderator or Admin access required." };
     }
 
     const adminDb = getServiceRoleClient();
@@ -466,9 +470,9 @@ export async function requestChanges(projectId: string, reportId?: string, notes
  */
 export async function reopenReport(reportId: string): Promise<AdminActionResult> {
   try {
-    const { isAuthorized } = await verifyAdmin();
+    const { isAuthorized } = await verifyModeratorOrAdmin();
     if (!isAuthorized) {
-      return { error: "Unauthorized: Admin access required." };
+      return { error: "Unauthorized: Moderator or Admin access required." };
     }
 
     const adminDb = getServiceRoleClient();
@@ -626,3 +630,355 @@ export async function updateProjectByAdmin(
     };
   }
 }
+
+/**
+ * Moderation Action: Delete reported comment or message and mark report as resolved
+ */
+export async function deleteReportedComment(
+  reportId: string,
+  commentId?: string,
+  targetUserId?: string
+): Promise<AdminActionResult> {
+  try {
+    const { isAuthorized } = await verifyModeratorOrAdmin();
+    if (!isAuthorized) {
+      return { error: "Unauthorized: Moderator or Admin access required." };
+    }
+
+    const adminDb = getServiceRoleClient();
+
+    // 1. Delete comment from forum tables if commentId provided
+    if (commentId) {
+      await adminDb.from("global_forum_posts").delete().eq("id", commentId);
+      await adminDb.from("project_forum_messages").delete().eq("id", commentId);
+    }
+
+    // 2. Mark report as resolved
+    const { error: repError } = await adminDb
+      .from("project_reports")
+      .update({
+        status: "resolved",
+        resolved_at: new Date().toISOString(),
+      })
+      .eq("id", reportId);
+
+    if (repError) throw repError;
+
+    // 3. Dispatch informational notification to target user
+    if (targetUserId) {
+      try {
+        const { dispatchNotification } = await import("@/actions/notifications");
+        await dispatchNotification({
+          userId: targetUserId,
+          type: "moderation",
+          title: "Comment Removed",
+          message: "A comment or message you posted was reported and removed by moderation for violating community rules.",
+          actionUrl: "/dashboard",
+        });
+      } catch {
+        // Non-blocking notification dispatch
+      }
+    }
+
+    revalidatePath("/dashboard/admin");
+    revalidatePath("/community");
+    return { success: true };
+  } catch (error: unknown) {
+    console.error("deleteReportedComment failed:", error);
+    return {
+      error: error instanceof Error ? error.message : "Failed to delete comment.",
+    };
+  }
+}
+
+/**
+ * Moderation Action: Delete reported comment, add a warning strike, and resolve report
+ */
+export async function deleteCommentAndWarnUser(
+  reportId: string,
+  commentId?: string,
+  targetUserId?: string
+): Promise<AdminActionResult> {
+  try {
+    const { isAuthorized } = await verifyModeratorOrAdmin();
+    if (!isAuthorized) {
+      return { error: "Unauthorized: Moderator or Admin access required." };
+    }
+
+    const adminDb = getServiceRoleClient();
+
+    // 1. Delete comment from forum tables if commentId provided
+    if (commentId) {
+      await adminDb.from("global_forum_posts").delete().eq("id", commentId);
+      await adminDb.from("project_forum_messages").delete().eq("id", commentId);
+    }
+
+    // 2. Adjust target user trust_score / send formal warning notification
+    if (targetUserId) {
+      try {
+        const { data: userYouth } = await adminDb
+          .from("users_youth")
+          .select("trust_score")
+          .eq("id", targetUserId)
+          .maybeSingle();
+
+        if (userYouth) {
+          const currentTrust = userYouth.trust_score ?? 50;
+          await adminDb
+            .from("users_youth")
+            .update({ trust_score: Math.max(0, currentTrust - 15) })
+            .eq("id", targetUserId);
+        }
+
+        const { dispatchNotification } = await import("@/actions/notifications");
+        await dispatchNotification({
+          userId: targetUserId,
+          type: "moderation",
+          title: "Official Moderation Warning",
+          message: "Your reported comment was deleted and a moderation strike was applied to your profile. Continued infractions will result in an account ban.",
+          actionUrl: "/dashboard",
+        });
+      } catch (err) {
+        console.warn("Could not record warning on target user:", err);
+      }
+    }
+
+    // 3. Mark report as resolved
+    const { error: repError } = await adminDb
+      .from("project_reports")
+      .update({
+        status: "resolved",
+        resolved_at: new Date().toISOString(),
+      })
+      .eq("id", reportId);
+
+    if (repError) throw repError;
+
+    revalidatePath("/dashboard/admin");
+    revalidatePath("/community");
+    return { success: true };
+  } catch (error: unknown) {
+    console.error("deleteCommentAndWarnUser failed:", error);
+    return {
+      error: error instanceof Error ? error.message : "Failed to apply warning.",
+    };
+  }
+}
+
+/**
+ * Moderation Action: Delete comment, ban target user account, and resolve report
+ */
+export async function deleteCommentAndBanUser(
+  reportId: string,
+  commentId?: string,
+  targetUserId?: string
+): Promise<AdminActionResult> {
+  try {
+    const { isAuthorized } = await verifyModeratorOrAdmin();
+    if (!isAuthorized) {
+      return { error: "Unauthorized: Moderator or Admin access required." };
+    }
+
+    const adminDb = getServiceRoleClient();
+
+    // 1. Delete comment from forum tables if commentId provided
+    if (commentId) {
+      await adminDb.from("global_forum_posts").delete().eq("id", commentId);
+      await adminDb.from("project_forum_messages").delete().eq("id", commentId);
+    }
+
+    // 2. Permanently ban user account via Supabase Auth Admin API
+    if (targetUserId) {
+      try {
+        // Suspend auth login access (100 years ban)
+        await adminDb.auth.admin.updateUserById(targetUserId, {
+          ban_duration: "876000h",
+          user_metadata: { banned: true, banned_at: new Date().toISOString() },
+        });
+
+        // Set trust_score to 0 in youth profile
+        await adminDb
+          .from("users_youth")
+          .update({ trust_score: 0 })
+          .eq("id", targetUserId);
+
+        const { dispatchNotification } = await import("@/actions/notifications");
+        await dispatchNotification({
+          userId: targetUserId,
+          type: "moderation",
+          title: "Account Suspended",
+          message: "Your account has been permanently suspended by administration for severe violations of European youth safety protocols.",
+          actionUrl: "/dashboard",
+        });
+      } catch (err) {
+        console.warn("Could not ban target user:", err);
+      }
+    }
+
+    // 3. Mark report as resolved
+    const { error: repError } = await adminDb
+      .from("project_reports")
+      .update({
+        status: "resolved",
+        resolved_at: new Date().toISOString(),
+      })
+      .eq("id", reportId);
+
+    if (repError) throw repError;
+
+    revalidatePath("/dashboard/admin");
+    revalidatePath("/community");
+    return { success: true };
+  } catch (error: unknown) {
+    console.error("deleteCommentAndBanUser failed:", error);
+    return {
+      error: error instanceof Error ? error.message : "Failed to ban user account.",
+    };
+  }
+}
+
+/**
+ * Staff & Role Management: Admin-only action to assign or change a user's system role.
+ * Strictly verifies the executor is an 'admin'.
+ */
+export async function updateUserRole(
+  targetUserId: string,
+  newRole: UserRole
+): Promise<AdminActionResult> {
+  try {
+    const { isAuthorized, user } = await verifyAdmin();
+    if (!isAuthorized || !user) {
+      return { error: "Unauthorized: Admin clearance required to assign roles." };
+    }
+
+    if (!targetUserId || !newRole) {
+      return { error: "Target user ID and new role are required." };
+    }
+
+    const validRoles: UserRole[] = ["admin", "moderator", "support", "user"];
+    if (!validRoles.includes(newRole)) {
+      return { error: "Invalid role specified." };
+    }
+
+    const adminDb = getServiceRoleClient();
+
+    // Prevent modifying the root administrator
+    const { data: targetAuthUser } = await adminDb.auth.admin.getUserById(targetUserId);
+    if (targetAuthUser?.user?.email === ADMIN_EMAIL) {
+      return { error: "Cannot modify root administrator credentials." };
+    }
+
+    // Update public profile entity in users_youth
+    const { error: youthError } = await adminDb
+      .from("users_youth")
+      .update({ role: newRole })
+      .eq("id", targetUserId);
+
+    if (youthError) throw youthError;
+
+    // Synchronize auth user_metadata for reliable token/session lookup
+    await adminDb.auth.admin.updateUserById(targetUserId, {
+      user_metadata: { role: newRole },
+    });
+
+    try {
+      const { dispatchNotification } = await import("@/actions/notifications");
+      await dispatchNotification({
+        userId: targetUserId,
+        type: "system",
+        title: "Account Role Updated",
+        message: `Your clearance level on EuroNova has been updated to: [${newRole.toUpperCase()}].`,
+        actionUrl: "/dashboard",
+      });
+    } catch {
+      // Non-blocking notification dispatch
+    }
+
+    revalidatePath("/dashboard/admin");
+    revalidatePath("/community");
+    revalidatePath("/", "layout");
+    return { success: true };
+  } catch (error: unknown) {
+    console.error("updateUserRole failed:", error);
+    return {
+      error: error instanceof Error ? error.message : "Failed to update user role.",
+    };
+  }
+}
+
+export interface StaffSearchUser {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  role: UserRole;
+  avatar_url: string | null;
+  created_at: string;
+}
+
+/**
+ * Searches users for the Staff & Roles management console.
+ * Strictly verifies the executor is an 'admin'.
+ */
+export async function searchStaffUsers(query?: string): Promise<{
+  users?: StaffSearchUser[];
+  error?: string;
+}> {
+  try {
+    const { isAuthorized } = await verifyAdmin();
+    if (!isAuthorized) {
+      return { error: "Unauthorized: Admin clearance required." };
+    }
+
+    const adminDb = getServiceRoleClient();
+    const cleanQuery = query?.trim().toLowerCase() || "";
+
+    let dbQuery = adminDb
+      .from("users_youth")
+      .select("id, full_name, email, role, avatar_url, created_at")
+      .order("created_at", { ascending: false });
+
+    if (cleanQuery) {
+      dbQuery = dbQuery.or(
+        `id.eq.${cleanQuery},full_name.ilike.%${cleanQuery}%,email.ilike.%${cleanQuery}%`
+      );
+    }
+
+    const { data, error } = await dbQuery.limit(50);
+    if (error) throw error;
+
+    const userList: StaffSearchUser[] = (data || []).map((u) => ({
+      id: u.id,
+      full_name: u.full_name,
+      email: u.email,
+      role: (u.role || "user") as UserRole,
+      avatar_url: u.avatar_url,
+      created_at: u.created_at,
+    }));
+
+    const missingEmailIds = userList.filter((u) => !u.email).map((u) => u.id);
+    if (missingEmailIds.length > 0) {
+      const { data: emailsData } = await adminDb.rpc("get_admin_user_emails", {
+        user_ids: missingEmailIds,
+      });
+      if (Array.isArray(emailsData)) {
+        const emailMap = new Map(
+          emailsData.map((e: { user_id: string; email: string }) => [e.user_id, e.email])
+        );
+        userList.forEach((u) => {
+          if (!u.email && emailMap.has(u.id)) {
+            u.email = emailMap.get(u.id) || null;
+          }
+        });
+      }
+    }
+
+    return { users: userList };
+  } catch (err: unknown) {
+    console.error("searchStaffUsers error:", err);
+    return {
+      error: err instanceof Error ? err.message : "Failed to search staff users.",
+    };
+  }
+}
+
+

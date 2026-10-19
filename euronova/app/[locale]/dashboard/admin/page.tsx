@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { ShieldAlert, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { getUserRole, type UserRole } from "@/lib/roles";
 import {
   AdminDashboardClient,
   OrgItem,
@@ -55,25 +56,14 @@ export default async function AdminPage(props: {
     redirect("/dashboard");
   }
 
-  // 1. Role-based verification with fallback to primary administrator email
-  let isAuthorized = user.email === "euronovaofficial@gmail.com";
-  if (!isAuthorized) {
-    try {
-      const { data: youthProfile } = await supabase
-        .from("users_youth")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
+  // 1. Role-based verification using centralized role utility
+  const currentUserRole: UserRole = await getUserRole(user.id, user.email);
+  const isAuthorizedStaff =
+    currentUserRole === "admin" ||
+    currentUserRole === "moderator" ||
+    currentUserRole === "support";
 
-      if (youthProfile?.role === "admin") {
-        isAuthorized = true;
-      }
-    } catch (err) {
-      console.warn("Could not check role in users_youth:", err);
-    }
-  }
-
-  if (!isAuthorized) {
+  if (!isAuthorizedStaff) {
     redirect("/dashboard");
   }
 
@@ -83,8 +73,32 @@ export default async function AdminPage(props: {
   const t = await getTranslations("AdminPanel");
 
   const currentTab =
-    (searchParams.tab as "orgs" | "youth" | "projects" | "reports") || "orgs";
+    (searchParams.tab as "orgs" | "youth" | "projects" | "reports" | "staff") || "orgs";
   const currentPage = parsePage(searchParams.page);
+
+  // Strict 403 Guard: If user is not an admin, deny access to the "staff" tab
+  if (currentTab === "staff" && currentUserRole !== "admin") {
+    return (
+      <div className="max-w-4xl mx-auto py-20 px-4 text-center">
+        <div className="bg-void-surface border border-nova-flare/40 rounded-2xl p-8 max-w-lg mx-auto shadow-2xl">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-nova-flare/10 border border-nova-flare/30 flex items-center justify-center text-nova-flare text-3xl font-black">
+            403
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Access Denied: Admin Clearance Required</h2>
+          <p className="text-sm text-gray-400 mb-6">
+            The Staff & Roles Management terminal is strictly restricted to Level 4 EuroNova System Administrators. Moderators and Support personnel cannot access this clearance level.
+          </p>
+          <Link
+            href="/dashboard/admin?tab=reports"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-void-deep border border-void-border text-white hover:border-plasma-cyan/50 transition-colors text-sm font-semibold"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Return to Authorized Hub
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   // 2. Dedicated count queries BEFORE fetching paginated data
   const [
@@ -95,6 +109,7 @@ export default async function AdminPage(props: {
     totalPendingOrgsCountRes,
     totalVerifiedOrgsCountRes,
     totalYouthCountRes,
+    totalStaffCountRes,
   ] = await Promise.all([
     adminDb.from("projects").select("*", { count: "exact", head: true }),
     adminDb.from("projects").select("*", { count: "exact", head: true }).eq("status", "published"),
@@ -106,6 +121,7 @@ export default async function AdminPage(props: {
       .or("verification_status.eq.pending,verification_status.is.null,verification_status.eq.rejected"),
     adminDb.from("users_org").select("*", { count: "exact", head: true }).eq("verification_status", "verified"),
     adminDb.from("users_youth").select("*", { count: "exact", head: true }),
+    adminDb.from("users_youth").select("*", { count: "exact", head: true }).in("role", ["admin", "moderator", "support"]),
   ]);
 
   const totalProjects = totalProjectsCountRes.count ?? 0;
@@ -115,6 +131,7 @@ export default async function AdminPage(props: {
   const totalPendingOrgs = totalPendingOrgsCountRes.count ?? 0;
   const totalVerifiedOrgs = totalVerifiedOrgsCountRes.count ?? 0;
   const totalYouth = totalYouthCountRes.count ?? 0;
+  const totalStaff = totalStaffCountRes.count ?? 0;
 
   // Defensive queries for project_reports table
   let totalReports = 0;
@@ -131,7 +148,9 @@ export default async function AdminPage(props: {
   }
 
   const activeTabTotal =
-    currentTab === "reports"
+    currentTab === "staff"
+      ? totalStaff
+      : currentTab === "reports"
       ? totalReports
       : currentTab === "projects"
       ? totalPublishedProjects
@@ -197,7 +216,7 @@ export default async function AdminPage(props: {
   const rawPublishedProjects = (publishedProjectsDataRes.data as ProjectItem[]) || [];
   const rawReports = (reportsDataRes.data as ReportItem[]) || [];
 
-  // Extract unique organization, youth user, and reporter IDs for admin email resolution
+  // Extract unique organization, youth user, reporter, and reported user IDs for admin email resolution
   const uniqueOrgIds = Array.from(
     new Set([
       ...rawPendingOrgs.map((o) => o.id),
@@ -206,6 +225,7 @@ export default async function AdminPage(props: {
       ...rawPublishedProjects.map((p) => p.org_id).filter((id): id is string => Boolean(id)),
       ...rawYouthUsers.map((y) => y.id),
       ...rawReports.map((r) => r.reporter_id).filter((id): id is string => Boolean(id)),
+      ...rawReports.map((r) => r.target_user_id).filter((id): id is string => Boolean(id)),
     ])
   );
 
@@ -220,6 +240,30 @@ export default async function AdminPage(props: {
       emailsData.forEach((row: { user_id: string; email: string }) => {
         if (row.user_id && row.email) {
           emailsMap.set(row.user_id, row.email);
+        }
+      });
+    }
+  }
+
+  // Resolve reporter & target user full names from users_youth
+  const userIdsToLookup = Array.from(
+    new Set([
+      ...rawReports.map((r) => r.reporter_id).filter((id): id is string => Boolean(id)),
+      ...rawReports.map((r) => r.target_user_id).filter((id): id is string => Boolean(id)),
+    ])
+  );
+
+  const youthNamesMap = new Map<string, string>();
+  if (userIdsToLookup.length > 0) {
+    const { data: youthsData } = await adminDb
+      .from("users_youth")
+      .select("id, full_name")
+      .in("id", userIdsToLookup);
+
+    if (youthsData && Array.isArray(youthsData)) {
+      youthsData.forEach((y: { id: string; full_name: string | null }) => {
+        if (y.id && y.full_name) {
+          youthNamesMap.set(y.id, y.full_name);
         }
       });
     }
@@ -253,7 +297,10 @@ export default async function AdminPage(props: {
 
   const reports: ReportItem[] = rawReports.map((report) => ({
     ...report,
+    reporter_name: report.reporter_id ? youthNamesMap.get(report.reporter_id) || null : null,
     reporter_email: report.reporter_id ? emailsMap.get(report.reporter_id) || null : null,
+    target_user_name: report.target_name || (report.target_user_id ? youthNamesMap.get(report.target_user_id) || null : null),
+    target_user_email: report.target_user_id ? emailsMap.get(report.target_user_id) || null : null,
   }));
 
   return (
@@ -280,7 +327,7 @@ export default async function AdminPage(props: {
 
         <div className="hidden sm:flex flex-col items-end">
           <span className="text-xs text-gray-400 uppercase tracking-wider font-mono">
-            Signed in as Admin
+            Signed in as [{currentUserRole.toUpperCase()}]
           </span>
           <span className="text-sm font-bold text-plasma-cyan font-mono">
             {user.email}
@@ -289,6 +336,7 @@ export default async function AdminPage(props: {
       </div>
 
       <AdminDashboardClient
+        currentUserRole={currentUserRole}
         pendingOrgs={pendingOrgs}
         verifiedOrgs={verifiedOrgs}
         youthUsers={youthUsers}
@@ -298,6 +346,7 @@ export default async function AdminPage(props: {
         totalProjects={totalProjects}
         totalOrgs={totalOrgs}
         totalYouth={totalYouth}
+        totalStaff={totalStaff}
         totalPendingOrgs={totalPendingOrgs}
         totalVerifiedOrgs={totalVerifiedOrgs}
         totalPendingProjects={totalPendingProjects}

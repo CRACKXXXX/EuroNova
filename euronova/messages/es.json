@@ -380,5 +380,28 @@
     "CBY": "Capacity Building in Youth",
     "Youth Exchange": "Intercambio Juvenil",
     "Training": "Curso de Formación"
+  },
+  "ProjectForum": {
+    "title": "Project Q&A Forum",
+    "subtitle": "A space for logistics and questions. Ask experienced users or the project organizers.",
+    "rulesWarning": "Se aplican normas estrictas de Erasmus+. Enlaces no autorizados y contenido inapropiado están bloqueados.",
+    "placeholder": "Pregunta sobre logística de viaje, dietas, visados o itinerario...",
+    "sendBtn": "Transmit Question",
+    "sending": "Transmitting...",
+    "emptyMessage": "Escribe un mensaje antes de transmitir.",
+    "postSuccess": "¡Pregunta verificada y publicada con éxito!",
+    "noMessages": "Aún no hay preguntas. ¡Sé el primero en iniciar la conversación!",
+    "coordinatorBadge": "Organization Coordinator",
+    "adminBadge": "EuroNova Admin",
+    "verifiedVolunteer": "Verified Volunteer",
+    "levelGatedNotice": "Alcanza el Nivel 2 (100 XP) para participar en el Q&A y evitar spam.",
+    "levelGatedHint": "Completa tu dossier de perfil (+50 XP) o postula a una misión (+50 XP) para desbloquear el foro.",
+    "lockedPlaceholder": "Alcanza el Nivel 2 (100 XP) para desbloquear las preguntas...",
+    "editBtn": "Edit",
+    "deleteBtn": "Delete",
+    "saveBtn": "Save Changes",
+    "cancelBtn": "Cancel",
+    "editSuccess": "¡Mensaje actualizado correctamente!",
+    "deleteSuccess": "Mensaje eliminado del foro."
   }
 }

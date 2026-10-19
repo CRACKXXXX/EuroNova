@@ -12,7 +12,6 @@ import { DistanceCalculator } from "@/components/DistanceCalculator";
 import { ShareProject } from "@/components/ShareProject";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ReportMissionButton } from "@/components/ReportMissionButton";
-import { MissionCompanionsSection } from "@/components/MissionCompanionsSection";
 import { TrackRecentlyViewed } from "@/components/TrackRecentlyViewed";
 import { ProjectForum } from "@/components/ProjectForum";
 
@@ -269,9 +268,6 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
                   </div>
                 </div>
               )}
-
-              {/* Mission Companions Community Scaffolding */}
-              <MissionCompanionsSection projectTitle={project.title} />
 
               {/* Community Auto-Moderated Q&A Forum */}
               <ProjectForum projectId={project.id} projectTitle={project.title} />

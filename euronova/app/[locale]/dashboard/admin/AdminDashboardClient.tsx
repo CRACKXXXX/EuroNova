@@ -29,14 +29,21 @@ import {
   Flag,
   ShieldCheck,
   ShieldAlert,
+  Shield,
   ExternalLink,
   RotateCcw,
   Edit3,
   Layers,
   Bot,
   X,
+  Search,
+  MessageSquare,
+  Loader2,
+  Check,
+  Copy,
 } from "lucide-react";
 import { COUNTRIES } from "@/lib/constants/countries";
+import { type UserRole, ROLE_BADGE_CONFIG } from "@/lib/roles";
 import {
   approveOrganization,
   revokeOrganization,
@@ -50,6 +57,12 @@ import {
   reopenReport,
   suspendOrganization,
   updateProjectByAdmin,
+  deleteReportedComment,
+  deleteCommentAndWarnUser,
+  deleteCommentAndBanUser,
+  updateUserRole,
+  searchStaffUsers,
+  type StaffSearchUser,
   type AdminProjectEditPayload,
 } from "./actions";
 
@@ -81,6 +94,7 @@ export interface YouthUserItem {
   languages: string[] | null;
   avatar_url: string | null;
   email: string | null;
+  role?: string | null;
   created_at: string;
 }
 
@@ -118,7 +132,10 @@ export interface ReportItem {
   status: string;
   created_at: string;
   resolved_at?: string | null;
+  reporter_name?: string | null;
   reporter_email?: string | null;
+  target_user_name?: string | null;
+  target_user_email?: string | null;
   projects?: {
     id: string;
     title: string;
@@ -135,6 +152,7 @@ export interface ReportItem {
 }
 
 interface AdminDashboardClientProps {
+  currentUserRole?: UserRole;
   pendingOrgs: OrgItem[];
   verifiedOrgs: OrgItem[];
   youthUsers: YouthUserItem[];
@@ -144,6 +162,7 @@ interface AdminDashboardClientProps {
   totalProjects: number;
   totalOrgs: number;
   totalYouth: number;
+  totalStaff?: number;
   totalPendingOrgs: number;
   totalVerifiedOrgs: number;
   totalPendingProjects: number;
@@ -152,7 +171,7 @@ interface AdminDashboardClientProps {
   totalPendingReports?: number;
   currentPage: number;
   totalPages: number;
-  currentTab?: "orgs" | "youth" | "projects" | "reports";
+  currentTab?: "orgs" | "youth" | "projects" | "reports" | "staff";
   pageSize?: number;
 }
 
@@ -217,6 +236,7 @@ export function isProjectScraped(project: ProjectItem): boolean {
 }
 
 export function AdminDashboardClient({
+  currentUserRole = "user",
   pendingOrgs,
   verifiedOrgs,
   youthUsers,
@@ -226,6 +246,7 @@ export function AdminDashboardClient({
   totalProjects,
   totalOrgs,
   totalYouth,
+  totalStaff = 0,
   totalPendingOrgs,
   totalVerifiedOrgs,
   totalPendingProjects,
@@ -242,8 +263,8 @@ export function AdminDashboardClient({
   const searchParams = useSearchParams();
 
   // Active tab strictly bound to URL parameter for resilient state persistence
-  const tabFromUrl = searchParams.get("tab") as "orgs" | "youth" | "projects" | "reports" | null;
-  const activeTab: "orgs" | "youth" | "projects" | "reports" = tabFromUrl || currentTab || "orgs";
+  const tabFromUrl = searchParams.get("tab") as "orgs" | "youth" | "projects" | "reports" | "staff" | null;
+  const activeTab: "orgs" | "youth" | "projects" | "reports" | "staff" = tabFromUrl || currentTab || "orgs";
 
   const [showSensitive, setShowSensitive] = useState(false);
   const [isScraping, setIsScraping] = useState(false);
@@ -275,6 +296,71 @@ export function AdminDashboardClient({
 
   // Split queue filtering for Projects: "all", "organic" (NGO), "scraper" (Auto-Scraper)
   const [projectOriginFilter, setProjectOriginFilter] = useState<"all" | "organic" | "scraper">("all");
+
+  // Youth user search filter by name, email, or user ID
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+
+  // Split UI filtering for Moderation Reports: "all", "users" (User & Comment Reports), "projects" (Project & Org Reports), "quarantine" (Quarantine Tray)
+  const [reportCategory, setReportCategory] = useState<"all" | "users" | "projects" | "quarantine">("all");
+
+  // Staff & Roles Management State
+  const [staffSearchQuery, setStaffSearchQuery] = useState("");
+  const [staffRoleFilter, setStaffRoleFilter] = useState<"all" | "staff" | "moderator" | "support" | "user">("all");
+  const [staffUsersList, setStaffUsersList] = useState<StaffSearchUser[]>([]);
+  const [hasSearchedStaff, setHasSearchedStaff] = useState(false);
+  const [isSearchingStaff, setIsSearchingStaff] = useState(false);
+  const [updatingUserRoleId, setUpdatingUserRoleId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const handleSearchStaff = async (queryText?: string) => {
+    const q = queryText !== undefined ? queryText : staffSearchQuery;
+    setIsSearchingStaff(true);
+    setFeedback(null);
+    try {
+      const res = await searchStaffUsers(q);
+      if (res.error) {
+        setFeedback({ type: "error", message: res.error });
+      } else if (res.users) {
+        setStaffUsersList(res.users);
+        setHasSearchedStaff(true);
+      }
+    } catch {
+      setFeedback({ type: "error", message: "Failed to search staff users." });
+    } finally {
+      setIsSearchingStaff(false);
+    }
+  };
+
+  const handleRoleChange = async (targetUserId: string, newRole: UserRole) => {
+    if (updatingUserRoleId) return;
+    setUpdatingUserRoleId(targetUserId);
+    setFeedback(null);
+    try {
+      const res = await updateUserRole(targetUserId, newRole);
+      if (res.error) {
+        setFeedback({ type: "error", message: res.error });
+      } else {
+        setFeedback({
+          type: "success",
+          message: `User clearance level updated to [${newRole.toUpperCase()}].`,
+        });
+        setStaffUsersList((prev) =>
+          prev.map((u) => (u.id === targetUserId ? { ...u, role: newRole } : u))
+        );
+        router.refresh();
+      }
+    } catch {
+      setFeedback({ type: "error", message: "Network error updating user role." });
+    } finally {
+      setUpdatingUserRoleId(null);
+    }
+  };
+
+  const handleCopyId = (id: string) => {
+    navigator.clipboard.writeText(id);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   // God Mode Project Edit State
   const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
@@ -315,7 +401,7 @@ export function AdminDashboardClient({
     });
   };
 
-  const handleTabChange = (tab: "orgs" | "youth" | "projects" | "reports") => {
+  const handleTabChange = (tab: "orgs" | "youth" | "projects" | "reports" | "staff") => {
     router.push(`?tab=${tab}&page=1`);
   };
 
@@ -564,6 +650,23 @@ export function AdminDashboardClient({
               )}
             </span>
           </button>
+
+          {currentUserRole === "admin" && (
+            <button
+              onClick={() => handleTabChange("staff")}
+              className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 border ${
+                activeTab === "staff"
+                  ? "bg-gradient-to-r from-plasma-cyan/20 to-hyper-violet/20 border-plasma-cyan text-white shadow-[0_0_20px_rgba(0,229,255,0.25)]"
+                  : "bg-void-surface border-void-border text-gray-400 hover:text-white hover:border-gray-700"
+              }`}
+            >
+              <ShieldCheck className="w-4 h-4 text-plasma-cyan" />
+              <span>Staff & Roles</span>
+              <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-plasma-cyan/30 text-white font-mono">
+                {totalStaff}
+              </span>
+            </button>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-3 shrink-0 self-start sm:self-auto">
@@ -789,121 +892,167 @@ export function AdminDashboardClient({
       )}
 
       {/* TAB 2: YOUTH USERS */}
-      {activeTab === "youth" && (
-        <div className="space-y-6 animate-in fade-in duration-300">
-          <div className="flex items-center justify-between border-b border-void-border pb-3">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2.5">
-              <Users className="w-5 h-5 text-plasma-cyan" />
-              {t("youthTitle")}
-              <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/30">
-                {totalYouth}
-              </span>
-            </h2>
-          </div>
+      {activeTab === "youth" && (() => {
+        const filteredYouthUsers = youthUsers.filter((user) => {
+          const q = userSearchQuery.toLowerCase().trim();
+          if (!q) return true;
+          const nameMatch = (user.full_name || "").toLowerCase().includes(q);
+          const emailMatch = (user.email || "").toLowerCase().includes(q);
+          const idMatch = (user.id || "").toLowerCase().includes(q);
+          const countryMatch = (user.country_code || "").toLowerCase().includes(q);
+          const phoneMatch = (user.phone || "").toLowerCase().includes(q);
+          return nameMatch || emailMatch || idMatch || countryMatch || phoneMatch;
+        });
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {youthUsers.map((user) => (
-              <div
-                key={user.id}
-                className="bg-void-surface border border-void-border hover:border-plasma-cyan/40 rounded-2xl p-6 sm:p-7 flex flex-col transition-all shadow-md"
-              >
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-14 h-14 rounded-full border-2 border-plasma-cyan/60 overflow-hidden flex items-center justify-center bg-void-deep shrink-0 shadow-[0_0_15px_rgba(0,229,255,0.2)]">
-                    {user.avatar_url ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-                    ) : (
-                      <User className="w-7 h-7 text-plasma-cyan/60" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-bold text-white break-all whitespace-normal">
-                      {user.full_name || t("unnamed")}
-                    </h3>
-                    <p className={`text-xs text-gray-400 font-mono mt-0.5 ${showSensitive ? "break-all whitespace-normal" : "truncate"}`}>
-                      {user.email ? (showSensitive ? user.email : maskEmail(user.email)) : "No email"}
-                    </p>
-                    <div className="mt-1 flex items-center gap-2">
-                      {renderCountry(user.country_code)}
-                      {user.is_rup_region && (
-                        <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/30">
-                          {t("rupBadge")}
-                        </span>
+        return (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-void-border pb-4">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2.5">
+                <Users className="w-5 h-5 text-plasma-cyan" />
+                {t("youthTitle")}
+                <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/30">
+                  {userSearchQuery ? `${filteredYouthUsers.length} of ${totalYouth}` : totalYouth}
+                </span>
+              </h2>
+
+              {/* Upgraded Youth User Search: Name, Email, ID */}
+              <div className="w-full sm:w-80 relative">
+                <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={userSearchQuery}
+                  onChange={(e) => setUserSearchQuery(e.target.value)}
+                  placeholder="Search by name, email, or user ID..."
+                  className="w-full bg-void-deep/90 border border-void-border rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-plasma-cyan transition-colors"
+                />
+                {userSearchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setUserSearchQuery("")}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-0.5 cursor-pointer"
+                    title="Clear search"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredYouthUsers.map((user) => (
+                <div
+                  key={user.id}
+                  className="bg-void-surface border border-void-border hover:border-plasma-cyan/40 rounded-2xl p-6 sm:p-7 flex flex-col transition-all shadow-md"
+                >
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-14 h-14 rounded-full border-2 border-plasma-cyan/60 overflow-hidden flex items-center justify-center bg-void-deep shrink-0 shadow-[0_0_15px_rgba(0,229,255,0.2)]">
+                      {user.avatar_url ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-7 h-7 text-plasma-cyan/60" />
                       )}
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base font-bold text-white break-all whitespace-normal">
+                        {user.full_name || t("unnamed")}
+                      </h3>
+                      <p className={`text-xs text-gray-400 font-mono mt-0.5 ${showSensitive ? "break-all whitespace-normal" : "truncate"}`}>
+                        {user.email ? (showSensitive ? user.email : maskEmail(user.email)) : "No email"}
+                      </p>
+                      <div className="mt-1 flex items-center gap-2">
+                        {renderCountry(user.country_code)}
+                        {user.is_rup_region && (
+                          <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/30">
+                            {t("rupBadge")}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
 
-                {/* Youth Details: Phone & Languages */}
-                <div className="space-y-1.5 mb-3 text-xs">
-                  {user.phone && (
-                    <div className="flex items-center gap-2 text-gray-300">
-                      <Phone className="w-3.5 h-3.5 text-plasma-cyan shrink-0" />
-                      <span className="text-gray-400 font-medium">{t("phone")}:</span>
-                      <span className={`font-mono text-gray-200 ${showSensitive ? "break-all whitespace-normal" : ""}`}>
-                        {showSensitive ? user.phone : maskPhone(user.phone)}
-                      </span>
-                    </div>
-                  )}
-                  {user.languages && user.languages.length > 0 && (
-                    <div className="flex items-center gap-2 text-gray-300">
-                      <Languages className="w-3.5 h-3.5 text-hyper-violet shrink-0" />
-                      <span className="text-gray-400 font-medium">{t("languages")}:</span>
-                      <span className={`text-gray-200 ${showSensitive ? "break-all whitespace-normal" : "truncate"}`}>
-                        {user.languages.join(", ")}
-                      </span>
-                    </div>
-                  )}
-                </div>
+                  {/* Youth Details: Phone & Languages */}
+                  <div className="space-y-1.5 mb-3 text-xs">
+                    {user.phone && (
+                      <div className="flex items-center gap-2 text-gray-300">
+                        <Phone className="w-3.5 h-3.5 text-plasma-cyan shrink-0" />
+                        <span className="text-gray-400 font-medium">{t("phone")}:</span>
+                        <span className={`font-mono text-gray-200 ${showSensitive ? "break-all whitespace-normal" : ""}`}>
+                          {showSensitive ? user.phone : maskPhone(user.phone)}
+                        </span>
+                      </div>
+                    )}
+                    {user.languages && user.languages.length > 0 && (
+                      <div className="flex items-center gap-2 text-gray-300">
+                        <Languages className="w-3.5 h-3.5 text-hyper-violet shrink-0" />
+                        <span className="text-gray-400 font-medium">{t("languages")}:</span>
+                        <span className={`text-gray-200 ${showSensitive ? "break-all whitespace-normal" : "truncate"}`}>
+                          {user.languages.join(", ")}
+                        </span>
+                      </div>
+                    )}
+                  </div>
 
-                {/* Youth Details: Bio */}
-                {user.bio ? (
-                  <div className="mb-4 bg-void-deep/60 p-3 rounded-lg border border-void-border/40">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
-                      {t("bio")}
-                    </span>
-                    <p className="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed break-words">
-                      {user.bio}
+                  {/* Youth Details: Bio */}
+                  {user.bio ? (
+                    <div className="mb-4 bg-void-deep/60 p-3 rounded-lg border border-void-border/40">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
+                        {t("bio")}
+                      </span>
+                      <p className="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed break-words">
+                        {user.bio}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-500 italic mb-4">
+                      {t("noDescription")}
                     </p>
+                  )}
+
+                  <div className="mt-auto pt-4 border-t border-void-border/60 flex items-center justify-between">
+                    <span className={`text-[11px] text-gray-500 font-mono ${showSensitive ? "break-all whitespace-normal" : ""}`}>
+                      ID: {formatId(user.id, showSensitive)}
+                    </span>
+                    <button
+                      disabled={isPending}
+                      onClick={() => {
+                        setDeleteConfig({
+                          action: () => deleteYouthUser(user.id),
+                          title: "Delete Youth User",
+                          message: `Are you sure you want to permanently delete user "${user.full_name || user.email || "this user"}"? This action cannot be undone.`,
+                        });
+                      }}
+                      className="py-2 px-3.5 rounded-lg bg-nova-flare/10 hover:bg-nova-flare/20 text-nova-flare border border-nova-flare/30 font-bold text-xs transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>{t("deleteUser")}</span>
+                    </button>
                   </div>
-                ) : (
-                  <p className="text-xs text-gray-500 italic mb-4">
-                    {t("noDescription")}
-                  </p>
-                )}
-
-                <div className="mt-auto pt-4 border-t border-void-border/60 flex items-center justify-between">
-                  <span className={`text-[11px] text-gray-500 font-mono ${showSensitive ? "break-all whitespace-normal" : ""}`}>
-                    ID: {formatId(user.id, showSensitive)}
-                  </span>
-                  <button
-                    disabled={isPending}
-                    onClick={() => {
-                      setDeleteConfig({
-                        action: () => deleteYouthUser(user.id),
-                        title: "Delete Youth User",
-                        message: `Are you sure you want to permanently delete user "${user.full_name || user.email || "this user"}"? This action cannot be undone.`,
-                      });
-                    }}
-                    className="py-2 px-3.5 rounded-lg bg-nova-flare/10 hover:bg-nova-flare/20 text-nova-flare border border-nova-flare/30 font-bold text-xs transition-all flex items-center gap-1.5 disabled:opacity-50"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>{t("deleteUser")}</span>
-                  </button>
                 </div>
-              </div>
-            ))}
+              ))}
 
-            {youthUsers.length === 0 && (
-              <div className="col-span-full py-12 text-center border border-dashed border-void-border rounded-2xl bg-void-surface/40">
-                <p className="text-gray-400 text-sm">{t("noYouthUsers")}</p>
-              </div>
-            )}
+              {filteredYouthUsers.length === 0 && (
+                <div className="col-span-full py-12 text-center border border-dashed border-void-border rounded-2xl bg-void-surface/40">
+                  <p className="text-gray-400 text-sm">
+                    {userSearchQuery ? `No youth users matching "${userSearchQuery}".` : t("noYouthUsers")}
+                  </p>
+                  {userSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setUserSearchQuery("")}
+                      className="mt-2 text-xs text-plasma-cyan hover:underline cursor-pointer font-semibold"
+                    >
+                      Clear search filter
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {renderPagination(totalYouth)}
           </div>
-
-          {renderPagination(totalYouth)}
-        </div>
-      )}
+        );
+      })()}
 
       {/* TAB 3: PROJECTS */}
       {activeTab === "projects" && (() => {
@@ -1230,11 +1379,49 @@ export function AdminDashboardClient({
         );
         const resolvedReports = reports.filter((r) => r.status === "resolved");
 
+        const isQuarantineReport = (r: ReportItem) => {
+          const type = r.target_type || (r.project_id ? "project" : r.org_id ? "organization" : "user");
+          return (
+            type === "quarantine" ||
+            (r.reason && r.reason.toLowerCase().includes("quarantine")) ||
+            (r.description && r.description.startsWith("[Quarantine"))
+          );
+        };
+
+        const isUserOrCommentReport = (r: ReportItem) => {
+          if (isQuarantineReport(r)) return false;
+          const type = r.target_type || (r.project_id ? "project" : r.org_id ? "organization" : "user");
+          return type === "user" || type === "comment";
+        };
+
+        const isProjectOrOrgReport = (r: ReportItem) => {
+          if (isQuarantineReport(r)) return false;
+          return !isUserOrCommentReport(r);
+        };
+
+        const activeQuarantineReports = activeReports.filter(isQuarantineReport);
+        const activeUserReports = activeReports.filter(isUserOrCommentReport);
+        const activeProjectReports = activeReports.filter(isProjectOrOrgReport);
+
+        const filteredActiveReports = activeReports.filter((r) => {
+          if (reportCategory === "quarantine") return isQuarantineReport(r);
+          if (reportCategory === "users") return isUserOrCommentReport(r);
+          if (reportCategory === "projects") return isProjectOrOrgReport(r);
+          return true;
+        });
+
+        const filteredResolvedReports = resolvedReports.filter((r) => {
+          if (reportCategory === "quarantine") return isQuarantineReport(r);
+          if (reportCategory === "users") return isUserOrCommentReport(r);
+          if (reportCategory === "projects") return isProjectOrOrgReport(r);
+          return true;
+        });
+
         return (
           <div className="space-y-8 animate-in fade-in duration-300">
             {/* 1. TOP BOX: Active Transmissions */}
-            <div className="bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 shadow-xl">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-void-border">
+            <div className="bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 shadow-xl space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-void-border">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-nova-flare/15 border border-nova-flare/30 flex items-center justify-center text-nova-flare shrink-0 shadow-[0_0_15px_rgba(255,46,99,0.25)]">
                     <ShieldAlert className="w-5 h-5" />
@@ -1263,16 +1450,88 @@ export function AdminDashboardClient({
                 </div>
               </div>
 
+              {/* Sub-Tabs Split: User & Comment Reports vs Project & Organization Reports vs Quarantine */}
+              <div className="flex flex-wrap items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setReportCategory("all")}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    reportCategory === "all"
+                      ? "bg-plasma-cyan text-void-deep shadow-[0_0_15px_rgba(0,229,255,0.35)]"
+                      : "bg-void-deep border border-void-border text-gray-400 hover:text-white"
+                  }`}
+                >
+                  All Reports ({activeReports.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setReportCategory("users")}
+                  className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    reportCategory === "users"
+                      ? "bg-gradient-to-r from-plasma-cyan to-hyper-violet text-void-deep shadow-[0_0_15px_rgba(0,229,255,0.4)]"
+                      : "bg-void-deep border border-void-border text-gray-400 hover:text-white hover:border-hyper-violet/40"
+                  }`}
+                >
+                  <User className="w-3.5 h-3.5 text-hyper-violet" />
+                  <span>User & Comment Reports</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] bg-hyper-violet/30 text-white font-mono">
+                    {activeUserReports.length}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setReportCategory("projects")}
+                  className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    reportCategory === "projects"
+                      ? "bg-nova-flare text-white shadow-[0_0_15px_rgba(255,46,99,0.35)]"
+                      : "bg-void-deep border border-void-border text-gray-400 hover:text-white hover:border-nova-flare/40"
+                  }`}
+                >
+                  <FolderGit2 className="w-3.5 h-3.5 text-nova-flare" />
+                  <span>Project & Organization Reports</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] bg-nova-flare/30 text-white font-mono">
+                    {activeProjectReports.length}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setReportCategory("quarantine")}
+                  className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    reportCategory === "quarantine"
+                      ? "bg-amber-400 text-void-deep shadow-[0_0_15px_rgba(245,158,11,0.45)]"
+                      : "bg-void-deep border border-amber-500/40 text-amber-400 hover:text-white hover:border-amber-400"
+                  }`}
+                >
+                  <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Quarantine / Suspicious</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-500/30 text-amber-200 font-mono font-bold">
+                    {activeQuarantineReports.length}
+                  </span>
+                </button>
+              </div>
+
               {/* Active Reports List */}
-              {activeReports.length === 0 ? (
+              {filteredActiveReports.length === 0 ? (
                 <div className="py-14 text-center border border-dashed border-void-border rounded-2xl bg-void-deep/40">
                   <ShieldCheck className="w-12 h-12 text-rup-emerald/70 mx-auto mb-3" />
-                  <p className="text-gray-200 font-bold text-base">{t("noActiveReports")}</p>
-                  <p className="text-gray-500 text-xs mt-1">No pending reports require moderator intervention.</p>
+                  <p className="text-gray-200 font-bold text-base">
+                    {reportCategory === "quarantine"
+                      ? "Quarantine Tray is Clear."
+                      : reportCategory === "users"
+                      ? "No pending User or Comment reports."
+                      : reportCategory === "projects"
+                      ? "No pending Project or Organization reports."
+                      : t("noActiveReports")}
+                  </p>
+                  <p className="text-gray-500 text-xs mt-1">
+                    {reportCategory === "quarantine"
+                      ? "No suspicious transmissions or auto-moderated content awaiting orbital review."
+                      : "No pending reports require moderator intervention in this section."}
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {activeReports.map((report) => {
+                  {filteredActiveReports.map((report) => {
                     const targetType = report.target_type || (report.project_id ? "project" : report.org_id ? "organization" : "user");
 
                     const reasonColor =
@@ -1282,6 +1541,8 @@ export function AdminDashboardClient({
                         ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
                         : report.reason === "broken"
                         ? "bg-plasma-cyan/15 text-plasma-cyan border-plasma-cyan/30"
+                        : targetType === "quarantine" || isQuarantineReport(report)
+                        ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
                         : "bg-hyper-violet/15 text-hyper-violet border-hyper-violet/30";
 
                     const statusColor =
@@ -1292,11 +1553,17 @@ export function AdminDashboardClient({
                     return (
                       <div
                         key={report.id}
-                        className="p-5 rounded-2xl bg-void-deep/90 border border-void-border hover:border-plasma-cyan/30 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-6 shadow-sm"
+                        className="p-5 sm:p-6 rounded-2xl bg-void-deep/90 border border-void-border hover:border-plasma-cyan/30 transition-all flex flex-col lg:flex-row lg:items-start justify-between gap-6 shadow-sm"
                       >
-                        <div className="space-y-3 flex-1 min-w-0">
+                        <div className="space-y-4 flex-1 min-w-0">
                           {/* Top metadata row with 360 Target Badges */}
                           <div className="flex flex-wrap items-center gap-2.5">
+                            {(targetType === "quarantine" || isQuarantineReport(report)) && (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/50 flex items-center gap-1 shadow-[0_0_12px_rgba(245,158,11,0.25)]">
+                                <ShieldAlert className="w-3 h-3 text-amber-400" />
+                                [QUARANTINE / SUSPICIOUS]
+                              </span>
+                            )}
                             {targetType === "project" && (
                               <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-plasma-cyan/15 text-plasma-cyan border border-plasma-cyan/40 flex items-center gap-1 shadow-[0_0_10px_rgba(0,229,255,0.15)]">
                                 <FolderGit2 className="w-3 h-3" />
@@ -1309,10 +1576,10 @@ export function AdminDashboardClient({
                                 [ORGANIZATION]
                               </span>
                             )}
-                            {targetType === "user" && (
+                            {(targetType === "user" || targetType === "comment") && !isQuarantineReport(report) && (
                               <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-amber-500/15 text-amber-400 border border-amber-500/40 flex items-center gap-1 shadow-[0_0_10px_rgba(245,158,11,0.15)]">
-                                <User className="w-3 h-3" />
-                                [USER]
+                                <MessageSquare className="w-3 h-3" />
+                                [USER & COMMENT]
                               </span>
                             )}
 
@@ -1325,93 +1592,199 @@ export function AdminDashboardClient({
                             <span className="text-xs text-gray-500 font-mono">
                               {new Date(report.created_at).toLocaleDateString()} {new Date(report.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
-                            <span className="text-xs text-gray-600">•</span>
-                            <span className="text-xs text-gray-400">
-                              {t("reporter")}:{" "}
-                              <span className="text-gray-200 font-mono">
-                                {report.reporter_email
-                                  ? showSensitive
-                                    ? report.reporter_email
-                                    : maskEmail(report.reporter_email)
-                                  : t("anonymousReporter")}
-                              </span>
-                            </span>
                           </div>
 
-                          {/* Target Details Reference */}
-                          <div>
-                            <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-0.5">
-                              {targetType === "organization" ? "Reported Organization:" : targetType === "user" ? "Reported User:" : "Reported Mission:"}
-                            </p>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              {targetType === "project" && (
-                                <>
-                                  <h3 className="text-base font-bold text-white hover:text-plasma-cyan transition-colors">
-                                    {report.projects?.title || `Project ID: ${report.project_id}`}
-                                  </h3>
-                                  {report.project_id && (
-                                    <a
-                                      href={`/dashboard/projects/${report.project_id}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-plasma-cyan hover:text-white p-1 rounded hover:bg-void-surface transition-colors inline-flex items-center gap-1 text-xs"
-                                      title={t("viewProject")}
-                                    >
-                                      <ExternalLink className="w-3.5 h-3.5" />
-                                      <span className="text-[11px] underline">Open Mission</span>
-                                    </a>
-                                  )}
-                                  {report.projects?.status && (
-                                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-void-surface border border-void-border text-gray-400">
-                                      Status: {report.projects.status}
-                                    </span>
-                                  )}
-                                </>
-                              )}
+                          {/* Data Enrichment: For User & Comment Reports */}
+                          {(targetType === "user" || targetType === "comment" || targetType === "quarantine" || isQuarantineReport(report)) ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* 1. Reporter Information Box */}
+                              <div className="p-3.5 rounded-xl bg-void-surface border border-void-border/70 space-y-1.5 text-xs">
+                                <div className="flex items-center justify-between text-gray-400 pb-1 border-b border-void-border/50">
+                                  <span className="font-bold uppercase tracking-wider text-[10px] text-plasma-cyan flex items-center gap-1">
+                                    <User className="w-3 h-3 text-plasma-cyan" />
+                                    Submitted by (Reporter)
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between text-xs pt-0.5">
+                                  <span className="text-gray-400">Reporter Name:</span>
+                                  <span className="text-white font-bold">
+                                    {report.reporter_name || t("anonymousReporter")}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-gray-400">Reporter Email:</span>
+                                  <span className="text-gray-300 font-mono">
+                                    {report.reporter_email
+                                      ? showSensitive
+                                        ? report.reporter_email
+                                        : maskEmail(report.reporter_email)
+                                      : "Anonymous"}
+                                  </span>
+                                </div>
+                              </div>
 
-                              {targetType === "organization" && (
-                                <>
-                                  <h3 className="text-base font-bold text-white hover:text-hyper-violet transition-colors">
-                                    {report.users_org?.org_name || report.target_name || `Org ID: ${report.org_id}`}
-                                  </h3>
-                                  {report.org_id && (
-                                    <a
-                                      href={`/dashboard/organizations/${report.org_id}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-hyper-violet hover:text-white p-1 rounded hover:bg-void-surface transition-colors inline-flex items-center gap-1 text-xs"
-                                      title="View Public Organization Profile"
-                                    >
-                                      <ExternalLink className="w-3.5 h-3.5" />
-                                      <span className="text-[11px] underline">Open Profile</span>
-                                    </a>
-                                  )}
-                                  {report.users_org?.verification_status && (
-                                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-void-surface border border-void-border text-gray-400">
-                                      Verification: {report.users_org.verification_status}
-                                    </span>
-                                  )}
-                                </>
-                              )}
-
-                              {targetType === "user" && (
-                                <h3 className="text-base font-bold text-white">
-                                  {report.target_name || `User ID: ${report.target_user_id}`}
-                                </h3>
-                              )}
+                              {/* 2. Reported User Information Box */}
+                              <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-1.5 text-xs">
+                                <div className="flex items-center justify-between pb-1 border-b border-amber-500/20">
+                                  <span className="font-bold uppercase tracking-wider text-[10px] text-amber-400 flex items-center gap-1">
+                                    <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+                                    Reported User
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between text-xs pt-0.5">
+                                  <span className="text-gray-400">User Name:</span>
+                                  <span className="text-white font-black">
+                                    {report.target_user_name || report.target_name || "Unknown User"}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-gray-400">User Email:</span>
+                                  <span className="text-gray-200 font-mono font-semibold">
+                                    {report.target_user_email
+                                      ? showSensitive
+                                        ? report.target_user_email
+                                        : maskEmail(report.target_user_email)
+                                      : "No registered email"}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between text-xs font-mono">
+                                  <span className="text-gray-400">User ID:</span>
+                                  <span className={`text-plasma-cyan font-bold ${showSensitive ? "break-all" : ""}`}>
+                                    {report.target_user_id
+                                      ? showSensitive
+                                        ? report.target_user_id
+                                        : formatId(report.target_user_id, false)
+                                      : "—"}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
-                          </div>
+                          ) : (
+                            /* Project or Organization Target Details */
+                            <div>
+                              <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-0.5">
+                                {targetType === "organization" ? "Reported Organization:" : "Reported Mission:"}
+                              </p>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {targetType === "project" && (
+                                  <>
+                                    <h3 className="text-base font-bold text-white hover:text-plasma-cyan transition-colors">
+                                      {report.projects?.title || `Project ID: ${report.project_id}`}
+                                    </h3>
+                                    {report.project_id && (
+                                      <a
+                                        href={`/dashboard/projects/${report.project_id}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-plasma-cyan hover:text-white p-1 rounded hover:bg-void-surface transition-colors inline-flex items-center gap-1 text-xs"
+                                        title={t("viewProject")}
+                                      >
+                                        <ExternalLink className="w-3.5 h-3.5" />
+                                        <span className="text-[11px] underline">Open Mission</span>
+                                      </a>
+                                    )}
+                                    {report.projects?.status && (
+                                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-void-surface border border-void-border text-gray-400">
+                                        Status: {report.projects.status}
+                                      </span>
+                                    )}
+                                  </>
+                                )}
+
+                                {targetType === "organization" && (
+                                  <>
+                                    <h3 className="text-base font-bold text-white hover:text-hyper-violet transition-colors">
+                                      {report.users_org?.org_name || report.target_name || `Org ID: ${report.org_id}`}
+                                    </h3>
+                                    {report.org_id && (
+                                      <a
+                                        href={`/dashboard/organizations/${report.org_id}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-hyper-violet hover:text-white p-1 rounded hover:bg-void-surface transition-colors inline-flex items-center gap-1 text-xs"
+                                        title="View Public Organization Profile"
+                                      >
+                                        <ExternalLink className="w-3.5 h-3.5" />
+                                        <span className="text-[11px] underline">Open Profile</span>
+                                      </a>
+                                    )}
+                                    {report.users_org?.verification_status && (
+                                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-void-surface border border-void-border text-gray-400">
+                                        Verification: {report.users_org.verification_status}
+                                      </span>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          )}
 
                           {/* Description */}
                           {report.description && (
-                            <div className="p-3 rounded-xl bg-void-surface border border-void-border/70 text-xs text-gray-300 leading-relaxed whitespace-pre-wrap">
+                            <div className="p-3.5 rounded-xl bg-void-surface border border-void-border/70 text-xs text-gray-300 leading-relaxed whitespace-pre-wrap">
+                              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">
+                                Report Notes / Flagged Content:
+                              </span>
                               {report.description}
                             </div>
                           )}
                         </div>
 
-                        {/* Quick Action Buttons */}
-                        <div className="flex sm:flex-row lg:flex-col items-stretch gap-2 shrink-0 lg:w-48">
+                        {/* Action Buttons */}
+                        <div className="flex sm:flex-row lg:flex-col items-stretch gap-2 shrink-0 lg:w-52">
+                          {/* Specific Action Buttons for User & Comment Reports and Quarantine */}
+                          {(targetType === "user" || targetType === "comment" || targetType === "quarantine" || isQuarantineReport(report)) && (
+                            <>
+                              <button
+                                type="button"
+                                disabled={isPending}
+                                onClick={() =>
+                                  handleAction(() =>
+                                    deleteReportedComment(report.id, undefined, report.target_user_id || undefined)
+                                  )
+                                }
+                                className="flex-1 py-2 px-3 rounded-xl bg-void-surface hover:bg-nova-flare/15 text-gray-300 hover:text-nova-flare border border-void-border hover:border-nova-flare/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50"
+                                title="Only removes the reported comment or discussion item"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                                <span>Delete Comment</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                disabled={isPending}
+                                onClick={() =>
+                                  handleAction(() =>
+                                    deleteCommentAndWarnUser(report.id, undefined, report.target_user_id || undefined)
+                                  )
+                                }
+                                className="flex-1 py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(245,158,11,0.15)] disabled:opacity-50"
+                                title="Removes comment and adds an official warning strike to the user"
+                              >
+                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                <span>Delete + Warn</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                disabled={isPending}
+                                onClick={() => {
+                                  setDeleteConfig({
+                                    action: () =>
+                                      deleteCommentAndBanUser(report.id, undefined, report.target_user_id || undefined),
+                                    title: "Ban User Account & Delete Comment",
+                                    message: `Are you sure you want to permanently suspend the account of "${report.target_user_name || report.target_name || report.target_user_id}" and delete the reported comment? This user will be barred from EuroNova.`,
+                                  });
+                                }}
+                                className="flex-1 py-2 px-3 rounded-xl bg-nova-flare/15 hover:bg-nova-flare/25 text-nova-flare border border-nova-flare/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(255,46,99,0.2)] disabled:opacity-50"
+                                title="Removes comment and bans the user account"
+                              >
+                                <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
+                                <span>Delete + Ban</span>
+                              </button>
+                            </>
+                          )}
+
                           {report.project_id && (
                             <>
                               <button
@@ -1552,8 +1925,8 @@ export function AdminDashboardClient({
                             <span className="text-sm font-bold text-gray-200">
                               {targetType === "organization"
                                 ? (report.users_org?.org_name || report.target_name || `Org: ${report.org_id}`)
-                                : targetType === "user"
-                                ? (report.target_name || `User: ${report.target_user_id}`)
+                                : targetType === "user" || targetType === "comment" || report.target_user_id
+                                ? (report.target_user_name || report.target_name || `User: ${report.target_user_id}`)
                                 : (report.projects?.title || `Project: ${report.project_id}`)}
                             </span>
                             {report.project_id && (
@@ -1616,6 +1989,376 @@ export function AdminDashboardClient({
           </div>
         );
       })()}
+
+      {/* TAB 5: STAFF & ROLE MANAGEMENT (STRICT ADMIN ONLY) */}
+      {activeTab === "staff" && currentUserRole === "admin" && (
+        <div className="space-y-8 animate-in fade-in duration-300">
+          {/* Section Header */}
+          <div className="bg-void-surface border border-plasma-cyan/30 rounded-2xl p-6 sm:p-7 shadow-[0_0_30px_rgba(0,229,255,0.08)]">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-void-border">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-plasma-cyan/20 to-hyper-violet/20 border border-plasma-cyan/40 flex items-center justify-center text-plasma-cyan shrink-0 shadow-[0_0_15px_rgba(0,229,255,0.2)]">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-3">
+                    <span>Staff & Role Management</span>
+                    <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-plasma-cyan/15 text-plasma-cyan border border-plasma-cyan/30 uppercase tracking-widest font-black">
+                      Admin Clearance Only
+                    </span>
+                  </h2>
+                  <p className="text-sm text-gray-400 mt-1 max-w-2xl">
+                    Grant, promote, or revoke moderation privileges across the EuroNova network. Role updates take effect immediately in both local forums and the admin panel.
+                  </p>
+                </div>
+              </div>
+
+              {/* Total Staff Counter Card */}
+              <div className="flex items-center gap-3 bg-void-deep px-4 py-3 rounded-xl border border-void-border shrink-0 self-start md:self-auto">
+                <Shield className="w-5 h-5 text-plasma-cyan" />
+                <div>
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-gray-400">
+                    Network Staff Count
+                  </div>
+                  <div className="text-lg font-black text-white font-mono">
+                    {totalStaff} Verified
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 4-Tier Permission Matrix Reference Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-6">
+              <div className="bg-void-deep/80 rounded-xl p-3.5 border border-plasma-cyan/40">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-sm">🛡️</span>
+                  <span className="text-xs font-black text-plasma-cyan uppercase tracking-wider">
+                    Admin
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-400 leading-relaxed">
+                  Full system authority. Manage projects, assign roles, inspect reports, and execute God Mode edits.
+                </p>
+              </div>
+
+              <div className="bg-void-deep/80 rounded-xl p-3.5 border border-amber-500/40">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-sm">⚔️</span>
+                  <span className="text-xs font-black text-amber-300 uppercase tracking-wider">
+                    Moderator
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-400 leading-relaxed">
+                  Resolve reports, Warn, Mute, Ban users, and delete comments. Cannot edit projects or assign roles.
+                </p>
+              </div>
+
+              <div className="bg-void-deep/80 rounded-xl p-3.5 border border-rup-emerald/40">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-sm">🎧</span>
+                  <span className="text-xs font-black text-rup-emerald uppercase tracking-wider">
+                    Support
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-400 leading-relaxed">
+                  View reports, read community forums, and reply to inquiries. Cannot Warn, Mute, Ban, or Delete.
+                </p>
+              </div>
+
+              <div className="bg-void-deep/80 rounded-xl p-3.5 border border-void-border">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-sm">👤</span>
+                  <span className="text-xs font-black text-gray-300 uppercase tracking-wider">
+                    User
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-400 leading-relaxed">
+                  Standard volunteer. Requires Level 11+ or Organizer status to reply to project questions.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Search & Filters Controls */}
+          <div className="bg-void-surface border border-void-border rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* Search Input for Email or ID */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSearchStaff();
+              }}
+              className="flex-1 flex items-center gap-2 max-w-xl"
+            >
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={staffSearchQuery}
+                  onChange={(e) => setStaffSearchQuery(e.target.value)}
+                  placeholder="Search by email, user ID, or full name..."
+                  className="w-full bg-void-deep border border-void-border rounded-xl pl-9 pr-9 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-plasma-cyan font-mono transition-colors"
+                />
+                {staffSearchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStaffSearchQuery("");
+                      handleSearchStaff("");
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-0.5"
+                    title="Clear search"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+              <button
+                type="submit"
+                disabled={isSearchingStaff}
+                className="px-4 py-2.5 rounded-xl bg-plasma-cyan text-void-deep font-bold text-xs hover:bg-plasma-cyan/90 transition-all shadow-[0_0_12px_rgba(0,229,255,0.25)] flex items-center gap-1.5 shrink-0 disabled:opacity-50"
+              >
+                {isSearchingStaff ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Search className="w-3.5 h-3.5" />
+                )}
+                <span>Search</span>
+              </button>
+            </form>
+
+            {/* Role Quick Filter Pills */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setStaffRoleFilter("all")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  staffRoleFilter === "all"
+                    ? "bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/40 shadow-[0_0_10px_rgba(0,229,255,0.2)]"
+                    : "bg-void-deep text-gray-400 hover:text-white border border-void-border"
+                }`}
+              >
+                All Users
+              </button>
+              <button
+                type="button"
+                onClick={() => setStaffRoleFilter("staff")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  staffRoleFilter === "staff"
+                    ? "bg-hyper-violet/20 text-hyper-violet border border-hyper-violet/40 shadow-[0_0_10px_rgba(99,102,241,0.2)]"
+                    : "bg-void-deep text-gray-400 hover:text-white border border-void-border"
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Staff Only
+              </button>
+              <button
+                type="button"
+                onClick={() => setStaffRoleFilter("moderator")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  staffRoleFilter === "moderator"
+                    ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]"
+                    : "bg-void-deep text-gray-400 hover:text-white border border-void-border"
+                }`}
+              >
+                <span>⚔️</span>
+                Moderators
+              </button>
+              <button
+                type="button"
+                onClick={() => setStaffRoleFilter("support")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  staffRoleFilter === "support"
+                    ? "bg-rup-emerald/20 text-rup-emerald border border-rup-emerald/40 shadow-[0_0_10px_rgba(0,230,118,0.2)]"
+                    : "bg-void-deep text-gray-400 hover:text-white border border-void-border"
+                }`}
+              >
+                <span>🎧</span>
+                Support
+              </button>
+              <button
+                type="button"
+                onClick={() => setStaffRoleFilter("user")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  staffRoleFilter === "user"
+                    ? "bg-gray-700/50 text-white border border-gray-600"
+                    : "bg-void-deep text-gray-400 hover:text-white border border-void-border"
+                }`}
+              >
+                Users
+              </button>
+            </div>
+          </div>
+
+          {/* User List & Role Selector Grid */}
+          {(() => {
+            const rawStaffList: StaffSearchUser[] = hasSearchedStaff
+              ? staffUsersList
+              : youthUsers.map((y) => ({
+                  id: y.id,
+                  full_name: y.full_name,
+                  email: y.email,
+                  role: (y.role || "user") as UserRole,
+                  avatar_url: y.avatar_url,
+                  created_at: y.created_at,
+                }));
+
+            const displayedUsers = rawStaffList.filter((u) => {
+              if (staffRoleFilter === "staff") return u.role !== "user";
+              if (staffRoleFilter === "moderator") return u.role === "moderator";
+              if (staffRoleFilter === "support") return u.role === "support";
+              if (staffRoleFilter === "user") return u.role === "user";
+              return true;
+            });
+
+            if (displayedUsers.length === 0) {
+              return (
+                <div className="bg-void-surface border border-void-border rounded-2xl p-12 text-center">
+                  <ShieldAlert className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                  <h3 className="text-base font-bold text-white mb-1">No Users Found</h3>
+                  <p className="text-xs text-gray-400 max-w-md mx-auto">
+                    No users matched your query or filter. Try typing a specific email address or user UUID above.
+                  </p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {displayedUsers.map((u) => {
+                  const isRootAdmin = u.email === "euronovaofficial@gmail.com";
+                  const roleConfig = ROLE_BADGE_CONFIG[u.role];
+                  const isUpdating = updatingUserRoleId === u.id;
+
+                  return (
+                    <div
+                      key={u.id}
+                      className={`bg-void-surface border rounded-2xl p-6 flex flex-col justify-between transition-all shadow-md relative ${
+                        u.role === "admin"
+                          ? "border-plasma-cyan/40 shadow-[0_0_20px_rgba(0,229,255,0.06)]"
+                          : u.role === "moderator"
+                          ? "border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.06)]"
+                          : u.role === "support"
+                          ? "border-rup-emerald/40 shadow-[0_0_20px_rgba(0,230,118,0.06)]"
+                          : "border-void-border hover:border-gray-700"
+                      }`}
+                    >
+                      <div>
+                        {/* User Header: Avatar, Name, Email */}
+                        <div className="flex items-start gap-4 mb-4">
+                          <div className="w-12 h-12 rounded-full border-2 border-void-border overflow-hidden flex items-center justify-center bg-void-deep shrink-0">
+                            {u.avatar_url ? (
+                              /* eslint-disable-next-line @next/next/no-img-element */
+                              <img
+                                src={u.avatar_url}
+                                alt="Avatar"
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <User className="w-6 h-6 text-gray-500" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-base font-bold text-white break-words">
+                              {u.full_name || "Unnamed Volunteer"}
+                            </h3>
+                            <p
+                              className={`text-xs text-gray-400 font-mono mt-0.5 ${
+                                showSensitive ? "break-all whitespace-normal" : "truncate"
+                              }`}
+                            >
+                              {u.email
+                                ? showSensitive
+                                  ? u.email
+                                  : maskEmail(u.email)
+                                : "No email registered"}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* User UUID & Copy */}
+                        <div className="flex items-center justify-between bg-void-deep/70 px-3 py-1.5 rounded-lg border border-void-border mb-4">
+                          <span className="text-[10px] font-mono text-gray-400 truncate">
+                            ID: {showSensitive ? u.id : formatId(u.id, false)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyId(u.id)}
+                            className="text-[10px] text-plasma-cyan hover:text-white flex items-center gap-1 font-mono transition-colors ml-2 cursor-pointer"
+                            title="Copy User ID"
+                          >
+                            {copiedId === u.id ? (
+                              <>
+                                <Check className="w-3 h-3 text-rup-emerald" />
+                                <span className="text-rup-emerald">Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3 h-3" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Current Role Badge */}
+                        <div className="mb-4">
+                          <div className="text-[10px] uppercase font-mono text-gray-500 mb-1.5 tracking-wider">
+                            Active Clearance
+                          </div>
+                          {roleConfig ? (
+                            <span
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs ${roleConfig.badgeClass}`}
+                            >
+                              <span>{roleConfig.icon}</span>
+                              <span>{roleConfig.label}</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs bg-void-deep text-gray-400 border border-void-border font-medium">
+                              <span>👤</span>
+                              <span>USER / VOLUNTEER</span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Role Selector Control */}
+                      <div className="pt-4 border-t border-void-border/70 mt-2">
+                        <label className="block text-[11px] font-bold text-gray-300 uppercase tracking-wider mb-2">
+                          Assign System Role
+                        </label>
+                        {isRootAdmin ? (
+                          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-plasma-cyan/10 border border-plasma-cyan/30 text-plasma-cyan text-xs font-bold font-mono">
+                            <Shield className="w-4 h-4 shrink-0" />
+                            <span>Root Admin (Immutable)</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <select
+                              value={u.role}
+                              disabled={isUpdating || isPending}
+                              onChange={(e) =>
+                                handleRoleChange(u.id, e.target.value as UserRole)
+                              }
+                              className="flex-1 bg-void-deep border border-void-border hover:border-plasma-cyan/50 rounded-xl px-3 py-2 text-xs text-white font-medium focus:outline-none focus:border-plasma-cyan transition-colors disabled:opacity-50 cursor-pointer"
+                            >
+                              <option value="user">User (Standard Volunteer)</option>
+                              <option value="support">🎧 Support (Inquiries & Read)</option>
+                              <option value="moderator">⚔️ Moderator (Full Shield)</option>
+                            </select>
+                            {isUpdating && (
+                              <Loader2 className="w-4 h-4 text-plasma-cyan animate-spin shrink-0" />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </div>
+      )}
 
       {/* God Mode Edit Project Modal */}
       {editingProject && (
