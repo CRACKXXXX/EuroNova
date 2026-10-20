@@ -806,13 +806,6 @@
     "editSuccess": "Message updated successfully!",
     "deleteSuccess": "Message deleted from forum."
   },
-  "MissionPassport": {
-    "title": "European Mobility Passport & Scrapbook",
-    "subtitle": "Your digital chronicle of completed European missions, verified border stamps, and field polaroids.",
-    "stampsCount": "{count} Verified Border Stamps",
-    "scrapbookTitle": "Field Memories & Polaroids",
-    "certifiedErasmus": "Official EU Mobility Stamp"
-  },
   "ProjectTldr": {
     "badge": "AI Executive Summary (TL;DR)",
     "subtitle": "Fast-track telemetry synthesized by EuroNova AI Intelligence"

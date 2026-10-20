@@ -3,6 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { moderateContent } from "@/lib/moderation";
+import { sanitizeErrorMessage } from "@/lib/errorSanitizer";
 
 export interface CreateProjectResult {
   error?: string;
@@ -61,6 +62,11 @@ export async function createProject(formData: FormData): Promise<CreateProjectRe
       "size" in imageFile &&
       imageFile.size > 0
     ) {
+      const MAX_PROJECT_IMAGE_SIZE = 1 * 1024 * 1024; // Strictly 1MB limit
+      if (imageFile.size > MAX_PROJECT_IMAGE_SIZE) {
+        return { error: "File is too large. Maximum allowed size is 1MB." };
+      }
+
       const fileExt = imageFile.name ? imageFile.name.split(".").pop() || "png" : "png";
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
       const { error: uploadError } = await supabase.storage
@@ -74,6 +80,7 @@ export async function createProject(formData: FormData): Promise<CreateProjectRe
         imageUrl = publicUrl;
       } else {
         console.error("Upload error:", uploadError);
+        return { error: sanitizeErrorMessage(uploadError) };
       }
     }
 
@@ -137,7 +144,7 @@ export async function createProject(formData: FormData): Promise<CreateProjectRe
     });
 
     if (insertError) {
-      return { error: insertError.message || "Failed to insert project into database." };
+      return { error: sanitizeErrorMessage(insertError) };
     }
 
     revalidatePath("/", "layout");
@@ -151,10 +158,7 @@ export async function createProject(formData: FormData): Promise<CreateProjectRe
   } catch (error: unknown) {
     console.error("Unhandled error in createProject:", error);
     return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "An unexpected error occurred while publishing the project.",
+      error: sanitizeErrorMessage(error),
     };
   }
 }

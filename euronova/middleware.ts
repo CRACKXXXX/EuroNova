@@ -39,7 +39,16 @@ export async function middleware(request: NextRequest) {
   const localeRegex = new RegExp(`^/(${routing.locales.join('|')})`)
   const pathWithoutLocale = pathname.replace(localeRegex, '') || '/'
 
-  if (!user && pathWithoutLocale.startsWith('/dashboard')) {
+  // Lista explícita de rutas públicas accesibles sin autenticación
+  const isPublicRoute =
+    pathWithoutLocale === '/' ||
+    pathWithoutLocale.startsWith('/support') ||
+    pathWithoutLocale.startsWith('/login') ||
+    pathWithoutLocale.startsWith('/signup') ||
+    pathWithoutLocale.startsWith('/legal') ||
+    !pathWithoutLocale.startsWith('/dashboard');
+
+  if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
     url.pathname = `/${routing.defaultLocale}/login` // Redirigir al login en el idioma por defecto
     return NextResponse.redirect(url)

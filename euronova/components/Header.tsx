@@ -41,33 +41,42 @@ export function Header({
   const [detectedOrgId, setDetectedOrgId] = useState<string | null>(propOrgId ?? null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [youthXp, setYouthXp] = useState<number>(0);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-  // Detectar id de usuario y organización desde Supabase
+  // Detectar id de usuario, organización y avatar desde Supabase
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (user) {
         setCurrentUserId(user.id);
+        if (user.user_metadata?.avatar_url) {
+          setAvatarUrl(user.user_metadata.avatar_url as string);
+        }
+
         if (role === "org") {
-          if (!propOrgId) {
-            const { data } = await supabase
-              .from("users_org")
-              .select("id")
-              .eq("id", user.id)
-              .maybeSingle();
-            if (data?.id) {
-              setDetectedOrgId(data.id);
-            }
+          const { data } = await supabase
+            .from("users_org")
+            .select("id, avatar_url")
+            .eq("id", user.id)
+            .maybeSingle();
+          if (data?.id) {
+            setDetectedOrgId(data.id);
+          }
+          if (data?.avatar_url) {
+            setAvatarUrl(data.avatar_url);
           }
         } else {
-          // Obtener XP real del voluntario para mostrar nivel reactivo
+          // Obtener XP real del voluntario y avatar para mostrar perfil reactivo
           const { data: youth } = await supabase
             .from("users_youth")
-            .select("xp")
+            .select("xp, avatar_url")
             .eq("id", user.id)
             .maybeSingle();
           if (youth && typeof youth.xp === "number") {
             setYouthXp(youth.xp);
+          }
+          if (youth?.avatar_url) {
+            setAvatarUrl(youth.avatar_url);
           }
         }
       }
@@ -114,16 +123,30 @@ export function Header({
           <Link
             href={`/${locale}/dashboard`}
             onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2.5 group shrink-0"
+            className="flex items-center group shrink-0"
           >
-            <Image
-              src="/logo-small.png"
-              alt="EuroNova"
-              width={32}
-              height={32}
-              className="group-hover:scale-110 transition-transform"
-            />
-            <span className="font-black text-white text-xl tracking-tight">EuroNova</span>
+            {/* Desktop Logo */}
+            <div className="hidden sm:block">
+              <Image
+                src="/logo-big.png"
+                alt="EuroNova"
+                width={140}
+                height={38}
+                priority
+                className="h-9 w-auto object-contain rounded-md group-hover:scale-105 transition-transform"
+              />
+            </div>
+            {/* Mobile / Compact Logo */}
+            <div className="block sm:hidden">
+              <Image
+                src="/logo-small.png"
+                alt="EuroNova"
+                width={36}
+                height={36}
+                priority
+                className="h-8 sm:h-9 w-auto object-contain rounded-md group-hover:scale-110 transition-transform"
+              />
+            </div>
           </Link>
 
           {/* Desktop Navigation Links - Strict single line */}
@@ -207,12 +230,22 @@ export function Header({
             </Link>
           )}
 
-          {/* Botón My Organization / My Profile con enrutamiento estricto */}
+          {/* Botón My Organization / My Profile con avatar dinámico */}
           <Link
             href={orgOrProfileHref}
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-void-surface hover:bg-hyper-violet/10 border border-void-border hover:border-hyper-violet/30 text-gray-300 hover:text-hyper-violet transition-all text-xs 2xl:text-sm font-semibold shrink-0 whitespace-nowrap"
           >
-            {isOrg ? <Building className="w-4 h-4" /> : <User className="w-4 h-4" />}
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={isOrg ? "Organization Logo" : "Profile Picture"}
+                className="h-8 w-8 rounded-full object-cover border border-void-border/70 shrink-0 shadow-sm"
+              />
+            ) : isOrg ? (
+              <Building className="w-4 h-4 shrink-0" />
+            ) : (
+              <User className="w-4 h-4 shrink-0" />
+            )}
             <span>{isOrg ? t("myOrg") : t("myProfile")}</span>
             {!isOrg && <UserLevelBadge level={youthLevel} size="sm" />}
           </Link>
@@ -247,16 +280,15 @@ export function Header({
             <Link
               href={`/${locale}/dashboard`}
               onClick={() => setIsOpen(false)}
-              className="flex items-center gap-2.5 group shrink-0"
+              className="flex items-center group shrink-0"
             >
               <Image
-                src="/logo-small.png"
+                src="/logo-big.png"
                 alt="EuroNova"
-                width={36}
-                height={36}
-                className="group-hover:scale-110 transition-transform"
+                width={140}
+                height={38}
+                className="h-9 w-auto object-contain rounded-md group-hover:scale-105 transition-transform"
               />
-              <span className="font-black text-white text-2xl tracking-tight">EuroNova</span>
             </Link>
 
             <button
@@ -361,9 +393,19 @@ export function Header({
               <Link
                 href={orgOrProfileHref}
                 onClick={() => setIsOpen(false)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-void-surface hover:bg-hyper-violet/10 border border-void-border hover:border-hyper-violet/50 text-gray-300 hover:text-hyper-violet transition-all text-sm font-semibold"
+                className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-void-surface hover:bg-hyper-violet/10 border border-void-border hover:border-hyper-violet/50 text-gray-300 hover:text-hyper-violet transition-all text-sm font-semibold"
               >
-                {isOrg ? <Building className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={isOrg ? "Organization Logo" : "Profile Picture"}
+                    className="h-8 w-8 rounded-full object-cover border border-void-border/70 shrink-0 shadow-sm"
+                  />
+                ) : isOrg ? (
+                  <Building className="w-4 h-4 shrink-0" />
+                ) : (
+                  <User className="w-4 h-4 shrink-0" />
+                )}
                 <span>{isOrg ? t("myOrg") : t("myProfile")}</span>
                 {!isOrg && <UserLevelBadge level={youthLevel} size="sm" />}
               </Link>

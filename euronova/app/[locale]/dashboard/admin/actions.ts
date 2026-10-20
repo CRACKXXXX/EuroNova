@@ -664,8 +664,25 @@ export async function deleteReportedComment(
 
     if (repError) throw repError;
 
-    // 3. Dispatch informational notification to target user
+    // 3. Deduct 5 trust points from target user if youth (Auto-Mod / Comment Deletion: -5)
     if (targetUserId) {
+      try {
+        const { data: userYouth } = await adminDb
+          .from("users_youth")
+          .select("trust_score")
+          .eq("id", targetUserId)
+          .maybeSingle();
+
+        if (userYouth && typeof userYouth.trust_score === "number") {
+          await adminDb
+            .from("users_youth")
+            .update({ trust_score: Math.max(0, userYouth.trust_score - 5) })
+            .eq("id", targetUserId);
+        }
+      } catch (err) {
+        console.warn("Could not deduct trust score on comment removal:", err);
+      }
+
       try {
         const { dispatchNotification } = await import("@/actions/notifications");
         await dispatchNotification({

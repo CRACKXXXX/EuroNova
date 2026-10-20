@@ -12,6 +12,8 @@ const LANGUAGES = [
   { code: "de", label: "Deutsch", short: "DE", flagUrl: "https://flagcdn.com/w20/de.png" },
   { code: "fr", label: "Français", short: "FR", flagUrl: "https://flagcdn.com/w20/fr.png" },
   { code: "it", label: "Italiano", short: "IT", flagUrl: "https://flagcdn.com/w20/it.png" },
+  { code: "ru", label: "Русский", short: "RU", flagUrl: "https://flagcdn.com/w20/ru.png" },
+  { code: "pt", label: "Português", short: "PT", flagUrl: "https://flagcdn.com/w20/pt.png" },
 ];
 
 export function LanguageSwitcher() {

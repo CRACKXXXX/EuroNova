@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import { sanitizeErrorMessage } from "@/lib/errorSanitizer";
 
 export interface InteractionResult {
   success?: boolean;
@@ -38,7 +39,7 @@ export async function toggleProjectFavorite(projectId: string): Promise<Interact
       .maybeSingle();
 
     if (selectError) {
-      return { error: selectError.message };
+      return { error: sanitizeErrorMessage(selectError) };
     }
 
     const currentFavorite = existing?.is_favorite ?? false;
@@ -59,7 +60,7 @@ export async function toggleProjectFavorite(projectId: string): Promise<Interact
       );
 
     if (upsertError) {
-      return { error: upsertError.message };
+      return { error: sanitizeErrorMessage(upsertError) };
     }
 
     revalidatePath("/dashboard/projects");
@@ -91,8 +92,7 @@ export async function toggleProjectFavorite(projectId: string): Promise<Interact
 
     return { success: true, is_favorite: newFavorite };
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "An unexpected error occurred.";
-    return { error: message };
+    return { error: sanitizeErrorMessage(err) };
   }
 }
 
@@ -121,7 +121,7 @@ export async function toggleProjectApplied(projectId: string): Promise<Interacti
       .maybeSingle();
 
     if (selectError) {
-      return { error: selectError.message };
+      return { error: sanitizeErrorMessage(selectError) };
     }
 
     const currentFavorite = existing?.is_favorite ?? false;
@@ -142,7 +142,7 @@ export async function toggleProjectApplied(projectId: string): Promise<Interacti
       );
 
     if (upsertError) {
-      return { error: upsertError.message };
+      return { error: sanitizeErrorMessage(upsertError) };
     }
 
     revalidatePath("/dashboard/projects");
@@ -161,6 +161,7 @@ export async function toggleProjectApplied(projectId: string): Promise<Interacti
           reason: XP_CONFIG.APPLY_MISSION.reason,
           actionType: XP_CONFIG.APPLY_MISSION.actionType,
           targetId: projectId,
+          trustBoost: XP_CONFIG.APPLY_MISSION.trustBoost,
         });
 
         if (xpResult.success && xpResult.gained) {
@@ -215,7 +216,6 @@ export async function toggleProjectApplied(projectId: string): Promise<Interacti
       newLevel
     };
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "An unexpected error occurred.";
-    return { error: message };
+    return { error: sanitizeErrorMessage(err) };
   }
 }

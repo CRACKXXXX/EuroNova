@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { sanitizeErrorMessage } from "@/lib/errorSanitizer";
 
 export type ProfileActionState = {
   success?: string;
@@ -91,14 +92,14 @@ export async function deleteMyAccount(): Promise<{ error?: string }> {
 
     const { error } = await supabase.rpc("delete_user");
     if (error) {
-      return { error: error.message };
+      return { error: sanitizeErrorMessage(error) };
     }
 
     await supabase.auth.signOut();
   } catch (error: unknown) {
     console.error("Failed to delete account:", error);
     return {
-      error: error instanceof Error ? error.message : "Failed to delete account.",
+      error: sanitizeErrorMessage(error),
     };
   }
 
@@ -134,6 +135,11 @@ export async function updateProfile(
       "size" in avatarFile &&
       avatarFile.size > 0
     ) {
+      const MAX_AVATAR_SIZE = 1 * 1024 * 1024; // Strictly 1MB limit
+      if (avatarFile.size > MAX_AVATAR_SIZE) {
+        return { error: "File is too large. Maximum allowed size is 1MB." };
+      }
+
       const fileExt = avatarFile.name ? avatarFile.name.split(".").pop() || "png" : "png";
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
 
@@ -142,7 +148,7 @@ export async function updateProfile(
         .upload(fileName, avatarFile, { upsert: true });
 
       if (uploadError) {
-        return { error: `Error subiendo avatar: ${uploadError.message}` };
+        return { error: sanitizeErrorMessage(uploadError) };
       }
 
       const {
@@ -219,6 +225,7 @@ export async function updateProfile(
             reason: XP_CONFIG.PROFILE_COMPLETION.reason,
             actionType: XP_CONFIG.PROFILE_COMPLETION.actionType,
             targetId: XP_CONFIG.PROFILE_COMPLETION.targetId,
+            trustBoost: XP_CONFIG.PROFILE_COMPLETION.trustBoost,
           });
 
           if (xpResult.success && xpResult.gained) {
@@ -317,10 +324,7 @@ export async function updateProfile(
   } catch (error: unknown) {
     console.error("Profile update failed:", error);
     return {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Ha ocurrido un error inesperado al guardar el perfil.",
+      error: sanitizeErrorMessage(error),
     };
   }
 }

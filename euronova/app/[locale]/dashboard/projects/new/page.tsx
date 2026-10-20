@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { createProject } from "./actions";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { MultiSelectCountry } from "@/components/MultiSelectCountry";
 import { MultiSelectTheme } from "@/components/MultiSelectTheme";
 import { CountrySelect } from "@/components/CountrySelect";
@@ -25,9 +26,16 @@ export default function NewProjectPage() {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setPreviewImage(URL.createObjectURL(file));
+    if (!file) return;
+
+    const MAX_IMAGE_SIZE = 1 * 1024 * 1024; // 1MB limit
+    if (file.size > MAX_IMAGE_SIZE) {
+      toast.error("File is too large. Maximum allowed size is 1MB.");
+      e.target.value = "";
+      return;
     }
+
+    setPreviewImage(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -136,7 +144,7 @@ export default function NewProjectPage() {
                   <p className="text-xs text-gray-500">{t("uploadFormats")}</p>
                 </div>
               )}
-              <input id="cover_image" name="cover_image" type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+              <input id="cover_image" name="cover_image" type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={handleImageChange} />
             </label>
           </div>
         </div>

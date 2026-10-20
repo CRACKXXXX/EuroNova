@@ -23,7 +23,6 @@ import { getTranslations } from "next-intl/server";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { RecentlyViewedMissions } from "@/components/RecentlyViewedMissions";
 import { LevelReputationModule } from "@/components/LevelReputationModule";
-import { MissionPassport } from "@/components/MissionPassport";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -416,7 +415,7 @@ export default async function ProfilePage(props: {
             <div className="mt-12 pt-8 border-t border-void-border">
               <LevelReputationModule
                 xp={typeof profileData?.xp === "number" ? profileData.xp : 0}
-                trustScore={typeof profileData?.trust_score === "number" ? profileData.trust_score : 50}
+                trustScore={typeof profileData?.trust_score === "number" ? profileData.trust_score : 30}
                 role={role}
               />
             </div>
@@ -489,11 +488,6 @@ export default async function ProfilePage(props: {
                   );
                 })}
               </div>
-            </div>
-
-            {/* PUBLIC SCRAPBOOK / PASSPORT */}
-            <div className="mt-12 pt-8 border-t border-void-border">
-              <MissionPassport />
             </div>
           </>
         )}

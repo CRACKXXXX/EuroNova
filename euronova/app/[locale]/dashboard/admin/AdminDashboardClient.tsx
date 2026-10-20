@@ -1396,7 +1396,8 @@ export function AdminDashboardClient({
 
         const isProjectOrOrgReport = (r: ReportItem) => {
           if (isQuarantineReport(r)) return false;
-          return !isUserOrCommentReport(r);
+          const type = r.target_type || (r.project_id ? "project" : r.org_id ? "organization" : "user");
+          return ["project", "organization", "survey"].includes(type);
         };
 
         const activeQuarantineReports = activeReports.filter(isQuarantineReport);
@@ -1488,7 +1489,7 @@ export function AdminDashboardClient({
                   }`}
                 >
                   <FolderGit2 className="w-3.5 h-3.5 text-nova-flare" />
-                  <span>Project & Organization Reports</span>
+                  <span>Project, Org & Surveys</span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] bg-nova-flare/30 text-white font-mono">
                     {activeProjectReports.length}
                   </span>
@@ -1520,7 +1521,7 @@ export function AdminDashboardClient({
                       : reportCategory === "users"
                       ? "No pending User or Comment reports."
                       : reportCategory === "projects"
-                      ? "No pending Project or Organization reports."
+                      ? "No pending Project, Org & Surveys reports."
                       : t("noActiveReports")}
                   </p>
                   <p className="text-gray-500 text-xs mt-1">
@@ -1574,6 +1575,12 @@ export function AdminDashboardClient({
                               <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-hyper-violet/15 text-hyper-violet border border-hyper-violet/40 flex items-center gap-1 shadow-[0_0_10px_rgba(99,102,241,0.15)]">
                                 <Building className="w-3 h-3" />
                                 [ORGANIZATION]
+                              </span>
+                            )}
+                            {targetType === "survey" && (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-plasma-cyan/15 text-plasma-cyan border border-plasma-cyan/40 flex items-center gap-1 shadow-[0_0_10px_rgba(0,229,255,0.15)]">
+                                <MessageSquare className="w-3 h-3" />
+                                [SURVEY]
                               </span>
                             )}
                             {(targetType === "user" || targetType === "comment") && !isQuarantineReport(report) && (
@@ -1663,9 +1670,15 @@ export function AdminDashboardClient({
                             /* Project or Organization Target Details */
                             <div>
                               <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-0.5">
-                                {targetType === "organization" ? "Reported Organization:" : "Reported Mission:"}
+                                {targetType === "organization" ? "Reported Organization:" : targetType === "survey" ? "Reported Survey:" : "Reported Mission:"}
                               </p>
                               <div className="flex items-center gap-2 flex-wrap">
+                                {targetType === "survey" && (
+                                  <h3 className="text-base font-bold text-white hover:text-plasma-cyan transition-colors">
+                                    {report.target_name || "Community Survey"}
+                                  </h3>
+                                )}
+
                                 {targetType === "project" && (
                                   <>
                                     <h3 className="text-base font-bold text-white hover:text-plasma-cyan transition-colors">

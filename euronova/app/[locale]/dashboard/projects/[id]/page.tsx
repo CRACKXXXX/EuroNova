@@ -30,11 +30,11 @@ export async function generateMetadata(
 
   if (!project) {
     return {
-      title: "Mission Details | EuroNova",
+      title: "EuroNova",
     };
   }
 
-  const title = `${project.title} | EuroNova`;
+  const title = "EuroNova";
   const description = project.description
     ? project.description.slice(0, 160)
     : "Discover Erasmus+ & ESC opportunities across Europe on EuroNova.";

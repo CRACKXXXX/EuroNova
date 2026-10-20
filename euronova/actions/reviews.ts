@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import { sanitizeErrorMessage } from "@/lib/errorSanitizer";
 
 export interface ReviewResult {
   success?: boolean;
@@ -47,7 +48,7 @@ export async function submitOrgReview(
       .maybeSingle();
 
     if (youthError) {
-      return { error: `Failed to verify youth profile: ${youthError.message}` };
+      return { error: sanitizeErrorMessage(youthError) };
     }
 
     if (!youth) {
@@ -102,7 +103,7 @@ export async function submitOrgReview(
       );
 
     if (insertError) {
-      return { error: insertError.message };
+      return { error: sanitizeErrorMessage(insertError) };
     }
 
     revalidatePath("/dashboard/organizations");
@@ -120,6 +121,7 @@ export async function submitOrgReview(
         reason: XP_CONFIG.NGO_REVIEW.reason,
         actionType: XP_CONFIG.NGO_REVIEW.actionType,
         targetId: orgId,
+        trustBoost: XP_CONFIG.NGO_REVIEW.trustBoost,
       });
 
       if (xpResult.success && xpResult.gained) {
@@ -138,7 +140,6 @@ export async function submitOrgReview(
       newLevel,
     };
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "An unexpected error occurred.";
-    return { error: message };
+    return { error: sanitizeErrorMessage(err) };
   }
 }

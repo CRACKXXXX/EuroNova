@@ -119,9 +119,16 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setAvatarLocalPreview(URL.createObjectURL(file));
+    if (!file) return;
+
+    const MAX_AVATAR_SIZE = 1 * 1024 * 1024; // 1MB
+    if (file.size > MAX_AVATAR_SIZE) {
+      toast.error("File is too large. Maximum allowed size is 1MB.");
+      e.target.value = "";
+      return;
     }
+
+    setAvatarLocalPreview(URL.createObjectURL(file));
   };
 
   const handleConfirmDelete = () => {
@@ -633,7 +640,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
             <input
               type="file"
               name="avatar"
-              accept="image/*"
+              accept="image/png,image/jpeg,image/webp,image/gif"
               className="hidden"
               onChange={handleAvatarChange}
             />

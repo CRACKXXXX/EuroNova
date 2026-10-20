@@ -1,10 +1,12 @@
+import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { 
   ShieldCheck, 
   Scale, 
   FileText, 
-  LifeBuoy
+  LifeBuoy,
+  Heart
 } from "lucide-react";
 
 export function Footer() {
@@ -18,12 +20,13 @@ export function Footer() {
           {/* Identidad de Marca y Misión */}
           <div className="md:col-span-6 space-y-3 text-center sm:text-left">
             <div className="flex items-center justify-center sm:justify-start gap-2.5">
-              <span className="text-xl sm:text-2xl font-black tracking-tight text-white">
-                EURO<span className="text-plasma-cyan">NOVA</span>
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/30 uppercase tracking-wider">
-                Erasmus+ & ORs
-              </span>
+              <Image
+                src="/logo-big.png"
+                alt="EuroNova"
+                width={130}
+                height={35}
+                className="h-8 w-auto object-contain rounded-md"
+              />
             </div>
             <p className="text-xs sm:text-sm text-gray-400 leading-relaxed max-w-md mx-auto sm:mx-0">
               Gateway to European youth mobility, non-formal learning opportunities, and international solidarity across the EU.
@@ -79,6 +82,15 @@ export function Footer() {
                 >
                   <LifeBuoy className="w-3.5 h-3.5 text-hyper-violet/70 group-hover:text-hyper-violet transition-colors" />
                   <span>{t("support")}</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/support"
+                  className="flex items-center justify-center sm:justify-start gap-2 transition-colors hover:text-nova-flare group font-medium text-nova-flare/90"
+                >
+                  <Heart className="w-3.5 h-3.5 text-nova-flare/70 group-hover:text-nova-flare transition-colors" />
+                  <span>Support EuroNova</span>
                 </Link>
               </li>
             </ul>
