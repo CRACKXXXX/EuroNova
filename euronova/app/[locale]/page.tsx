@@ -25,11 +25,15 @@ import {
   MapPin,
   Server,
   Users2,
-  ExternalLink,
 } from "lucide-react";
 
-export default async function Home() {
-  const t = await getTranslations("Landing");
+interface PageProps {
+  params: Promise<{ locale: string }>;
+}
+
+export default async function Home({ params }: PageProps) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Landing" });
   const supabase = await createClient();
 
   const { count, error } = await supabase
@@ -40,7 +44,7 @@ export default async function Home() {
     console.error("Error fetching projects count from Supabase:", error);
   }
 
-  const projectCount = count && count > 0 ? count : 50;
+  const projectCount = typeof count === "number" && count > 0 ? count : 50;
 
   return (
     <div className="min-h-screen bg-void-deep text-white flex flex-col relative selection:bg-plasma-cyan/25 selection:text-plasma-cyan overflow-hidden">
@@ -98,9 +102,10 @@ export default async function Home() {
               width={420}
               height={110}
               priority
+              style={{ width: "auto", height: "auto" }}
               className="relative w-auto h-auto max-w-[280px] sm:max-w-[420px] drop-shadow-[0_0_40px_rgba(0,229,255,0.35)]"
             />
-            <h1 className="sr-only">EuroNova — European Mobility Gateway</h1>
+            <h1 className="sr-only">{t("heroH1")}</h1>
           </div>
 
           {/* Title & Subtitle */}
@@ -256,7 +261,7 @@ export default async function Home() {
                 {t("youthPoint1Desc")}
               </p>
               <div className="mt-auto pt-6 border-t border-void-border/50 flex items-center gap-2 text-xs text-plasma-cyan font-mono">
-                <span>100% EU Grant Funded • Zero Out-of-Pocket</span>
+                <span>{t("tagGrantFunded")}</span>
               </div>
             </div>
 
@@ -267,7 +272,7 @@ export default async function Home() {
               </div>
               <div className="mb-3">
                 <span className="text-[10px] font-black uppercase tracking-wider text-rup-emerald block mb-1">
-                  Special EU Directive
+                  {t("tagEuDirective")}
                 </span>
                 <h4 className="text-xl font-bold text-white">
                   {t("youthPoint2Title")}
@@ -277,7 +282,7 @@ export default async function Home() {
                 {t("youthPoint2Desc")}
               </p>
               <div className="mt-auto pt-6 border-t border-rup-emerald/20 flex items-center gap-2 text-xs text-rup-emerald font-mono">
-                <span>Canary Islands • Azores • Madeira • ORs</span>
+                <span>{t("tagCanaryRegions")}</span>
               </div>
             </div>
 
@@ -293,7 +298,7 @@ export default async function Home() {
                 {t("youthPoint3Desc")}
               </p>
               <div className="mt-auto pt-6 border-t border-void-border/50 flex items-center gap-2 text-xs text-hyper-violet font-mono">
-                <span>Direct Squad Chat • Unedited Community Ratings</span>
+                <span>{t("tagDirectSquad")}</span>
               </div>
             </div>
           </div>
@@ -337,7 +342,7 @@ export default async function Home() {
                 </p>
               </div>
               <div className="mt-auto pt-6 border-t border-void-border/50 text-xs text-hyper-violet font-mono">
-                Official European Commission Registry Validation
+                {t("tagRegistryValidation")}
               </div>
             </div>
 
@@ -355,7 +360,7 @@ export default async function Home() {
                 </p>
               </div>
               <div className="mt-auto pt-6 border-t border-void-border/50 text-xs text-plasma-cyan font-mono">
-                Auto-Ingested Missions • 30+ European Nations Reach
+                {t("tagPanEuropeanReach")}
               </div>
             </div>
 
@@ -373,7 +378,7 @@ export default async function Home() {
                 </p>
               </div>
               <div className="mt-auto pt-6 border-t border-void-border/50 text-xs text-rup-emerald font-mono">
-                Verified Routing • Direct Official Links Only
+                {t("tagVerifiedRouting")}
               </div>
             </div>
           </div>
@@ -419,9 +424,9 @@ export default async function Home() {
                 </p>
               </div>
               <div className="mt-auto pt-6 flex flex-wrap gap-2 border-t border-void-border/50 text-xs font-mono text-gray-400">
-                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">Green Travel Calculation</span>
-                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">Youthpass Validation</span>
-                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">Cigna &amp; EHIC Coverage</span>
+                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">{t("tagGreenTravel")}</span>
+                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">{t("tagYouthpass")}</span>
+                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">{t("tagHealthCoverage")}</span>
               </div>
             </div>
 
@@ -439,9 +444,9 @@ export default async function Home() {
                 </p>
               </div>
               <div className="mt-auto pt-6 flex flex-wrap gap-2 border-t border-void-border/50 text-xs font-mono text-gray-400">
-                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">Shared Flight Coordination</span>
-                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">Luggage &amp; Packing Advice</span>
-                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">Cultural Exchange</span>
+                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">{t("tagFlightCoord")}</span>
+                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">{t("tagLuggageAdvice")}</span>
+                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">{t("tagCulturalExchange")}</span>
               </div>
             </div>
 
@@ -459,9 +464,9 @@ export default async function Home() {
                 </p>
               </div>
               <div className="mt-auto pt-6 flex flex-wrap gap-2 border-t border-void-border/50 text-xs font-mono text-gray-400">
-                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">Level 1-10 Gamification</span>
-                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">Anti-Spam Barrier</span>
-                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">Alumni Staff Eligibility</span>
+                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">{t("tagGamification")}</span>
+                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">{t("tagAntiSpam")}</span>
+                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">{t("tagStaffEligibility")}</span>
               </div>
             </div>
 
@@ -479,9 +484,9 @@ export default async function Home() {
                 </p>
               </div>
               <div className="mt-auto pt-6 flex flex-wrap gap-2 border-t border-void-border/50 text-xs font-mono text-gray-400">
-                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">Dispute Escalation Matrix</span>
-                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">Direct Discord Webhooks</span>
-                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">48h Auto-Purge Privacy</span>
+                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">{t("tagDisputeEscalation")}</span>
+                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">{t("tagDiscordWebhooks")}</span>
+                <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">{t("tagAutoPurgePrivacy")}</span>
               </div>
             </div>
 
@@ -526,7 +531,7 @@ export default async function Home() {
                     {t("donationsTitle")}
                   </h4>
                   <span className="text-[11px] font-mono text-plasma-cyan uppercase tracking-wider">
-                    Community Funded • Independent Infrastructure
+                    {t("tagCommunityFunded")}
                   </span>
                 </div>
               </div>
@@ -570,5 +575,3 @@ export default async function Home() {
     </div>
   );
 }
-
-

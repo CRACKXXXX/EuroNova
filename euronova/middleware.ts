@@ -19,9 +19,6 @@ export async function middleware(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          response = NextResponse.next({
-            request,
-          })
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, {
               ...options,
@@ -39,11 +36,12 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Extraer el path quitando el locale (ej: /es/dashboard -> /dashboard)
+  // Extraer el path quitando el locale con delimitador de frontera seguro (ej: /es/dashboard -> /dashboard)
   const pathname = request.nextUrl.pathname
-  const localeMatch = pathname.match(new RegExp(`^/(${routing.locales.join('|')})`))
+  const localeRegex = new RegExp(`^/(${routing.locales.join('|')})(?=/|$)`)
+  const localeMatch = pathname.match(localeRegex)
   const currentLocale = localeMatch ? localeMatch[1] : routing.defaultLocale
-  const pathWithoutLocale = pathname.replace(new RegExp(`^/(${routing.locales.join('|')})`), '') || '/'
+  const pathWithoutLocale = pathname.replace(localeRegex, '') || '/'
 
   // Lista estricta y blindada de rutas públicas accesibles sin autenticación
   const isPublicRoute =
@@ -53,19 +51,28 @@ export async function middleware(request: NextRequest) {
     pathWithoutLocale.startsWith('/support') ||
     pathWithoutLocale.startsWith('/legal')
 
+  // Helper para propagar cookies acumuladas durante redirecciones de autenticación
+  const createRedirectResponse = (targetUrl: URL) => {
+    const redirectResponse = NextResponse.redirect(targetUrl)
+    response.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+    })
+    return redirectResponse
+  }
+
   // Redirección inquebrantable si no hay usuario autenticado intentando acceder a rutas protegidas
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
     url.pathname = `/${currentLocale}/login`
     url.searchParams.set('next', pathname)
-    return NextResponse.redirect(url)
+    return createRedirectResponse(url)
   }
 
   // Si el usuario ya está autenticado e intenta ir a login o signup, enviarlo al dashboard
   if (user && (pathWithoutLocale.startsWith('/login') || pathWithoutLocale.startsWith('/signup'))) {
     const url = request.nextUrl.clone()
     url.pathname = `/${currentLocale}/dashboard`
-    return NextResponse.redirect(url)
+    return createRedirectResponse(url)
   }
 
   return response

@@ -55,7 +55,28 @@
     "howToHelpTitle": "How You Can Help Grow the Mission",
     "howToHelpDesc": "You don't need money to support EuroNova. Share the platform with youth centres, high schools, and universities in your region; report outdated project listings; contribute translations into your native European language; or reach Level 10 to join our volunteer support team.",
     "legalDisclaimerTitle": "Institutional Independence & Trademark Notice",
-    "legalDisclaimerDesc": "EuroNova is an independent open-access digital initiative and is not officially affiliated with, endorsed by, or funded by the European Commission, EACEA, or any Erasmus+ National Agency. 'Erasmus+' and 'European Solidarity Corps' are registered trademarks of the European Union."
+    "legalDisclaimerDesc": "EuroNova is an independent open-access digital initiative and is not officially affiliated with, endorsed by, or funded by the European Commission, EACEA, or any Erasmus+ National Agency. 'Erasmus+' and 'European Solidarity Corps' are registered trademarks of the European Union.",
+    "heroH1": "EuroNova — European Mobility Gateway",
+    "tagGrantFunded": "100% EU Grant Funded • Zero Out-of-Pocket",
+    "tagEuDirective": "Special EU Directive",
+    "tagCanaryRegions": "Canary Islands • Azores • Madeira • ORs",
+    "tagDirectSquad": "Direct Squad Chat • Unedited Community Ratings",
+    "tagRegistryValidation": "Official European Commission Registry Validation",
+    "tagPanEuropeanReach": "Auto-Ingested Missions • 30+ European Nations Reach",
+    "tagVerifiedRouting": "Verified Routing • Direct Official Links Only",
+    "tagGreenTravel": "Green Travel Calculation",
+    "tagYouthpass": "Youthpass Validation",
+    "tagHealthCoverage": "Cigna & EHIC Coverage",
+    "tagFlightCoord": "Shared Flight Coordination",
+    "tagLuggageAdvice": "Luggage & Packing Advice",
+    "tagCulturalExchange": "Cultural Exchange",
+    "tagGamification": "Level 1-10 Gamification",
+    "tagAntiSpam": "Anti-Spam Barrier",
+    "tagStaffEligibility": "Alumni Staff Eligibility",
+    "tagDisputeEscalation": "Dispute Escalation Matrix",
+    "tagDiscordWebhooks": "Direct Discord Webhooks",
+    "tagAutoPurgePrivacy": "48h Auto-Purge Privacy",
+    "tagCommunityFunded": "Community Funded • Independent Infrastructure"
   },
   "PublicHeader": {
     "support": "Support",
@@ -999,5 +1020,35 @@
     "savePreferences": "Save Preferences",
     "saving": "Saving...",
     "savedSuccess": "Preferences updated successfully."
+  },
+  "Errors": {
+    "badge": "MISSION ANOMALY DETECTED",
+    "title": "Quantum Signal Disruption",
+    "description": "An unexpected anomaly occurred while processing orbital transmissions. Our telemetry system has logged the event.",
+    "digestLabel": "Error Digest",
+    "tryAgain": "Re-establish Connection",
+    "returnHome": "Return to Gateway"
+  },
+  "NotFound": {
+    "badge": "COORDINATES UNREACHABLE",
+    "title": "Lost in Deep Space (404)",
+    "description": "The orbital sector or mission coordinates you are attempting to reach do not exist or have been re-assigned.",
+    "returnHome": "Return to Gateway",
+    "exploreMissions": "Explore Missions"
+  },
+  "Footer": {
+    "tagline": "Gateway to European youth mobility, non-formal learning opportunities, and international solidarity across the EU.",
+    "legalTitle": "Legal",
+    "supportTitle": "Support",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "notice": "Legal Notice",
+    "support": "Help & Support",
+    "supportEuroNova": "Support EuroNova",
+    "copyright": "EuroNova Project. All rights reserved."
+  },
+  "Common": {
+    "selectLanguage": "Select Language",
+    "backToTop": "Back to top"
   }
 }

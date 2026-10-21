@@ -23,7 +23,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "EuroNova",
-  description: "Encuentra proyectos de voluntariado y movilidad en Europa.",
+  description: "Discover verified Erasmus+ and European Solidarity Corps youth mobility missions across 30+ European nations with 100% funding.",
   manifest: "/manifest.json",
   icons: {
     icon: "/logo-svg.svg",

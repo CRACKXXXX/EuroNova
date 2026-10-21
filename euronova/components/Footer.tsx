@@ -29,14 +29,14 @@ export function Footer() {
               />
             </div>
             <p className="text-xs sm:text-sm text-gray-400 leading-relaxed max-w-md mx-auto sm:mx-0">
-              Gateway to European youth mobility, non-formal learning opportunities, and international solidarity across the EU.
+              {t("tagline")}
             </p>
           </div>
 
           {/* Enlaces Legales */}
           <div className="md:col-span-3 space-y-2.5 text-center sm:text-left">
             <h4 className="text-xs font-bold uppercase tracking-wider text-gray-300">
-              Legal
+              {t("legalTitle")}
             </h4>
             <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
               <li>
@@ -72,7 +72,7 @@ export function Footer() {
           {/* Asistencia / Soporte */}
           <div className="md:col-span-3 space-y-2.5 text-center sm:text-left">
             <h4 className="text-xs font-bold uppercase tracking-wider text-gray-300">
-              Support
+              {t("supportTitle")}
             </h4>
             <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
               <li>
@@ -90,7 +90,7 @@ export function Footer() {
                   className="flex items-center justify-center sm:justify-start gap-2 transition-colors hover:text-nova-flare group font-medium text-nova-flare/90"
                 >
                   <Heart className="w-3.5 h-3.5 text-nova-flare/70 group-hover:text-nova-flare transition-colors" />
-                  <span>Support EuroNova</span>
+                  <span>{t("supportEuroNova")}</span>
                 </Link>
               </li>
             </ul>
@@ -100,8 +100,8 @@ export function Footer() {
 
         {/* Línea Inferior: Copyright */}
         <div className="pt-8 mt-8 border-t border-void-border/60 text-center sm:text-left text-xs text-gray-500">
-          <p className="font-medium text-gray-400">
-            &copy; {new Date().getFullYear()} EuroNova Project. All rights reserved.
+          <p className="font-medium text-gray-400" suppressHydrationWarning>
+            &copy; {new Date().getFullYear()} {t("copyright")}
           </p>
         </div>
       </div>

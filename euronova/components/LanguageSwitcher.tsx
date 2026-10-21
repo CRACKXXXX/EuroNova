@@ -2,11 +2,20 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { useLocale } from "next-intl";
-import { usePathname, useRouter } from "@/i18n/routing";
+import { useLocale, useTranslations } from "next-intl";
+import { usePathname, useRouter, routing } from "@/i18n/routing";
 import { ChevronDown } from "lucide-react";
 
-const LANGUAGES = [
+type AppLocale = (typeof routing.locales)[number];
+
+interface LanguageOption {
+  code: AppLocale;
+  label: string;
+  short: string;
+  flagUrl: string;
+}
+
+const LANGUAGES: LanguageOption[] = [
   { code: "es", label: "Español", short: "ES", flagUrl: "https://flagcdn.com/w20/es.png" },
   { code: "en", label: "English", short: "EN", flagUrl: "https://flagcdn.com/w20/gb.png" },
   { code: "de", label: "Deutsch", short: "DE", flagUrl: "https://flagcdn.com/w20/de.png" },
@@ -18,6 +27,7 @@ const LANGUAGES = [
 
 export function LanguageSwitcher() {
   const locale = useLocale();
+  const t = useTranslations("Common");
   const router = useRouter();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
@@ -25,7 +35,7 @@ export function LanguageSwitcher() {
 
   const currentLang = LANGUAGES.find((l) => l.code === locale) || LANGUAGES[1];
 
-  const changeLanguage = (newLocale: string) => {
+  const changeLanguage = (newLocale: AppLocale) => {
     setIsOpen(false);
     router.replace(pathname, { locale: newLocale });
   };
@@ -46,7 +56,7 @@ export function LanguageSwitcher() {
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-void-surface hover:bg-void-surface/90 border border-void-border hover:border-plasma-cyan text-xs font-bold text-gray-200 transition-all shrink-0 cursor-pointer"
-        aria-label="Select Language"
+        aria-label={t("selectLanguage")}
       >
         <Image
           src={currentLang.flagUrl}

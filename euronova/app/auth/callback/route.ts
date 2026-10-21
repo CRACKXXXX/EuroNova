@@ -4,8 +4,9 @@ import { createClient } from '@/utils/supabase/server'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  // We don't use locale in next, we can just redirect to dashboard and middleware will prefix it
-  const next = searchParams.get('next') ?? '/dashboard'
+  // Sanitize next parameter to prevent open redirect vulnerabilities
+  const rawNext = searchParams.get('next') ?? '/dashboard'
+  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/dashboard'
 
   if (code) {
     const supabase = await createClient()
