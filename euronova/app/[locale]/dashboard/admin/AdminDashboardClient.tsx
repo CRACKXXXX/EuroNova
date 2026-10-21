@@ -41,6 +41,12 @@ import {
   Loader2,
   Check,
   Copy,
+  Bell,
+  AlertTriangle,
+  Send,
+  Headphones,
+  ArrowUpRight,
+  Clock,
 } from "lucide-react";
 import { COUNTRIES } from "@/lib/constants/countries";
 import { type UserRole, ROLE_BADGE_CONFIG } from "@/lib/roles";
@@ -62,8 +68,16 @@ import {
   deleteCommentAndBanUser,
   updateUserRole,
   searchStaffUsers,
+  deleteSurveyAndWarnCreator,
+  warnSurveyCreator,
+  sendCustomAdminNotification,
+  escalateReportToAdmin,
+  resolveAdminEscalation,
+  updateSupportTicketStatus,
   type StaffSearchUser,
   type AdminProjectEditPayload,
+  type AdminEscalationItem,
+  type StaffTicketItem,
 } from "./actions";
 
 export interface OrgItem {
@@ -132,6 +146,8 @@ export interface ReportItem {
   status: string;
   created_at: string;
   resolved_at?: string | null;
+  resolution_action?: string | null;
+  updated_at?: string | null;
   reporter_name?: string | null;
   reporter_email?: string | null;
   target_user_name?: string | null;
@@ -151,7 +167,7 @@ export interface ReportItem {
   } | null;
 }
 
-interface AdminDashboardClientProps {
+export interface AdminDashboardClientProps {
   currentUserRole?: UserRole;
   pendingOrgs: OrgItem[];
   verifiedOrgs: OrgItem[];
@@ -159,6 +175,12 @@ interface AdminDashboardClientProps {
   pendingProjects: ProjectItem[];
   publishedProjects: ProjectItem[];
   reports?: ReportItem[];
+  escalations?: AdminEscalationItem[];
+  totalEscalations?: number;
+  totalPendingEscalations?: number;
+  tickets?: StaffTicketItem[];
+  totalTickets?: number;
+  totalPendingTickets?: number;
   totalProjects: number;
   totalOrgs: number;
   totalYouth: number;
@@ -171,7 +193,7 @@ interface AdminDashboardClientProps {
   totalPendingReports?: number;
   currentPage: number;
   totalPages: number;
-  currentTab?: "orgs" | "youth" | "projects" | "reports" | "staff";
+  currentTab?: "orgs" | "youth" | "projects" | "reports" | "staff" | "escalations" | "tickets";
   pageSize?: number;
 }
 
@@ -243,6 +265,12 @@ export function AdminDashboardClient({
   pendingProjects,
   publishedProjects,
   reports = [],
+  escalations = [],
+  totalEscalations = 0,
+  totalPendingEscalations = 0,
+  tickets = [],
+  totalTickets = 0,
+  totalPendingTickets = 0,
   totalProjects,
   totalOrgs,
   totalYouth,
@@ -263,13 +291,50 @@ export function AdminDashboardClient({
   const searchParams = useSearchParams();
 
   // Active tab strictly bound to URL parameter for resilient state persistence
-  const tabFromUrl = searchParams.get("tab") as "orgs" | "youth" | "projects" | "reports" | "staff" | null;
-  const activeTab: "orgs" | "youth" | "projects" | "reports" | "staff" = tabFromUrl || currentTab || "orgs";
+  const tabFromUrl = searchParams.get("tab") as "orgs" | "youth" | "projects" | "reports" | "staff" | "escalations" | "tickets" | null;
+  const activeTab: "orgs" | "youth" | "projects" | "reports" | "staff" | "escalations" | "tickets" =
+    tabFromUrl ||
+    currentTab ||
+    (currentUserRole === "support"
+      ? "tickets"
+      : currentUserRole === "moderator"
+      ? "reports"
+      : "orgs");
 
   const [showSensitive, setShowSensitive] = useState(false);
   const [isScraping, setIsScraping] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  // Escalation creation modal (moderator requesting admin action on a report)
+  const [escalateModal, setEscalateModal] = useState<{
+    reportId: string;
+    targetName: string;
+    targetType: string;
+    defaultAction: "delete_survey" | "ban_user" | "delete_org" | "emergency_lock" | "investigate";
+  } | null>(null);
+  const [escalateReason, setEscalateReason] = useState("");
+  const [escalateAction, setEscalateAction] = useState<"delete_survey" | "ban_user" | "delete_org" | "emergency_lock" | "investigate">("investigate");
+
+  // Escalation resolution modal (admin approving/rejecting escalation)
+  const [resolveEscalateModal, setResolveEscalateModal] = useState<{
+    escalation: AdminEscalationItem;
+    decision: "approved" | "rejected";
+  } | null>(null);
+  const [resolveNotes, setResolveNotes] = useState("");
+
+  // Support ticket response modal
+  const [ticketReplyModal, setTicketReplyModal] = useState<{
+    ticket: StaffTicketItem;
+  } | null>(null);
+  const [ticketReplyMessage, setTicketReplyMessage] = useState("");
+  const [ticketReplyStatus, setTicketReplyStatus] = useState<"open" | "in_progress" | "resolved">("resolved");
+
+  // Escalations tab filter
+  const [escalationStatusFilter, setEscalationStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+
+  // Tickets tab filter
+  const [ticketStatusFilter, setTicketStatusFilter] = useState<"all" | "open" | "in_progress" | "resolved">("all");
 
   const handleRunScraper = async () => {
     if (isScraping) return;
@@ -293,6 +358,135 @@ export function AdminDashboardClient({
     title: string;
     message: string;
   } | null>(null);
+
+  // Custom In-App Notification Modal State for Users & Organizations
+  const [notifyConfig, setNotifyConfig] = useState<{
+    targetId: string;
+    targetName: string;
+    targetType: "user" | "org";
+  } | null>(null);
+  const [notifyTitle, setNotifyTitle] = useState("");
+  const [notifyMessage, setNotifyMessage] = useState("");
+  const [notifyType, setNotifyType] = useState<"system" | "action_required" | "moderation" | "alert">("system");
+
+  const handleSendNotification = () => {
+    if (!notifyConfig) return;
+    if (!notifyTitle.trim() || !notifyMessage.trim()) {
+      setFeedback({ type: "error", message: "Notification title and message are required." });
+      return;
+    }
+
+    startTransition(async () => {
+      const res = await sendCustomAdminNotification(
+        notifyConfig.targetId,
+        notifyTitle,
+        notifyMessage,
+        notifyType
+      );
+
+      if (res.success) {
+        setFeedback({
+          type: "success",
+          message: `In-app notification delivered to "${notifyConfig.targetName}" successfully!`,
+        });
+        setNotifyConfig(null);
+        setNotifyTitle("");
+        setNotifyMessage("");
+        setNotifyType("system");
+      } else {
+        setFeedback({
+          type: "error",
+          message: res.error || "Failed to deliver in-app notification.",
+        });
+      }
+    });
+  };
+
+  const handleEscalateSubmit = () => {
+    if (!escalateModal) return;
+    if (!escalateReason.trim()) {
+      setFeedback({ type: "error", message: "An explanation for the escalation is required." });
+      return;
+    }
+
+    startTransition(async () => {
+      const res = await escalateReportToAdmin(
+        escalateModal.reportId,
+        escalateReason.trim(),
+        escalateAction
+      );
+
+      if (res?.success) {
+        setFeedback({
+          type: "success",
+          message: "Report successfully escalated to Level 4 Administrators for review.",
+        });
+        setEscalateModal(null);
+        setEscalateReason("");
+        router.refresh();
+      } else {
+        setFeedback({
+          type: "error",
+          message: res?.error || "Failed to escalate report.",
+        });
+      }
+    });
+  };
+
+  const handleResolveEscalateSubmit = () => {
+    if (!resolveEscalateModal) return;
+
+    startTransition(async () => {
+      const res = await resolveAdminEscalation(
+        resolveEscalateModal.escalation.id,
+        resolveEscalateModal.decision,
+        resolveNotes,
+        resolveEscalateModal.decision === "approved"
+      );
+
+      if (res?.success) {
+        setFeedback({
+          type: "success",
+          message: `Escalation ${resolveEscalateModal.decision === "approved" ? "approved and executed" : "dismissed"} successfully.`,
+        });
+        setResolveEscalateModal(null);
+        setResolveNotes("");
+        router.refresh();
+      } else {
+        setFeedback({
+          type: "error",
+          message: res?.error || "Failed to resolve escalation.",
+        });
+      }
+    });
+  };
+
+  const handleTicketReplySubmit = () => {
+    if (!ticketReplyModal) return;
+
+    startTransition(async () => {
+      const res = await updateSupportTicketStatus(
+        ticketReplyModal.ticket.id,
+        ticketReplyStatus,
+        ticketReplyMessage.trim() || undefined
+      );
+
+      if (res?.success) {
+        setFeedback({
+          type: "success",
+          message: "Ticket updated and response dispatched to user successfully.",
+        });
+        setTicketReplyModal(null);
+        setTicketReplyMessage("");
+        router.refresh();
+      } else {
+        setFeedback({
+          type: "error",
+          message: res?.error || "Failed to update support ticket.",
+        });
+      }
+    });
+  };
 
   // Split queue filtering for Projects: "all", "organic" (NGO), "scraper" (Auto-Scraper)
   const [projectOriginFilter, setProjectOriginFilter] = useState<"all" | "organic" | "scraper">("all");
@@ -401,7 +595,7 @@ export function AdminDashboardClient({
     });
   };
 
-  const handleTabChange = (tab: "orgs" | "youth" | "projects" | "reports" | "staff") => {
+  const handleTabChange = (tab: "orgs" | "youth" | "projects" | "reports" | "staff" | "escalations" | "tickets") => {
     router.push(`?tab=${tab}&page=1`);
   };
 
@@ -588,70 +782,117 @@ export function AdminDashboardClient({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-void-border">
         {/* Navigation Tabs with True Total Counts */}
         <div className="flex flex-wrap gap-3">
-          <button
-            onClick={() => handleTabChange("orgs")}
-            className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 border ${
-              activeTab === "orgs"
-                ? "bg-hyper-violet/20 border-hyper-violet text-white shadow-[0_0_20px_rgba(99,102,241,0.25)]"
-                : "bg-void-surface border-void-border text-gray-400 hover:text-white hover:border-gray-700"
-            }`}
-          >
-            <Building className="w-4 h-4 text-hyper-violet" />
-            <span>{t("tabOrgs")}</span>
-            <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-hyper-violet/30 text-white font-mono">
-              {totalOrgs}
-            </span>
-          </button>
+          {(currentUserRole === "admin" || currentUserRole === "root") && (
+            <button
+              onClick={() => handleTabChange("orgs")}
+              className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 border ${
+                activeTab === "orgs"
+                  ? "bg-hyper-violet/20 border-hyper-violet text-white shadow-[0_0_20px_rgba(99,102,241,0.25)]"
+                  : "bg-void-surface border-void-border text-gray-400 hover:text-white hover:border-gray-700"
+              }`}
+            >
+              <Building className="w-4 h-4 text-hyper-violet" />
+              <span>{t("tabOrgs")}</span>
+              <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-hyper-violet/30 text-white font-mono">
+                {totalOrgs}
+              </span>
+            </button>
+          )}
 
+          {(currentUserRole === "admin" || currentUserRole === "root") && (
+            <button
+              onClick={() => handleTabChange("youth")}
+              className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 border ${
+                activeTab === "youth"
+                  ? "bg-plasma-cyan/20 border-plasma-cyan text-white shadow-[0_0_20px_rgba(0,229,255,0.25)]"
+                  : "bg-void-surface border-void-border text-gray-400 hover:text-white hover:border-gray-700"
+              }`}
+            >
+              <Users className="w-4 h-4 text-plasma-cyan" />
+              <span>{t("tabYouth")}</span>
+              <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-plasma-cyan/30 text-white font-mono">
+                {totalYouth}
+              </span>
+            </button>
+          )}
+
+          {(currentUserRole === "admin" || currentUserRole === "root") && (
+            <button
+              onClick={() => handleTabChange("projects")}
+              className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 border ${
+                activeTab === "projects"
+                  ? "bg-nova-flare/20 border-nova-flare text-white shadow-[0_0_20px_rgba(255,46,99,0.25)]"
+                  : "bg-void-surface border-void-border text-gray-400 hover:text-white hover:border-gray-700"
+              }`}
+            >
+              <FolderGit2 className="w-4 h-4 text-nova-flare" />
+              <span>{t("tabProjects")}</span>
+              <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-nova-flare/30 text-white font-mono">
+                {totalProjects}
+              </span>
+            </button>
+          )}
+
+          {(currentUserRole === "admin" || currentUserRole === "root" || currentUserRole === "moderator") && (
+            <button
+              onClick={() => handleTabChange("reports")}
+              className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 border ${
+                activeTab === "reports"
+                  ? "bg-nova-flare/20 border-nova-flare text-white shadow-[0_0_20px_rgba(255,46,99,0.25)]"
+                  : "bg-void-surface border-void-border text-gray-400 hover:text-white hover:border-gray-700"
+              }`}
+            >
+              <Flag className="w-4 h-4 text-nova-flare" />
+              <span>{t("tabReports")}</span>
+              <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-nova-flare/30 text-white font-mono flex items-center gap-1.5">
+                {totalReports}
+                {totalPendingReports > 0 && (
+                  <span className="w-2 h-2 rounded-full bg-nova-flare animate-ping inline-block" />
+                )}
+              </span>
+            </button>
+          )}
+
+          {(currentUserRole === "admin" || currentUserRole === "root") && (
+            <button
+              onClick={() => handleTabChange("escalations")}
+              className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 border ${
+                activeTab === "escalations"
+                  ? "bg-amber-500/20 border-amber-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.25)]"
+                  : "bg-void-surface border-void-border text-gray-400 hover:text-white hover:border-gray-700"
+              }`}
+            >
+              <ShieldAlert className="w-4 h-4 text-amber-400" />
+              <span>Escalations</span>
+              <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-amber-500/30 text-white font-mono flex items-center gap-1.5">
+                {totalEscalations}
+                {totalPendingEscalations > 0 && (
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping inline-block" />
+                )}
+              </span>
+            </button>
+          )}
+
+          {/* Support Tickets Tab: Visible to ALL staff roles (Support, Moderator, Admin, Root) */}
           <button
-            onClick={() => handleTabChange("youth")}
+            onClick={() => handleTabChange("tickets")}
             className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 border ${
-              activeTab === "youth"
+              activeTab === "tickets"
                 ? "bg-plasma-cyan/20 border-plasma-cyan text-white shadow-[0_0_20px_rgba(0,229,255,0.25)]"
                 : "bg-void-surface border-void-border text-gray-400 hover:text-white hover:border-gray-700"
             }`}
           >
-            <Users className="w-4 h-4 text-plasma-cyan" />
-            <span>{t("tabYouth")}</span>
-            <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-plasma-cyan/30 text-white font-mono">
-              {totalYouth}
-            </span>
-          </button>
-
-          <button
-            onClick={() => handleTabChange("projects")}
-            className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 border ${
-              activeTab === "projects"
-                ? "bg-nova-flare/20 border-nova-flare text-white shadow-[0_0_20px_rgba(255,46,99,0.25)]"
-                : "bg-void-surface border-void-border text-gray-400 hover:text-white hover:border-gray-700"
-            }`}
-          >
-            <FolderGit2 className="w-4 h-4 text-nova-flare" />
-            <span>{t("tabProjects")}</span>
-            <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-nova-flare/30 text-white font-mono">
-              {totalProjects}
-            </span>
-          </button>
-
-          <button
-            onClick={() => handleTabChange("reports")}
-            className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 border ${
-              activeTab === "reports"
-                ? "bg-nova-flare/20 border-nova-flare text-white shadow-[0_0_20px_rgba(255,46,99,0.25)]"
-                : "bg-void-surface border-void-border text-gray-400 hover:text-white hover:border-gray-700"
-            }`}
-          >
-            <Flag className="w-4 h-4 text-nova-flare" />
-            <span>{t("tabReports")}</span>
-            <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-nova-flare/30 text-white font-mono flex items-center gap-1.5">
-              {totalReports}
-              {totalPendingReports > 0 && (
-                <span className="w-2 h-2 rounded-full bg-nova-flare animate-ping inline-block" />
+            <Headphones className="w-4 h-4 text-plasma-cyan" />
+            <span>Support Tickets</span>
+            <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-plasma-cyan/30 text-white font-mono flex items-center gap-1.5">
+              {totalTickets}
+              {totalPendingTickets > 0 && (
+                <span className="w-2 h-2 rounded-full bg-plasma-cyan animate-ping inline-block" />
               )}
             </span>
           </button>
 
-          {currentUserRole === "admin" && (
+          {(currentUserRole === "admin" || currentUserRole === "root") && (
             <button
               onClick={() => handleTabChange("staff")}
               className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 border ${
@@ -661,7 +902,7 @@ export function AdminDashboardClient({
               }`}
             >
               <ShieldCheck className="w-4 h-4 text-plasma-cyan" />
-              <span>Staff & Roles</span>
+              <span>Staff &amp; Roles</span>
               <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-plasma-cyan/30 text-white font-mono">
                 {totalStaff}
               </span>
@@ -786,6 +1027,25 @@ export function AdminDashboardClient({
                       <span>{t("requestChanges")}</span>
                     </a>
                     <button
+                      type="button"
+                      disabled={isPending}
+                      onClick={() => {
+                        setNotifyConfig({
+                          targetId: org.id,
+                          targetName: org.org_name || "Pending Organization",
+                          targetType: "org",
+                        });
+                        setNotifyTitle("Official Notice: Complete Organization Dossier");
+                        setNotifyMessage("");
+                        setNotifyType("action_required");
+                      }}
+                      className="flex-1 py-2 px-2.5 rounded-lg bg-hyper-violet/15 hover:bg-hyper-violet/25 text-hyper-violet border border-hyper-violet/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      title="Send In-App Notification"
+                    >
+                      <Bell className="w-3.5 h-3.5 shrink-0" />
+                      <span>Notify</span>
+                    </button>
+                    <button
                       disabled={isPending}
                       onClick={() => {
                         setDeleteConfig({
@@ -853,6 +1113,25 @@ export function AdminDashboardClient({
                   {renderContactIcons(org)}
 
                   <div className="flex gap-2.5 mt-auto pt-2">
+                    <button
+                      type="button"
+                      disabled={isPending}
+                      onClick={() => {
+                        setNotifyConfig({
+                          targetId: org.id,
+                          targetName: org.org_name || "Verified Organization",
+                          targetType: "org",
+                        });
+                        setNotifyTitle("EuroNova Administrative Notice");
+                        setNotifyMessage("");
+                        setNotifyType("system");
+                      }}
+                      className="flex-1 py-2 px-3 rounded-lg bg-hyper-violet/10 hover:bg-hyper-violet/20 text-hyper-violet border border-hyper-violet/30 font-bold text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                      title="Send In-App Notification"
+                    >
+                      <Bell className="w-3.5 h-3.5 shrink-0" />
+                      <span>Notify</span>
+                    </button>
                     <button
                       disabled={isPending}
                       onClick={() => handleAction(() => revokeOrganization(org.id))}
@@ -1009,24 +1288,45 @@ export function AdminDashboardClient({
                     </p>
                   )}
 
-                  <div className="mt-auto pt-4 border-t border-void-border/60 flex items-center justify-between">
+                  <div className="mt-auto pt-4 border-t border-void-border/60 flex items-center justify-between gap-2">
                     <span className={`text-[11px] text-gray-500 font-mono ${showSensitive ? "break-all whitespace-normal" : ""}`}>
                       ID: {formatId(user.id, showSensitive)}
                     </span>
-                    <button
-                      disabled={isPending}
-                      onClick={() => {
-                        setDeleteConfig({
-                          action: () => deleteYouthUser(user.id),
-                          title: "Delete Youth User",
-                          message: `Are you sure you want to permanently delete user "${user.full_name || user.email || "this user"}"? This action cannot be undone.`,
-                        });
-                      }}
-                      className="py-2 px-3.5 rounded-lg bg-nova-flare/10 hover:bg-nova-flare/20 text-nova-flare border border-nova-flare/30 font-bold text-xs transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>{t("deleteUser")}</span>
-                    </button>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        disabled={isPending}
+                        onClick={() => {
+                          setNotifyConfig({
+                            targetId: user.id,
+                            targetName: user.full_name || user.email || "Youth Volunteer",
+                            targetType: "user",
+                          });
+                          setNotifyTitle("EuroNova Community Notice");
+                          setNotifyMessage("");
+                          setNotifyType("system");
+                        }}
+                        className="py-2 px-3 rounded-lg bg-hyper-violet/10 hover:bg-hyper-violet/20 text-hyper-violet border border-hyper-violet/30 font-bold text-xs transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                        title="Send In-App Notification"
+                      >
+                        <Bell className="w-3.5 h-3.5" />
+                        <span>Notify</span>
+                      </button>
+                      <button
+                        disabled={isPending}
+                        onClick={() => {
+                          setDeleteConfig({
+                            action: () => deleteYouthUser(user.id),
+                            title: "Delete Youth User",
+                            message: `Are you sure you want to permanently delete user "${user.full_name || user.email || "this user"}"? This action cannot be undone.`,
+                          });
+                        }}
+                        className="py-2 px-3.5 rounded-lg bg-nova-flare/10 hover:bg-nova-flare/20 text-nova-flare border border-nova-flare/30 font-bold text-xs transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>{t("deleteUser")}</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -1590,9 +1890,16 @@ export function AdminDashboardClient({
                               </span>
                             )}
 
-                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border ${statusColor}`}>
-                              {report.status}
-                            </span>
+                            {report.status === "escalated" ? (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/50 flex items-center gap-1 shadow-[0_0_12px_rgba(245,158,11,0.25)]">
+                                <ShieldAlert className="w-3 h-3 text-amber-400" />
+                                ESCALATED TO ADMIN
+                              </span>
+                            ) : (
+                              <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border ${statusColor}`}>
+                                {report.status}
+                              </span>
+                            )}
                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${reasonColor}`}>
                               {report.reason}
                             </span>
@@ -1744,6 +2051,7 @@ export function AdminDashboardClient({
                         </div>
 
                         {/* Action Buttons */}
+                        {/* Action Buttons */}
                         <div className="flex sm:flex-row lg:flex-col items-stretch gap-2 shrink-0 lg:w-52">
                           {/* Specific Action Buttons for User & Comment Reports and Quarantine */}
                           {(targetType === "user" || targetType === "comment" || targetType === "quarantine" || isQuarantineReport(report)) && (
@@ -1778,23 +2086,45 @@ export function AdminDashboardClient({
                                 <span>Delete + Warn</span>
                               </button>
 
-                              <button
-                                type="button"
-                                disabled={isPending}
-                                onClick={() => {
-                                  setDeleteConfig({
-                                    action: () =>
-                                      deleteCommentAndBanUser(report.id, undefined, report.target_user_id || undefined),
-                                    title: "Ban User Account & Delete Comment",
-                                    message: `Are you sure you want to permanently suspend the account of "${report.target_user_name || report.target_name || report.target_user_id}" and delete the reported comment? This user will be barred from EuroNova.`,
-                                  });
-                                }}
-                                className="flex-1 py-2 px-3 rounded-xl bg-nova-flare/15 hover:bg-nova-flare/25 text-nova-flare border border-nova-flare/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(255,46,99,0.2)] disabled:opacity-50"
-                                title="Removes comment and bans the user account"
-                              >
-                                <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
-                                <span>Delete + Ban</span>
-                              </button>
+                              {currentUserRole === "moderator" ? (
+                                <button
+                                  type="button"
+                                  disabled={isPending || report.status === "escalated"}
+                                  onClick={() => {
+                                    setEscalateModal({
+                                      reportId: report.id,
+                                      targetName: report.target_user_name || report.target_name || "Reported User",
+                                      targetType: "user",
+                                      defaultAction: "ban_user",
+                                    });
+                                    setEscalateAction("ban_user");
+                                    setEscalateReason(`Account suspension request flagged by moderator: ${report.reason}`);
+                                  }}
+                                  className="flex-1 py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(245,158,11,0.2)] disabled:opacity-50"
+                                  title="Moderators cannot ban accounts directly. Request Admin Action."
+                                >
+                                  <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
+                                  <span>{report.status === "escalated" ? "Escalated" : "Escalate Ban Request"}</span>
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  disabled={isPending}
+                                  onClick={() => {
+                                    setDeleteConfig({
+                                      action: () =>
+                                        deleteCommentAndBanUser(report.id, undefined, report.target_user_id || undefined),
+                                      title: "Ban User Account & Delete Comment",
+                                      message: `Are you sure you want to permanently suspend the account of "${report.target_user_name || report.target_name || report.target_user_id}" and delete the reported comment? This user will be barred from EuroNova.`,
+                                    });
+                                  }}
+                                  className="flex-1 py-2 px-3 rounded-xl bg-nova-flare/15 hover:bg-nova-flare/25 text-nova-flare border border-nova-flare/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(255,46,99,0.2)] disabled:opacity-50"
+                                  title="Removes comment and bans the user account"
+                                >
+                                  <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
+                                  <span>Delete + Ban</span>
+                                </button>
+                              )}
                             </>
                           )}
 
@@ -1836,22 +2166,112 @@ export function AdminDashboardClient({
                             </>
                           )}
 
-                          {report.org_id && (
-                            <button
-                              type="button"
-                              disabled={isPending}
-                              onClick={() => {
-                                setDeleteConfig({
-                                  action: () => suspendOrganization(report.org_id!, report.id),
-                                  title: "Suspend Reported Organization",
-                                  message: `Are you sure you want to suspend this organization? It will be marked as rejected and revoked from publishing.`,
-                                });
-                              }}
-                              className="flex-1 py-2 px-3 rounded-xl bg-nova-flare/15 hover:bg-nova-flare/25 text-nova-flare border border-nova-flare/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(255,46,99,0.15)] disabled:opacity-50"
-                            >
-                              <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
-                              <span>Suspend Org</span>
-                            </button>
+                          {targetType === "survey" && (
+                            <>
+                              {currentUserRole === "moderator" ? (
+                                <button
+                                  type="button"
+                                  disabled={isPending || report.status === "escalated"}
+                                  onClick={() => {
+                                    setEscalateModal({
+                                      reportId: report.id,
+                                      targetName: report.target_name || "Community Survey",
+                                      targetType: "survey",
+                                      defaultAction: "delete_survey",
+                                    });
+                                    setEscalateAction("delete_survey");
+                                    setEscalateReason(`Survey deletion request flagged by moderator: ${report.reason}`);
+                                  }}
+                                  className="flex-1 py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(245,158,11,0.2)] disabled:opacity-50"
+                                  title="Moderators cannot delete surveys directly. Escalate to Admin."
+                                >
+                                  <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
+                                  <span>{report.status === "escalated" ? "Escalated" : "Escalate to Admin"}</span>
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  disabled={isPending}
+                                  onClick={() => {
+                                    setDeleteConfig({
+                                      action: () =>
+                                        deleteSurveyAndWarnCreator(
+                                          report.id,
+                                          report.target_name || undefined,
+                                          report.target_user_id || report.org_id || undefined
+                                        ),
+                                      title: "Delete Survey & Warn Creator",
+                                      message: `Are you sure you want to permanently delete the survey "${report.target_name || "this survey"}" and apply an official disciplinary warning strike (-15 Trust Score) to the creator?`,
+                                    });
+                                  }}
+                                  className="flex-1 py-2 px-3 rounded-xl bg-nova-flare/15 hover:bg-nova-flare/25 text-nova-flare border border-nova-flare/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(255,46,99,0.2)] disabled:opacity-50"
+                                  title="Deletes the survey and penalizes the creator's Trust Score"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                                  <span>Delete &amp; Warn</span>
+                                </button>
+                              )}
+
+                              <button
+                                type="button"
+                                disabled={isPending}
+                                onClick={() =>
+                                  handleAction(() =>
+                                    warnSurveyCreator(
+                                      report.id,
+                                      report.target_user_id || report.org_id || undefined
+                                    )
+                                  )
+                                }
+                                className="flex-1 py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(245,158,11,0.15)] disabled:opacity-50"
+                                title="Leaves the survey active but applies a disciplinary warning strike (-15 Trust Score) to the creator"
+                              >
+                                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                                <span>Warn Only</span>
+                              </button>
+                            </>
+                          )}
+
+                          {targetType === "organization" && report.org_id && (
+                            <>
+                              {currentUserRole === "moderator" ? (
+                                <button
+                                  type="button"
+                                  disabled={isPending || report.status === "escalated"}
+                                  onClick={() => {
+                                    setEscalateModal({
+                                      reportId: report.id,
+                                      targetName: report.users_org?.org_name || "Organization",
+                                      targetType: "organization",
+                                      defaultAction: "delete_org",
+                                    });
+                                    setEscalateAction("delete_org");
+                                    setEscalateReason(`Organization suspension request flagged by moderator: ${report.reason}`);
+                                  }}
+                                  className="flex-1 py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(245,158,11,0.2)] disabled:opacity-50"
+                                  title="Moderators cannot suspend organizations directly. Escalate to Admin."
+                                >
+                                  <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
+                                  <span>{report.status === "escalated" ? "Escalated" : "Escalate to Admin"}</span>
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  disabled={isPending}
+                                  onClick={() => {
+                                    setDeleteConfig({
+                                      action: () => suspendOrganization(report.org_id!, report.id),
+                                      title: "Suspend Reported Organization",
+                                      message: `Are you sure you want to suspend this organization? It will be marked as rejected and revoked from publishing.`,
+                                    });
+                                  }}
+                                  className="flex-1 py-2 px-3 rounded-xl bg-nova-flare/15 hover:bg-nova-flare/25 text-nova-flare border border-nova-flare/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(255,46,99,0.15)] disabled:opacity-50"
+                                >
+                                  <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
+                                  <span>Suspend Org</span>
+                                </button>
+                              )}
+                            </>
                           )}
 
                           <button
@@ -1932,6 +2352,22 @@ export function AdminDashboardClient({
                                 • Resolved: {new Date(report.resolved_at).toLocaleDateString()} {new Date(report.resolved_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             )}
+                            {report.resolution_action && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-hyper-violet/20 text-hyper-violet border border-hyper-violet/30">
+                                Action: {report.resolution_action}
+                              </span>
+                            )}
+                            {(() => {
+                              const ts = report.updated_at || report.resolved_at || report.created_at;
+                              const hoursSinceUpdatedAt = Math.floor((Date.now() - new Date(ts).getTime()) / (1000 * 60 * 60));
+                              const remainingHours = Math.max(0, 48 - hoursSinceUpdatedAt);
+                              return (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-void-surface border border-nova-flare/30 text-nova-flare flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  Auto-deleting in {remainingHours}h
+                                </span>
+                              );
+                            })()}
                           </div>
 
                           <div className="flex items-center gap-2 flex-wrap">
@@ -2004,7 +2440,7 @@ export function AdminDashboardClient({
       })()}
 
       {/* TAB 5: STAFF & ROLE MANAGEMENT (STRICT ADMIN ONLY) */}
-      {activeTab === "staff" && currentUserRole === "admin" && (
+      {activeTab === "staff" && (currentUserRole === "admin" || currentUserRole === "root") && (
         <div className="space-y-8 animate-in fade-in duration-300">
           {/* Section Header */}
           <div className="bg-void-surface border border-plasma-cyan/30 rounded-2xl p-6 sm:p-7 shadow-[0_0_30px_rgba(0,229,255,0.08)]">
@@ -2355,8 +2791,11 @@ export function AdminDashboardClient({
                               className="flex-1 bg-void-deep border border-void-border hover:border-plasma-cyan/50 rounded-xl px-3 py-2 text-xs text-white font-medium focus:outline-none focus:border-plasma-cyan transition-colors disabled:opacity-50 cursor-pointer"
                             >
                               <option value="user">User (Standard Volunteer)</option>
-                              <option value="support">🎧 Support (Inquiries & Read)</option>
-                              <option value="moderator">⚔️ Moderator (Full Shield)</option>
+                              <option value="support">🎧 Support Specialist (Tickets &amp; Inquiries)</option>
+                              <option value="moderator">⚔️ Moderator (Reports &amp; Forum Shield)</option>
+                              {(currentUserRole === "root" || currentUserRole === "admin") && (
+                                <option value="admin">🛡️ Administrator (Full God Mode)</option>
+                              )}
                             </select>
                             {isUpdating && (
                               <Loader2 className="w-4 h-4 text-plasma-cyan animate-spin shrink-0" />
@@ -2372,6 +2811,347 @@ export function AdminDashboardClient({
           })()}
         </div>
       )}
+
+      {/* TAB 6: ADMIN ESCALATIONS COMMAND CENTER */}
+      {activeTab === "escalations" && (currentUserRole === "admin" || currentUserRole === "root") && (() => {
+        const filteredEscalations = escalations.filter((esc) => {
+          if (escalationStatusFilter === "all") return true;
+          return esc.status === escalationStatusFilter;
+        });
+
+        return (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            {/* Header & Filter Controls */}
+            <div className="bg-void-surface/80 border border-amber-500/30 rounded-2xl p-6 backdrop-blur-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-[0_0_30px_rgba(245,158,11,0.08)]">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
+                  <ShieldAlert className="w-6 h-6 text-amber-400" />
+                  <span>Administrative Escalations Queue</span>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 font-mono">
+                    {totalPendingEscalations} Pending Review
+                  </span>
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                  Actions requiring Level 4 Administrator clearance escalated by External Moderators and Support Specialists.
+                </p>
+              </div>
+
+              {/* Status Filter Pills */}
+              <div className="flex flex-wrap items-center gap-2">
+                {(["all", "pending", "approved", "rejected"] as const).map((st) => (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => setEscalationStatusFilter(st)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                      escalationStatusFilter === st
+                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.25)]"
+                        : "bg-void-deep text-gray-400 hover:text-white border border-void-border"
+                    }`}
+                  >
+                    {st === "all" ? "All" : st}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Escalations List */}
+            {filteredEscalations.length === 0 ? (
+              <div className="bg-void-surface/40 border border-void-border/60 rounded-2xl p-12 text-center">
+                <CheckCircle2 className="w-12 h-12 text-rup-emerald mx-auto mb-3 opacity-60" />
+                <h3 className="text-lg font-bold text-white mb-1">Clear Skies in Escalations</h3>
+                <p className="text-sm text-gray-400">
+                  No administrative escalations match your current filter.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredEscalations.map((esc) => {
+                  const isPendingStatus = esc.status === "pending";
+                  const statusBadgeClass =
+                    esc.status === "pending"
+                      ? "bg-amber-500/15 text-amber-300 border-amber-500/40"
+                      : esc.status === "approved" || esc.status === "executed"
+                      ? "bg-rup-emerald/15 text-rup-emerald border-rup-emerald/40"
+                      : "bg-gray-700/30 text-gray-400 border-gray-600/40";
+
+                  const actionLabel =
+                    esc.recommended_action === "delete_survey"
+                      ? "Delete Survey & Penalize Creator"
+                      : esc.recommended_action === "ban_user"
+                      ? "Permanent Account Ban"
+                      : esc.recommended_action === "delete_org"
+                      ? "Suspend Organization"
+                      : "Administrative Investigation";
+
+                  return (
+                    <div
+                      key={esc.id}
+                      className="bg-void-surface/60 border border-void-border/80 rounded-2xl p-6 backdrop-blur-xl hover:border-amber-500/30 transition-all space-y-4"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-void-border/60">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${statusBadgeClass}`}>
+                            {esc.status}
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-void-deep text-plasma-cyan border border-void-border">
+                            Target: {esc.target_type}
+                          </span>
+                          <span className="text-xs text-gray-400 font-mono">
+                            Escalated by: <span className="text-white font-bold">{esc.escalated_by_role.toUpperCase()}</span>
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-500 font-mono">
+                          {new Date(esc.created_at).toLocaleString()}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Target Entity / Subject</p>
+                          <p className="text-sm font-bold text-white break-all">{esc.target_name || esc.target_id}</p>
+                          <p className="text-[11px] text-gray-500 font-mono">Target ID: {esc.target_id}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Recommended Action</p>
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold">
+                            <ShieldAlert className="w-3.5 h-3.5" />
+                            {actionLabel}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-void-deep/80 border border-void-border/60 text-xs space-y-1">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Escalation Statement</p>
+                        <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">{esc.reason}</p>
+                      </div>
+
+                      {esc.admin_notes && (
+                        <div className="p-3 rounded-xl bg-plasma-cyan/5 border border-plasma-cyan/20 text-xs space-y-0.5">
+                          <p className="text-[10px] font-bold text-plasma-cyan uppercase tracking-wider">Admin Resolution Notes</p>
+                          <p className="text-gray-300">{esc.admin_notes}</p>
+                        </div>
+                      )}
+
+                      {/* Admin Decision Actions */}
+                      {isPendingStatus && (
+                        <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
+                          <button
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => {
+                              setResolveEscalateModal({
+                                escalation: esc,
+                                decision: "rejected",
+                              });
+                              setResolveNotes("");
+                            }}
+                            className="px-4 py-2 rounded-xl bg-void-deep hover:bg-void-border text-gray-300 hover:text-white border border-void-border text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+                          >
+                            Dismiss Escalation
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => {
+                              setResolveEscalateModal({
+                                escalation: esc,
+                                decision: "approved",
+                              });
+                              setResolveNotes("");
+                            }}
+                            className="px-5 py-2 rounded-xl bg-nova-flare hover:bg-nova-flare/90 text-white font-bold text-xs transition-all shadow-[0_0_15px_rgba(255,46,99,0.3)] disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                          >
+                            <ShieldAlert className="w-4 h-4 shrink-0" />
+                            <span>Approve &amp; Execute Action</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {/* TAB 7: SUPPORT TICKETS & VOLUNTEER INQUIRIES */}
+      {activeTab === "tickets" && (() => {
+        const filteredTickets = tickets.filter((tk) => {
+          if (ticketStatusFilter === "all") return true;
+          if (ticketStatusFilter === "open") return tk.status === "open" || tk.status === "pending" || !tk.status;
+          return tk.status === ticketStatusFilter;
+        });
+
+        return (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            {/* Header & Filter Controls */}
+            <div className="bg-void-surface/80 border border-plasma-cyan/30 rounded-2xl p-6 backdrop-blur-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-[0_0_30px_rgba(0,229,255,0.08)]">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
+                  <Headphones className="w-6 h-6 text-plasma-cyan" />
+                  <span>Support &amp; Volunteer Inquiries</span>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-plasma-cyan/15 text-plasma-cyan border border-plasma-cyan/30 font-mono">
+                    {totalPendingTickets} Open
+                  </span>
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                  Manage incoming user tickets, role applications, and dispute communications.
+                </p>
+              </div>
+
+              {/* Status Filter Pills */}
+              <div className="flex flex-wrap items-center gap-2">
+                {(["all", "open", "in_progress", "resolved"] as const).map((st) => (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => setTicketStatusFilter(st)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                      ticketStatusFilter === st
+                        ? "bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/50 shadow-[0_0_12px_rgba(0,229,255,0.25)]"
+                        : "bg-void-deep text-gray-400 hover:text-white border border-void-border"
+                    }`}
+                  >
+                    {st === "all" ? "All" : st.replace("_", " ")}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tickets List */}
+            {filteredTickets.length === 0 ? (
+              <div className="bg-void-surface/40 border border-void-border/60 rounded-2xl p-12 text-center">
+                <CheckCircle2 className="w-12 h-12 text-rup-emerald mx-auto mb-3 opacity-60" />
+                <h3 className="text-lg font-bold text-white mb-1">Inbox Zero</h3>
+                <p className="text-sm text-gray-400">
+                  No support inquiries match your current filter.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredTickets.map((tk) => {
+                  const isApplySupport = tk.reason === "apply_support";
+                  const currentStatus = tk.status || "open";
+
+                  const statusBadgeClass =
+                    currentStatus === "resolved"
+                      ? "bg-rup-emerald/15 text-rup-emerald border-rup-emerald/40"
+                      : currentStatus === "in_progress"
+                      ? "bg-hyper-violet/15 text-hyper-violet border-hyper-violet/40"
+                      : "bg-plasma-cyan/15 text-plasma-cyan border-plasma-cyan/40";
+
+                  return (
+                    <div
+                      key={tk.id}
+                      className={`bg-void-surface/60 border rounded-2xl p-6 backdrop-blur-xl transition-all space-y-4 ${
+                        isApplySupport
+                          ? "border-hyper-violet/50 shadow-[0_0_20px_rgba(99,102,241,0.15)]"
+                          : "border-void-border/80 hover:border-plasma-cyan/30"
+                      }`}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-void-border/60">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${statusBadgeClass}`}>
+                            {currentStatus.replace("_", " ")}
+                          </span>
+                          {isApplySupport && (
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-hyper-violet/20 text-hyper-violet border border-hyper-violet/40 flex items-center gap-1 shadow-[0_0_10px_rgba(99,102,241,0.25)]">
+                              <span>🎧</span>
+                              Level 10 Vanguard Applicant
+                            </span>
+                          )}
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-void-deep text-gray-300 border border-void-border">
+                            Reason: {tk.reason}
+                          </span>
+                          {tk.resolution_action && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-hyper-violet/20 text-hyper-violet border border-hyper-violet/30">
+                              Action: {tk.resolution_action}
+                            </span>
+                          )}
+                          {currentStatus === "resolved" && (() => {
+                            const ts = tk.updated_at || tk.resolved_at || tk.created_at;
+                            const hoursSinceUpdatedAt = Math.floor((Date.now() - new Date(ts).getTime()) / (1000 * 60 * 60));
+                            const remainingHours = Math.max(0, 48 - hoursSinceUpdatedAt);
+                            return (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-void-surface border border-nova-flare/30 text-nova-flare flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                Auto-deleting in {remainingHours}h
+                              </span>
+                            );
+                          })()}
+                        </div>
+                        <span className="text-xs text-gray-500 font-mono">
+                          {new Date(tk.created_at).toLocaleString()}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">User Contact</p>
+                          <p className="text-white font-bold">{tk.email}</p>
+                          {tk.phone && <p className="text-gray-400 font-mono mt-0.5">Phone: {tk.phone}</p>}
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Subject</p>
+                          <p className="text-white font-bold text-sm">{tk.subject}</p>
+                        </div>
+                      </div>
+
+                      <div className="p-4 rounded-xl bg-void-deep/80 border border-void-border/60 text-xs space-y-1">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Message Transmission</p>
+                        <p className="text-gray-200 leading-relaxed whitespace-pre-wrap font-sans">{tk.content}</p>
+                      </div>
+
+                      {/* Ticket Action Buttons */}
+                      <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
+                        {currentStatus !== "in_progress" && currentStatus !== "resolved" && (
+                          <button
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => {
+                              handleAction(() => updateSupportTicketStatus(tk.id, "in_progress"));
+                            }}
+                            className="px-4 py-2 rounded-xl bg-hyper-violet/15 hover:bg-hyper-violet/25 text-hyper-violet border border-hyper-violet/40 text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+                          >
+                            Set In Progress
+                          </button>
+                        )}
+                        {currentStatus !== "resolved" && (
+                          <button
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => {
+                              handleAction(() => updateSupportTicketStatus(tk.id, "resolved"));
+                            }}
+                            className="px-4 py-2 rounded-xl bg-rup-emerald/15 hover:bg-rup-emerald/25 text-rup-emerald border border-rup-emerald/40 text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+                          >
+                            Mark Resolved
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          disabled={isPending}
+                          onClick={() => {
+                            setTicketReplyModal({ ticket: tk });
+                            setTicketReplyMessage("");
+                            setTicketReplyStatus("resolved");
+                          }}
+                          className="px-5 py-2 rounded-xl bg-plasma-cyan hover:bg-plasma-cyan/90 text-void-deep font-bold text-xs transition-all shadow-[0_0_15px_rgba(0,229,255,0.3)] disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                          <span>Reply &amp; Notify</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* God Mode Edit Project Modal */}
       {editingProject && (
@@ -2540,6 +3320,113 @@ export function AdminDashboardClient({
         </div>
       )}
 
+      {/* Custom In-App Notification Modal for Users & Organizations */}
+      {notifyConfig && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-void-deep/90 backdrop-blur-sm px-4 animate-in fade-in duration-200">
+          <div className="bg-void-surface border border-plasma-cyan/30 rounded-2xl p-6 sm:p-8 max-w-lg w-full shadow-[0_0_40px_rgba(0,229,255,0.15)] animate-in zoom-in-95 duration-200">
+            <div className="flex items-start justify-between gap-4 mb-5 border-b border-void-border pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-plasma-cyan/10 border border-plasma-cyan/30 flex items-center justify-center text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.2)]">
+                  <Bell className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white tracking-tight">
+                    Send In-App Notification
+                  </h3>
+                  <p className="text-xs text-gray-400">
+                    Recipient: <span className="text-plasma-cyan font-semibold">{notifyConfig.targetName}</span> ({notifyConfig.targetType === "org" ? "Organization" : "Youth User"})
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setNotifyConfig(null)}
+                disabled={isPending}
+                className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-void-deep transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
+                  Notification Category
+                </label>
+                <select
+                  value={notifyType}
+                  onChange={(e) => setNotifyType(e.target.value as "system" | "action_required" | "moderation" | "alert")}
+                  disabled={isPending}
+                  className="w-full px-4 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-plasma-cyan focus:outline-none cursor-pointer"
+                >
+                  <option value="system">System / Announcement</option>
+                  <option value="alert">Important Notice / Alert</option>
+                  <option value="moderation">Moderation / Policy Notice</option>
+                  <option value="action_required">Action Required</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
+                  Notification Title
+                </label>
+                <input
+                  type="text"
+                  value={notifyTitle}
+                  onChange={(e) => setNotifyTitle(e.target.value)}
+                  disabled={isPending}
+                  placeholder="e.g., Action Required: Update Profile Details or Warning Notice"
+                  className="w-full px-4 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-plasma-cyan focus:outline-none placeholder-gray-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
+                  Transmission Message
+                </label>
+                <textarea
+                  rows={4}
+                  value={notifyMessage}
+                  onChange={(e) => setNotifyMessage(e.target.value)}
+                  disabled={isPending}
+                  placeholder="Enter official transmission details to be received by the recipient in their notifications..."
+                  className="w-full px-4 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-plasma-cyan focus:outline-none placeholder-gray-500 resize-y"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-6 border-t border-void-border mt-6">
+              <button
+                type="button"
+                onClick={() => setNotifyConfig(null)}
+                disabled={isPending}
+                className="px-5 py-2.5 rounded-xl bg-void-deep hover:bg-gray-800 text-gray-300 text-sm font-bold border border-void-border transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSendNotification}
+                disabled={isPending || !notifyTitle.trim() || !notifyMessage.trim()}
+                className="px-6 py-2.5 rounded-xl bg-plasma-cyan hover:bg-plasma-cyan/90 text-void-deep font-bold text-sm transition-all shadow-[0_0_20px_rgba(0,229,255,0.35)] disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+              >
+                {isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Transmitting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    <span>Send Notification</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Custom Delete Confirmation Modal */}
       {deleteConfig && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-void-deep/90 backdrop-blur-sm px-4 animate-in fade-in duration-200">
@@ -2574,6 +3461,306 @@ export function AdminDashboardClient({
                   <span>Confirm Delete</span>
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* 1. Request Admin Action (Escalation) Modal */}
+      {escalateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-void-deep/90 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-void-surface border border-amber-500/40 rounded-2xl p-6 sm:p-8 max-w-lg w-full shadow-[0_0_50px_rgba(245,158,11,0.2)] animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-4 border-b border-void-border mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                    <span>Request Admin Action</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                      ESCALATION
+                    </span>
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Forward to Level 4 Administrators for destructive review.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEscalateModal(null)}
+                disabled={isPending}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-void-deep transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  Target Entity
+                </label>
+                <div className="px-3.5 py-2 rounded-xl bg-void-deep border border-void-border text-white text-sm font-semibold truncate">
+                  {escalateModal.targetName}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  Recommended Admin Action
+                </label>
+                <select
+                  value={escalateAction}
+                  onChange={(e) => setEscalateAction(e.target.value as any)}
+                  disabled={isPending}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-amber-400 focus:outline-none cursor-pointer"
+                >
+                  <option value="delete_survey">Delete Community Survey &amp; Strike Creator</option>
+                  <option value="ban_user">Permanent Account Ban</option>
+                  <option value="delete_org">Suspend Organization &amp; Revoke Publishing</option>
+                  <option value="emergency_lock">Emergency Lock Entity / Data Quarantine</option>
+                  <option value="investigate">Deep Administrative Investigation</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  Statement / Reason for Escalation *
+                </label>
+                <textarea
+                  rows={4}
+                  value={escalateReason}
+                  onChange={(e) => setEscalateReason(e.target.value)}
+                  disabled={isPending}
+                  placeholder="Detail why administrative intervention is required and summarize evidence..."
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-amber-400 focus:outline-none placeholder-gray-500 resize-y"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-6 border-t border-void-border mt-6">
+              <button
+                type="button"
+                onClick={() => setEscalateModal(null)}
+                disabled={isPending}
+                className="px-5 py-2.5 rounded-xl bg-void-deep hover:bg-void-border text-gray-300 text-sm font-bold border border-void-border transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleEscalateSubmit}
+                disabled={isPending || !escalateReason.trim()}
+                className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-void-deep font-bold text-sm transition-all shadow-[0_0_20px_rgba(245,158,11,0.35)] disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+              >
+                {isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Escalating...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldAlert className="w-4 h-4" />
+                    <span>Transmit Escalation</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Admin Escalation Resolution Modal */}
+      {resolveEscalateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-void-deep/90 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-void-surface border border-plasma-cyan/40 rounded-2xl p-6 sm:p-8 max-w-lg w-full shadow-[0_0_50px_rgba(0,229,255,0.2)] animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-4 border-b border-void-border mb-6">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                  resolveEscalateModal.decision === "approved"
+                    ? "bg-nova-flare/15 border border-nova-flare/30 text-nova-flare"
+                    : "bg-gray-700/20 border border-gray-600/40 text-gray-300"
+                }`}>
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                    <span>{resolveEscalateModal.decision === "approved" ? "Approve & Execute Action" : "Dismiss Escalation"}</span>
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Target: {resolveEscalateModal.escalation.target_name || resolveEscalateModal.escalation.target_id}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setResolveEscalateModal(null)}
+                disabled={isPending}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-void-deep transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-3.5 rounded-xl bg-void-deep/80 border border-void-border text-xs space-y-1">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Escalated Reason</p>
+                <p className="text-gray-300 whitespace-pre-wrap">{resolveEscalateModal.escalation.reason}</p>
+                <p className="text-amber-400 font-bold pt-1">
+                  Action: {resolveEscalateModal.escalation.recommended_action}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  Administrative Resolution Notes (Optional)
+                </label>
+                <textarea
+                  rows={3}
+                  value={resolveNotes}
+                  onChange={(e) => setResolveNotes(e.target.value)}
+                  disabled={isPending}
+                  placeholder="Notes explaining decision to the staff member who filed..."
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-plasma-cyan focus:outline-none placeholder-gray-500 resize-y"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-6 border-t border-void-border mt-6">
+              <button
+                type="button"
+                onClick={() => setResolveEscalateModal(null)}
+                disabled={isPending}
+                className="px-5 py-2.5 rounded-xl bg-void-deep hover:bg-void-border text-gray-300 text-sm font-bold border border-void-border transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleResolveEscalateSubmit}
+                disabled={isPending}
+                className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md flex items-center gap-2 cursor-pointer ${
+                  resolveEscalateModal.decision === "approved"
+                    ? "bg-nova-flare hover:bg-nova-flare/90 text-white shadow-[0_0_20px_rgba(255,46,99,0.35)]"
+                    : "bg-void-deep hover:bg-gray-800 text-gray-300 border border-void-border"
+                }`}
+              >
+                {isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Resolving...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>Confirm {resolveEscalateModal.decision === "approved" ? "Execution" : "Dismissal"}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Support Ticket Reply Modal */}
+      {ticketReplyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-void-deep/90 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-void-surface border border-plasma-cyan/40 rounded-2xl p-6 sm:p-8 max-w-lg w-full shadow-[0_0_50px_rgba(0,229,255,0.2)] animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-4 border-b border-void-border mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-plasma-cyan/15 border border-plasma-cyan/30 flex items-center justify-center text-plasma-cyan">
+                  <Headphones className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white tracking-tight">
+                    Reply to Volunteer Ticket
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-0.5 truncate max-w-xs">
+                    {ticketReplyModal.ticket.subject}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTicketReplyModal(null)}
+                disabled={isPending}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-void-deep transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <span className="text-gray-400 block mb-0.5 font-bold uppercase text-[10px]">Recipient</span>
+                  <span className="text-white font-mono">{ticketReplyModal.ticket.email}</span>
+                </div>
+                <div>
+                  <span className="text-gray-400 block mb-0.5 font-bold uppercase text-[10px]">Reason</span>
+                  <span className="text-plasma-cyan font-semibold">{ticketReplyModal.ticket.reason}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  Ticket Status After Response
+                </label>
+                <select
+                  value={ticketReplyStatus}
+                  onChange={(e) => setTicketReplyStatus(e.target.value as any)}
+                  disabled={isPending}
+                  className="w-full px-3.5 py-2 rounded-xl bg-void-deep border border-void-border text-white text-xs focus:border-plasma-cyan focus:outline-none cursor-pointer"
+                >
+                  <option value="resolved">Mark as Resolved</option>
+                  <option value="in_progress">Keep In Progress</option>
+                  <option value="open">Keep Open</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  In-App Notification Message
+                </label>
+                <textarea
+                  rows={4}
+                  value={ticketReplyMessage}
+                  onChange={(e) => setTicketReplyMessage(e.target.value)}
+                  disabled={isPending}
+                  placeholder="Enter response message that will be delivered directly to the user's notification tray..."
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-plasma-cyan focus:outline-none placeholder-gray-500 resize-y"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-6 border-t border-void-border mt-6">
+              <button
+                type="button"
+                onClick={() => setTicketReplyModal(null)}
+                disabled={isPending}
+                className="px-5 py-2.5 rounded-xl bg-void-deep hover:bg-void-border text-gray-300 text-sm font-bold border border-void-border transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleTicketReplySubmit}
+                disabled={isPending}
+                className="px-6 py-2.5 rounded-xl bg-plasma-cyan hover:bg-plasma-cyan/90 text-void-deep font-bold text-sm transition-all shadow-[0_0_20px_rgba(0,229,255,0.35)] disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+              >
+                {isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Dispatched...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    <span>Transmit Response</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

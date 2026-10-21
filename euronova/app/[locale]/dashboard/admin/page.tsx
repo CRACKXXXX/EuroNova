@@ -12,6 +12,7 @@ import {
   ProjectItem,
   ReportItem,
 } from "./AdminDashboardClient";
+import type { AdminEscalationItem, StaffTicketItem } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -58,12 +59,18 @@ export default async function AdminPage(props: {
 
   // 1. Role-based verification using centralized role utility
   const currentUserRole: UserRole = await getUserRole(user.id, user.email);
-  const isAuthorizedStaff =
-    currentUserRole === "admin" ||
-    currentUserRole === "moderator" ||
-    currentUserRole === "support";
 
-  if (!isAuthorizedStaff) {
+  // Strict Panel Isolation: Route staff members to their dedicated panels
+  if (currentUserRole === "moderator") {
+    redirect("/dashboard/moderator-panel");
+  }
+
+  if (currentUserRole === "support") {
+    redirect("/dashboard/support-panel");
+  }
+
+  const isAuthorizedAdmin = currentUserRole === "root" || currentUserRole === "admin";
+  if (!isAuthorizedAdmin) {
     redirect("/dashboard");
   }
 
@@ -72,12 +79,35 @@ export default async function AdminPage(props: {
   const searchParams = await props.searchParams;
   const t = await getTranslations("AdminPanel");
 
-  const currentTab =
-    (searchParams.tab as "orgs" | "youth" | "projects" | "reports" | "staff") || "orgs";
+  const requestedTab = searchParams.tab as
+    | "orgs"
+    | "youth"
+    | "projects"
+    | "reports"
+    | "staff"
+    | "escalations"
+    | "tickets"
+    | undefined;
+
+  let currentTab:
+    | "orgs"
+    | "youth"
+    | "projects"
+    | "reports"
+    | "staff"
+    | "escalations"
+    | "tickets" = "orgs";
+
+  currentTab = requestedTab || "orgs";
+
   const currentPage = parsePage(searchParams.page);
 
-  // Strict 403 Guard: If user is not an admin, deny access to the "staff" tab
-  if (currentTab === "staff" && currentUserRole !== "admin") {
+  // Strict 403 Guard: If user is not admin/root, deny access to restricted tabs
+  if (
+    (currentTab === "staff" || currentTab === "escalations") &&
+    currentUserRole !== "admin" &&
+    currentUserRole !== "root"
+  ) {
     return (
       <div className="max-w-4xl mx-auto py-20 px-4 text-center">
         <div className="bg-void-surface border border-nova-flare/40 rounded-2xl p-8 max-w-lg mx-auto shadow-2xl">
@@ -86,10 +116,10 @@ export default async function AdminPage(props: {
           </div>
           <h2 className="text-xl font-bold text-white mb-2">Access Denied: Admin Clearance Required</h2>
           <p className="text-sm text-gray-400 mb-6">
-            The Staff & Roles Management terminal is strictly restricted to Level 4 EuroNova System Administrators. Moderators and Support personnel cannot access this clearance level.
+            The requested terminal is strictly restricted to Level 4 EuroNova System Administrators. Moderators and Support personnel cannot access this clearance level.
           </p>
           <Link
-            href="/dashboard/admin?tab=reports"
+            href={currentUserRole === "support" ? "/dashboard/admin?tab=tickets" : "/dashboard/admin?tab=reports"}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-void-deep border border-void-border text-white hover:border-plasma-cyan/50 transition-colors text-sm font-semibold"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -110,6 +140,10 @@ export default async function AdminPage(props: {
     totalVerifiedOrgsCountRes,
     totalYouthCountRes,
     totalStaffCountRes,
+    totalEscalationsRes,
+    totalPendingEscalationsRes,
+    totalTicketsRes,
+    totalPendingTicketsRes,
   ] = await Promise.all([
     adminDb.from("projects").select("*", { count: "exact", head: true }),
     adminDb.from("projects").select("*", { count: "exact", head: true }).eq("status", "published"),
@@ -121,7 +155,11 @@ export default async function AdminPage(props: {
       .or("verification_status.eq.pending,verification_status.is.null,verification_status.eq.rejected"),
     adminDb.from("users_org").select("*", { count: "exact", head: true }).eq("verification_status", "verified"),
     adminDb.from("users_youth").select("*", { count: "exact", head: true }),
-    adminDb.from("users_youth").select("*", { count: "exact", head: true }).in("role", ["admin", "moderator", "support"]),
+    adminDb.from("users_youth").select("*", { count: "exact", head: true }).in("role", ["admin", "root", "moderator", "support"]),
+    adminDb.from("admin_escalations").select("*", { count: "exact", head: true }),
+    adminDb.from("admin_escalations").select("*", { count: "exact", head: true }).eq("status", "pending"),
+    adminDb.from("support_tickets").select("*", { count: "exact", head: true }),
+    adminDb.from("support_tickets").select("*", { count: "exact", head: true }).in("status", ["open", "pending", "in_progress"]),
   ]);
 
   const totalProjects = totalProjectsCountRes.count ?? 0;
@@ -132,6 +170,10 @@ export default async function AdminPage(props: {
   const totalVerifiedOrgs = totalVerifiedOrgsCountRes.count ?? 0;
   const totalYouth = totalYouthCountRes.count ?? 0;
   const totalStaff = totalStaffCountRes.count ?? 0;
+  const totalEscalations = totalEscalationsRes.count ?? 0;
+  const totalPendingEscalations = totalPendingEscalationsRes.count ?? 0;
+  const totalTickets = totalTicketsRes.count ?? 0;
+  const totalPendingTickets = totalPendingTicketsRes.count ?? 0;
 
   // Defensive queries for project_reports table
   let totalReports = 0;
@@ -152,6 +194,10 @@ export default async function AdminPage(props: {
       ? totalStaff
       : currentTab === "reports"
       ? totalReports
+      : currentTab === "escalations"
+      ? totalEscalations
+      : currentTab === "tickets"
+      ? totalTickets
       : currentTab === "projects"
       ? totalPublishedProjects
       : currentTab === "youth"
@@ -172,6 +218,8 @@ export default async function AdminPage(props: {
     pendingProjectsDataRes,
     publishedProjectsDataRes,
     reportsDataRes,
+    escalationsDataRes,
+    ticketsDataRes,
   ] = await Promise.all([
     adminDb
       .from("users_org")
@@ -207,6 +255,16 @@ export default async function AdminPage(props: {
       .select("*, projects(id, title, status, dest_country, project_type), users_org(id, org_name, verification_status, contact_email)")
       .order("created_at", { ascending: false })
       .range(currentTab === "reports" ? from : 0, currentTab === "reports" ? to : PAGE_SIZE - 1),
+    adminDb
+      .from("admin_escalations")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .range(currentTab === "escalations" ? from : 0, currentTab === "escalations" ? to : PAGE_SIZE - 1),
+    adminDb
+      .from("support_tickets")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .range(currentTab === "tickets" ? from : 0, currentTab === "tickets" ? to : PAGE_SIZE - 1),
   ]);
 
   const rawPendingOrgs = (pendingOrgsDataRes.data as OrgItem[]) || [];
@@ -215,6 +273,8 @@ export default async function AdminPage(props: {
   const rawPendingProjects = (pendingProjectsDataRes.data as ProjectItem[]) || [];
   const rawPublishedProjects = (publishedProjectsDataRes.data as ProjectItem[]) || [];
   const rawReports = (reportsDataRes.data as ReportItem[]) || [];
+  const rawEscalations = (escalationsDataRes.data as AdminEscalationItem[]) || [];
+  const rawTickets = (ticketsDataRes.data as StaffTicketItem[]) || [];
 
   // Extract unique organization, youth user, reporter, and reported user IDs for admin email resolution
   const uniqueOrgIds = Array.from(
@@ -226,6 +286,7 @@ export default async function AdminPage(props: {
       ...rawYouthUsers.map((y) => y.id),
       ...rawReports.map((r) => r.reporter_id).filter((id): id is string => Boolean(id)),
       ...rawReports.map((r) => r.target_user_id).filter((id): id is string => Boolean(id)),
+      ...rawTickets.map((t) => t.user_id).filter((id): id is string => Boolean(id)),
     ])
   );
 
@@ -250,6 +311,8 @@ export default async function AdminPage(props: {
     new Set([
       ...rawReports.map((r) => r.reporter_id).filter((id): id is string => Boolean(id)),
       ...rawReports.map((r) => r.target_user_id).filter((id): id is string => Boolean(id)),
+      ...rawTickets.map((t) => t.user_id).filter((id): id is string => Boolean(id)),
+      ...rawEscalations.map((e) => e.escalated_by).filter((id): id is string => Boolean(id)),
     ])
   );
 
@@ -343,6 +406,12 @@ export default async function AdminPage(props: {
         pendingProjects={pendingProjects}
         publishedProjects={publishedProjects}
         reports={reports}
+        escalations={rawEscalations}
+        totalEscalations={totalEscalations}
+        totalPendingEscalations={totalPendingEscalations}
+        tickets={rawTickets}
+        totalTickets={totalTickets}
+        totalPendingTickets={totalPendingTickets}
         totalProjects={totalProjects}
         totalOrgs={totalOrgs}
         totalYouth={totalYouth}

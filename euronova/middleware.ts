@@ -23,7 +23,12 @@ export async function middleware(request: NextRequest) {
             request,
           })
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
+            response.cookies.set(name, value, {
+              ...options,
+              maxAge: options?.maxAge ?? 60 * 60 * 24 * 30, // 30-day persistent session
+              path: options?.path ?? '/',
+              sameSite: options?.sameSite ?? 'lax',
+            })
           )
         },
       },
@@ -36,21 +41,30 @@ export async function middleware(request: NextRequest) {
 
   // Extraer el path quitando el locale (ej: /es/dashboard -> /dashboard)
   const pathname = request.nextUrl.pathname
-  const localeRegex = new RegExp(`^/(${routing.locales.join('|')})`)
-  const pathWithoutLocale = pathname.replace(localeRegex, '') || '/'
+  const localeMatch = pathname.match(new RegExp(`^/(${routing.locales.join('|')})`))
+  const currentLocale = localeMatch ? localeMatch[1] : routing.defaultLocale
+  const pathWithoutLocale = pathname.replace(new RegExp(`^/(${routing.locales.join('|')})`), '') || '/'
 
-  // Lista explícita de rutas públicas accesibles sin autenticación
+  // Lista estricta y blindada de rutas públicas accesibles sin autenticación
   const isPublicRoute =
     pathWithoutLocale === '/' ||
-    pathWithoutLocale.startsWith('/support') ||
     pathWithoutLocale.startsWith('/login') ||
     pathWithoutLocale.startsWith('/signup') ||
-    pathWithoutLocale.startsWith('/legal') ||
-    !pathWithoutLocale.startsWith('/dashboard');
+    pathWithoutLocale.startsWith('/support') ||
+    pathWithoutLocale.startsWith('/legal')
 
+  // Redirección inquebrantable si no hay usuario autenticado intentando acceder a rutas protegidas
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
-    url.pathname = `/${routing.defaultLocale}/login` // Redirigir al login en el idioma por defecto
+    url.pathname = `/${currentLocale}/login`
+    url.searchParams.set('next', pathname)
+    return NextResponse.redirect(url)
+  }
+
+  // Si el usuario ya está autenticado e intenta ir a login o signup, enviarlo al dashboard
+  if (user && (pathWithoutLocale.startsWith('/login') || pathWithoutLocale.startsWith('/signup'))) {
+    const url = request.nextUrl.clone()
+    url.pathname = `/${currentLocale}/dashboard`
     return NextResponse.redirect(url)
   }
 

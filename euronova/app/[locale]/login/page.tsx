@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Globe } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
@@ -9,9 +10,19 @@ import { PublicHeader } from "@/components/PublicHeader";
 import { LoginForm } from "@/components/LoginForm";
 import { RegisterForm } from "@/components/RegisterForm";
 
-export default function LoginPage() {
+function LoginContent() {
   const t = useTranslations("Login");
+  const searchParams = useSearchParams();
   const [isViewLogin, setIsViewLogin] = useState(true);
+
+  useEffect(() => {
+    const mode = searchParams.get("mode") || searchParams.get("view");
+    if (mode === "signup" || mode === "register") {
+      setIsViewLogin(false);
+    } else {
+      setIsViewLogin(true);
+    }
+  }, [searchParams]);
 
   const handleGoogleLogin = async () => {
     const supabase = createClient();
@@ -94,5 +105,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-void-deep" />}>
+      <LoginContent />
+    </Suspense>
   );
 }

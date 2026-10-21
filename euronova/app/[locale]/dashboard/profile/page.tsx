@@ -16,13 +16,15 @@ import {
   Star, 
   Leaf, 
   Award, 
-  Lock 
+  Lock,
+  Headphones 
 } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { RecentlyViewedMissions } from "@/components/RecentlyViewedMissions";
 import { LevelReputationModule } from "@/components/LevelReputationModule";
+import { calculateLevelFromXp } from "@/lib/gamification";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -79,8 +81,10 @@ export default async function ProfilePage(props: {
     redirect(`/${locale}/login`);
   }
 
-  // 1. Determinar el rol (Priorizar metadata, sino fallback a youth)
-  const role: "youth" | "org" = user.user_metadata?.role || "youth";
+  // 1. Determinar el rol (Solo 'org' u 'organization' cargan perfil de ONG. Staff y youth cargan perfil personal youth)
+  const rawMetadataRole = (user.user_metadata?.role || "").toLowerCase().trim();
+  const isOrg = rawMetadataRole === "org" || rawMetadataRole === "organization";
+  const role: "youth" | "org" = isOrg ? "org" : "youth";
   let profileData: Record<string, unknown> | null = null;
 
   // 2. Extraer datos o forzar su creación
@@ -180,6 +184,36 @@ export default async function ProfilePage(props: {
   // Variables de telemetría y conteos estrictos
   const savedProjectsCount = favoritesCount || 0;
   const appliedProjectsCount = appliedCount || 0;
+
+  // Nivel del usuario calculado y detección de hito Level 10+
+  const userXp = typeof profileData?.xp === "number" ? profileData.xp : 0;
+  const userLevel = calculateLevelFromXp(userXp);
+  const isLevel10Plus = userLevel >= 10;
+
+  // Notificación automática al alcanzar Nivel 10 para postularse al rol de Soporte
+  if (role === "youth" && isLevel10Plus) {
+    try {
+      const { data: existingNotif } = await supabase
+        .from("notifications")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("title", "Level 10 Vanguard: Apply for Staff Support Role!")
+        .limit(1);
+
+      if (!existingNotif || existingNotif.length === 0) {
+        const { dispatchNotification } = await import("@/actions/notifications");
+        await dispatchNotification({
+          userId: user.id,
+          type: "system",
+          title: "Level 10 Vanguard: Apply for Staff Support Role!",
+          message: "Congratulations on reaching Level 10! You have unlocked official eligibility to join the EuroNova Staff as a Support Specialist. Open a support ticket to submit your candidacy.",
+          actionUrl: `/${locale}/dashboard/support?reason=apply_support`,
+        });
+      }
+    } catch {
+      // non-blocking
+    }
+  }
 
   // Antigüedad de la cuenta en días calculada a partir de created_at
   const userCreatedAt = user.created_at ? new Date(user.created_at) : new Date();
@@ -347,6 +381,45 @@ export default async function ProfilePage(props: {
             </p>
           </div>
         </div>
+
+        {/* LEVEL 10+ GAMIFICATION HOOK: SUPPORT SPECIALIST RECRUITMENT BANNER */}
+        {role === "youth" && isLevel10Plus && (
+          <div className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-void-surface via-void-surface/95 to-rup-emerald/10 border border-rup-emerald/50 shadow-[0_0_35px_rgba(0,230,118,0.2)] relative overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="absolute top-0 right-0 w-72 h-72 bg-rup-emerald/10 rounded-full blur-[90px] pointer-events-none" />
+            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div className="flex items-start gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-rup-emerald/15 border border-rup-emerald/40 flex items-center justify-center text-rup-emerald shrink-0 shadow-[0_0_20px_rgba(0,230,118,0.3)]">
+                  <Headphones className="w-7 h-7 animate-pulse" />
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rup-emerald/20 text-rup-emerald border border-rup-emerald/40 shadow-[0_0_10px_rgba(0,230,118,0.3)]">
+                      Level 10 Vanguard Milestone
+                    </span>
+                    <span className="text-xs text-gray-400 font-mono">
+                      Level {userLevel} · {userXp.toLocaleString()} XP
+                    </span>
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-black text-white tracking-tight">
+                    Invitation: Join the EuroNova Staff as a Support Specialist!
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-2xl font-light">
+                    You have demonstrated exceptional dedication to the European mobility community. As a Level 10+ veteran, you are officially invited to apply for the <strong className="text-rup-emerald font-semibold">Support Specialist</strong> role to guide incoming youth, answer inquiries, and unlock platform staff credentials.
+                  </p>
+                </div>
+              </div>
+              <div className="shrink-0 w-full md:w-auto">
+                <Link
+                  href={`/${locale}/dashboard/support?reason=apply_support`}
+                  className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-rup-emerald hover:bg-rup-emerald/90 text-void-deep font-black text-xs sm:text-sm transition-all shadow-[0_0_25px_rgba(0,230,118,0.4)] hover:scale-105 cursor-pointer uppercase tracking-wider"
+                >
+                  <Headphones className="w-4 h-4" />
+                  <span>Apply for Support Role</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* DYNAMIC PROFILE COMPLETION PROGRESS BAR (Only for Youth Volunteers) */}
         {role === "youth" && (

@@ -1,16 +1,45 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { createTicket } from "./actions";
-import { Mail, Phone, MessageSquare, Send } from "lucide-react";
+import { Mail, Phone, MessageSquare, Send, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 export function SupportForm() {
   const t = useTranslations("SupportForm");
+  const searchParams = useSearchParams();
+  const defaultReason = searchParams.get("reason") || "";
+
+  const [selectedReason, setSelectedReason] = useState(defaultReason);
+  const [subjectValue, setSubjectValue] = useState(
+    defaultReason === "apply_support"
+      ? "Application for EuroNova Community Support Specialist (Level 10+)"
+      : ""
+  );
+
+  useEffect(() => {
+    if (defaultReason) {
+      setSelectedReason(defaultReason);
+      if (defaultReason === "apply_support" && !subjectValue) {
+        setSubjectValue("Application for EuroNova Community Support Specialist (Level 10+)");
+      }
+    }
+  }, [defaultReason, subjectValue]);
+
   const [state, action, isPending] = useActionState(createTicket, null);
 
   return (
     <form action={action} className="space-y-6">
+      {selectedReason === "apply_support" && (
+        <div className="p-4 rounded-xl bg-rup-emerald/10 border border-rup-emerald/30 text-rup-emerald text-xs flex items-center gap-3 animate-in fade-in">
+          <Sparkles className="w-5 h-5 shrink-0" />
+          <span>
+            <strong>Level 10+ Vanguard Application:</strong> Please outline your past Erasmus+/ESC mobility experiences, languages spoken, and your motivation to help fellow volunteers across Europe.
+          </span>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">{t("email")}</label>
@@ -47,6 +76,8 @@ export function SupportForm() {
             type="text"
             name="subject"
             required
+            value={subjectValue}
+            onChange={(e) => setSubjectValue(e.target.value)}
             className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all"
             placeholder={t("subjectPlaceholder")}
           />
@@ -57,14 +88,20 @@ export function SupportForm() {
           <select
             name="reason"
             required
-            className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all appearance-none"
+            value={selectedReason}
+            onChange={(e) => setSelectedReason(e.target.value)}
+            className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all appearance-none cursor-pointer"
           >
-            <option value="">{t("selectReason")}</option>
-            <option value="technical">{t("reasonTechnical")}</option>
-            <option value="account">{t("reasonAccount")}</option>
-            <option value="projects">{t("reasonProjects")}</option>
-            <option value="billing">{t("reasonBilling")}</option>
-            <option value="other">{t("reasonOther")}</option>
+            <option value="">{t("selectReason") || "Select inquiry category..."}</option>
+            <option value="apply_support">Apply for Support Role (Level 10+ Vanguard)</option>
+            <option value="survey_moderation">Survey Moderation & Community Polls</option>
+            <option value="trust_score_dispute">Trust Score / XP Telemetry Disputes</option>
+            <option value="scraper_issue">Auto-Scraper Project Indexing Issues</option>
+            <option value="technical">{t("reasonTechnical") || "Technical Bug or Platform Issue"}</option>
+            <option value="account">{t("reasonAccount") || "Account & Profile Inquiries"}</option>
+            <option value="projects">{t("reasonProjects") || "Mission Verification & Infopack Inquiries"}</option>
+            <option value="billing">{t("reasonBilling") || "Donations & Infrastructure Fund"}</option>
+            <option value="other">{t("reasonOther") || "General Community Inquiry"}</option>
           </select>
         </div>
       </div>
@@ -78,7 +115,11 @@ export function SupportForm() {
             required
             rows={5}
             className="w-full bg-void-deep border border-void-border rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all"
-            placeholder={t("contentPlaceholder")}
+            placeholder={
+              selectedReason === "apply_support"
+                ? "Describe your European mobility background, countries visited, spoken languages, and why you wish to assist fellow volunteers on EuroNova..."
+                : t("contentPlaceholder")
+            }
           />
         </div>
       </div>
@@ -98,7 +139,7 @@ export function SupportForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full font-bold py-4 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-void-deep bg-plasma-cyan hover:bg-plasma-cyan/80 shadow-[0_0_15px_rgba(0,229,255,0.3)] hover:shadow-[0_0_25px_rgba(0,229,255,0.5)] disabled:opacity-50"
+          className="w-full font-bold py-4 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-void-deep bg-plasma-cyan hover:bg-plasma-cyan/80 shadow-[0_0_15px_rgba(0,229,255,0.3)] hover:shadow-[0_0_25px_rgba(0,229,255,0.5)] disabled:opacity-50 cursor-pointer"
         >
           <Send className="w-5 h-5" />
           {isPending ? t("submitting") : t("submit")}

@@ -45,6 +45,20 @@ export async function createTicket(prevState: unknown, formData: FormData) {
     return { error: "Hubo un error al guardar tu mensaje. Inténtalo de nuevo." };
   }
 
+  // Dispatch external Discord & email alerts
+  try {
+    const { sendCriticalSupportAlert } = await import("@/lib/externalAlerts");
+    void sendCriticalSupportAlert({
+      ticketId: user.id,
+      userEmail: email,
+      subject,
+      reason,
+      content,
+    });
+  } catch (err) {
+    console.warn("Could not send external support alert:", err);
+  }
+
   try {
     await transporter.sendMail({
       from: `"EuroNova Support" <EuroNovaOfficial@gmail.com>`,
@@ -65,6 +79,30 @@ export async function createTicket(prevState: unknown, formData: FormData) {
   } catch (mailError) {
     console.error("Error al enviar email:", mailError);
     // Even if email fails, ticket was saved. 
+  }
+
+  // If applicant is applying for Support Specialist, log to admin_escalations
+  if (reason === "apply_support") {
+    try {
+      const { createClient: createSupabaseClient } = await import("@supabase/supabase-js");
+      const adminDb = createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      await adminDb.from("admin_escalations").insert({
+        escalated_by: user.id,
+        escalated_by_role: "user",
+        target_type: "user",
+        target_id: user.id,
+        target_name: email,
+        reason: `Support Role Application: ${subject}`,
+        recommended_action: "investigate",
+        status: "pending",
+        admin_notes: `Application Statement:\n${content}`,
+      });
+    } catch (err) {
+      console.warn("Could not register support application escalation:", err);
+    }
   }
 
   return { success: "¡Ticket enviado con éxito! Nuestro equipo te contactará pronto." };

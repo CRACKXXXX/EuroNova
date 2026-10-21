@@ -20,6 +20,8 @@ const youthProfileSchema = z.object({
   bio: z.string().trim().optional().or(z.literal("")).nullable(),
   phone: z.string().trim().optional().or(z.literal("")).nullable(),
   languages: z.string().trim().optional().or(z.literal("")).nullable(),
+  notification_email: z.string().trim().email().optional().or(z.literal("")).nullable(),
+  discord_webhook_url: z.string().trim().url().optional().or(z.literal("")).nullable(),
 });
 
 const orgProfileSchema = z.object({
@@ -33,6 +35,8 @@ const orgProfileSchema = z.object({
   social_tiktok: z.string().trim().optional().or(z.literal("")).nullable(),
   social_youtube: z.string().trim().optional().or(z.literal("")).nullable(),
   social_linkedin: z.string().trim().optional().or(z.literal("")).nullable(),
+  notification_email: z.string().trim().email().optional().or(z.literal("")).nullable(),
+  discord_webhook_url: z.string().trim().url().optional().or(z.literal("")).nullable(),
 });
 
 interface YouthUpdatePayload {
@@ -44,6 +48,8 @@ interface YouthUpdatePayload {
   bio: string | null;
   phone: string | null;
   languages: string[] | null;
+  notification_email?: string | null;
+  discord_webhook_url?: string | null;
   avatar_url?: string;
 }
 
@@ -59,6 +65,8 @@ interface OrgUpdatePayload {
   social_tiktok: string | null;
   social_youtube: string | null;
   social_linkedin: string | null;
+  notification_email?: string | null;
+  discord_webhook_url?: string | null;
   verification_status?: string;
   avatar_url?: string;
 }
@@ -171,6 +179,8 @@ export async function updateProfile(
         bio: formData.get("bio")?.toString() ?? "",
         phone: formData.get("phone")?.toString() ?? "",
         languages: formData.get("languages")?.toString() ?? "",
+        notification_email: formData.get("notification_email")?.toString() ?? "",
+        discord_webhook_url: formData.get("discord_webhook_url")?.toString() ?? "",
       };
 
       const parsed = youthProfileSchema.safeParse(rawData);
@@ -187,6 +197,8 @@ export async function updateProfile(
         bio,
         phone,
         languages: rawLanguages,
+        notification_email,
+        discord_webhook_url,
       } = parsed.data;
 
       const payload: YouthUpdatePayload = {
@@ -198,6 +210,8 @@ export async function updateProfile(
         bio: sanitizeOptionalString(bio),
         phone: sanitizeOptionalString(phone),
         languages: sanitizeLanguages(rawLanguages),
+        notification_email: sanitizeOptionalString(notification_email),
+        discord_webhook_url: sanitizeOptionalString(discord_webhook_url),
       };
 
       if (avatar_url) {
@@ -249,6 +263,8 @@ export async function updateProfile(
         social_tiktok: formData.get("social_tiktok")?.toString() ?? "",
         social_youtube: formData.get("social_youtube")?.toString() ?? "",
         social_linkedin: formData.get("social_linkedin")?.toString() ?? "",
+        notification_email: formData.get("notification_email")?.toString() ?? "",
+        discord_webhook_url: formData.get("discord_webhook_url")?.toString() ?? "",
       };
 
       const parsed = orgProfileSchema.safeParse(rawData);
@@ -268,6 +284,8 @@ export async function updateProfile(
         social_tiktok,
         social_youtube,
         social_linkedin,
+        notification_email,
+        discord_webhook_url,
       } = parsed.data;
 
       const payload: OrgUpdatePayload = {
@@ -282,6 +300,8 @@ export async function updateProfile(
         social_tiktok: sanitizeOptionalString(social_tiktok),
         social_youtube: sanitizeOptionalString(social_youtube),
         social_linkedin: sanitizeOptionalString(social_linkedin),
+        notification_email: sanitizeOptionalString(notification_email),
+        discord_webhook_url: sanitizeOptionalString(discord_webhook_url),
         verification_status: "pending",
       };
 

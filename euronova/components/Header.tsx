@@ -13,6 +13,8 @@ import {
   Menu, 
   X, 
   ShieldAlert,
+  ShieldCheck,
+  Headphones,
   Map as MapIcon,
   Users
 } from "lucide-react";
@@ -25,14 +27,17 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { calculateLevelFromXp } from "@/lib/gamification";
 import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/utils/supabase/client";
+import { type UserRole } from "@/lib/roles";
 
 export function Header({ 
   role, 
   isAdmin, 
+  staffRole: propStaffRole,
   orgId: propOrgId 
 }: { 
   role: "youth" | "org"; 
   isAdmin?: boolean; 
+  staffRole?: UserRole;
   orgId?: string | null; 
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -42,6 +47,7 @@ export function Header({
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [youthXp, setYouthXp] = useState<number>(0);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [staffRole, setStaffRole] = useState<UserRole>(propStaffRole || (isAdmin ? "admin" : "user"));
 
   // Detectar id de usuario, organización y avatar desde Supabase
   useEffect(() => {
@@ -66,10 +72,10 @@ export function Header({
             setAvatarUrl(data.avatar_url);
           }
         } else {
-          // Obtener XP real del voluntario y avatar para mostrar perfil reactivo
+          // Obtener XP real del voluntario, avatar y rol para mostrar panel correspondiente
           const { data: youth } = await supabase
             .from("users_youth")
-            .select("xp, avatar_url")
+            .select("xp, avatar_url, role")
             .eq("id", user.id)
             .maybeSingle();
           if (youth && typeof youth.xp === "number") {
@@ -77,6 +83,9 @@ export function Header({
           }
           if (youth?.avatar_url) {
             setAvatarUrl(youth.avatar_url);
+          }
+          if (youth?.role) {
+            setStaffRole(youth.role as UserRole);
           }
         }
       }
@@ -218,8 +227,32 @@ export function Header({
             </Link>
           )}
 
-          {/* Clean Elegant Icon Button: Admin Shield (Immediately to the left of Profile) */}
-          {isAdmin && (
+          {/* Moderator Panel Link */}
+          {staffRole === "moderator" && (
+            <Link
+              href={`/${locale}/dashboard/moderator-panel`}
+              title="Moderator Panel"
+              aria-label="Moderator Panel"
+              className="p-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:border-amber-400 transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(245,158,11,0.15)]"
+            >
+              <ShieldCheck className="w-4 h-4" />
+            </Link>
+          )}
+
+          {/* Support Panel Link */}
+          {staffRole === "support" && (
+            <Link
+              href={`/${locale}/dashboard/support-panel`}
+              title="Support Panel"
+              aria-label="Support Panel"
+              className="p-2 rounded-lg bg-plasma-cyan/10 hover:bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/30 hover:border-plasma-cyan transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(0,229,255,0.15)]"
+            >
+              <Headphones className="w-4 h-4" />
+            </Link>
+          )}
+
+          {/* Clean Elegant Icon Button: Admin Shield (For admin and root) */}
+          {(isAdmin || staffRole === "admin" || staffRole === "root") && (
             <Link
               href={`/${locale}/dashboard/admin`}
               title={t("adminPanel") || "Admin Panel"}
@@ -368,7 +401,29 @@ export function Header({
               </Link>
             )}
 
-            {isAdmin && (
+            {staffRole === "moderator" && (
+              <Link
+                href={`/${locale}/dashboard/moderator-panel`}
+                onClick={() => setIsOpen(false)}
+                className="text-xl sm:text-2xl font-bold tracking-tight text-amber-400 hover:scale-105 transition-all flex items-center gap-2.5"
+              >
+                <ShieldCheck className="w-5 h-5" />
+                <span>Moderator Panel</span>
+              </Link>
+            )}
+
+            {staffRole === "support" && (
+              <Link
+                href={`/${locale}/dashboard/support-panel`}
+                onClick={() => setIsOpen(false)}
+                className="text-xl sm:text-2xl font-bold tracking-tight text-plasma-cyan hover:scale-105 transition-all flex items-center gap-2.5"
+              >
+                <Headphones className="w-5 h-5" />
+                <span>Support Panel</span>
+              </Link>
+            )}
+
+            {(isAdmin || staffRole === "admin" || staffRole === "root") && (
               <Link
                 href={`/${locale}/dashboard/admin`}
                 onClick={() => setIsOpen(false)}

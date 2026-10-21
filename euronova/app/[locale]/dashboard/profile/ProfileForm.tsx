@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   User,
   Upload,
+  Bell,
 } from "lucide-react";
 import { CountrySelect } from "@/components/CountrySelect";
 import { COUNTRIES } from "@/lib/constants/countries";
@@ -273,6 +274,8 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
     const orgYoutube = getString(currentData, "social_youtube");
     const orgLinkedin = getString(currentData, "social_linkedin");
     const orgVerificationStatus = getString(currentData, "verification_status");
+    const notificationEmail = getString(currentData, "notification_email");
+    const discordWebhookUrl = getString(currentData, "discord_webhook_url");
 
     return (
       <div className={`space-y-6 transition-all duration-700 ${isDisintegrating ? "animate-out fade-out zoom-out filter blur-sm scale-95 pointer-events-none" : ""}`}>
@@ -537,6 +540,34 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
           )}
         </div>
 
+        {/* Notification Preferences (View Mode) */}
+        <div className="bg-void-deep border border-void-border rounded-xl p-6 space-y-4">
+          <div className="flex items-center gap-2 border-b border-void-border pb-3">
+            <Bell className="w-5 h-5 text-plasma-cyan" />
+            <h3 className="text-lg font-bold text-white">
+              {t("notificationPreferences") || "Notification Preferences"}
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wider">
+                {t("notificationEmail") || "Notification Email"}
+              </p>
+              <p className="font-semibold text-white mt-1">
+                {notificationEmail || "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wider">
+                {t("discordWebhook") || "Discord Webhook URL"}
+              </p>
+              <p className="font-mono text-xs text-gray-300 mt-1 truncate">
+                {discordWebhookUrl || "—"}
+              </p>
+            </div>
+          </div>
+        </div>
+
         {state?.success && (
           <div
             role="status"
@@ -582,6 +613,8 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
   const defaultOrgTiktok = getString(currentData, "social_tiktok");
   const defaultOrgYoutube = getString(currentData, "social_youtube");
   const defaultOrgLinkedin = getString(currentData, "social_linkedin");
+  const defaultNotificationEmail = getString(currentData, "notification_email");
+  const defaultDiscordWebhook = getString(currentData, "discord_webhook_url");
 
   return (
     <form
@@ -873,6 +906,45 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
           </div>
         </>
       )}
+
+      {/* Notification Preferences (Edit Mode) */}
+      <div className="bg-void-deep border border-void-border rounded-xl p-6 space-y-4">
+        <div className="flex items-center gap-2 border-b border-void-border pb-3">
+          <Bell className="w-5 h-5 text-plasma-cyan" />
+          <h3 className="text-base font-bold text-white">
+            {t("notificationPreferences") || "Notification Preferences"}
+          </h3>
+        </div>
+        <p className="text-xs text-gray-400">
+          {t("notificationPreferencesHelp") || "Configure your external notification channels for instant alerts on ticket replies and updates."}
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">
+              {t("notificationEmail") || "Notification Email"}
+            </label>
+            <input
+              type="email"
+              name="notification_email"
+              defaultValue={defaultNotificationEmail}
+              placeholder="alerts@example.com"
+              className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all text-sm"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">
+              {t("discordWebhook") || "Discord Webhook URL"}
+            </label>
+            <input
+              type="url"
+              name="discord_webhook_url"
+              defaultValue={defaultDiscordWebhook}
+              placeholder="https://discord.com/api/webhooks/..."
+              className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all text-sm font-mono"
+            />
+          </div>
+        </div>
+      </div>
 
       <div className="pt-4 border-t border-void-border flex gap-4">
         <button

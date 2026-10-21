@@ -15,7 +15,12 @@ export async function createClient() {
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
+              cookieStore.set(name, value, {
+                ...options,
+                maxAge: options?.maxAge ?? 60 * 60 * 24 * 30, // 30-day persistent session
+                path: options?.path ?? '/',
+                sameSite: options?.sameSite ?? 'lax',
+              })
             )
           } catch {
             // Se ignora si se llama desde un Server Component.
