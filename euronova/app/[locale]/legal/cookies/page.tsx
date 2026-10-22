@@ -3,7 +3,7 @@
 import { use } from "react";
 import { Link } from "@/i18n/routing";
 import { Footer } from "@/components/Footer";
-import { ArrowLeft, Cookie, ShieldCheck, Lock, Sliders, CheckCircle2, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Cookie, ShieldCheck, Lock, Sliders, CheckCircle2 } from "lucide-react";
 
 interface CookiesPageProps {
   params: Promise<{ locale: string }>;
@@ -135,7 +135,7 @@ export default function CookiesPolicyPage(props: CookiesPageProps) {
                   <h2 className="text-plasma-cyan">3. Telemetría de Rendimiento Opcional (Bloqueo Activo)</h2>
                 </div>
                 <p>
-                  Cualquier script o cookie opcional de analítica de rendimiento se encuentra estrictamente <strong>bloqueado por defecto</strong> hasta que el usuario decida voluntariamente pulsar en <em>"Aceptar Analítica y Telemetría"</em>.
+                  Cualquier script o cookie opcional de analítica de rendimiento se encuentra estrictamente <strong>bloqueado por defecto</strong> hasta que el usuario decida voluntariamente pulsar en <em>&quot;Aceptar Analítica y Telemetría&quot;</em>.
                 </p>
                 <div className="flex items-center gap-3 p-4 rounded-xl bg-void-deep border border-void-border text-xs text-gray-300">
                   <CheckCircle2 className="w-5 h-5 text-rup-emerald shrink-0" />
@@ -152,7 +152,7 @@ export default function CookiesPolicyPage(props: CookiesPageProps) {
                   <h2 className="text-plasma-cyan">4. Cómo Revocar tu Consentimiento</h2>
                 </div>
                 <p>
-                  Conforme al Artículo 7.3 del RGPD, retirar el consentimiento debe ser tan fácil como otorgarlo. Puedes cambiar tu elección en cualquier momento haciendo clic en el botón inferior o en el enlace permanente <strong>"Preferencias de Cookies"</strong> ubicado en el pie de página de todo el sitio web.
+                  Conforme al Artículo 7.3 del RGPD, retirar el consentimiento debe ser tan fácil como otorgarlo. Puedes cambiar tu elección en cualquier momento haciendo clic en el botón inferior o en el enlace permanente <strong>&quot;Preferencias de Cookies&quot;</strong> ubicado en el pie de página de todo el sitio web.
                 </p>
                 <div className="pt-2">
                   <button
@@ -230,7 +230,7 @@ export default function CookiesPolicyPage(props: CookiesPageProps) {
                   <h2 className="text-plasma-cyan">3. Optional Performance Telemetry (Fail-Closed Active Blocker)</h2>
                 </div>
                 <p>
-                  Any non-essential analytics or performance scripts remain strictly blocked until you explicitly grant consent by choosing <em>"Accept Analytics & Telemetry"</em>.
+                  Any non-essential analytics or performance scripts remain strictly blocked until you explicitly grant consent by choosing <em>&quot;Accept Analytics &amp; Telemetry&quot;</em>.
                 </p>
                 <div className="flex items-center gap-3 p-4 rounded-xl bg-void-deep border border-void-border text-xs text-gray-300">
                   <CheckCircle2 className="w-5 h-5 text-rup-emerald shrink-0" />
@@ -247,7 +247,7 @@ export default function CookiesPolicyPage(props: CookiesPageProps) {
                   <h2 className="text-plasma-cyan">4. How to Revoke Consent (GDPR Art. 7.3)</h2>
                 </div>
                 <p>
-                  Withdrawing consent is as simple as granting it. You can adjust your preference at any moment using the button below or via the permanent <strong>"Privacy & Cookie Preferences"</strong> link located in the global footer.
+                  Withdrawing consent is as simple as granting it. You can adjust your preference at any moment using the button below or via the permanent <strong>&quot;Privacy &amp; Cookie Preferences&quot;</strong> link located in the global footer.
                 </p>
                 <div className="pt-2">
                   <button
