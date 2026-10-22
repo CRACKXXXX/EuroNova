@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
@@ -6,11 +9,14 @@ import {
   Scale, 
   FileText, 
   LifeBuoy,
-  Heart
+  Heart,
+  Cookie
 } from "lucide-react";
+import { CookieConsentGatekeeper } from "./CookieConsentGatekeeper";
 
 export function Footer() {
   const t = useTranslations("Footer");
+  const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
 
   return (
     <footer className="mt-20 w-full bg-void-deep/95 border-t border-void-border">
@@ -59,12 +65,36 @@ export function Footer() {
               </li>
               <li>
                 <Link
+                  href="/legal/cookies"
+                  className="flex items-center justify-center sm:justify-start gap-2 transition-colors hover:text-plasma-cyan group"
+                >
+                  <Cookie className="w-3.5 h-3.5 text-plasma-cyan/70 group-hover:text-plasma-cyan transition-colors" />
+                  <span>{t("cookies")}</span>
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/legal/notice"
                   className="flex items-center justify-center sm:justify-start gap-2 transition-colors hover:text-plasma-cyan group"
                 >
                   <FileText className="w-3.5 h-3.5 text-rup-emerald/70 group-hover:text-rup-emerald transition-colors" />
                   <span>{t("notice")}</span>
                 </Link>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCookieModalOpen(true);
+                    if (typeof window !== "undefined") {
+                      window.dispatchEvent(new CustomEvent("euronova:open-cookie-preferences"));
+                    }
+                  }}
+                  className="flex items-center justify-center sm:justify-start gap-2 transition-colors hover:text-plasma-cyan group cursor-pointer text-xs sm:text-sm text-gray-400"
+                >
+                  <Cookie className="w-3.5 h-3.5 text-plasma-cyan/70 group-hover:text-plasma-cyan transition-colors" />
+                  <span>{t("cookiePreferences")}</span>
+                </button>
               </li>
             </ul>
           </div>
@@ -105,6 +135,12 @@ export function Footer() {
           </p>
         </div>
       </div>
+
+      {/* Active Cookie & Privacy Consent Gatekeeper Pop-up Modal */}
+      <CookieConsentGatekeeper
+        isOpenOverride={isCookieModalOpen ? true : undefined}
+        onCloseOverride={() => setIsCookieModalOpen(false)}
+      />
     </footer>
   );
 }

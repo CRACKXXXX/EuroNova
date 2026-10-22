@@ -86,7 +86,31 @@ function sanitizeLanguages(value: string | null | undefined): string[] | null {
   return items.length > 0 ? items : null;
 }
 
-export async function deleteMyAccount(): Promise<{ error?: string }> {
+import { createClient as createAdminClient, SupabaseClient } from "@supabase/supabase-js";
+
+function getPrivilegedAdminClient(): SupabaseClient {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error("Privileged service configuration is missing.");
+  }
+  return createAdminClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+export interface DataExportResult {
+  success?: boolean;
+  error?: string;
+  filename?: string;
+  data?: string;
+}
+
+/**
+ * GDPR Article 20 - Right to Data Portability
+ * Compiles a structured, machine-readable JSON archive of all personal records.
+ */
+export async function exportMyData(): Promise<DataExportResult> {
   try {
     const supabase = await createClient();
     const {
@@ -95,23 +119,202 @@ export async function deleteMyAccount(): Promise<{ error?: string }> {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return { error: "No estás autenticado." };
+      return { error: "Authentication required to export personal data." };
     }
 
-    const { error } = await supabase.rpc("delete_user");
-    if (error) {
-      return { error: sanitizeErrorMessage(error) };
+    const userId = user.id;
+
+    // Concurrently fetch all personal data belonging to the authenticated user
+    const [
+      youthRes,
+      orgRes,
+      interactionsRes,
+      notificationsRes,
+      threadsRes,
+      postsRes,
+      messagesRes,
+      ticketsRes,
+      applicationsRes,
+      reviewsRes,
+    ] = await Promise.all([
+      supabase.from("users_youth").select("*").eq("id", userId).maybeSingle(),
+      supabase.from("users_org").select("*").eq("id", userId).maybeSingle(),
+      supabase.from("user_project_interactions").select("*").eq("user_id", userId),
+      supabase.from("notifications").select("*").eq("user_id", userId),
+      supabase.from("global_forum_threads").select("id, category_id, title, content, views, reply_count, created_at").eq("user_id", userId),
+      supabase.from("global_forum_posts").select("id, thread_id, content, created_at").eq("user_id", userId),
+      supabase.from("project_forum_messages").select("id, project_id, content, created_at").eq("user_id", userId),
+      supabase.from("support_tickets").select("id, subject, reason, content, status, created_at, resolved_at").eq("user_id", userId),
+      supabase.from("applications").select("*").eq("youth_id", userId),
+      supabase.from("reviews").select("*").eq("youth_id", userId),
+    ]);
+
+    const exportArchive = {
+      metadata: {
+        export_timestamp_utc: new Date().toISOString(),
+        gdpr_compliance_article: "Article 20 — Right to Data Portability (EU GDPR 2016/679)",
+        platform: "EuroNova European Youth Mobility Gateway",
+        user_id: userId,
+        format_version: "2026-v1",
+      },
+      account: {
+        id: user.id,
+        email: user.email,
+        created_at: user.created_at,
+        last_sign_in_at: user.last_sign_in_at,
+        metadata: user.user_metadata || {},
+      },
+      profile: {
+        youth: youthRes.data || null,
+        organization: orgRes.data || null,
+      },
+      activity: {
+        project_interactions: interactionsRes.data || [],
+        notifications: notificationsRes.data || [],
+        applications: applicationsRes.data || [],
+        reviews: reviewsRes.data || [],
+        support_tickets: ticketsRes.data || [],
+      },
+      forum_contributions: {
+        global_threads: threadsRes.data || [],
+        global_posts: postsRes.data || [],
+        project_messages: messagesRes.data || [],
+      },
+    };
+
+    const filename = `euronova-data-export-${userId.slice(0, 8)}-${Date.now()}.json`;
+    const jsonString = JSON.stringify(exportArchive, null, 2);
+
+    return {
+      success: true,
+      filename,
+      data: jsonString,
+    };
+  } catch (err: unknown) {
+    console.error("exportMyData failed:", err);
+    return {
+      error: sanitizeErrorMessage(err),
+    };
+  }
+}
+
+/**
+ * GDPR Article 17 - Atomic Right to Erasure ("Delete My Account")
+ * Anonymizes community discussions to Ghost User, purges all PII, and wipes auth credentials.
+ */
+export async function deleteMyAccount(): Promise<{ success?: boolean; error?: string }> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return { error: "Authentication required to perform account erasure." };
     }
 
+    const userId = user.id;
+
+    // Prevent deletion of root master administrator
+    if (user.email === "euronovaofficial@gmail.com") {
+      return { error: "Security Exception: The Root Master Administrator account cannot be deleted." };
+    }
+
+    const adminDb = getPrivilegedAdminClient();
+
+    // 1. Resolve or verify Ghost User for forum preservation
+    let ghostId = "554ec183-ced5-4e1c-9aee-a94ca1d51ec4";
+    const { data: ghostCheck } = await adminDb
+      .from("users_youth")
+      .select("id")
+      .eq("id", ghostId)
+      .maybeSingle();
+
+    if (!ghostCheck) {
+      const { data: ghostByEmail } = await adminDb
+        .from("users_youth")
+        .select("id")
+        .eq("email", "archive-anonymized@euronova.internal")
+        .maybeSingle();
+
+      if (ghostByEmail?.id) {
+        ghostId = ghostByEmail.id;
+      }
+    }
+
+    // 2. Anonymize all authored forum discussions (Art. 17 Forum Integrity Preservation)
+    await Promise.all([
+      adminDb
+        .from("global_forum_threads")
+        .update({
+          user_id: ghostId,
+          author_name: "Deleted User",
+          author_avatar: null,
+        })
+        .eq("user_id", userId),
+
+      adminDb
+        .from("global_forum_posts")
+        .update({
+          user_id: ghostId,
+          author_name: "Deleted User",
+          author_avatar: null,
+        })
+        .eq("user_id", userId),
+
+      adminDb
+        .from("project_forum_messages")
+        .update({
+          user_id: ghostId,
+          author_name: "Deleted User",
+          avatar_url: null,
+        })
+        .eq("user_id", userId),
+    ]);
+
+    // 3. Purge direct personal activities & interactions
+    await Promise.all([
+      adminDb.from("notifications").delete().eq("user_id", userId),
+      adminDb.from("user_project_interactions").delete().eq("user_id", userId),
+      adminDb.from("applications").delete().eq("youth_id", userId),
+      adminDb.from("reviews").delete().eq("youth_id", userId),
+    ]);
+
+    // 4. Scrub support tickets PII
+    await adminDb
+      .from("support_tickets")
+      .update({
+        email: "deleted-user@anonymized.internal",
+        phone: null,
+        content: "[Inquiry content purged pursuant to GDPR Art. 17 right to erasure]",
+      })
+      .eq("user_id", userId);
+
+    // 5. Delete public relational profiles
+    await Promise.all([
+      adminDb.from("users_youth").delete().eq("id", userId),
+      adminDb.from("users_org").delete().eq("id", userId),
+    ]);
+
+    // 6. Delete underlying auth user to permanently wipe credentials
+    const { error: authError } = await adminDb.auth.admin.deleteUser(userId);
+    if (authError) {
+      console.error("auth.admin.deleteUser failed:", authError);
+      return { error: sanitizeErrorMessage(authError) };
+    }
+
+    // 7. Clear local session cookies
     await supabase.auth.signOut();
+
+    revalidatePath("/", "layout");
+    return { success: true };
   } catch (error: unknown) {
-    console.error("Failed to delete account:", error);
+    console.error("Failed to execute atomic account erasure:", error);
     return {
       error: sanitizeErrorMessage(error),
     };
   }
-
-  redirect("/login");
 }
 
 export async function updateProfile(

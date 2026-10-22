@@ -31,40 +31,103 @@ export async function login(prevState: unknown, formData: FormData) {
 }
 
 export async function signup(prevState: unknown, formData: FormData) {
-  const email = formData.get("email") as string;
+  const email = (formData.get("email") as string)?.trim();
   const password = formData.get("password") as string;
-  const role = formData.get("role") as string;
+  const role = (formData.get("role") as string)?.trim();
+  const fullName = (formData.get("fullName") as string)?.trim();
+  const birthDate = (formData.get("birth_date") as string)?.trim();
+  const orgAgeDeclaration = formData.get("org_age_declaration") === "on";
+  const acceptedTos = formData.get("accepted_tos") === "on";
 
   if (!email || !password || !role) {
-    return { error: "Faltan campos obligatorios para el registro." };
+    return { error: "Missing required registration credentials." };
   }
+
+  // Auditable Consent Traceability (Art. 7 GDPR)
+  if (!acceptedTos) {
+    return { error: "You must accept the Terms of Service and Privacy Policy to create an account." };
+  }
+
+  // Strict Age Verification Gate (Art. 8 GDPR & Erasmus+ Rules)
+  if (role === "youth") {
+    if (!birthDate) {
+      return { error: "Please enter your date of birth." };
+    }
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) {
+      return { error: "Invalid date of birth format. Please use YYYY-MM-DD." };
+    }
+
+    const [yearStr, monthStr, dayStr] = birthDate.split("-");
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10) - 1;
+    const day = parseInt(dayStr, 10);
+    const birthDateObj = new Date(Date.UTC(year, month, day));
+    const now = new Date();
+
+    if (isNaN(birthDateObj.getTime()) || birthDateObj > now) {
+      return { error: "Date of birth cannot be in the future." };
+    }
+
+    let age = now.getUTCFullYear() - birthDateObj.getUTCFullYear();
+    const m = now.getUTCMonth() - birthDateObj.getUTCMonth();
+    if (m < 0 || (m === 0 && now.getUTCDate() < birthDateObj.getUTCDate())) {
+      age--;
+    }
+
+    if (age < 13) {
+      return {
+        error: "You must be at least 13 years old to register on EuroNova (GDPR Art. 8 & Erasmus+ compliance).",
+      };
+    }
+  } else if (role === "org") {
+    if (!orgAgeDeclaration) {
+      return {
+        error: "You must confirm that you are an authorized representative of legal age (18+).",
+      };
+    }
+  }
+
+  const acceptedTosAt = new Date().toISOString();
 
   try {
     const supabase = await createClient();
 
-    // Paso 1: Autenticación base
+    // Step 1: Base Authentication and Consent Audit Metadata
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          role: role,
-        }
-      }
+          role,
+          full_name: fullName || null,
+          birth_date: role === "youth" ? birthDate : null,
+          accepted_tos_at: acceptedTosAt,
+          consent_version: "2026-v1",
+        },
+      },
     });
 
     if (error) {
       return { error: error.message };
     }
 
+    // Step 2: Relational profile creation with defensive attributes
     if (data.user) {
       if (role === "youth") {
-        const { error: profileError } = await supabase.from("users_youth").upsert({ id: data.user.id });
+        const { error: profileError } = await supabase.from("users_youth").upsert({
+          id: data.user.id,
+          full_name: fullName || null,
+          birth_date: birthDate,
+        });
         if (profileError) {
           console.error("Error creating youth profile:", profileError);
         }
       } else if (role === "org") {
-        const { error: profileError } = await supabase.from("users_org").upsert({ id: data.user.id });
+        const { error: profileError } = await supabase.from("users_org").upsert({
+          id: data.user.id,
+          org_name: fullName || null,
+        });
         if (profileError) {
           console.error("Error creating org profile:", profileError);
         }

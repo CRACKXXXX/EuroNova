@@ -284,11 +284,19 @@
   },
   "Footer": {
     "rights": "EuroNova. Todos los derechos reservados.",
-    "support": "Soporte / Crear Ticket",
+    "tagline": "Puerta de acceso a la movilidad juvenil europea, oportunidades de aprendizaje y solidaridad internacional en la UE.",
+    "legalTitle": "Legal",
+    "supportTitle": "Soporte",
     "privacy": "Política de Privacidad",
     "terms": "Términos y Condiciones",
     "notice": "Aviso Legal",
-    "translationTip": "💡 Consejo: Puedes traducir toda esta plataforma a tu idioma usando la función 'Traducir' de tu navegador."
+    "cookies": "Política de Cookies",
+    "cookiePreferences": "Preferencias de Cookies y Privacidad",
+    "support": "Ayuda y Soporte",
+    "supportEuroNova": "Apoyar a EuroNova",
+    "copyright": "Proyecto EuroNova. Todos los derechos reservados.",
+    "fiscalShieldTitle": "Aviso de Inmunidad Fiscal y Legal P2P (Apoyo Voluntario de Infraestructura)",
+    "fiscalShieldDesc": "EuroNova es una iniciativa independiente y sin fines comerciales de acceso libre. Las contribuciones financieras realizadas a través de Revolut, PayPal o transferencias bancarias SEPA son donaciones personales estrictamente voluntarias entre particulares (P2P) destinadas exclusivamente a mantener la infraestructura de servidores y copias de seguridad. No constituyen una compraventa, contrato vinculante ni patrocinio deducible de impuestos. Los donantes renuncian expresamente a derechos de reembolso comercial bajo normativas de consumo de la UE."
   },
   "DashboardContent": {
     "transmissionsReceived": "Misiones Internacionales",
@@ -403,5 +411,16 @@
     "cancelBtn": "Cancel",
     "editSuccess": "¡Mensaje actualizado correctamente!",
     "deleteSuccess": "Mensaje eliminado del foro."
+  },
+  "CookieGatekeeper": {
+    "title": "Gatekeeper Activo de Privacidad y Cookies",
+    "badge": "Directiva ePrivacy y RGPD Art. 7.3",
+    "description": "EuroNova opera con cero publicidad comercial. Empleamos cookies técnicas de sesión estrictamente necesarias para autenticar tu expediente. La telemetría opcional permanece bloqueada hasta que otorgues consentimiento explícito.",
+    "acceptBtn": "Aceptar Analítica y Telemetría",
+    "rejectBtn": "Rechazar Opcionales (Solo Esenciales)",
+    "cookieNoticeLink": "Ver Auditoría Técnica de Cookies",
+    "statusGranted": "Analítica Opcional: Activa",
+    "statusDenied": "Analítica Opcional: Bloqueada",
+    "preferencesUpdated": "Preferencias de privacidad actualizadas con éxito."
   }
 }
