@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useFormatter } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Building,
@@ -287,6 +287,8 @@ export function AdminDashboardClient({
   pageSize = 50,
 }: AdminDashboardClientProps) {
   const t = useTranslations("AdminPanel");
+  const tOrgs = useTranslations("Organizations");
+  const format = useFormatter();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -661,7 +663,7 @@ export function AdminDashboardClient({
             href={website.startsWith("http") ? website : `https://${website}`}
             target="_blank"
             rel="noopener noreferrer"
-            title="Website"
+            title={tOrgs("websiteTitle")}
             className="w-7 h-7 rounded-md bg-void-deep border border-void-border flex items-center justify-center text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 transition-colors"
           >
             <Globe className="w-3.5 h-3.5" />
@@ -672,7 +674,7 @@ export function AdminDashboardClient({
             href={instagram.startsWith("http") ? instagram : `https://${instagram}`}
             target="_blank"
             rel="noopener noreferrer"
-            title="Instagram"
+            title={tOrgs("instagramTitle")}
             className="w-7 h-7 rounded-md bg-void-deep border border-void-border flex items-center justify-center text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 transition-colors"
           >
             <Camera className="w-3.5 h-3.5" />
@@ -683,7 +685,7 @@ export function AdminDashboardClient({
             href={tiktok.startsWith("http") ? tiktok : `https://${tiktok}`}
             target="_blank"
             rel="noopener noreferrer"
-            title="TikTok"
+            title={tOrgs("tiktokTitle")}
             className="w-7 h-7 rounded-md bg-void-deep border border-void-border flex items-center justify-center text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 transition-colors"
           >
             <Music className="w-3.5 h-3.5" />
@@ -694,7 +696,7 @@ export function AdminDashboardClient({
             href={youtube.startsWith("http") ? youtube : `https://${youtube}`}
             target="_blank"
             rel="noopener noreferrer"
-            title="YouTube"
+            title={tOrgs("youtubeTitle")}
             className="w-7 h-7 rounded-md bg-void-deep border border-void-border flex items-center justify-center text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 transition-colors"
           >
             <PlaySquare className="w-3.5 h-3.5" />
@@ -705,7 +707,7 @@ export function AdminDashboardClient({
             href={linkedin.startsWith("http") ? linkedin : `https://${linkedin}`}
             target="_blank"
             rel="noopener noreferrer"
-            title="LinkedIn"
+            title={tOrgs("linkedinTitle")}
             className="w-7 h-7 rounded-md bg-void-deep border border-void-border flex items-center justify-center text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 transition-colors"
           >
             <Briefcase className="w-3.5 h-3.5" />
@@ -1201,7 +1203,7 @@ export function AdminDashboardClient({
                   type="text"
                   value={userSearchQuery}
                   onChange={(e) => setUserSearchQuery(e.target.value)}
-                  placeholder="Search by name, email, or user ID..."
+                  placeholder={t("searchUsersPlaceholder")}
                   className="w-full bg-void-deep/90 border border-void-border rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-plasma-cyan transition-colors"
                 />
                 {userSearchQuery && (
@@ -1227,7 +1229,7 @@ export function AdminDashboardClient({
                     <div className="w-14 h-14 rounded-full border-2 border-plasma-cyan/60 overflow-hidden flex items-center justify-center bg-void-deep shrink-0 shadow-[0_0_15px_rgba(0,229,255,0.2)]">
                       {user.avatar_url ? (
                         /* eslint-disable-next-line @next/next/no-img-element */
-                        <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                        <img src={user.avatar_url} alt={t("avatarAlt")} className="w-full h-full object-cover" />
                       ) : (
                         <User className="w-7 h-7 text-plasma-cyan/60" />
                       )}
@@ -1904,7 +1906,7 @@ export function AdminDashboardClient({
                               {report.reason}
                             </span>
                             <span className="text-xs text-gray-500 font-mono">
-                              {new Date(report.created_at).toLocaleDateString()} {new Date(report.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              {format.dateTime(new Date(report.created_at), { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
 
@@ -2345,11 +2347,11 @@ export function AdminDashboardClient({
                               {report.reason}
                             </span>
                             <span className="text-[11px] text-gray-500 font-mono">
-                              Filed: {new Date(report.created_at).toLocaleDateString()}
+                              Filed: {format.dateTime(new Date(report.created_at), { dateStyle: 'medium' })}
                             </span>
                             {report.resolved_at && (
                               <span className="text-[11px] text-rup-emerald/80 font-mono">
-                                • Resolved: {new Date(report.resolved_at).toLocaleDateString()} {new Date(report.resolved_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                • Resolved: {format.dateTime(new Date(report.resolved_at), { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                               </span>
                             )}
                             {report.resolution_action && (
@@ -2544,7 +2546,7 @@ export function AdminDashboardClient({
                   type="text"
                   value={staffSearchQuery}
                   onChange={(e) => setStaffSearchQuery(e.target.value)}
-                  placeholder="Search by email, user ID, or full name..."
+                  placeholder={t("searchStaffPlaceholder")}
                   className="w-full bg-void-deep border border-void-border rounded-xl pl-9 pr-9 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-plasma-cyan font-mono transition-colors"
                 />
                 {staffSearchQuery && (
@@ -2699,7 +2701,7 @@ export function AdminDashboardClient({
                               /* eslint-disable-next-line @next/next/no-img-element */
                               <img
                                 src={u.avatar_url}
-                                alt="Avatar"
+                                alt={t("avatarAlt")}
                                 className="w-full h-full object-cover"
                               />
                             ) : (
@@ -2902,7 +2904,7 @@ export function AdminDashboardClient({
                           </span>
                         </div>
                         <span className="text-xs text-gray-500 font-mono">
-                          {new Date(esc.created_at).toLocaleString()}
+                          {format.dateTime(new Date(esc.created_at), { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
 
@@ -3083,7 +3085,7 @@ export function AdminDashboardClient({
                           })()}
                         </div>
                         <span className="text-xs text-gray-500 font-mono">
-                          {new Date(tk.created_at).toLocaleString()}
+                          {format.dateTime(new Date(tk.created_at), { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
 
@@ -3195,7 +3197,7 @@ export function AdminDashboardClient({
                   value={editForm.title}
                   onChange={(e) => setEditForm((prev) => ({ ...prev, title: e.target.value }))}
                   className="w-full px-4 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-plasma-cyan focus:outline-none focus:ring-1 focus:ring-plasma-cyan"
-                  placeholder="Enter full project title..."
+                  placeholder={t("projectTitlePlaceholder")}
                 />
               </div>
 
@@ -3211,7 +3213,7 @@ export function AdminDashboardClient({
                     value={editForm.dest_country || ""}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, dest_country: e.target.value.toUpperCase() }))}
                     className="w-full px-4 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm uppercase font-mono focus:border-plasma-cyan focus:outline-none"
-                    placeholder="e.g. ES, DE, IT"
+                    placeholder={t("countriesExamplePlaceholder")}
                   />
                 </div>
 
@@ -3241,7 +3243,7 @@ export function AdminDashboardClient({
                     value={editForm.duration_days ?? ""}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, duration_days: e.target.value ? parseInt(e.target.value) : null }))}
                     className="w-full px-4 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-plasma-cyan focus:outline-none"
-                    placeholder="e.g. 14"
+                    placeholder={t("durationDaysPlaceholder")}
                   />
                 </div>
               </div>
@@ -3270,7 +3272,7 @@ export function AdminDashboardClient({
                   value={editForm.description || ""}
                   onChange={(e) => setEditForm((prev) => ({ ...prev, description: e.target.value }))}
                   className="w-full px-4 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-plasma-cyan focus:outline-none resize-y"
-                  placeholder="Detailed description of the Erasmus+ mission..."
+                  placeholder={t("projectDescPlaceholder")}
                 />
               </div>
 
@@ -3375,7 +3377,7 @@ export function AdminDashboardClient({
                   value={notifyTitle}
                   onChange={(e) => setNotifyTitle(e.target.value)}
                   disabled={isPending}
-                  placeholder="e.g., Action Required: Update Profile Details or Warning Notice"
+                  placeholder={t("notificationTitlePlaceholder")}
                   className="w-full px-4 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-plasma-cyan focus:outline-none placeholder-gray-500"
                 />
               </div>
@@ -3389,7 +3391,7 @@ export function AdminDashboardClient({
                   value={notifyMessage}
                   onChange={(e) => setNotifyMessage(e.target.value)}
                   disabled={isPending}
-                  placeholder="Enter official transmission details to be received by the recipient in their notifications..."
+                  placeholder={t("notificationMsgPlaceholder")}
                   className="w-full px-4 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-plasma-cyan focus:outline-none placeholder-gray-500 resize-y"
                 />
               </div>
@@ -3533,7 +3535,7 @@ export function AdminDashboardClient({
                   value={escalateReason}
                   onChange={(e) => setEscalateReason(e.target.value)}
                   disabled={isPending}
-                  placeholder="Detail why administrative intervention is required and summarize evidence..."
+                  placeholder={t("escalateReasonPlaceholder")}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-amber-400 focus:outline-none placeholder-gray-500 resize-y"
                 />
               </div>
@@ -3621,7 +3623,7 @@ export function AdminDashboardClient({
                   value={resolveNotes}
                   onChange={(e) => setResolveNotes(e.target.value)}
                   disabled={isPending}
-                  placeholder="Notes explaining decision to the staff member who filed..."
+                  placeholder={t("resolveNotesPlaceholder")}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-plasma-cyan focus:outline-none placeholder-gray-500 resize-y"
                 />
               </div>
@@ -3728,7 +3730,7 @@ export function AdminDashboardClient({
                   value={ticketReplyMessage}
                   onChange={(e) => setTicketReplyMessage(e.target.value)}
                   disabled={isPending}
-                  placeholder="Enter response message that will be delivered directly to the user's notification tray..."
+                  placeholder={t("ticketReplyPlaceholder")}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-plasma-cyan focus:outline-none placeholder-gray-500 resize-y"
                 />
               </div>

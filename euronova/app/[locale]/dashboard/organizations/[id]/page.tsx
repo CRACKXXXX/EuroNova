@@ -2,7 +2,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getFormatter } from "next-intl/server";
 import { 
   Building, 
   MapPin, 
@@ -44,6 +44,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
   const supabase = await createClient();
   const t = await getTranslations("OrgReviews");
   const tOrg = await getTranslations("Organizations");
+  const format = await getFormatter();
 
   // Paginación independiente para reseñas y proyectos (50 elementos por página)
   const REVIEWS_PER_PAGE = 50;
@@ -436,7 +437,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
               <span>{t("title")}</span>
             </h2>
             <span className="text-xs font-semibold text-gray-400">
-              {totalReviews} {t("totalReviews")}
+              {t("totalReviewsCount", { count: totalReviews })}
             </span>
           </div>
 
@@ -448,7 +449,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                   : rev.users_youth || {};
                 const authorName = youth.full_name || "Verified Participant";
                 const authorCountry = youth.country_code ? COUNTRIES.find((c) => c.code === youth.country_code) : null;
-                const formattedDate = new Date(rev.created_at).toLocaleDateString(undefined, {
+                const formattedDate = format.dateTime(new Date(rev.created_at), {
                   year: "numeric",
                   month: "short",
                   day: "numeric",

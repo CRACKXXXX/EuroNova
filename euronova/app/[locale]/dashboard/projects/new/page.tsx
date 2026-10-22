@@ -136,7 +136,7 @@ export default function NewProjectPage() {
           <div className="flex flex-col items-center justify-center w-full">
             <label htmlFor="cover_image" className="flex flex-col items-center justify-center w-full h-48 border-2 border-void-border border-dashed rounded-lg cursor-pointer bg-void-deep hover:bg-void-surface hover:border-plasma-cyan transition-all overflow-hidden relative">
               {previewImage ? (
-                <Image src={previewImage} alt="Preview" fill className="object-cover opacity-60" />
+                <Image src={previewImage} alt="Preview" fill sizes="(max-width: 768px) 100vw, 800px" className="object-cover opacity-60" />
               ) : (
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   <UploadCloud className="w-10 h-10 text-gray-400 mb-3" />

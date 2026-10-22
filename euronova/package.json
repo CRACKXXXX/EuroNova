@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/validate-i18n.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "validate:i18n": "node scripts/validate-i18n.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

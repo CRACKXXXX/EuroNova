@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import Image from "next/image";
-import { Link } from "@/i18n/routing";
+import type { Metadata } from "next";
+import { Link, routing } from "@/i18n/routing";
 import { getTranslations } from "next-intl/server";
 import { PublicHeader } from "@/components/PublicHeader";
 import { Footer } from "@/components/Footer";
@@ -29,6 +30,53 @@ import {
 
 interface PageProps {
   params: Promise<{ locale: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Landing" });
+
+  const languageAlternates: Record<string, string> = {};
+  for (const l of routing.locales) {
+    languageAlternates[l] = `/${l}`;
+  }
+  languageAlternates["x-default"] = `/${routing.defaultLocale}`;
+
+  const title = "EuroNova — European Mobility Gateway";
+  const description = t("subtitle");
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `/${locale}`,
+      languages: languageAlternates,
+    },
+    openGraph: {
+      title,
+      description,
+      url: `/${locale}`,
+      siteName: "EuroNova",
+      locale,
+      images: [
+        {
+          url: "/logo-big.png",
+          width: 1200,
+          height: 630,
+          alt: "EuroNova — European Youth Mobility Gateway",
+        },
+      ],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["/logo-big.png"],
+    },
+  };
 }
 
 export default async function Home({ params }: PageProps) {
@@ -98,10 +146,11 @@ export default async function Home({ params }: PageProps) {
             <div className="absolute -inset-6 bg-gradient-to-r from-plasma-cyan/30 via-hyper-violet/30 to-plasma-cyan/30 rounded-3xl blur-2xl opacity-60 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
             <Image
               src="/logo-big.png"
-              alt="EuroNova Logo"
+              alt={t("logoAlt")}
               width={420}
               height={110}
               priority
+              sizes="(max-width: 640px) 280px, 420px"
               style={{ width: "auto", height: "auto" }}
               className="relative w-auto h-auto max-w-[280px] sm:max-w-[420px] drop-shadow-[0_0_40px_rgba(0,229,255,0.35)]"
             />
@@ -149,7 +198,7 @@ export default async function Home({ params }: PageProps) {
                 href="/login"
                 className="group flex items-center justify-center gap-3 px-8 py-4 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 transition-all duration-300 hover:bg-cyan-500/20 hover:text-cyan-300 hover:scale-105 active:scale-95"
               >
-                <span className="font-extrabold text-xl tracking-wide whitespace-nowrap">
+                <span className="font-extrabold text-lg sm:text-xl tracking-wide text-center break-words sm:whitespace-nowrap min-w-0">
                   {t("singleCta")}
                 </span>
                 <Rocket className="w-6 h-6 shrink-0 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1" />

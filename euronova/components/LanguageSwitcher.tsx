@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useTransition, Suspense } from "react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter, routing } from "@/i18n/routing";
-import { ChevronDown } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { ChevronDown, Loader2 } from "lucide-react";
 
 type AppLocale = (typeof routing.locales)[number];
 
@@ -25,11 +26,13 @@ const LANGUAGES: LanguageOption[] = [
   { code: "pt", label: "Português", short: "PT", flagUrl: "https://flagcdn.com/w20/pt.png" },
 ];
 
-export function LanguageSwitcher() {
+function LanguageSwitcherInner() {
   const locale = useLocale();
   const t = useTranslations("Common");
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -37,7 +40,18 @@ export function LanguageSwitcher() {
 
   const changeLanguage = (newLocale: AppLocale) => {
     setIsOpen(false);
-    router.replace(pathname, { locale: newLocale });
+    if (newLocale === locale) return;
+
+    // Explicitly update NEXT_LOCALE cookie on client side (1 year expiration)
+    document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
+
+    // Reconstruct full path preserving query parameters
+    const queryString = searchParams?.toString();
+    const targetUrl = queryString ? `${pathname}?${queryString}` : pathname;
+
+    startTransition(() => {
+      router.replace(targetUrl, { locale: newLocale });
+    });
   };
 
   useEffect(() => {
@@ -55,17 +69,25 @@ export function LanguageSwitcher() {
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-void-surface hover:bg-void-surface/90 border border-void-border hover:border-plasma-cyan text-xs font-bold text-gray-200 transition-all shrink-0 cursor-pointer"
+        disabled={isPending}
+        className={`flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] min-w-[44px] rounded-lg bg-void-surface hover:bg-void-surface/90 border border-void-border hover:border-plasma-cyan focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none text-xs font-bold text-gray-200 transition-all shrink-0 cursor-pointer ${
+          isPending ? "opacity-70 pointer-events-none" : ""
+        }`}
         aria-label={t("selectLanguage")}
       >
-        <Image
-          src={currentLang.flagUrl}
-          alt={currentLang.short}
-          width={16}
-          height={12}
-          unoptimized
-          className="w-4 h-auto rounded-[2px]"
-        />
+        {isPending ? (
+          <Loader2 className="w-4 h-4 text-plasma-cyan animate-spin" />
+        ) : (
+          <Image
+            src={currentLang.flagUrl}
+            alt={currentLang.short}
+            width={16}
+            height={12}
+            unoptimized
+            style={{ width: "auto", height: "auto" }}
+            className="w-4 h-auto rounded-[2px]"
+          />
+        )}
         <span>{currentLang.short}</span>
         <ChevronDown
           className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${
@@ -80,8 +102,9 @@ export function LanguageSwitcher() {
             <button
               key={lang.code}
               type="button"
+              disabled={isPending}
               onClick={() => changeLanguage(lang.code)}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-left transition-colors cursor-pointer ${
+              className={`w-full flex items-center gap-2 px-3 py-2.5 min-h-[44px] text-xs font-semibold text-left transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none ${
                 locale === lang.code
                   ? "bg-plasma-cyan/15 text-plasma-cyan font-bold"
                   : "text-gray-300 hover:bg-void-deep hover:text-white"
@@ -93,6 +116,7 @@ export function LanguageSwitcher() {
                 width={16}
                 height={12}
                 unoptimized
+                style={{ width: "auto", height: "auto" }}
                 className="w-4 h-auto rounded-[2px]"
               />
               <span className="flex-1">{lang.label}</span>
@@ -104,5 +128,20 @@ export function LanguageSwitcher() {
         </div>
       )}
     </div>
+  );
+}
+
+export function LanguageSwitcher() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] min-w-[44px] rounded-lg bg-void-surface border border-void-border text-xs font-bold text-gray-400 shrink-0">
+          <span className="w-4 h-3 bg-void-border rounded animate-pulse" />
+          <span>--</span>
+        </div>
+      }
+    >
+      <LanguageSwitcherInner />
+    </Suspense>
   );
 }

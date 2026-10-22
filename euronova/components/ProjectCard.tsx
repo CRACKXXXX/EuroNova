@@ -16,7 +16,7 @@ import {
   ShieldCheck
 } from "lucide-react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations, useFormatter } from "next-intl";
 import { COUNTRIES } from "@/lib/constants/countries";
 import { PROJECT_TYPE_COLORS } from "@/lib/constants/projectTypes";
 import { toggleProjectFavorite, toggleProjectApplied } from "@/actions/interactions";
@@ -49,6 +49,7 @@ export interface ProjectData {
 export function ProjectCard({ project }: { project: ProjectData }) {
   const t = useTranslations("ProjectCard");
   const tTypes = useTranslations("ProjectTypes");
+  const format = useFormatter();
 
   const [isFavorite, setIsFavorite] = useState(project.is_favorite ?? false);
   const [isApplied, setIsApplied] = useState(project.is_applied ?? false);
@@ -236,13 +237,13 @@ export function ProjectCard({ project }: { project: ProjectData }) {
           </div>
         </div>
 
-        <h3 className="text-xl font-bold text-white mb-2 line-clamp-2 group-hover/card:text-plasma-cyan transition-colors">
+        <h3 className="text-xl font-bold text-white mb-2 line-clamp-2 group-hover/card:text-plasma-cyan transition-colors min-w-0 break-words hyphens-auto">
           {project.title}
         </h3>
 
         {/* Fallback de logo o avatar de la organización */}
         {project.org_name && (
-          <div className="flex items-center gap-2 text-sm text-gray-300 mb-4">
+          <div className="flex items-center gap-2 text-sm text-gray-300 mb-4 min-w-0">
             {project.org_logo_url ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
@@ -255,7 +256,7 @@ export function ProjectCard({ project }: { project: ProjectData }) {
                 <Building className="w-3 h-3 text-plasma-cyan" />
               </div>
             )}
-            <span className="line-clamp-1 font-medium">{project.org_name}</span>
+            <span className="line-clamp-1 font-medium min-w-0 break-words">{project.org_name}</span>
           </div>
         )}
 
@@ -283,7 +284,7 @@ export function ProjectCard({ project }: { project: ProjectData }) {
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-hyper-violet" />
             <span>
-              {project.min_age} - {project.max_age} {t("years")}
+              {project.min_age} - {project.max_age} {t("yearsCount", { count: project.max_age })}
             </span>
           </div>
 
@@ -291,7 +292,7 @@ export function ProjectCard({ project }: { project: ProjectData }) {
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-gray-400" />
               <span>
-                {project.duration_days} {t("days")}
+                {t("durationDaysCount", { count: project.duration_days })}
               </span>
             </div>
           )}
@@ -300,8 +301,8 @@ export function ProjectCard({ project }: { project: ProjectData }) {
             <Euro className="w-4 h-4 text-rup-emerald shrink-0" />
             <span className="truncate">
               {project.travel_budget_min != null || project.travel_budget_max != null
-                ? `${project.travel_budget_min != null ? "€" + project.travel_budget_min : "€0"} - ${
-                    project.travel_budget_max != null ? "€" + project.travel_budget_max : t("noLimit")
+                ? `${project.travel_budget_min != null ? "€" + format.number(project.travel_budget_min) : "€0"} - ${
+                    project.travel_budget_max != null ? "€" + format.number(project.travel_budget_max) : t("noLimit")
                   }`
                 : t("notSpecified")}
             </span>
@@ -340,7 +341,7 @@ export function ProjectCard({ project }: { project: ProjectData }) {
       <div className="p-4 border-t border-void-border bg-void-deep/50 mt-auto">
         <Link
           href={`/dashboard/projects/${project.id}`}
-          className="w-full py-2.5 rounded-lg bg-white/5 hover:bg-plasma-cyan/10 text-white font-medium text-sm transition-colors border border-transparent hover:border-plasma-cyan/30 flex justify-center items-center gap-2"
+          className="w-full py-2.5 rounded-lg bg-white/5 hover:bg-plasma-cyan/10 text-white font-medium text-sm transition-colors border border-transparent hover:border-plasma-cyan/30 flex justify-center items-center gap-2 text-center break-words min-w-0 px-3"
         >
           {t("viewDetails")}
         </Link>

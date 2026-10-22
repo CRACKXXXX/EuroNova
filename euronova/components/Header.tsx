@@ -43,6 +43,7 @@ export function Header({
   const [isOpen, setIsOpen] = useState(false);
   const locale = useLocale();
   const t = useTranslations("Header");
+  const tCommon = useTranslations("Common");
   const [detectedOrgId, setDetectedOrgId] = useState<string | null>(propOrgId ?? null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [youthXp, setYouthXp] = useState<number>(0);
@@ -132,16 +133,19 @@ export function Header({
           <Link
             href={`/${locale}/dashboard`}
             onClick={() => setIsOpen(false)}
-            className="flex items-center group shrink-0"
+            aria-label={t("home") || "EuroNova"}
+            className="flex items-center group shrink-0 rounded-lg focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none"
           >
             {/* Desktop Logo */}
             <div className="hidden sm:block">
               <Image
                 src="/logo-big.png"
-                alt="EuroNova"
+                alt={tCommon("logoAlt")}
                 width={140}
                 height={38}
                 priority
+                sizes="140px"
+                style={{ width: "auto", height: "auto" }}
                 className="h-9 w-auto object-contain rounded-md group-hover:scale-105 transition-transform"
               />
             </div>
@@ -149,10 +153,12 @@ export function Header({
             <div className="block sm:hidden">
               <Image
                 src="/logo-small.png"
-                alt="EuroNova"
+                alt={tCommon("logoAlt")}
                 width={36}
                 height={36}
                 priority
+                sizes="36px"
+                style={{ width: "auto", height: "auto" }}
                 className="h-8 sm:h-9 w-auto object-contain rounded-md group-hover:scale-110 transition-transform"
               />
             </div>
@@ -231,9 +237,9 @@ export function Header({
           {staffRole === "moderator" && (
             <Link
               href={`/${locale}/dashboard/moderator-panel`}
-              title="Moderator Panel"
-              aria-label="Moderator Panel"
-              className="p-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:border-amber-400 transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(245,158,11,0.15)]"
+              title={t("moderatorPanel")}
+              aria-label={t("moderatorPanel")}
+              className="p-2 min-w-[44px] min-h-[44px] rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:border-amber-400 focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(245,158,11,0.15)]"
             >
               <ShieldCheck className="w-4 h-4" />
             </Link>
@@ -243,9 +249,9 @@ export function Header({
           {staffRole === "support" && (
             <Link
               href={`/${locale}/dashboard/support-panel`}
-              title="Support Panel"
-              aria-label="Support Panel"
-              className="p-2 rounded-lg bg-plasma-cyan/10 hover:bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/30 hover:border-plasma-cyan transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(0,229,255,0.15)]"
+              title={t("supportPanel")}
+              aria-label={t("supportPanel")}
+              className="p-2 min-w-[44px] min-h-[44px] rounded-lg bg-plasma-cyan/10 hover:bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/30 hover:border-plasma-cyan focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(0,229,255,0.15)]"
             >
               <Headphones className="w-4 h-4" />
             </Link>
@@ -257,23 +263,26 @@ export function Header({
               href={`/${locale}/dashboard/admin`}
               title={t("adminPanel") || "Admin Panel"}
               aria-label={t("adminPanel") || "Admin Panel"}
-              className="p-2 rounded-lg bg-nova-flare/10 hover:bg-nova-flare/20 text-nova-flare border border-nova-flare/30 hover:border-nova-flare transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(255,46,99,0.15)]"
+              className="p-2 min-w-[44px] min-h-[44px] rounded-lg bg-nova-flare/10 hover:bg-nova-flare/20 text-nova-flare border border-nova-flare/30 hover:border-nova-flare focus-visible:ring-2 focus-visible:ring-nova-flare focus-visible:outline-none transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(255,46,99,0.15)]"
             >
               <ShieldAlert className="w-4 h-4" />
             </Link>
           )}
 
-          {/* Botón My Organization / My Profile con avatar dinámico */}
+          {/* Botón My Organization / My Profile con avatar dinámico y skeleton shimmer */}
           <Link
             href={orgOrProfileHref}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-void-surface hover:bg-hyper-violet/10 border border-void-border hover:border-hyper-violet/30 text-gray-300 hover:text-hyper-violet transition-all text-xs 2xl:text-sm font-semibold shrink-0 whitespace-nowrap"
+            className="flex items-center gap-2 px-3 py-1.5 min-h-[44px] rounded-lg bg-void-surface hover:bg-hyper-violet/10 border border-void-border hover:border-hyper-violet/30 focus-visible:ring-2 focus-visible:ring-hyper-violet focus-visible:outline-none text-gray-300 hover:text-hyper-violet transition-all text-xs 2xl:text-sm font-semibold shrink-0 whitespace-nowrap"
           >
             {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt={isOrg ? "Organization Logo" : "Profile Picture"}
-                className="h-8 w-8 rounded-full object-cover border border-void-border/70 shrink-0 shadow-sm"
-              />
+              <div className="relative h-8 w-8 rounded-full overflow-hidden border border-void-border/70 shrink-0 shadow-sm bg-void-deep">
+                <div className="absolute inset-0 bg-void-border/50 animate-pulse pointer-events-none" />
+                <img
+                  src={avatarUrl}
+                  alt={isOrg ? "Organization Logo" : "Profile Picture"}
+                  className="relative h-8 w-8 rounded-full object-cover"
+                />
+              </div>
             ) : isOrg ? (
               <Building className="w-4 h-4 shrink-0" />
             ) : (
@@ -294,8 +303,8 @@ export function Header({
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="p-2 rounded-lg border border-void-border bg-void-surface text-gray-300 hover:text-white hover:border-plasma-cyan focus:outline-none transition-colors cursor-pointer"
-            aria-label="Toggle navigation menu"
+            className="min-w-[44px] min-h-[44px] p-2 rounded-lg border border-void-border bg-void-surface text-gray-300 hover:text-white hover:border-plasma-cyan focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-colors cursor-pointer flex items-center justify-center"
+            aria-label={t("toggleMenu") || "Toggle navigation menu"}
           >
             <Menu className="w-6 h-6" />
           </button>
@@ -313,13 +322,16 @@ export function Header({
             <Link
               href={`/${locale}/dashboard`}
               onClick={() => setIsOpen(false)}
-              className="flex items-center group shrink-0"
+              aria-label={t("home") || "EuroNova"}
+              className="flex items-center group shrink-0 min-h-[44px] min-w-[44px] rounded-lg focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none"
             >
               <Image
                 src="/logo-big.png"
-                alt="EuroNova"
+                alt={tCommon("logoAlt")}
                 width={140}
                 height={38}
+                sizes="140px"
+                style={{ width: "auto", height: "auto" }}
                 className="h-9 w-auto object-contain rounded-md group-hover:scale-105 transition-transform"
               />
             </Link>
@@ -327,8 +339,8 @@ export function Header({
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="p-3 rounded-full border border-void-border bg-void-surface text-gray-300 hover:text-white hover:border-plasma-cyan transition-colors cursor-pointer"
-              aria-label="Close menu"
+              className="min-w-[44px] min-h-[44px] p-2.5 rounded-full border border-void-border bg-void-surface text-gray-300 hover:text-white hover:border-plasma-cyan focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-colors cursor-pointer flex items-center justify-center"
+              aria-label={t("closeMenu") || "Close menu"}
             >
               <X className="w-7 h-7" />
             </button>

@@ -2,7 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { ArrowLeft, Euro, MapPin, Building, AlertTriangle, Trash2, ExternalLink, Users, Globe2, Clock, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getFormatter } from "next-intl/server";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { deleteProjectAction } from "./actions";
@@ -14,54 +14,76 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ReportMissionButton } from "@/components/ReportMissionButton";
 import { TrackRecentlyViewed } from "@/components/TrackRecentlyViewed";
 import { ProjectForum } from "@/components/ProjectForum";
+import { routing } from "@/i18n/routing";
 
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(
-  props: { params: Promise<{ id: string }> }
+  props: { params: Promise<{ locale: string; id: string }> }
 ): Promise<Metadata> {
-  const params = await props.params;
+  const { locale, id } = await props.params;
   const supabase = await createClient();
   const { data: project } = await supabase
     .from("projects")
     .select("title, description, image_url, dest_country, project_type")
-    .eq("id", params.id)
+    .eq("id", id)
     .maybeSingle();
 
   if (!project) {
     return {
-      title: "EuroNova",
+      title: "Mission Not Found",
     };
   }
 
-  const title = "EuroNova";
-  const description = project.description
-    ? project.description.slice(0, 160)
-    : "Discover Erasmus+ & ESC opportunities across Europe on EuroNova.";
+  const title = `${project.title} | EuroNova`;
+  const cleanDescription = project.description
+    ? project.description.slice(0, 160).replace(/\s+/g, " ").trim()
+    : "Discover Erasmus+ & ESC youth mobility opportunities across Europe on EuroNova.";
   const imageUrl = project.image_url || "/logo-big.png";
+
+  const languageAlternates: Record<string, string> = {};
+  for (const l of routing.locales) {
+    languageAlternates[l] = `/${l}/dashboard/projects/${id}`;
+  }
+  languageAlternates["x-default"] = `/${routing.defaultLocale}/dashboard/projects/${id}`;
 
   return {
     title,
-    description,
+    description: cleanDescription,
+    alternates: {
+      canonical: `/${locale}/dashboard/projects/${id}`,
+      languages: languageAlternates,
+    },
     openGraph: {
-      title,
-      description,
-      images: [{ url: imageUrl }],
       type: "article",
+      locale,
+      url: `/${locale}/dashboard/projects/${id}`,
+      siteName: "EuroNova",
+      title,
+      description: cleanDescription,
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: project.title,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title,
-      description,
+      description: cleanDescription,
       images: [imageUrl],
     },
   };
 }
 
-export default async function ProjectDetailsPage(props: { params: Promise<{ id: string }> }) {
+export default async function ProjectDetailsPage(props: { params: Promise<{ locale: string; id: string }> }) {
   const params = await props.params;
   const t = await getTranslations("ProjectDetails");
   const tGeneral = await getTranslations("NewProject"); // to reuse some generic keys if needed
+  const format = await getFormatter();
   const supabase = await createClient();
   
   const { data: { user } } = await supabase.auth.getUser();
@@ -103,7 +125,7 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
   const destCountryObj = COUNTRIES.find(c => c.code === (project.dest_country || project.country));
   const destCountryNode = destCountryObj ? (
     <span className="flex items-center gap-1.5">
-      <Image src={destCountryObj.flagUrl} alt={destCountryObj.name} width={16} height={12} unoptimized className="w-4 h-auto rounded-[2px]" title={destCountryObj.name} />
+      <Image src={destCountryObj.flagUrl} alt={destCountryObj.name} width={16} height={12} unoptimized style={{ width: "auto", height: "auto" }} className="w-4 h-auto rounded-[2px]" title={destCountryObj.name} />
       <span>{destCountryObj.name}</span>
     </span>
   ) : (
@@ -115,7 +137,7 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
         const cObj = COUNTRIES.find(c => c.code === code);
         return cObj ? (
           <span key={code} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-void-deep border border-void-border text-sm">
-            <Image src={cObj.flagUrl} alt={cObj.name} width={16} height={12} unoptimized className="w-4 h-auto rounded-[2px]" title={cObj.name} />
+            <Image src={cObj.flagUrl} alt={cObj.name} width={16} height={12} unoptimized style={{ width: "auto", height: "auto" }} className="w-4 h-auto rounded-[2px]" title={cObj.name} />
             <span>{cObj.name}</span>
           </span>
         ) : (
@@ -167,7 +189,16 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
         {/* HERO IMAGE */}
         {project.image_url ? (
           <div className="w-full h-64 md:h-80 relative bg-void-deep rounded-t-3xl overflow-hidden">
-            <Image src={project.image_url} alt={project.title} fill className="object-cover opacity-80" />
+            {/* Shimmer skeleton behind the image while it loads */}
+            <div className="absolute inset-0 bg-void-border/30 animate-pulse pointer-events-none" />
+            <Image
+              src={project.image_url}
+              alt={project.title}
+              fill
+              priority
+              sizes="(max-width: 768px) 100vw, 1024px"
+              className="object-cover opacity-80"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-void-surface to-transparent" />
           </div>
         ) : (
@@ -212,14 +243,17 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
           {/* PUBLISHER PROFILE CARD */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-xl bg-void-deep/80 border border-void-border backdrop-blur-sm mb-10 w-full sm:w-fit">
             {orgLogo ? (
-              <Image
-                src={orgLogo}
-                alt={orgName}
-                width={48}
-                height={48}
-                unoptimized
-                className="w-12 h-12 rounded-full object-cover border border-void-border bg-void-deep shrink-0 shadow-[0_0_15px_rgba(0,229,255,0.15)]"
-              />
+              <div className="relative w-12 h-12 rounded-full shrink-0 overflow-hidden border border-void-border bg-void-deep shadow-[0_0_15px_rgba(0,229,255,0.15)]">
+                <div className="absolute inset-0 bg-void-border/50 animate-pulse pointer-events-none" />
+                <Image
+                  src={orgLogo}
+                  alt={orgName}
+                  width={48}
+                  height={48}
+                  unoptimized
+                  className="relative w-12 h-12 rounded-full object-cover"
+                />
+              </div>
             ) : (
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-void-surface to-plasma-cyan/20 flex items-center justify-center border border-plasma-cyan/30 shrink-0 shadow-[0_0_15px_rgba(0,229,255,0.15)]">
                 <Building className="w-6 h-6 text-plasma-cyan" />
@@ -298,7 +332,7 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
                   <Users className="w-5 h-5 text-plasma-cyan shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm text-gray-400 font-medium">{t("ageRange")}</p>
-                    <p className="text-white font-semibold">{project.min_age} - {project.max_age} {t("years")}</p>
+                    <p className="text-white font-semibold">{project.min_age} - {project.max_age} {t("yearsCount", { count: project.max_age })}</p>
                     {project.target_profile && <p className="text-gray-400 text-sm">{project.target_profile}</p>}
                   </div>
                 </div>
@@ -307,7 +341,7 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
                   <Clock className="w-5 h-5 text-plasma-cyan shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm text-gray-400 font-medium">{t("duration")}</p>
-                    <p className="text-white font-semibold">{project.duration_days ? `${project.duration_days} ${t("days")}` : t("notSpecified")}</p>
+                    <p className="text-white font-semibold">{project.duration_days ? t("durationDaysCount", { count: project.duration_days }) : t("notSpecified")}</p>
                   </div>
                 </div>
 
@@ -317,12 +351,12 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ id: 
                     <p className="text-sm text-gray-400 font-medium">{t("budget")}</p>
                     {project.travel_budget_min || project.travel_budget_max ? (
                       <p className="text-white font-semibold">
-                        {project.travel_budget_min ? `${project.travel_budget_min}€` : "0€"} - {project.travel_budget_max ? `${project.travel_budget_max}€` : "No limit"}
+                        {project.travel_budget_min ? `${format.number(project.travel_budget_min)}€` : "0€"} - {project.travel_budget_max ? `${format.number(project.travel_budget_max)}€` : t("noLimit")}
                       </p>
                     ) : (
-                      <p className="text-white font-semibold">{project.travel_budget ? `${project.travel_budget}€` : t("variableBudget")}</p>
+                      <p className="text-white font-semibold">{project.travel_budget ? `${format.number(project.travel_budget)}€` : t("variableBudget")}</p>
                     )}
-                    {project.participation_fee > 0 && <p className="text-gray-400 text-sm">{t("fee")} {project.participation_fee}€</p>}
+                    {project.participation_fee > 0 && <p className="text-gray-400 text-sm">{t("fee")} {format.number(project.participation_fee)}€</p>}
                   </div>
                 </div>
 

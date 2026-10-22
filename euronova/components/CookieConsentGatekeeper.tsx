@@ -27,6 +27,7 @@ export function CookieConsentGatekeeper({
   onCloseOverride,
 }: CookieConsentGatekeeperProps) {
   const t = useTranslations("CookieGatekeeper");
+  const tCommon = useTranslations("Common");
   const [isOpen, setIsOpen] = useState(false);
   const [consentStatus, setConsentStatus] = useState<"granted" | "denied" | null>(null);
 
@@ -107,7 +108,7 @@ export function CookieConsentGatekeeper({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Cookie & Privacy Consent Gatekeeper"
+      aria-label={t("gatekeeperAriaLabel")}
       className="fixed inset-0 flex items-center justify-center p-4 animate-in fade-in duration-200"
       style={{
         position: "fixed",
@@ -169,7 +170,7 @@ export function CookieConsentGatekeeper({
             onClick={handleClose}
             className="p-1.5 rounded-xl text-gray-400 hover:text-white hover:bg-void-deep transition-colors cursor-pointer border border-transparent hover:border-void-border"
             style={{ cursor: "pointer", pointerEvents: "auto" }}
-            aria-label="Close"
+            aria-label={tCommon("close")}
           >
             <X className="w-5 h-5" />
           </button>

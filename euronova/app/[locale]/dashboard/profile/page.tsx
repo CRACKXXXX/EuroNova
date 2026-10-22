@@ -20,7 +20,7 @@ import {
   Headphones 
 } from "lucide-react";
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getFormatter } from "next-intl/server";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { RecentlyViewedMissions } from "@/components/RecentlyViewedMissions";
 import { LevelReputationModule } from "@/components/LevelReputationModule";
@@ -74,6 +74,7 @@ export default async function ProfilePage(props: {
   const resolvedParams = await props?.params;
   const locale = resolvedParams?.locale || "en";
   const t = await getTranslations("Profile");
+  const format = await getFormatter();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -397,7 +398,7 @@ export default async function ProfilePage(props: {
                       Level 10 Vanguard Milestone
                     </span>
                     <span className="text-xs text-gray-400 font-mono">
-                      Level {userLevel} · {userXp.toLocaleString()} XP
+                      Level {userLevel} · {format.number(userXp)} XP
                     </span>
                   </div>
                   <h3 className="text-lg sm:text-xl font-black text-white tracking-tight">

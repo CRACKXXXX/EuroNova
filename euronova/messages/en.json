@@ -76,7 +76,9 @@
     "tagDisputeEscalation": "Dispute Escalation Matrix",
     "tagDiscordWebhooks": "Direct Discord Webhooks",
     "tagAutoPurgePrivacy": "48h Auto-Purge Privacy",
-    "tagCommunityFunded": "Community Funded • Independent Infrastructure"
+    "tagCommunityFunded": "Community Funded • Independent Infrastructure",
+    "logoAlt": "EuroNova Logo",
+    "searchGuidesDynamic": "{count, plural, =0 {Search guides...} one {Search # guide (e.g., UNMASKED, Secret Buddy)...} other {Search #+ guides (e.g., UNMASKED, Secret Buddy, Werewolf, Zorro, Ryanair, Cigna)...}}"
   },
   "PublicHeader": {
     "support": "Support",
@@ -93,7 +95,13 @@
     "myOrg": "My Organization",
     "myProfile": "My Profile",
     "logout": "Logout",
-    "adminPanel": "Admin Panel"
+    "adminPanel": "Admin Panel",
+    "toggleMenu": "Toggle navigation menu",
+    "closeMenu": "Close menu",
+    "notifications": "Notifications",
+    "viewNotifications": "View notifications",
+    "moderatorPanel": "Moderator Panel",
+    "supportPanel": "Support Panel"
   },
   "Sidebar": {
     "search": "Search",
@@ -129,7 +137,10 @@
     "clearAll": "Clear All",
     "clearDates": "Clear Dates",
     "recentSearches": "Recent Searches",
-    "clearRecentSearches": "Clear"
+    "clearRecentSearches": "Clear",
+    "toggleFilters": "Toggle Filters",
+    "toggleAiTitle": "Toggle AI Natural Language Search",
+    "clearInputTitle": "Clear input"
   },
   "Dashboard": {
     "title": "Transmissions Received",
@@ -309,10 +320,11 @@
     "recentlyViewed": "Recently Viewed Missions",
     "recentlyViewedDesc": "Planetary mission transmissions you have explored recently.",
     "noRecentlyViewed": "No recently viewed missions yet. Explore new opportunities on your radar!",
-    "clearHistory": "Clear",
+    "clearHistory": "Clear history",
     "exploreMissions": "Explore Missions",
     "notificationPreferences": "Notification Preferences",
-    "notificationPreferencesHelp": "Configure where you receive critical system alerts."
+    "notificationPreferencesHelp": "Configure where you receive critical system alerts.",
+    "avatarAlt": "Avatar"
   },
   "Projects": {
     "backHome": "Back to Home",
@@ -336,7 +348,8 @@
     "alertInstant": "Instant (As soon as published)",
     "alertWeekly": "Weekly Orbital Digest",
     "activateAlert": "Activate Alert",
-    "alertActivated": "Mission alert calibrated! You will receive new matching transmissions."
+    "alertActivated": "Mission alert calibrated! You will receive new matching transmissions.",
+    "durationDaysCount": "{count, plural, =0 {0 days} one {# day} other {# days}}"
   },
   "ProjectCard": {
     "lastMinute": "LAST MINUTE",
@@ -355,7 +368,9 @@
     "addToFavorites": "Add to favorites",
     "removeFromFavorites": "Remove from favorites",
     "markAsApplied": "Mark as applied",
-    "applied": "Applied"
+    "applied": "Applied",
+    "durationDaysCount": "{count, plural, =0 {0 days} one {# day} other {# days}}",
+    "yearsCount": "{count, plural, =0 {0 years} one {# year} other {# years}}"
   },
   "Organizations": {
     "backHome": "Back to Home",
@@ -373,7 +388,12 @@
     "countryNotSpecified": "Unspecified country",
     "noOrgsFound": "No organizations found",
     "viewProfile": "View Profile & Reviews",
-    "reviews": "Reviews"
+    "reviews": "Reviews",
+    "websiteTitle": "Website",
+    "instagramTitle": "Instagram",
+    "tiktokTitle": "TikTok",
+    "youtubeTitle": "YouTube",
+    "linkedinTitle": "LinkedIn"
   },
   "NewProject": {
     "backHome": "Back to Home",
@@ -420,7 +440,9 @@
     "financingType": "Financing Type",
     "financingTotal": "Total",
     "financingPartial": "Partial",
-    "financingNone": "None"
+    "financingNone": "None",
+    "previewAlt": "Preview",
+    "targetProfilePlaceholder": "e.g. Students"
   },
   "ProjectDetails": {
     "publisherProfile": "Publisher Profile",
@@ -485,7 +507,9 @@
     "missionCompanionsBadge": "3 Volunteers Going",
     "missionCompanionsDesc": "3 verified European youth are preparing their dossier for this destination. Join the coordinated travel crew.",
     "connectCompanions": "Connect (Moderated P2P)",
-    "companionsRequested": "P2P Mission Connection requested! You will be linked once registrations close."
+    "companionsRequested": "P2P Mission Connection requested! You will be linked once registrations close.",
+    "durationDaysCount": "{count, plural, =0 {0 days} one {# day} other {# days}}",
+    "yearsCount": "{count, plural, =0 {0 years} one {# year} other {# years}}"
   },
   "Footer": {
     "rights": "EuroNova. All rights reserved.",
@@ -610,7 +634,19 @@
     "resolvedReportsTitle": "Resolved Log",
     "resolvedReportsSubtitle": "Reports marked as resolved. Automatically purged after 72 hours via daily pg_cron cleanup.",
     "noResolvedReports": "No resolved reports in the orbital log.",
-    "resolvedAt": "Resolved"
+    "resolvedAt": "Resolved",
+    "avatarAlt": "Avatar",
+    "searchUsersPlaceholder": "Search by name, email, or user ID...",
+    "searchStaffPlaceholder": "Search by email, user ID, or full name...",
+    "projectTitlePlaceholder": "Enter full project title...",
+    "countriesExamplePlaceholder": "e.g. ES, DE, IT",
+    "durationDaysPlaceholder": "e.g. 14",
+    "projectDescPlaceholder": "Detailed description of the Erasmus+ mission...",
+    "notificationTitlePlaceholder": "e.g., Action Required: Update Profile Details or Warning Notice",
+    "notificationMsgPlaceholder": "Enter official transmission details to be received by the recipient in their notifications...",
+    "escalateReasonPlaceholder": "Detail why administrative intervention is required and summarize evidence...",
+    "resolveNotesPlaceholder": "Notes explaining decision to the staff member who filed...",
+    "ticketReplyPlaceholder": "Enter response message that will be delivered directly to the user's notification tray..."
   },
   "ProjectTypes": {
     "YE": "Youth Exchange",
@@ -666,7 +702,10 @@
     "editFolder": "Edit Collection",
     "renameFolder": "Rename Collection",
     "confirmDeleteFolder": "Delete Collection?",
-    "deleteFolderWarning": "Are you sure you want to delete this collection? All missions will remain safely in your favorites."
+    "deleteFolderWarning": "Are you sure you want to delete this collection? All missions will remain safely in your favorites.",
+    "renameCollection": "Rename Collection",
+    "deleteCollection": "Delete Collection",
+    "assignToCollection": "Assign to Collection"
   },
   "OrgReviews": {
     "title": "Organization Reviews & Reputation",
@@ -688,7 +727,8 @@
     "next": "Next",
     "pageOf": "Page {current} of {total}",
     "showingResults": "Showing {from} - {to} of {total} reviews",
-    "showingProjects": "Showing {from} - {to} of {total} missions"
+    "showingProjects": "Showing {from} - {to} of {total} missions",
+    "totalReviewsCount": "{count, plural, =0 {0 reviews} one {# review} other {# reviews}}"
   },
   "Map": {
     "title": "Cosmic Mission Radar",
@@ -706,7 +746,8 @@
     "filterByType": "Filter by Type",
     "allTypes": "All Types",
     "searchLocation": "Search location...",
-    "noCoordinates": "Geospatial data currently unavailable for this transmission."
+    "noCoordinates": "Geospatial data currently unavailable for this transmission.",
+    "durationDaysCount": "{count, plural, =0 {0 days} one {# day} other {# days}}"
   },
   "Pagination": {
     "previous": "Previous",
@@ -726,7 +767,8 @@
     "savedMissions": "Saved Missions",
     "myProfile": "My Profile",
     "publishMission": "Publish Mission",
-    "verifiedOrgs": "Verified Entities"
+    "verifiedOrgs": "Verified Entities",
+    "commandCenter": "Command Center"
   },
   "OrgTeam": {
     "title": "Organization Squad & Internal Roles",
@@ -771,7 +813,8 @@
     "noMembers": "No team members found matching your filter.",
     "revokeTitle": "Revoke Member Access?",
     "revokeDesc": "Are you sure you want to revoke system access for this member? They will immediately lose access to review dossiers and manage projects.",
-    "revokeConfirmBtn": "Yes, Revoke Access"
+    "revokeConfirmBtn": "Yes, Revoke Access",
+    "revokeAccess": "Revoke access"
   },
   "SemanticSearch": {
     "aiMagic": "AI Magic Search",
@@ -845,11 +888,13 @@
     "impressionsDesc": "Total volunteers who spotted this mission in the feed or radar",
     "viewsDesc": "Volunteers who inspected the mission details and requirements",
     "startedDesc": "Candidates who initiated the application transmission form",
-    "submittedDesc": "Final verified candidacies successfully registered"
+    "submittedDesc": "Final verified candidacies successfully registered",
+    "registeredCount": "{count, plural, =0 {0 registered} one {# registered} other {# registered}}"
   },
   "SecurityBadge": {
     "aiChecked": "AI Anti-Scam Verified",
-    "tooltip": "Verified by EuroNova AI & Moderation Team"
+    "tooltip": "Verified by EuroNova AI & Moderation Team",
+    "aiShieldVerifiedTitle": "Verified by EuroNova AI & Moderation Team"
   },
   "ProjectForum": {
     "title": "Project Q&A Forum",
@@ -874,7 +919,21 @@
     "saveBtn": "Save Changes",
     "cancelBtn": "Cancel",
     "editSuccess": "Message updated successfully!",
-    "deleteSuccess": "Message deleted from forum."
+    "deleteSuccess": "Message deleted from forum.",
+    "warnUser": "Warn user",
+    "warnUserTitle": "Warn User (Adds strike & sends notification)",
+    "muteUser": "Mute user",
+    "muteUserTitle": "Mute User Time-out (5m, 10m, 15m, 1h)",
+    "replyPlaceholder": "Write your direct answer or follow-up question...",
+    "restrictedActionTitle": "Level 11+, Staff, or Organizers only",
+    "editTopic": "Edit Topic",
+    "deleteTopic": "Delete Topic",
+    "editReply": "Edit Reply",
+    "deleteReply": "Delete Reply",
+    "newThreadTitlePlaceholder": "e.g., Looking for travel companions from Madrid to Berlin in May...",
+    "newThreadContentPlaceholder": "Provide complete context, questions, or ideas. Our auto-moderator blocks hate speech and external scam links.",
+    "views": "Views",
+    "replies": "Replies"
   },
   "ProjectTldr": {
     "badge": "AI Executive Summary (TL;DR)",
@@ -892,11 +951,15 @@
     "previewTitle": "Live Candidate View",
     "saveForm": "Save Application Flow",
     "formSaved": "Application survey blueprint saved successfully in organization cloud!",
-    "questionTitlePlaceholder": "What is your main motivation for volunteering in this project?"
+    "questionTitlePlaceholder": "What is your main motivation for volunteering in this project?",
+    "duplicateQuestion": "Duplicate question",
+    "deleteQuestion": "Delete question",
+    "removeFile": "Remove file",
+    "dossierTitlePlaceholder": "e.g. European Solidarity Corps Application Dossier"
   },
   "Notifications": {
     "title": "Orbital Transmissions",
-    "unreadBadge": "{count} unread",
+    "unreadBadge": "{count, plural, =0 {0 unread} one {# unread} other {# unread}}",
     "markAllRead": "Mark all as read",
     "preferences": "Notification Settings",
     "emptyTitle": "All quiet in orbit",
@@ -920,7 +983,11 @@
     "prefSystemDesc": "Platform announcements, verification badges, and profile completeness reminders.",
     "savePreferences": "Save Preferences",
     "saving": "Saving...",
-    "savedSuccess": "Preferences updated successfully."
+    "savedSuccess": "Preferences updated successfully.",
+    "newBadge": "{count, plural, =0 {0 new} one {# new} other {# new}}",
+    "unreadNotificationsCount": "{count, plural, =0 {No new transmissions} one {# new transmission} other {# new transmissions}}",
+    "openSettings": "Open notification settings",
+    "dismiss": "Dismiss notification"
   },
   "Errors": {
     "badge": "MISSION ANOMALY DETECTED",
@@ -946,10 +1013,36 @@
     "cookieNoticeLink": "View Technical Cookie Audit",
     "statusGranted": "Optional Analytics: Active",
     "statusDenied": "Optional Analytics: Blocked",
-    "preferencesUpdated": "Privacy preferences updated successfully."
+    "preferencesUpdated": "Privacy preferences updated successfully.",
+    "gatekeeperAriaLabel": "Cookie & Privacy Consent Gatekeeper"
   },
   "Common": {
     "selectLanguage": "Select Language",
-    "backToTop": "Back to top"
+    "backToTop": "Back to top",
+    "close": "Close",
+    "closeModal": "Close dialog",
+    "homeAriaLabel": "EuroNova Home",
+    "logoAlt": "EuroNova Logo",
+    "breadcrumb": "Breadcrumb",
+    "goBack": "Go back to previous page",
+    "avatarAlt": "Avatar"
+  },
+  "Reports": {
+    "reportOrgTitle": "Report this organization to moderators",
+    "reportSurveyTitle": "Report this community survey to EuroNova moderators",
+    "orgViolationPlaceholder": "Provide concrete context, correspondence, or details explaining the compliance violation...",
+    "surveyContextPlaceholder": "Provide any additional context for the moderation team...",
+    "userViolationPlaceholder": "Explain why this user or message violates EuroNova community guidelines..."
+  },
+  "Surveys": {
+    "deleteSurvey": "Delete Survey",
+    "deleteStaffAction": "Delete Survey (Staff Action)",
+    "removeOption": "Remove option",
+    "questionExamplePlaceholder": "e.g., Should Erasmus+ projects provide mandatory vegan meal options?",
+    "optionNumberPlaceholder": "Option {number} text..."
+  },
+  "Donation": {
+    "copyRevolut": "Copy Revolut Tag",
+    "copyPaypal": "Copy PayPal Link"
   }
 }

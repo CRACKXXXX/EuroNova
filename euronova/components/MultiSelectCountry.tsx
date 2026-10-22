@@ -36,9 +36,22 @@ export function MultiSelectCountry({ selected, onChange, placeholder = "Select c
 
   return (
     <div className="relative" ref={containerRef}>
-      <div 
+      <button 
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full bg-void-surface border border-void-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all cursor-pointer flex justify-between items-center"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setIsOpen(!isOpen);
+          } else if (e.key === "Escape" && isOpen) {
+            e.preventDefault();
+            setIsOpen(false);
+          }
+        }}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        aria-label={placeholder}
+        className="w-full min-h-[44px] bg-void-surface border border-void-border rounded-lg px-4 py-2.5 text-sm text-white focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none focus:border-plasma-cyan transition-all cursor-pointer flex justify-between items-center text-left"
       >
         <span className="truncate pr-4 text-gray-300 flex items-center gap-2">
           {selected.length === 0 
@@ -57,6 +70,7 @@ export function MultiSelectCountry({ selected, onChange, placeholder = "Select c
                         width={20} 
                         height={15} 
                         unoptimized 
+                        style={{ width: "auto", height: "auto" }}
                         className="w-5 h-auto rounded-[2px]" 
                         title={c.name} 
                       />
@@ -69,18 +83,29 @@ export function MultiSelectCountry({ selected, onChange, placeholder = "Select c
           }
         </span>
         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </div>
+      </button>
       
       {isOpen && (
-        <div className="absolute z-50 w-full mt-2 bg-void-deep border border-void-border rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar">
+        <div 
+          role="listbox"
+          aria-multiselectable="true"
+          aria-label={placeholder}
+          className="absolute z-50 w-full mt-2 bg-void-deep border border-void-border rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar"
+        >
           {COUNTRIES.map(country => (
-            <label 
+            <div 
               key={country.code} 
-              onClick={(e) => {
-                e.preventDefault();
-                toggleCountry(country.code);
+              role="option"
+              aria-selected={selected.includes(country.code)}
+              tabIndex={0}
+              onClick={() => toggleCountry(country.code)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  toggleCountry(country.code);
+                }
               }}
-              className="flex items-center gap-3 px-4 py-2 hover:bg-void-surface cursor-pointer group transition-colors"
+              className="flex items-center gap-3 px-4 py-2.5 min-h-[44px] hover:bg-void-surface focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none cursor-pointer group transition-colors"
             >
               <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0
                 ${selected.includes(country.code) 
@@ -96,10 +121,11 @@ export function MultiSelectCountry({ selected, onChange, placeholder = "Select c
                 width={20} 
                 height={15} 
                 unoptimized 
+                style={{ width: "auto", height: "auto" }}
                 className="w-5 h-auto rounded-[2px] shrink-0" 
               />
               <span className="text-white text-sm">{country.name}</span>
-            </label>
+            </div>
           ))}
         </div>
       )}

@@ -12,6 +12,7 @@ import { RegisterForm } from "@/components/RegisterForm";
 
 function LoginContent() {
   const t = useTranslations("Login");
+  const tCommon = useTranslations("Common");
   const searchParams = useSearchParams();
   const [isViewLogin, setIsViewLogin] = useState(true);
 
@@ -48,10 +49,12 @@ function LoginContent() {
         <div className="flex flex-col items-center mb-8">
           <Image 
             src="/logo-big.png" 
-            alt="EuroNova Logo" 
+            alt={tCommon("logoAlt")} 
             width={300} 
             height={80} 
             priority 
+            sizes="(max-width: 480px) 100vw, 300px"
+            style={{ width: "auto", height: "auto" }}
             className="w-auto h-auto max-w-full drop-shadow-[0_0_25px_rgba(0,229,255,0.15)]" 
           />
           <h2 className="sr-only">EuroNova</h2>

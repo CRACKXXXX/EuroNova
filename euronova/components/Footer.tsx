@@ -16,6 +16,7 @@ import { CookieConsentGatekeeper } from "./CookieConsentGatekeeper";
 
 export function Footer() {
   const t = useTranslations("Footer");
+  const tCommon = useTranslations("Common");
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
 
   return (
@@ -28,9 +29,12 @@ export function Footer() {
             <div className="flex items-center justify-center sm:justify-start gap-2.5">
               <Image
                 src="/logo-big.png"
-                alt="EuroNova"
+                alt={tCommon("logoAlt")}
                 width={130}
                 height={35}
+                sizes="130px"
+                style={{ width: "auto", height: "auto" }}
+                loading="lazy"
                 className="h-8 w-auto object-contain rounded-md"
               />
             </div>
