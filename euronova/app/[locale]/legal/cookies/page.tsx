@@ -95,32 +95,32 @@ export default function CookiesPolicyPage(props: CookiesPageProps) {
                   De conformidad con el artículo 22.2 de la Ley 34/2002 (LSSI-CE) y las directrices del Comité Europeo de Protección de Datos (CEPD), las cookies técnicas esenciales son aquellas imprescindibles para la navegación y la prestación del servicio expresamente solicitado por el usuario. No requieren consentimiento previo.
                 </p>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs sm:text-sm border border-void-border rounded-xl overflow-hidden font-mono">
-                    <thead className="bg-void-deep text-plasma-cyan uppercase tracking-wider text-[11px]">
+                  <table className="w-full text-left text-xs sm:text-sm border border-void-border rounded-xl overflow-hidden">
+                    <thead className="bg-void-deep text-plasma-cyan uppercase tracking-wider text-[11px] font-mono">
                       <tr>
-                        <th className="p-3 border-b border-void-border">Nombre</th>
-                        <th className="p-3 border-b border-void-border">Proveedor</th>
-                        <th className="p-3 border-b border-void-border">Finalidad</th>
-                        <th className="p-3 border-b border-void-border">Caducidad</th>
+                        <th className="p-3 border-b border-void-border">Tipo de Cookie</th>
+                        <th className="p-3 border-b border-void-border">Función Principal</th>
+                        <th className="p-3 border-b border-void-border">Servicio Responsable</th>
+                        <th className="p-3 border-b border-void-border">Duración</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-void-border/60 bg-void-surface/40">
+                    <tbody className="divide-y divide-void-border/60 bg-void-surface/40 text-gray-300">
                       <tr>
-                        <td className="p-3 font-bold text-white">sb-*-auth-token</td>
-                        <td className="p-3 text-gray-400">Supabase Auth</td>
-                        <td className="p-3 text-gray-300">Autenticación criptográfica segura de sesión.</td>
-                        <td className="p-3 text-gray-400">Sesión / 1 año</td>
+                        <td className="p-3 font-bold text-white">Credencial de Sesión Segura</td>
+                        <td className="p-3 text-gray-300">Mantiene tu sesión iniciada de forma protegida y autentica tu expediente.</td>
+                        <td className="p-3 text-gray-400">EuroNova (Servidor Seguro UE)</td>
+                        <td className="p-3 text-gray-400">Sesión activa</td>
                       </tr>
                       <tr>
-                        <td className="p-3 font-bold text-white">euronova_consent</td>
-                        <td className="p-3 text-gray-400">EuroNova Core</td>
-                        <td className="p-3 text-gray-300">Almacena la preferencia de consentimiento del usuario.</td>
+                        <td className="p-3 font-bold text-white">Preferencia de Privacidad</td>
+                        <td className="p-3 text-gray-300">Recuerda tu elección sobre analíticas para no preguntarte continuamente.</td>
+                        <td className="p-3 text-gray-400">EuroNova Gatekeeper</td>
                         <td className="p-3 text-gray-400">1 año</td>
                       </tr>
                       <tr>
-                        <td className="p-3 font-bold text-white">NEXT_LOCALE</td>
-                        <td className="p-3 text-gray-400">Next-Intl</td>
-                        <td className="p-3 text-gray-300">Mantiene el idioma seleccionado por el usuario en la interfaz.</td>
+                        <td className="p-3 font-bold text-white">Preferencia de Idioma</td>
+                        <td className="p-3 text-gray-300">Guarda si prefieres navegar en español, inglés u otro idioma europeo.</td>
+                        <td className="p-3 text-gray-400">EuroNova</td>
                         <td className="p-3 text-gray-400">Persistente</td>
                       </tr>
                     </tbody>
@@ -190,32 +190,32 @@ export default function CookiesPolicyPage(props: CookiesPageProps) {
                   Pursuant to Article 22.2 of Spanish Law 34/2002 (LSSI-CE) and European Data Protection Board guidelines, essential technical cookies are strictly required to navigate the platform and deliver core authenticated functionality. These do not require prior consent.
                 </p>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs sm:text-sm border border-void-border rounded-xl overflow-hidden font-mono">
-                    <thead className="bg-void-deep text-plasma-cyan uppercase tracking-wider text-[11px]">
+                  <table className="w-full text-left text-xs sm:text-sm border border-void-border rounded-xl overflow-hidden">
+                    <thead className="bg-void-deep text-plasma-cyan uppercase tracking-wider text-[11px] font-mono">
                       <tr>
-                        <th className="p-3 border-b border-void-border">Cookie Key</th>
-                        <th className="p-3 border-b border-void-border">Provider</th>
-                        <th className="p-3 border-b border-void-border">Purpose</th>
+                        <th className="p-3 border-b border-void-border">Cookie Type</th>
+                        <th className="p-3 border-b border-void-border">Primary Function</th>
+                        <th className="p-3 border-b border-void-border">Responsible Service</th>
                         <th className="p-3 border-b border-void-border">Retention</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-void-border/60 bg-void-surface/40">
+                    <tbody className="divide-y divide-void-border/60 bg-void-surface/40 text-gray-300">
                       <tr>
-                        <td className="p-3 font-bold text-white">sb-*-auth-token</td>
-                        <td className="p-3 text-gray-400">Supabase Auth</td>
-                        <td className="p-3 text-gray-300">Cryptographic session authentication and user security.</td>
-                        <td className="p-3 text-gray-400">Session / 1 Year</td>
+                        <td className="p-3 font-bold text-white">Secure Session Credential</td>
+                        <td className="p-3 text-gray-300">Keeps you securely signed in and authenticates your user dossier.</td>
+                        <td className="p-3 text-gray-400">EuroNova (EU Secure Server)</td>
+                        <td className="p-3 text-gray-400">Active session</td>
                       </tr>
                       <tr>
-                        <td className="p-3 font-bold text-white">euronova_consent</td>
-                        <td className="p-3 text-gray-400">EuroNova Core</td>
-                        <td className="p-3 text-gray-300">Stores your explicit tracking consent decision.</td>
-                        <td className="p-3 text-gray-400">1 Year</td>
+                        <td className="p-3 font-bold text-white">Privacy Preference</td>
+                        <td className="p-3 text-gray-300">Remembers your analytics choices so you are not prompted repeatedly.</td>
+                        <td className="p-3 text-gray-400">EuroNova Gatekeeper</td>
+                        <td className="p-3 text-gray-400">1 year</td>
                       </tr>
                       <tr>
-                        <td className="p-3 font-bold text-white">NEXT_LOCALE</td>
-                        <td className="p-3 text-gray-400">Next-Intl</td>
-                        <td className="p-3 text-gray-300">Preserves interface locale selection across page requests.</td>
+                        <td className="p-3 font-bold text-white">Language Preference</td>
+                        <td className="p-3 text-gray-300">Preserves your preferred European browsing language across page visits.</td>
+                        <td className="p-3 text-gray-400">EuroNova</td>
                         <td className="p-3 text-gray-400">Persistent</td>
                       </tr>
                     </tbody>
