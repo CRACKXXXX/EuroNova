@@ -496,5 +496,9 @@
     "statusGranted": "Analítica Opcional: Activa",
     "statusDenied": "Analítica Opcional: Bloqueada",
     "preferencesUpdated": "Preferencias de privacidad actualizadas con éxito."
+  },
+  "Common": {
+    "selectLanguage": "Seleccionar Idioma",
+    "backToTop": "Volver arriba"
   }
 }

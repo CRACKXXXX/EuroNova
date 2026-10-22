@@ -1,7 +1,8 @@
 "use client";
 
 import { use } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
+import { Footer } from "@/components/Footer";
 import { ArrowLeft, Cookie, ShieldCheck, Lock, Sliders, CheckCircle2, ShieldAlert } from "lucide-react";
 
 interface CookiesPageProps {
@@ -263,6 +264,9 @@ export default function CookiesPolicyPage(props: CookiesPageProps) {
           )}
         </div>
       </div>
+
+      {/* Global Minimalist Footer & Gatekeeper Modal */}
+      <Footer />
     </div>
   );
 }
