@@ -2,6 +2,9 @@
 
 import { createClient } from "@/utils/supabase/server";
 import nodemailer from "nodemailer";
+import { TicketSubmissionSchema } from "@/lib/schemas";
+import { stripDangerousHtml } from "@/lib/securitySanitizer";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimiter";
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -19,14 +22,38 @@ export async function createTicket(prevState: unknown, formData: FormData) {
     return { error: "Debes estar autenticado para crear un ticket." };
   }
 
-  const email = formData.get("email") as string;
-  const phone = formData.get("phone") as string;
-  const subject = formData.get("subject") as string;
-  const reason = formData.get("reason") as string;
-  const content = formData.get("content") as string;
+  // 1. Rate limiting check per user
+  const rateCheck = await checkRateLimit(`ticket_${user.id}`, RATE_LIMITS.TICKET);
+  if (!rateCheck.success) {
+    return {
+      error: rateCheck.error || "Demasiados tickets enviados. Por favor, espera antes de enviar otro.",
+    };
+  }
 
-  if (!email || !subject || !reason || !content) {
-    return { error: "Por favor, completa todos los campos obligatorios." };
+  const rawPayload = {
+    email: formData.get("email") as string,
+    phone: (formData.get("phone") as string) || null,
+    subject: formData.get("subject") as string,
+    reason: formData.get("reason") as string,
+    content: formData.get("content") as string,
+  };
+
+  // 2. Zod double-layer schema validation
+  const parsed = TicketSubmissionSchema.safeParse(rawPayload);
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0]?.message || "Por favor, completa todos los campos obligatorios correctamente.";
+    return { error: issue };
+  }
+
+  // 3. Strip dangerous HTML & scripts
+  const email = parsed.data.email;
+  const phone = parsed.data.phone ? stripDangerousHtml(parsed.data.phone, 30) : null;
+  const subject = stripDangerousHtml(parsed.data.subject, 150);
+  const reason = stripDangerousHtml(parsed.data.reason, 50);
+  const content = stripDangerousHtml(parsed.data.content, 5000);
+
+  if (content.length < 10) {
+    return { error: "El contenido del ticket debe tener al menos 10 caracteres." };
   }
 
   const { error } = await supabase
@@ -34,7 +61,7 @@ export async function createTicket(prevState: unknown, formData: FormData) {
     .insert({
       user_id: user.id,
       email,
-      phone: phone || null,
+      phone,
       subject,
       reason,
       content,

@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { sanitizeErrorMessage } from "@/lib/errorSanitizer";
+import { validateSafeHttpsUrl, stripDangerousHtml } from "@/lib/securitySanitizer";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimiter";
 
 export type ProfileActionState = {
   success?: string;
@@ -13,30 +15,93 @@ export type ProfileActionState = {
 } | null;
 
 const youthProfileSchema = z.object({
-  full_name: z.string().trim().optional().or(z.literal("")).nullable(),
+  full_name: z.string().trim().max(100).optional().or(z.literal("")).nullable(),
   birth_date: z.string().trim().optional().or(z.literal("")).nullable(),
-  country_code: z.string().trim().optional().or(z.literal("")).nullable(),
+  country_code: z.string().trim().max(10).optional().or(z.literal("")).nullable(),
   is_rup_region: z.boolean().default(false),
-  bio: z.string().trim().optional().or(z.literal("")).nullable(),
-  phone: z.string().trim().optional().or(z.literal("")).nullable(),
-  languages: z.string().trim().optional().or(z.literal("")).nullable(),
-  notification_email: z.string().trim().email().optional().or(z.literal("")).nullable(),
-  discord_webhook_url: z.string().trim().url().optional().or(z.literal("")).nullable(),
+  bio: z.string().trim().max(2000).optional().or(z.literal("")).nullable(),
+  phone: z.string().trim().max(30).optional().or(z.literal("")).nullable(),
+  languages: z.string().trim().max(200).optional().or(z.literal("")).nullable(),
+  notification_email: z.string().trim().email().max(120).optional().or(z.literal("")).nullable(),
+  discord_webhook_url: z
+    .string()
+    .trim()
+    .max(500)
+    .optional()
+    .or(z.literal(""))
+    .nullable()
+    .refine((val) => !val || validateSafeHttpsUrl(val, { allowDiscordWebhookOnly: true }).isValid, {
+      message: "Discord Webhook URL must be a valid HTTPS webhook from discord.com.",
+    }),
 });
 
 const orgProfileSchema = z.object({
-  org_name: z.string().trim().optional().or(z.literal("")).nullable(),
-  oid_number: z.string().trim().optional().or(z.literal("")).nullable(),
-  country_hq: z.string().trim().optional().or(z.literal("")).nullable(),
-  description: z.string().trim().optional().or(z.literal("")).nullable(),
-  website: z.string().trim().optional().or(z.literal("")).nullable(),
-  contact_email: z.string().trim().optional().or(z.literal("")).nullable(),
-  social_instagram: z.string().trim().optional().or(z.literal("")).nullable(),
-  social_tiktok: z.string().trim().optional().or(z.literal("")).nullable(),
-  social_youtube: z.string().trim().optional().or(z.literal("")).nullable(),
-  social_linkedin: z.string().trim().optional().or(z.literal("")).nullable(),
-  notification_email: z.string().trim().email().optional().or(z.literal("")).nullable(),
-  discord_webhook_url: z.string().trim().url().optional().or(z.literal("")).nullable(),
+  org_name: z.string().trim().max(150).optional().or(z.literal("")).nullable(),
+  oid_number: z.string().trim().max(50).optional().or(z.literal("")).nullable(),
+  country_hq: z.string().trim().max(10).optional().or(z.literal("")).nullable(),
+  description: z.string().trim().max(5000).optional().or(z.literal("")).nullable(),
+  website: z
+    .string()
+    .trim()
+    .max(500)
+    .optional()
+    .or(z.literal(""))
+    .nullable()
+    .refine((val) => !val || validateSafeHttpsUrl(val).isValid, {
+      message: "Website URL must use a safe HTTPS protocol without pointing to internal IP addresses.",
+    }),
+  contact_email: z.string().trim().email().max(120).optional().or(z.literal("")).nullable(),
+  social_instagram: z
+    .string()
+    .trim()
+    .max(500)
+    .optional()
+    .or(z.literal(""))
+    .nullable()
+    .refine((val) => !val || validateSafeHttpsUrl(val).isValid, {
+      message: "Instagram URL must use a safe HTTPS protocol.",
+    }),
+  social_tiktok: z
+    .string()
+    .trim()
+    .max(500)
+    .optional()
+    .or(z.literal(""))
+    .nullable()
+    .refine((val) => !val || validateSafeHttpsUrl(val).isValid, {
+      message: "TikTok URL must use a safe HTTPS protocol.",
+    }),
+  social_youtube: z
+    .string()
+    .trim()
+    .max(500)
+    .optional()
+    .or(z.literal(""))
+    .nullable()
+    .refine((val) => !val || validateSafeHttpsUrl(val).isValid, {
+      message: "YouTube URL must use a safe HTTPS protocol.",
+    }),
+  social_linkedin: z
+    .string()
+    .trim()
+    .max(500)
+    .optional()
+    .or(z.literal(""))
+    .nullable()
+    .refine((val) => !val || validateSafeHttpsUrl(val).isValid, {
+      message: "LinkedIn URL must use a safe HTTPS protocol.",
+    }),
+  notification_email: z.string().trim().email().max(120).optional().or(z.literal("")).nullable(),
+  discord_webhook_url: z
+    .string()
+    .trim()
+    .max(500)
+    .optional()
+    .or(z.literal(""))
+    .nullable()
+    .refine((val) => !val || validateSafeHttpsUrl(val, { allowDiscordWebhookOnly: true }).isValid, {
+      message: "Discord Webhook URL must be a valid HTTPS webhook from discord.com.",
+    }),
 });
 
 interface YouthUpdatePayload {
@@ -71,10 +136,10 @@ interface OrgUpdatePayload {
   avatar_url?: string;
 }
 
-function sanitizeOptionalString(value: string | null | undefined): string | null {
+function sanitizeOptionalString(value: string | null | undefined, maxLength = 2000): string | null {
   if (value === null || value === undefined) return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
+  const cleaned = stripDangerousHtml(value, maxLength);
+  return cleaned.length > 0 ? cleaned : null;
 }
 
 function sanitizeLanguages(value: string | null | undefined): string[] | null {
@@ -330,6 +395,12 @@ export async function updateProfile(
 
     if (userError || !user) {
       return { error: "No estás autenticado." };
+    }
+
+    // Rate Limiting Gate (Sliding Window per User)
+    const rateCheck = await checkRateLimit(user.id, RATE_LIMITS.MUTATION);
+    if (!rateCheck.success) {
+      return { error: rateCheck.error || "Demasiadas peticiones de actualización. Por favor, espera." };
     }
 
     const role = formData.get("role")?.toString();

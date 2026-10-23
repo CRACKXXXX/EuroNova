@@ -4,6 +4,9 @@ import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { moderateContent } from "@/lib/moderation";
 import { sanitizeErrorMessage } from "@/lib/errorSanitizer";
+import { ProjectCreationSchema } from "@/lib/schemas";
+import { validateSafeHttpsUrl, stripDangerousHtml } from "@/lib/securitySanitizer";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimiter";
 
 export interface CreateProjectResult {
   error?: string;
@@ -23,6 +26,14 @@ export async function createProject(formData: FormData): Promise<CreateProjectRe
       return { error: "User not authenticated" };
     }
 
+    // Rate Limiting Gate (Sliding Window per Organization)
+    const rateCheck = await checkRateLimit(`project_${user.id}`, RATE_LIMITS.PROJECT_CREATION);
+    if (!rateCheck.success) {
+      return {
+        error: rateCheck.error || "Project creation rate limit reached. Please wait before publishing another mission.",
+      };
+    }
+
     // Check if user is an organization
     const { data: orgData, error: orgError } = await supabase
       .from("users_org")
@@ -34,12 +45,69 @@ export async function createProject(formData: FormData): Promise<CreateProjectRe
       return { error: "Only organizations can publish projects." };
     }
 
-    const title = (formData.get("title") as string | null)?.trim() || "";
-    const description = (formData.get("description") as string | null)?.trim() || "";
-
-    if (!title) {
-      return { error: "Project title is required." };
+    // Parse and normalize raw form fields
+    const rawOfficialUrl = (formData.get("official_url") as string | null)?.trim() || null;
+    if (rawOfficialUrl) {
+      const urlCheck = validateSafeHttpsUrl(rawOfficialUrl);
+      if (!urlCheck.isValid) {
+        return { error: `Invalid official application URL: ${urlCheck.error}` };
+      }
     }
+
+    const themesString = formData.get("themes") as string | null;
+    const themes = themesString
+      ? themesString
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+      : [];
+
+    const eligibleCountriesStr = formData.get("eligible_countries") as string | null;
+    const eligible_countries = eligibleCountriesStr
+      ? eligibleCountriesStr
+          .split(",")
+          .map((c) => c.trim())
+          .filter(Boolean)
+      : [];
+
+    const rawProjectData = {
+      title: (formData.get("title") as string | null)?.trim() || "",
+      description: (formData.get("description") as string | null)?.trim() || "",
+      project_type: (formData.get("project_type") as string) || "ESC",
+      dest_country: (formData.get("dest_country") as string) || "",
+      exact_location: (formData.get("exact_location") as string | null)?.trim() || null,
+      official_url: rawOfficialUrl,
+      target_profile: (formData.get("target_profile") as string | null)?.trim() || null,
+      min_age: parseInt(formData.get("min_age") as string) || 18,
+      max_age: parseInt(formData.get("max_age") as string) || 30,
+      duration_days: parseInt(formData.get("duration_days") as string) || null,
+      travel_budget_min: parseInt(formData.get("travel_budget_min") as string) || null,
+      travel_budget_max: parseInt(formData.get("travel_budget_max") as string) || null,
+      participation_fee: parseInt(formData.get("participation_fee") as string) || null,
+      financing_type: (formData.get("financing_type") as string) || null,
+      covers_rup_flights: formData.get("covers_rup_flights") === "on",
+      is_last_minute: formData.get("is_last_minute") === "on",
+      accommodation_covered: formData.get("accommodation_covered") === "on",
+      themes,
+      eligible_countries,
+    };
+
+    // Zod double-layer schema validation
+    const parsed = ProjectCreationSchema.safeParse(rawProjectData);
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0]?.message || "Invalid project submission parameters.";
+      return { error: issue };
+    }
+
+    // Strip dangerous HTML
+    const title = stripDangerousHtml(parsed.data.title, 150);
+    const description = stripDangerousHtml(parsed.data.description, 10000);
+    const exact_location = parsed.data.exact_location
+      ? stripDangerousHtml(parsed.data.exact_location, 150)
+      : null;
+    const target_profile = parsed.data.target_profile
+      ? stripDangerousHtml(parsed.data.target_profile, 500)
+      : null;
 
     // AI Auto-moderation interception
     const moderation = await moderateContent(title, description);
@@ -84,61 +152,27 @@ export async function createProject(formData: FormData): Promise<CreateProjectRe
       }
     }
 
-    const project_type = (formData.get("project_type") as string) || "ESC";
-    const dest_country = (formData.get("dest_country") as string) || "";
-    const exact_location = (formData.get("exact_location") as string) || null;
-    const official_url = (formData.get("official_url") as string) || null;
-    const target_profile = (formData.get("target_profile") as string) || null;
-
-    const min_age = parseInt(formData.get("min_age") as string) || 18;
-    const max_age = parseInt(formData.get("max_age") as string) || 30;
-    const duration_days = parseInt(formData.get("duration_days") as string) || null;
-    const travel_budget_min = parseInt(formData.get("travel_budget_min") as string) || null;
-    const travel_budget_max = parseInt(formData.get("travel_budget_max") as string) || null;
-    const participation_fee = parseInt(formData.get("participation_fee") as string) || null;
-    const financing_type = (formData.get("financing_type") as string) || null;
-
-    const covers_rup_flights = formData.get("covers_rup_flights") === "on";
-    const is_last_minute = formData.get("is_last_minute") === "on";
-    const accommodation_covered = formData.get("accommodation_covered") === "on";
-
-    const themesString = formData.get("themes") as string | null;
-    const themes = themesString
-      ? themesString
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean)
-      : [];
-
-    const eligibleCountriesStr = formData.get("eligible_countries") as string | null;
-    const eligible_countries = eligibleCountriesStr
-      ? eligibleCountriesStr
-          .split(",")
-          .map((c) => c.trim())
-          .filter(Boolean)
-      : [];
-
     const { error: insertError } = await supabase.from("projects").insert({
       org_id: user.id,
       title,
       description,
-      project_type,
-      dest_country,
+      project_type: parsed.data.project_type,
+      dest_country: parsed.data.dest_country,
       exact_location,
-      official_url,
+      official_url: parsed.data.official_url,
       target_profile,
-      min_age,
-      max_age,
-      duration_days,
-      travel_budget_min,
-      travel_budget_max,
-      participation_fee,
-      covers_rup_flights,
-      is_last_minute,
-      accommodation_covered,
-      themes,
-      eligible_countries,
-      financing_type,
+      min_age: parsed.data.min_age,
+      max_age: parsed.data.max_age,
+      duration_days: parsed.data.duration_days,
+      travel_budget_min: parsed.data.travel_budget_min,
+      travel_budget_max: parsed.data.travel_budget_max,
+      participation_fee: parsed.data.participation_fee,
+      covers_rup_flights: parsed.data.covers_rup_flights,
+      is_last_minute: parsed.data.is_last_minute,
+      accommodation_covered: parsed.data.accommodation_covered,
+      themes: parsed.data.themes,
+      eligible_countries: parsed.data.eligible_countries,
+      financing_type: parsed.data.financing_type,
       image_url: imageUrl,
       status: projectStatus,
     });

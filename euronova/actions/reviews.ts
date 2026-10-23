@@ -3,6 +3,9 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { sanitizeErrorMessage } from "@/lib/errorSanitizer";
+import { ReviewSubmissionSchema } from "@/lib/schemas";
+import { stripDangerousHtml } from "@/lib/securitySanitizer";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimiter";
 
 export interface ReviewResult {
   success?: boolean;
@@ -21,16 +24,16 @@ export async function submitOrgReview(
   reviewText: string
 ): Promise<ReviewResult> {
   try {
-    if (!orgId || typeof orgId !== "string") {
-      return { error: "Organization ID is required." };
+    // 1. Zod double-layer schema validation
+    const parsed = ReviewSubmissionSchema.safeParse({ orgId, rating, reviewText });
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0]?.message || "Invalid review parameters.";
+      return { error: issue };
     }
 
-    if (!rating || typeof rating !== "number" || rating < 1 || rating > 5) {
-      return { error: "Rating must be an integer between 1 and 5." };
-    }
-
-    if (!reviewText || typeof reviewText !== "string" || reviewText.trim().length < 5) {
-      return { error: "Review text must be at least 5 characters long." };
+    const cleanReviewText = stripDangerousHtml(parsed.data.reviewText, 2000);
+    if (cleanReviewText.length < 5) {
+      return { error: "Review text must be at least 5 characters long after sanitization." };
     }
 
     const supabase = await createClient();
@@ -38,6 +41,14 @@ export async function submitOrgReview(
 
     if (authError || !user) {
       return { error: "You must be signed in to submit an organization review." };
+    }
+
+    // Rate Limiting Gate (Sliding Window by User ID)
+    const rateCheck = await checkRateLimit(user.id, RATE_LIMITS.MUTATION);
+    if (!rateCheck.success) {
+      return {
+        error: rateCheck.error || "Rate limit exceeded. Please wait before submitting another review.",
+      };
     }
 
     // LÓGICA ANTI-SPAM: Verificar que el usuario pertenezca a users_youth
@@ -96,7 +107,7 @@ export async function submitOrgReview(
           org_id: orgId,
           author_id: user.id,
           rating: Math.round(rating),
-          review_text: reviewText.trim(),
+          review_text: cleanReviewText,
           created_at: new Date().toISOString(),
         },
         { onConflict: "org_id,author_id" }

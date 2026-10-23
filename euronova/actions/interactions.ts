@@ -3,6 +3,8 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { sanitizeErrorMessage } from "@/lib/errorSanitizer";
+import { UuidSchema } from "@/lib/schemas";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimiter";
 
 export interface InteractionResult {
   success?: boolean;
@@ -19,8 +21,9 @@ export interface InteractionResult {
  */
 export async function toggleProjectFavorite(projectId: string): Promise<InteractionResult> {
   try {
-    if (!projectId || typeof projectId !== "string") {
-      return { error: "Invalid project ID." };
+    const validUuid = UuidSchema.safeParse(projectId);
+    if (!validUuid.success) {
+      return { error: "Invalid project UUID identifier." };
     }
 
     const supabase = await createClient();
@@ -28,6 +31,11 @@ export async function toggleProjectFavorite(projectId: string): Promise<Interact
 
     if (authError || !user) {
       return { error: "Authentication required to favorite projects." };
+    }
+
+    const rateCheck = await checkRateLimit(user.id, RATE_LIMITS.MUTATION);
+    if (!rateCheck.success) {
+      return { error: rateCheck.error || "Rate limit reached. Please wait." };
     }
 
     // Obtener la interacción actual
@@ -101,8 +109,9 @@ export async function toggleProjectFavorite(projectId: string): Promise<Interact
  */
 export async function toggleProjectApplied(projectId: string): Promise<InteractionResult> {
   try {
-    if (!projectId || typeof projectId !== "string") {
-      return { error: "Invalid project ID." };
+    const validUuid = UuidSchema.safeParse(projectId);
+    if (!validUuid.success) {
+      return { error: "Invalid project UUID identifier." };
     }
 
     const supabase = await createClient();
@@ -110,6 +119,11 @@ export async function toggleProjectApplied(projectId: string): Promise<Interacti
 
     if (authError || !user) {
       return { error: "Authentication required to track applications." };
+    }
+
+    const rateCheck = await checkRateLimit(user.id, RATE_LIMITS.MUTATION);
+    if (!rateCheck.success) {
+      return { error: rateCheck.error || "Rate limit reached. Please wait." };
     }
 
     // Obtener la interacción actual
