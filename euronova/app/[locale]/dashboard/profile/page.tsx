@@ -349,10 +349,10 @@ export default async function ProfilePage(props: {
           items={
             role === "org"
               ? [
-                  { label: "Organization Command Center", href: `/${locale}/dashboard/organizations/${user.id}` },
-                  { label: t("title") || "Profile" }
+                  { label: t("orgCommandCenter"), href: `/${locale}/dashboard/organizations/${user.id}` },
+                  { label: t("title") }
                 ]
-              : [{ label: t("title") || "Profile" }]
+              : [{ label: t("title") }]
           }
         />
       </div>
@@ -395,17 +395,17 @@ export default async function ProfilePage(props: {
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2.5 flex-wrap">
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rup-emerald/20 text-rup-emerald border border-rup-emerald/40 shadow-[0_0_10px_rgba(0,230,118,0.3)]">
-                      Level 10 Vanguard Milestone
+                      {t("vanguardMilestoneBadge")}
                     </span>
                     <span className="text-xs text-gray-400 font-mono">
-                      Level {userLevel} · {format.number(userXp)} XP
+                      {t("levelXpBadge", { level: userLevel, xp: format.number(userXp) })}
                     </span>
                   </div>
                   <h3 className="text-lg sm:text-xl font-black text-white tracking-tight">
-                    Invitation: Join the EuroNova Staff as a Support Specialist!
+                    {t("vanguardInvitationTitle")}
                   </h3>
                   <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-2xl font-light">
-                    You have demonstrated exceptional dedication to the European mobility community. As a Level 10+ veteran, you are officially invited to apply for the <strong className="text-rup-emerald font-semibold">Support Specialist</strong> role to guide incoming youth, answer inquiries, and unlock platform staff credentials.
+                    {t("vanguardInvitationDesc")}
                   </p>
                 </div>
               </div>
@@ -415,7 +415,7 @@ export default async function ProfilePage(props: {
                   className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-rup-emerald hover:bg-rup-emerald/90 text-void-deep font-black text-xs sm:text-sm transition-all shadow-[0_0_25px_rgba(0,230,118,0.4)] hover:scale-105 cursor-pointer uppercase tracking-wider"
                 >
                   <Headphones className="w-4 h-4" />
-                  <span>Apply for Support Role</span>
+                  <span>{t("vanguardApplyBtn")}</span>
                 </Link>
               </div>
             </div>
@@ -463,11 +463,11 @@ export default async function ProfilePage(props: {
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-rup-emerald animate-pulse" />
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                  Organization Command Center
+                  {t("orgCommandCenter")}
                 </h3>
               </div>
               <p className="text-xs text-gray-400">
-                Manage your missions, squad members, webhooks, analytics, and surveys.
+                {t("orgCommandCenterDesc")}
               </p>
             </div>
             <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto">
@@ -476,7 +476,7 @@ export default async function ProfilePage(props: {
                 className="w-full sm:w-auto text-center px-5 py-2.5 rounded-xl bg-hyper-violet hover:bg-hyper-violet/90 text-white font-bold text-xs transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)] flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Building className="w-4 h-4" />
-                <span>Open Command Center</span>
+                <span>{t("openCommandCenter")}</span>
               </Link>
             </div>
           </div>

@@ -101,9 +101,9 @@ export function ProjectCard({ project }: { project: ProjectData }) {
       } else if (res?.is_applied !== undefined) {
         setIsApplied(res.is_applied);
         if (res.is_applied && res.xpGained) {
-          toast.success(`Mission application logged! +${res.xpGained} XP awarded.`, { icon: "🚀" });
+          toast.success(t("appLoggedXp", { xp: res.xpGained }), { icon: "🚀" });
           if (res.leveledUp) {
-            toast.success(`LEVEL UP! You reached Level ${res.newLevel}!`, { icon: "⚡" });
+            toast.success(t("appLoggedLevelUp", { level: res.newLevel ?? 1 }), { icon: "⚡" });
           }
           if (typeof window !== "undefined") {
             window.dispatchEvent(new CustomEvent("euronova:xp-updated", { 
@@ -111,7 +111,7 @@ export function ProjectCard({ project }: { project: ProjectData }) {
             }));
           }
         } else if (res.is_applied && !res.xpGained) {
-          toast.info("Mission application logged! (XP already claimed for this mission)", { icon: "📋" });
+          toast.info(t("appLoggedAlreadyClaimed"), { icon: "📋" });
         }
       }
     });
@@ -187,11 +187,11 @@ export function ProjectCard({ project }: { project: ProjectData }) {
 
             {/* AI Anti-Scam Shield micro-badge */}
             <div
-              title="Verified by EuroNova AI & Moderation Team"
+              title={t("aiSecurityTooltip")}
               className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/40 shadow-[0_0_12px_rgba(0,230,118,0.25)] flex items-center gap-1 cursor-help shrink-0"
             >
               <ShieldCheck className="w-3 h-3 text-rup-emerald shrink-0" />
-              <span>AI Security Checked</span>
+              <span>{t("aiSecurityChecked")}</span>
             </div>
           </div>
 

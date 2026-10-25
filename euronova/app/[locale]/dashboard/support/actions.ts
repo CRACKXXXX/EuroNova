@@ -90,16 +90,16 @@ export async function createTicket(prevState: unknown, formData: FormData) {
     await transporter.sendMail({
       from: `"EuroNova Support" <EuroNovaOfficial@gmail.com>`,
       to: "EuroNovaOfficial@gmail.com",
-      subject: `Nuevo Ticket [${reason.toUpperCase()}]: ${subject}`,
+      subject: `[EuroNova Support] [${reason.toUpperCase()}]: ${subject}`,
       html: `
-        <h2>Nuevo ticket de soporte</h2>
-        <p><strong>Usuario ID:</strong> ${user.id}</p>
-        <p><strong>Email de Contacto:</strong> ${email}</p>
-        <p><strong>Teléfono:</strong> ${phone || "No proporcionado"}</p>
-        <p><strong>Motivo:</strong> ${reason}</p>
-        <p><strong>Asunto:</strong> ${subject}</p>
+        <h2>EuroNova Support Ticket</h2>
+        <p><strong>User ID:</strong> ${user.id}</p>
+        <p><strong>Contact Email:</strong> ${email}</p>
+        <p><strong>Phone:</strong> ${phone || "Not provided"}</p>
+        <p><strong>Reason:</strong> ${reason}</p>
+        <p><strong>Subject:</strong> ${subject}</p>
         <hr />
-        <h3>Contenido:</h3>
+        <h3>Content:</h3>
         <p style="white-space: pre-wrap;">${content}</p>
       `,
     });

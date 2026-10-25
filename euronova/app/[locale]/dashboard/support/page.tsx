@@ -9,7 +9,7 @@ export default async function SupportPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
       <div className="mb-2">
-        <Breadcrumbs items={[{ label: t("title") || "Support" }]} />
+        <Breadcrumbs items={[{ label: t("title") }]} />
       </div>
       
       <div>

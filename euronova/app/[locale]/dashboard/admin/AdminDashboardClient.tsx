@@ -865,7 +865,7 @@ export function AdminDashboardClient({
               }`}
             >
               <ShieldAlert className="w-4 h-4 text-amber-400" />
-              <span>Escalations</span>
+              <span>{t("tabEscalationsLabel")}</span>
               <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-amber-500/30 text-white font-mono flex items-center gap-1.5">
                 {totalEscalations}
                 {totalPendingEscalations > 0 && (
@@ -885,7 +885,7 @@ export function AdminDashboardClient({
             }`}
           >
             <Headphones className="w-4 h-4 text-plasma-cyan" />
-            <span>Support Tickets</span>
+            <span>{t("tabSupportTicketsLabel")}</span>
             <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-plasma-cyan/30 text-white font-mono flex items-center gap-1.5">
               {totalTickets}
               {totalPendingTickets > 0 && (
@@ -904,7 +904,7 @@ export function AdminDashboardClient({
               }`}
             >
               <ShieldCheck className="w-4 h-4 text-plasma-cyan" />
-              <span>Staff &amp; Roles</span>
+              <span>{t("tabStaffRolesLabel")}</span>
               <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-plasma-cyan/30 text-white font-mono">
                 {totalStaff}
               </span>
@@ -937,12 +937,12 @@ export function AdminDashboardClient({
             {showSensitive ? (
               <>
                 <EyeOff className="w-4 h-4 text-nova-flare shrink-0" />
-                <span>Hide Sensitive Data</span>
+                <span>{t("hideSensitiveData")}</span>
               </>
             ) : (
               <>
                 <Eye className="w-4 h-4 text-plasma-cyan shrink-0" />
-                <span>Show Sensitive Data</span>
+                <span>{t("showSensitiveData")}</span>
               </>
             )}
           </button>
@@ -1042,10 +1042,10 @@ export function AdminDashboardClient({
                         setNotifyType("action_required");
                       }}
                       className="flex-1 py-2 px-2.5 rounded-lg bg-hyper-violet/15 hover:bg-hyper-violet/25 text-hyper-violet border border-hyper-violet/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                      title="Send In-App Notification"
+                      title={t("sendInAppNotification")}
                     >
                       <Bell className="w-3.5 h-3.5 shrink-0" />
-                      <span>Notify</span>
+                      <span>{t("notifyBtn")}</span>
                     </button>
                     <button
                       disabled={isPending}
@@ -1129,10 +1129,10 @@ export function AdminDashboardClient({
                         setNotifyType("system");
                       }}
                       className="flex-1 py-2 px-3 rounded-lg bg-hyper-violet/10 hover:bg-hyper-violet/20 text-hyper-violet border border-hyper-violet/30 font-bold text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
-                      title="Send In-App Notification"
+                      title={t("sendInAppNotification")}
                     >
                       <Bell className="w-3.5 h-3.5 shrink-0" />
-                      <span>Notify</span>
+                      <span>{t("notifyBtn")}</span>
                     </button>
                     <button
                       disabled={isPending}
@@ -1211,7 +1211,7 @@ export function AdminDashboardClient({
                     type="button"
                     onClick={() => setUserSearchQuery("")}
                     className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-0.5 cursor-pointer"
-                    title="Clear search"
+                    title={t("clearSearch")}
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -1309,10 +1309,10 @@ export function AdminDashboardClient({
                           setNotifyType("system");
                         }}
                         className="py-2 px-3 rounded-lg bg-hyper-violet/10 hover:bg-hyper-violet/20 text-hyper-violet border border-hyper-violet/30 font-bold text-xs transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
-                        title="Send In-App Notification"
+                        title={t("sendInAppNotification")}
                       >
                         <Bell className="w-3.5 h-3.5" />
-                        <span>Notify</span>
+                        <span>{t("notifyBtn")}</span>
                       </button>
                       <button
                         disabled={isPending}
@@ -1344,7 +1344,7 @@ export function AdminDashboardClient({
                       onClick={() => setUserSearchQuery("")}
                       className="mt-2 text-xs text-plasma-cyan hover:underline cursor-pointer font-semibold"
                     >
-                      Clear search filter
+                      {t("clearSearchFilter")}
                     </button>
                   )}
                 </div>
@@ -1386,10 +1386,10 @@ export function AdminDashboardClient({
               <div>
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
                   <Layers className="w-4 h-4 text-plasma-cyan" />
-                  <span>Project Origin Filter</span>
+                  <span>{t("projectOriginFilter")}</span>
                 </h3>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Filter queues between direct NGO publications and automated scraper feeds.
+                  {t("projectOriginFilterDesc")}
                 </p>
               </div>
 
@@ -1464,7 +1464,7 @@ export function AdminDashboardClient({
                           {isScraped ? (
                             <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-purple-500/15 text-purple-300 border border-purple-500/30 flex items-center gap-1 shadow-[0_0_10px_rgba(168,85,247,0.15)]">
                               <Bot className="w-3 h-3" />
-                              Auto-Scraped
+                              {t("autoScrapedBadge")}
                             </span>
                           ) : (
                             <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/30 flex items-center gap-1">
@@ -1486,7 +1486,7 @@ export function AdminDashboardClient({
 
                       {(project.login_email || project.users_org?.contact_email) && (
                         <p className={`text-xs text-gray-400 font-mono mb-3 ${showSensitive ? "break-all whitespace-normal" : "truncate"}`}>
-                          Contact: {showSensitive ? (project.login_email || project.users_org?.contact_email) : maskEmail(project.login_email || project.users_org?.contact_email)}
+                          {t("contactLabel", { email: (showSensitive ? (project.login_email || project.users_org?.contact_email) : maskEmail(project.login_email || project.users_org?.contact_email)) || '' })}
                         </p>
                       )}
 
@@ -1520,10 +1520,10 @@ export function AdminDashboardClient({
                           disabled={isPending}
                           onClick={() => handleOpenEditProject(project)}
                           className="py-2 px-3 rounded-lg bg-plasma-cyan/15 hover:bg-plasma-cyan/25 text-plasma-cyan border border-plasma-cyan/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-[0_0_10px_rgba(0,229,255,0.15)]"
-                          title="God Mode: Edit project details before approval"
+                          title={t("editProjectTooltip")}
                         >
                           <Edit3 className="w-3.5 h-3.5 shrink-0" />
-                          <span>Edit</span>
+                          <span>{t("editProjectBtn")}</span>
                         </button>
                         <a
                           href={`mailto:${project.login_email || project.users_org?.contact_email || ""}?subject=EuroNova%20-%20Project%20Review:%20${encodeURIComponent(project.title)}&body=Hello,%20your%20project%20was%20flagged.%20Please%20modify%20it%20so%20we%20can%20publish:%0A%0A-%20...`}
@@ -1590,7 +1590,7 @@ export function AdminDashboardClient({
                           {isScraped ? (
                             <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-purple-500/15 text-purple-300 border border-purple-500/30 flex items-center gap-1 shadow-[0_0_10px_rgba(168,85,247,0.15)]">
                               <Bot className="w-3 h-3" />
-                              Auto-Scraped
+                              {t("autoScrapedBadge")}
                             </span>
                           ) : (
                             <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/30 flex items-center gap-1">
@@ -1612,7 +1612,7 @@ export function AdminDashboardClient({
 
                       {(project.login_email || project.users_org?.contact_email) && (
                         <p className={`text-xs text-gray-400 font-mono mb-3 ${showSensitive ? "break-all whitespace-normal" : "truncate"}`}>
-                          Contact: {showSensitive ? (project.login_email || project.users_org?.contact_email) : maskEmail(project.login_email || project.users_org?.contact_email)}
+                          {t("contactLabel", { email: (showSensitive ? (project.login_email || project.users_org?.contact_email) : maskEmail(project.login_email || project.users_org?.contact_email)) || '' })}
                         </p>
                       )}
 
@@ -1640,7 +1640,7 @@ export function AdminDashboardClient({
                           className="flex-1 py-2 px-3 rounded-lg bg-plasma-cyan/15 hover:bg-plasma-cyan/25 text-plasma-cyan border border-plasma-cyan/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
                         >
                           <Edit3 className="w-3.5 h-3.5 shrink-0" />
-                          <span>Edit</span>
+                          <span>{t("editProjectBtn")}</span>
                         </button>
                         <button
                           disabled={isPending}
@@ -1745,10 +1745,10 @@ export function AdminDashboardClient({
                 {/* Triage Summary Badges */}
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="px-3 py-1.5 rounded-lg bg-nova-flare/15 border border-nova-flare/30 text-xs font-bold text-nova-flare">
-                    Active: {activeReports.length}
+                    {t("activeCountLabel", { count: activeReports.length })}
                   </span>
                   <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border text-xs font-semibold text-gray-300">
-                    Total: <strong className="text-white">{totalReports}</strong>
+                    {t.rich("totalReportsLabel", { count: totalReports, strong: (c) => <strong className="text-white">{c}</strong> })}
                   </span>
                 </div>
               </div>
@@ -1764,7 +1764,7 @@ export function AdminDashboardClient({
                       : "bg-void-deep border border-void-border text-gray-400 hover:text-white"
                   }`}
                 >
-                  All Reports ({activeReports.length})
+                  {t("allReportsTab", { count: activeReports.length })}
                 </button>
                 <button
                   type="button"
@@ -1776,7 +1776,7 @@ export function AdminDashboardClient({
                   }`}
                 >
                   <User className="w-3.5 h-3.5 text-hyper-violet" />
-                  <span>User & Comment Reports</span>
+                  <span>{t("userCommentReportsTab")}</span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] bg-hyper-violet/30 text-white font-mono">
                     {activeUserReports.length}
                   </span>
@@ -1791,7 +1791,7 @@ export function AdminDashboardClient({
                   }`}
                 >
                   <FolderGit2 className="w-3.5 h-3.5 text-nova-flare" />
-                  <span>Project, Org & Surveys</span>
+                  <span>{t("projectOrgSurveysTab")}</span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] bg-nova-flare/30 text-white font-mono">
                     {activeProjectReports.length}
                   </span>
@@ -1806,7 +1806,7 @@ export function AdminDashboardClient({
                   }`}
                 >
                   <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Quarantine / Suspicious</span>
+                  <span>{t("quarantineSuspiciousTab")}</span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-500/30 text-amber-200 font-mono font-bold">
                     {activeQuarantineReports.length}
                   </span>
@@ -1918,17 +1918,17 @@ export function AdminDashboardClient({
                                 <div className="flex items-center justify-between text-gray-400 pb-1 border-b border-void-border/50">
                                   <span className="font-bold uppercase tracking-wider text-[10px] text-plasma-cyan flex items-center gap-1">
                                     <User className="w-3 h-3 text-plasma-cyan" />
-                                    Submitted by (Reporter)
+                                    {t("submittedByReporter")}
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between text-xs pt-0.5">
-                                  <span className="text-gray-400">Reporter Name:</span>
+                                  <span className="text-gray-400">{t("reporterNameLabel")}</span>
                                   <span className="text-white font-bold">
                                     {report.reporter_name || t("anonymousReporter")}
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between text-xs">
-                                  <span className="text-gray-400">Reporter Email:</span>
+                                  <span className="text-gray-400">{t("reporterEmailLabel")}</span>
                                   <span className="text-gray-300 font-mono">
                                     {report.reporter_email
                                       ? showSensitive
@@ -1939,22 +1939,22 @@ export function AdminDashboardClient({
                                 </div>
                               </div>
 
-                              {/* 2. Reported User Information Box */}
+                              {/* 2. {t("reportedUser")} Information Box */}
                               <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-1.5 text-xs">
                                 <div className="flex items-center justify-between pb-1 border-b border-amber-500/20">
                                   <span className="font-bold uppercase tracking-wider text-[10px] text-amber-400 flex items-center gap-1">
                                     <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-                                    Reported User
+                                    {t("reportedUser")}
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between text-xs pt-0.5">
-                                  <span className="text-gray-400">User Name:</span>
+                                  <span className="text-gray-400">{t("userNameLabel")}</span>
                                   <span className="text-white font-black">
                                     {report.target_user_name || report.target_name || "Unknown User"}
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between text-xs">
-                                  <span className="text-gray-400">User Email:</span>
+                                  <span className="text-gray-400">{t("userEmailLabel")}</span>
                                   <span className="text-gray-200 font-mono font-semibold">
                                     {report.target_user_email
                                       ? showSensitive
@@ -1964,7 +1964,7 @@ export function AdminDashboardClient({
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between text-xs font-mono">
-                                  <span className="text-gray-400">User ID:</span>
+                                  <span className="text-gray-400">{t("userIdLabel")}</span>
                                   <span className={`text-plasma-cyan font-bold ${showSensitive ? "break-all" : ""}`}>
                                     {report.target_user_id
                                       ? showSensitive
@@ -2002,12 +2002,12 @@ export function AdminDashboardClient({
                                         title={t("viewProject")}
                                       >
                                         <ExternalLink className="w-3.5 h-3.5" />
-                                        <span className="text-[11px] underline">Open Mission</span>
+                                        <span className="text-[11px] underline">{t("openMission")}</span>
                                       </a>
                                     )}
                                     {report.projects?.status && (
                                       <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-void-surface border border-void-border text-gray-400">
-                                        Status: {report.projects.status}
+                                        {t("statusPrefix", { status: report.projects.status })}
                                       </span>
                                     )}
                                   </>
@@ -2024,15 +2024,15 @@ export function AdminDashboardClient({
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-hyper-violet hover:text-white p-1 rounded hover:bg-void-surface transition-colors inline-flex items-center gap-1 text-xs"
-                                        title="View Public Organization Profile"
+                                        title={t("viewPublicOrgProfile")}
                                       >
                                         <ExternalLink className="w-3.5 h-3.5" />
-                                        <span className="text-[11px] underline">Open Profile</span>
+                                        <span className="text-[11px] underline">{t("openProfile")}</span>
                                       </a>
                                     )}
                                     {report.users_org?.verification_status && (
                                       <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-void-surface border border-void-border text-gray-400">
-                                        Verification: {report.users_org.verification_status}
+                                        {t("verificationPrefix", { status: report.users_org.verification_status })}
                                       </span>
                                     )}
                                   </>
@@ -2041,11 +2041,11 @@ export function AdminDashboardClient({
                             </div>
                           )}
 
-                          {/* Description */}
+                          {/* {t("descriptionLabel")} */}
                           {report.description && (
                             <div className="p-3.5 rounded-xl bg-void-surface border border-void-border/70 text-xs text-gray-300 leading-relaxed whitespace-pre-wrap">
                               <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">
-                                Report Notes / Flagged Content:
+                                {t("reportNotesFlagged")}
                               </span>
                               {report.description}
                             </div>
@@ -2067,10 +2067,10 @@ export function AdminDashboardClient({
                                   )
                                 }
                                 className="flex-1 py-2 px-3 rounded-xl bg-void-surface hover:bg-nova-flare/15 text-gray-300 hover:text-nova-flare border border-void-border hover:border-nova-flare/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50"
-                                title="Only removes the reported comment or discussion item"
+                                title={t("tooltipRemoveComment")}
                               >
                                 <Trash2 className="w-3.5 h-3.5 shrink-0" />
-                                <span>Delete Comment</span>
+                                <span>{t("deleteComment")}</span>
                               </button>
 
                               <button
@@ -2082,10 +2082,10 @@ export function AdminDashboardClient({
                                   )
                                 }
                                 className="flex-1 py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(245,158,11,0.15)] disabled:opacity-50"
-                                title="Removes comment and adds an official warning strike to the user"
+                                title={t("tooltipWarnUser")}
                               >
                                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                                <span>Delete + Warn</span>
+                                <span>{t("deleteAndWarn")}</span>
                               </button>
 
                               {currentUserRole === "moderator" ? (
@@ -2095,7 +2095,7 @@ export function AdminDashboardClient({
                                   onClick={() => {
                                     setEscalateModal({
                                       reportId: report.id,
-                                      targetName: report.target_user_name || report.target_name || "Reported User",
+                                      targetName: report.target_user_name || report.target_name || t("reportedUser"),
                                       targetType: "user",
                                       defaultAction: "ban_user",
                                     });
@@ -2103,7 +2103,7 @@ export function AdminDashboardClient({
                                     setEscalateReason(`Account suspension request flagged by moderator: ${report.reason}`);
                                   }}
                                   className="flex-1 py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(245,158,11,0.2)] disabled:opacity-50"
-                                  title="Moderators cannot ban accounts directly. Request Admin Action."
+                                  title={t("tooltipModCannotBan")}
                                 >
                                   <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
                                   <span>{report.status === "escalated" ? "Escalated" : "Escalate Ban Request"}</span>
@@ -2121,10 +2121,10 @@ export function AdminDashboardClient({
                                     });
                                   }}
                                   className="flex-1 py-2 px-3 rounded-xl bg-nova-flare/15 hover:bg-nova-flare/25 text-nova-flare border border-nova-flare/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(255,46,99,0.2)] disabled:opacity-50"
-                                  title="Removes comment and bans the user account"
+                                  title={t("tooltipBanUser")}
                                 >
                                   <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
-                                  <span>Delete + Ban</span>
+                                  <span>{t("deleteAndBan")}</span>
                                 </button>
                               )}
                             </>
@@ -2185,7 +2185,7 @@ export function AdminDashboardClient({
                                     setEscalateReason(`Survey deletion request flagged by moderator: ${report.reason}`);
                                   }}
                                   className="flex-1 py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(245,158,11,0.2)] disabled:opacity-50"
-                                  title="Moderators cannot delete surveys directly. Escalate to Admin."
+                                  title={t("tooltipModCannotDeleteSurvey")}
                                 >
                                   <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
                                   <span>{report.status === "escalated" ? "Escalated" : "Escalate to Admin"}</span>
@@ -2207,10 +2207,10 @@ export function AdminDashboardClient({
                                     });
                                   }}
                                   className="flex-1 py-2 px-3 rounded-xl bg-nova-flare/15 hover:bg-nova-flare/25 text-nova-flare border border-nova-flare/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(255,46,99,0.2)] disabled:opacity-50"
-                                  title="Deletes the survey and penalizes the creator's Trust Score"
+                                  title={t("tooltipDeleteSurvey")}
                                 >
                                   <Trash2 className="w-3.5 h-3.5 shrink-0" />
-                                  <span>Delete &amp; Warn</span>
+                                  <span>{t("deleteAndWarnSurvey")}</span>
                                 </button>
                               )}
 
@@ -2226,10 +2226,10 @@ export function AdminDashboardClient({
                                   )
                                 }
                                 className="flex-1 py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(245,158,11,0.15)] disabled:opacity-50"
-                                title="Leaves the survey active but applies a disciplinary warning strike (-15 Trust Score) to the creator"
+                                title={t("tooltipWarnSurveyCreator")}
                               >
                                 <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                                <span>Warn Only</span>
+                                <span>{t("warnOnly")}</span>
                               </button>
                             </>
                           )}
@@ -2251,7 +2251,7 @@ export function AdminDashboardClient({
                                     setEscalateReason(`Organization suspension request flagged by moderator: ${report.reason}`);
                                   }}
                                   className="flex-1 py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(245,158,11,0.2)] disabled:opacity-50"
-                                  title="Moderators cannot suspend organizations directly. Escalate to Admin."
+                                  title={t("tooltipModCannotSuspendOrg")}
                                 >
                                   <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
                                   <span>{report.status === "escalated" ? "Escalated" : "Escalate to Admin"}</span>
@@ -2270,7 +2270,7 @@ export function AdminDashboardClient({
                                   className="flex-1 py-2 px-3 rounded-xl bg-nova-flare/15 hover:bg-nova-flare/25 text-nova-flare border border-nova-flare/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(255,46,99,0.15)] disabled:opacity-50"
                                 >
                                   <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
-                                  <span>Suspend Org</span>
+                                  <span>{t("suspendOrg")}</span>
                                 </button>
                               )}
                             </>
@@ -2315,7 +2315,7 @@ export function AdminDashboardClient({
 
                 <div className="flex items-center gap-2">
                   <span className="px-3 py-1.5 rounded-lg bg-void-deep/80 border border-void-border/60 text-xs text-gray-400 font-mono">
-                    Auto-purged via pg_cron (72h)
+                    {t("autoPurged72h")}
                   </span>
                 </div>
               </div>
@@ -2341,13 +2341,13 @@ export function AdminDashboardClient({
                               [{targetType.toUpperCase()}]
                             </span>
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/30">
-                              Resolved
+                              {t("reportResolved")}
                             </span>
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-void-surface border border-void-border text-gray-400 uppercase">
                               {report.reason}
                             </span>
                             <span className="text-[11px] text-gray-500 font-mono">
-                              Filed: {format.dateTime(new Date(report.created_at), { dateStyle: 'medium' })}
+                              {t("filedDate", { date: format.dateTime(new Date(report.created_at), { dateStyle: 'medium' }) })}
                             </span>
                             {report.resolved_at && (
                               <span className="text-[11px] text-rup-emerald/80 font-mono">
@@ -2356,7 +2356,7 @@ export function AdminDashboardClient({
                             )}
                             {report.resolution_action && (
                               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-hyper-violet/20 text-hyper-violet border border-hyper-violet/30">
-                                Action: {report.resolution_action}
+                                {t("actionCol", { action: report.resolution_action })}
                               </span>
                             )}
                             {(() => {
@@ -2366,7 +2366,7 @@ export function AdminDashboardClient({
                               return (
                                 <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-void-surface border border-nova-flare/30 text-nova-flare flex items-center gap-1">
                                   <Clock className="w-3 h-3" />
-                                  Auto-deleting in {remainingHours}h
+                                  {t("autoDeletingInHours", { hours: remainingHours })}
                                 </span>
                               );
                             })()}
@@ -2397,7 +2397,7 @@ export function AdminDashboardClient({
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-gray-400 hover:text-hyper-violet p-0.5 transition-colors"
-                                title="View Organization Profile"
+                                title={t("viewOrgProfile")}
                               >
                                 <ExternalLink className="w-3.5 h-3.5" />
                               </a>
@@ -2418,15 +2418,15 @@ export function AdminDashboardClient({
                             disabled={isPending}
                             onClick={() => handleAction(() => reopenReport(report.id))}
                             className="py-1.5 px-3 rounded-lg bg-hyper-violet/15 hover:bg-hyper-violet/25 text-hyper-violet border border-hyper-violet/40 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                            title="Reopen this report back to pending queue"
+                            title={t("reopenReportTooltip")}
                           >
                             <RotateCcw className="w-3.5 h-3.5" />
-                            <span>Undo / Reopen</span>
+                            <span>{t("undoReopen")}</span>
                           </button>
 
                           <div className="flex items-center gap-1.5 text-xs text-rup-emerald/90 font-medium px-3 py-1.5 rounded-lg bg-rup-emerald/10 border border-rup-emerald/20">
                             <CheckCircle2 className="w-3.5 h-3.5 text-rup-emerald" />
-                            <span className="hidden sm:inline">Closed</span>
+                            <span className="hidden sm:inline">{t("closed")}</span>
                           </div>
                         </div>
                       </div>
@@ -2453,13 +2453,13 @@ export function AdminDashboardClient({
                 </div>
                 <div>
                   <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-3">
-                    <span>Staff & Role Management</span>
+                    <span>{t("staffRoleManagement")}</span>
                     <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-plasma-cyan/15 text-plasma-cyan border border-plasma-cyan/30 uppercase tracking-widest font-black">
-                      Admin Clearance Only
+                      {t("adminClearanceOnly")}
                     </span>
                   </h2>
                   <p className="text-sm text-gray-400 mt-1 max-w-2xl">
-                    Grant, promote, or revoke moderation privileges across the EuroNova network. Role updates take effect immediately in both local forums and the admin panel.
+                    {t("staffRoleManagementDesc")}
                   </p>
                 </div>
               </div>
@@ -2469,10 +2469,10 @@ export function AdminDashboardClient({
                 <Shield className="w-5 h-5 text-plasma-cyan" />
                 <div>
                   <div className="text-[10px] font-mono uppercase tracking-wider text-gray-400">
-                    Network Staff Count
+                    {t("networkStaffCount")}
                   </div>
                   <div className="text-lg font-black text-white font-mono">
-                    {totalStaff} Verified
+                    {totalStaff} {t("verifiedStaff")}
                   </div>
                 </div>
               </div>
@@ -2484,11 +2484,11 @@ export function AdminDashboardClient({
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="text-sm">🛡️</span>
                   <span className="text-xs font-black text-plasma-cyan uppercase tracking-wider">
-                    Admin
+                    {t("roleAdminTitle")}
                   </span>
                 </div>
                 <p className="text-[11px] text-gray-400 leading-relaxed">
-                  Full system authority. Manage projects, assign roles, inspect reports, and execute God Mode edits.
+                  {t("roleAdminDesc")}
                 </p>
               </div>
 
@@ -2496,11 +2496,11 @@ export function AdminDashboardClient({
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="text-sm">⚔️</span>
                   <span className="text-xs font-black text-amber-300 uppercase tracking-wider">
-                    Moderator
+                    {t("roleModTitle")}
                   </span>
                 </div>
                 <p className="text-[11px] text-gray-400 leading-relaxed">
-                  Resolve reports, Warn, Mute, Ban users, and delete comments. Cannot edit projects or assign roles.
+                  {t("roleModDesc")}
                 </p>
               </div>
 
@@ -2508,11 +2508,11 @@ export function AdminDashboardClient({
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="text-sm">🎧</span>
                   <span className="text-xs font-black text-rup-emerald uppercase tracking-wider">
-                    Support
+                    {t("roleSupportTitle")}
                   </span>
                 </div>
                 <p className="text-[11px] text-gray-400 leading-relaxed">
-                  View reports, read community forums, and reply to inquiries. Cannot Warn, Mute, Ban, or Delete.
+                  {t("roleSupportDesc")}
                 </p>
               </div>
 
@@ -2520,11 +2520,11 @@ export function AdminDashboardClient({
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="text-sm">👤</span>
                   <span className="text-xs font-black text-gray-300 uppercase tracking-wider">
-                    User
+                    {t("roleUserDesc") ? "User" : "User"}
                   </span>
                 </div>
                 <p className="text-[11px] text-gray-400 leading-relaxed">
-                  Standard volunteer. Requires Level 11+ or Organizer status to reply to project questions.
+                  {t("roleUserDesc")}
                 </p>
               </div>
             </div>
@@ -2557,7 +2557,7 @@ export function AdminDashboardClient({
                       handleSearchStaff("");
                     }}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-0.5"
-                    title="Clear search"
+                    title={t("clearSearch")}
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -2573,7 +2573,7 @@ export function AdminDashboardClient({
                 ) : (
                   <Search className="w-3.5 h-3.5" />
                 )}
-                <span>Search</span>
+                <span>{t("searchBtn")}</span>
               </button>
             </form>
 
@@ -2588,7 +2588,7 @@ export function AdminDashboardClient({
                     : "bg-void-deep text-gray-400 hover:text-white border border-void-border"
                 }`}
               >
-                All Users
+                {t("filterAllUsers")}
               </button>
               <button
                 type="button"
@@ -2600,7 +2600,7 @@ export function AdminDashboardClient({
                 }`}
               >
                 <ShieldCheck className="w-3.5 h-3.5" />
-                Staff Only
+                {t("filterStaffOnly")}
               </button>
               <button
                 type="button"
@@ -2612,7 +2612,7 @@ export function AdminDashboardClient({
                 }`}
               >
                 <span>⚔️</span>
-                Moderators
+                {t("filterModerators")}
               </button>
               <button
                 type="button"
@@ -2624,7 +2624,7 @@ export function AdminDashboardClient({
                 }`}
               >
                 <span>🎧</span>
-                Support
+                {t("filterSupport")}
               </button>
               <button
                 type="button"
@@ -2635,7 +2635,7 @@ export function AdminDashboardClient({
                     : "bg-void-deep text-gray-400 hover:text-white border border-void-border"
                 }`}
               >
-                Users
+                {t("filterUsers")}
               </button>
             </div>
           </div>
@@ -2665,9 +2665,9 @@ export function AdminDashboardClient({
               return (
                 <div className="bg-void-surface border border-void-border rounded-2xl p-12 text-center">
                   <ShieldAlert className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                  <h3 className="text-base font-bold text-white mb-1">No Users Found</h3>
+                  <h3 className="text-base font-bold text-white mb-1">{t("noUsersFoundTitle")}</h3>
                   <p className="text-xs text-gray-400 max-w-md mx-auto">
-                    No users matched your query or filter. Try typing a specific email address or user UUID above.
+                    {t("noUsersFoundDesc")}
                   </p>
                 </div>
               );
@@ -2735,17 +2735,17 @@ export function AdminDashboardClient({
                             type="button"
                             onClick={() => handleCopyId(u.id)}
                             className="text-[10px] text-plasma-cyan hover:text-white flex items-center gap-1 font-mono transition-colors ml-2 cursor-pointer"
-                            title="Copy User ID"
+                            title={t("copyUserId")}
                           >
                             {copiedId === u.id ? (
                               <>
                                 <Check className="w-3 h-3 text-rup-emerald" />
-                                <span className="text-rup-emerald">Copied</span>
+                                <span className="text-rup-emerald">{t("copied")}</span>
                               </>
                             ) : (
                               <>
                                 <Copy className="w-3 h-3" />
-                                <span>Copy</span>
+                                <span>{t("copy")}</span>
                               </>
                             )}
                           </button>
@@ -2754,7 +2754,7 @@ export function AdminDashboardClient({
                         {/* Current Role Badge */}
                         <div className="mb-4">
                           <div className="text-[10px] uppercase font-mono text-gray-500 mb-1.5 tracking-wider">
-                            Active Clearance
+                            {t("activeClearance")}
                           </div>
                           {roleConfig ? (
                             <span
@@ -2766,7 +2766,7 @@ export function AdminDashboardClient({
                           ) : (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs bg-void-deep text-gray-400 border border-void-border font-medium">
                               <span>👤</span>
-                              <span>USER / VOLUNTEER</span>
+                              <span>{t("userVolunteerRole")}</span>
                             </span>
                           )}
                         </div>
@@ -2775,12 +2775,12 @@ export function AdminDashboardClient({
                       {/* Role Selector Control */}
                       <div className="pt-4 border-t border-void-border/70 mt-2">
                         <label className="block text-[11px] font-bold text-gray-300 uppercase tracking-wider mb-2">
-                          Assign System Role
+                          {t("assignSystemRole")}
                         </label>
                         {isRootAdmin ? (
                           <div className="flex items-center gap-2 p-2.5 rounded-xl bg-plasma-cyan/10 border border-plasma-cyan/30 text-plasma-cyan text-xs font-bold font-mono">
                             <Shield className="w-4 h-4 shrink-0" />
-                            <span>Root Admin (Immutable)</span>
+                            <span>{t("rootAdminImmutable")}</span>
                           </div>
                         ) : (
                           <div className="flex items-center gap-2">
@@ -2792,11 +2792,11 @@ export function AdminDashboardClient({
                               }
                               className="flex-1 bg-void-deep border border-void-border hover:border-plasma-cyan/50 rounded-xl px-3 py-2 text-xs text-white font-medium focus:outline-none focus:border-plasma-cyan transition-colors disabled:opacity-50 cursor-pointer"
                             >
-                              <option value="user">User (Standard Volunteer)</option>
-                              <option value="support">🎧 Support Specialist (Tickets &amp; Inquiries)</option>
-                              <option value="moderator">⚔️ Moderator (Reports &amp; Forum Shield)</option>
+                              <option value="user">{t("userStandardVolunteer")}</option>
+                              <option value="support">{t("supportSpecialistOption")}</option>
+                              <option value="moderator">{t("moderatorOption")}</option>
                               {(currentUserRole === "root" || currentUserRole === "admin") && (
-                                <option value="admin">🛡️ Administrator (Full God Mode)</option>
+                                <option value="admin">{t("adminOption")}</option>
                               )}
                             </select>
                             {isUpdating && (
@@ -2828,13 +2828,13 @@ export function AdminDashboardClient({
               <div>
                 <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
                   <ShieldAlert className="w-6 h-6 text-amber-400" />
-                  <span>Administrative Escalations Queue</span>
+                  <span>{t("escalationsQueueTitle")}</span>
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 font-mono">
                     {totalPendingEscalations} Pending Review
                   </span>
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-400 mt-1">
-                  Actions requiring Level 4 Administrator clearance escalated by External Moderators and Support Specialists.
+                  Actions requiring Level 4 Administrator clearance escalated by External {t("filterModerators")} and Support Specialists.
                 </p>
               </div>
 
@@ -2861,9 +2861,9 @@ export function AdminDashboardClient({
             {filteredEscalations.length === 0 ? (
               <div className="bg-void-surface/40 border border-void-border/60 rounded-2xl p-12 text-center">
                 <CheckCircle2 className="w-12 h-12 text-rup-emerald mx-auto mb-3 opacity-60" />
-                <h3 className="text-lg font-bold text-white mb-1">Clear Skies in Escalations</h3>
+                <h3 className="text-lg font-bold text-white mb-1">{t("clearSkiesEscalations")}</h3>
                 <p className="text-sm text-gray-400">
-                  No administrative escalations match your current filter.
+                  {t("clearSkiesEscalationsDesc")}
                 </p>
               </div>
             ) : (
@@ -2897,10 +2897,10 @@ export function AdminDashboardClient({
                             {esc.status}
                           </span>
                           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-void-deep text-plasma-cyan border border-void-border">
-                            Target: {esc.target_type}
+                            {t("targetPrefix", { type: esc.target_type })}
                           </span>
                           <span className="text-xs text-gray-400 font-mono">
-                            Escalated by: <span className="text-white font-bold">{esc.escalated_by_role.toUpperCase()}</span>
+                            {t.rich("escalatedByPrefix", { role: esc.escalated_by_role.toUpperCase(), strong: (c) => <span className="text-white font-bold">{c}</span> })}
                           </span>
                         </div>
                         <span className="text-xs text-gray-500 font-mono">
@@ -2910,12 +2910,12 @@ export function AdminDashboardClient({
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Target Entity / Subject</p>
+                          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t("targetEntitySubject")}</p>
                           <p className="text-sm font-bold text-white break-all">{esc.target_name || esc.target_id}</p>
                           <p className="text-[11px] text-gray-500 font-mono">Target ID: {esc.target_id}</p>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Recommended Action</p>
+                          <p className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">{t("recommendedAction")}</p>
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold">
                             <ShieldAlert className="w-3.5 h-3.5" />
                             {actionLabel}
@@ -2924,13 +2924,13 @@ export function AdminDashboardClient({
                       </div>
 
                       <div className="p-3.5 rounded-xl bg-void-deep/80 border border-void-border/60 text-xs space-y-1">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Escalation Statement</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t("escalationStatement")}</p>
                         <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">{esc.reason}</p>
                       </div>
 
                       {esc.admin_notes && (
                         <div className="p-3 rounded-xl bg-plasma-cyan/5 border border-plasma-cyan/20 text-xs space-y-0.5">
-                          <p className="text-[10px] font-bold text-plasma-cyan uppercase tracking-wider">Admin Resolution Notes</p>
+                          <p className="text-[10px] font-bold text-plasma-cyan uppercase tracking-wider">{t("adminResolutionNotes")}</p>
                           <p className="text-gray-300">{esc.admin_notes}</p>
                         </div>
                       )}
@@ -2949,9 +2949,7 @@ export function AdminDashboardClient({
                               setResolveNotes("");
                             }}
                             className="px-4 py-2 rounded-xl bg-void-deep hover:bg-void-border text-gray-300 hover:text-white border border-void-border text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
-                          >
-                            Dismiss Escalation
-                          </button>
+                          >{t("dismissEscalation")}</button>
                           <button
                             type="button"
                             disabled={isPending}
@@ -2965,7 +2963,7 @@ export function AdminDashboardClient({
                             className="px-5 py-2 rounded-xl bg-nova-flare hover:bg-nova-flare/90 text-white font-bold text-xs transition-all shadow-[0_0_15px_rgba(255,46,99,0.3)] disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                           >
                             <ShieldAlert className="w-4 h-4 shrink-0" />
-                            <span>Approve &amp; Execute Action</span>
+                            <span>{t("approveExecuteAction")}</span>
                           </button>
                         </div>
                       )}
@@ -2993,13 +2991,13 @@ export function AdminDashboardClient({
               <div>
                 <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
                   <Headphones className="w-6 h-6 text-plasma-cyan" />
-                  <span>Support &amp; Volunteer Inquiries</span>
+                  <span>{t("supportInquiriesTitle")}</span>
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-plasma-cyan/15 text-plasma-cyan border border-plasma-cyan/30 font-mono">
                     {totalPendingTickets} Open
                   </span>
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-400 mt-1">
-                  Manage incoming user tickets, role applications, and dispute communications.
+                  {t("supportInquiriesSubtitle")}
                 </p>
               </div>
 
@@ -3026,9 +3024,9 @@ export function AdminDashboardClient({
             {filteredTickets.length === 0 ? (
               <div className="bg-void-surface/40 border border-void-border/60 rounded-2xl p-12 text-center">
                 <CheckCircle2 className="w-12 h-12 text-rup-emerald mx-auto mb-3 opacity-60" />
-                <h3 className="text-lg font-bold text-white mb-1">Inbox Zero</h3>
+                <h3 className="text-lg font-bold text-white mb-1">{t("inboxZero")}</h3>
                 <p className="text-sm text-gray-400">
-                  No support inquiries match your current filter.
+                  {t("inboxZeroDesc")}
                 </p>
               </div>
             ) : (
@@ -3061,15 +3059,15 @@ export function AdminDashboardClient({
                           {isApplySupport && (
                             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-hyper-violet/20 text-hyper-violet border border-hyper-violet/40 flex items-center gap-1 shadow-[0_0_10px_rgba(99,102,241,0.25)]">
                               <span>🎧</span>
-                              Level 10 Vanguard Applicant
+                              {t("level10Applicant")}
                             </span>
                           )}
                           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-void-deep text-gray-300 border border-void-border">
-                            Reason: {tk.reason}
+                            {t("ticketReason", { reason: tk.reason })}
                           </span>
                           {tk.resolution_action && (
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-hyper-violet/20 text-hyper-violet border border-hyper-violet/30">
-                              Action: {tk.resolution_action}
+                              {t("ticketAction", { action: tk.resolution_action })}
                             </span>
                           )}
                           {currentStatus === "resolved" && (() => {
@@ -3079,7 +3077,7 @@ export function AdminDashboardClient({
                             return (
                               <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-void-surface border border-nova-flare/30 text-nova-flare flex items-center gap-1">
                                 <Clock className="w-3 h-3" />
-                                Auto-deleting in {remainingHours}h
+                                {t("autoDeletingInHours", { hours: remainingHours })}
                               </span>
                             );
                           })()}
@@ -3091,18 +3089,18 @@ export function AdminDashboardClient({
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                         <div>
-                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">User Contact</p>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{t("userContact")}</p>
                           <p className="text-white font-bold">{tk.email}</p>
                           {tk.phone && <p className="text-gray-400 font-mono mt-0.5">Phone: {tk.phone}</p>}
                         </div>
                         <div>
-                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Subject</p>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{t("subject")}</p>
                           <p className="text-white font-bold text-sm">{tk.subject}</p>
                         </div>
                       </div>
 
                       <div className="p-4 rounded-xl bg-void-deep/80 border border-void-border/60 text-xs space-y-1">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Message Transmission</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{t("messageTransmission")}</p>
                         <p className="text-gray-200 leading-relaxed whitespace-pre-wrap font-sans">{tk.content}</p>
                       </div>
 
@@ -3117,7 +3115,7 @@ export function AdminDashboardClient({
                             }}
                             className="px-4 py-2 rounded-xl bg-hyper-violet/15 hover:bg-hyper-violet/25 text-hyper-violet border border-hyper-violet/40 text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
                           >
-                            Set In Progress
+                            {t("setInProgress")}
                           </button>
                         )}
                         {currentStatus !== "resolved" && (
@@ -3129,7 +3127,7 @@ export function AdminDashboardClient({
                             }}
                             className="px-4 py-2 rounded-xl bg-rup-emerald/15 hover:bg-rup-emerald/25 text-rup-emerald border border-rup-emerald/40 text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
                           >
-                            Mark Resolved
+                            {t("markResolved")}
                           </button>
                         )}
                         <button
@@ -3143,7 +3141,7 @@ export function AdminDashboardClient({
                           className="px-5 py-2 rounded-xl bg-plasma-cyan hover:bg-plasma-cyan/90 text-void-deep font-bold text-xs transition-all shadow-[0_0_15px_rgba(0,229,255,0.3)] disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                         >
                           <Send className="w-3.5 h-3.5" />
-                          <span>Reply &amp; Notify</span>
+                          <span>{t("replyNotify")}</span>
                         </button>
                       </div>
                     </div>
@@ -3166,13 +3164,13 @@ export function AdminDashboardClient({
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-                    <span>God Mode: Edit Mission</span>
+                    <span>{t("editMissionTitle")}</span>
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/30">
                       ADMIN
                     </span>
                   </h3>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    Modify mission metadata directly before approving or updating live details.
+                    {t("editMissionSubtitle")}
                   </p>
                 </div>
               </div>
@@ -3189,7 +3187,7 @@ export function AdminDashboardClient({
               {/* Title */}
               <div>
                 <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
-                  Mission Title <span className="text-nova-flare">*</span>
+                  {t("missionTitleLabel")} <span className="text-nova-flare">*</span>
                 </label>
                 <input
                   type="text"
@@ -3205,7 +3203,7 @@ export function AdminDashboardClient({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
-                    Dest Country
+                    {t("destCountryLabel")}
                   </label>
                   <input
                     type="text"
@@ -3219,23 +3217,23 @@ export function AdminDashboardClient({
 
                 <div>
                   <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
-                    Project Type
+                    {t("projectTypeLabel")}
                   </label>
                   <select
                     value={editForm.project_type || "YE"}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, project_type: e.target.value }))}
                     className="w-full px-4 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-plasma-cyan focus:outline-none"
                   >
-                    <option value="YE">Youth Exchange (YE)</option>
-                    <option value="TC">Training Course (TC)</option>
-                    <option value="ESC">European Solidarity Corps (ESC)</option>
-                    <option value="OTHER">Other</option>
+                    <option value="YE">{t("typeYe")}</option>
+                    <option value="TC">{t("typeTc")}</option>
+                    <option value="ESC">{t("typeEsc")}</option>
+                    <option value="OTHER">{t("typeOther")}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
-                    Duration (Days)
+                    {t("durationDaysLabel")}
                   </label>
                   <input
                     type="number"
@@ -3251,21 +3249,21 @@ export function AdminDashboardClient({
               {/* Application URL (External redirect) */}
               <div>
                 <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
-                  External Application URL
+                  {t("externalAppUrlLabel")}
                 </label>
                 <input
                   type="url"
                   value={editForm.official_url || ""}
                   onChange={(e) => setEditForm((prev) => ({ ...prev, official_url: e.target.value }))}
                   className="w-full px-4 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm font-mono focus:border-plasma-cyan focus:outline-none"
-                  placeholder="https://forms.gle/... or official website"
+                  placeholder={t("externalAppUrlPlaceholder")}
                 />
               </div>
 
-              {/* Description */}
+              {/* {t("descriptionLabel")} */}
               <div>
                 <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
-                  Description
+                  {t("descriptionLabel")}
                 </label>
                 <textarea
                   rows={5}
@@ -3285,7 +3283,7 @@ export function AdminDashboardClient({
                     onChange={(e) => setEditForm((prev) => ({ ...prev, covers_rup_flights: e.target.checked }))}
                     className="w-4 h-4 rounded border-void-border bg-void-deep text-rup-emerald focus:ring-rup-emerald"
                   />
-                  <span>Covers RUP / Canary Islands Flights</span>
+                  <span>{t("coversRupFlights")}</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-gray-300">
                   <input
@@ -3294,7 +3292,7 @@ export function AdminDashboardClient({
                     onChange={(e) => setEditForm((prev) => ({ ...prev, is_last_minute: e.target.checked }))}
                     className="w-4 h-4 rounded border-void-border bg-void-deep text-nova-flare focus:ring-nova-flare"
                   />
-                  <span>Last Minute Urgent</span>
+                  <span>{t("lastMinuteUrgent")}</span>
                 </label>
               </div>
 
@@ -3305,16 +3303,14 @@ export function AdminDashboardClient({
                   onClick={() => setEditingProject(null)}
                   disabled={isPending}
                   className="px-5 py-2.5 rounded-xl bg-void-deep hover:bg-gray-800 text-gray-300 text-sm font-bold border border-void-border transition-colors disabled:opacity-50"
-                >
-                  Cancel
-                </button>
+                >{t("cancel")}</button>
                 <button
                   type="submit"
                   disabled={isPending}
                   className="px-6 py-2.5 rounded-xl bg-plasma-cyan hover:bg-plasma-cyan/90 text-void-deep font-bold text-sm transition-all shadow-[0_0_20px_rgba(0,229,255,0.35)] disabled:opacity-50 flex items-center gap-2"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>{isPending ? "Saving..." : "Save Changes"}</span>
+                  <span>{isPending ? t("saving") : t("saveChanges")}</span>
                 </button>
               </div>
             </form>
@@ -3333,10 +3329,10 @@ export function AdminDashboardClient({
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white tracking-tight">
-                    Send In-App Notification
+                    {t("sendInAppNotificationTitle")}
                   </h3>
                   <p className="text-xs text-gray-400">
-                    Recipient: <span className="text-plasma-cyan font-semibold">{notifyConfig.targetName}</span> ({notifyConfig.targetType === "org" ? "Organization" : "Youth User"})
+                    {t.rich("recipientLabel", { name: notifyConfig.targetName, span: (c) => <span className="text-plasma-cyan font-semibold">{c}</span> })} ({notifyConfig.targetType === "org" ? "Organization" : "Youth User"})
                   </p>
                 </div>
               </div>
@@ -3353,7 +3349,7 @@ export function AdminDashboardClient({
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
-                  Notification Category
+                  {t("notificationCategory")}
                 </label>
                 <select
                   value={notifyType}
@@ -3361,16 +3357,16 @@ export function AdminDashboardClient({
                   disabled={isPending}
                   className="w-full px-4 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-plasma-cyan focus:outline-none cursor-pointer"
                 >
-                  <option value="system">System / Announcement</option>
-                  <option value="alert">Important Notice / Alert</option>
-                  <option value="moderation">Moderation / Policy Notice</option>
-                  <option value="action_required">Action Required</option>
+                  <option value="system">{t("catAnnouncement")}</option>
+                  <option value="alert">{t("catAlert")}</option>
+                  <option value="moderation">{t("catPolicy")}</option>
+                  <option value="action_required">{t("catActionRequired")}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
-                  Notification Title
+                  {t("notificationTitleLabel")}
                 </label>
                 <input
                   type="text"
@@ -3384,7 +3380,7 @@ export function AdminDashboardClient({
 
               <div>
                 <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
-                  Transmission Message
+                  {t("transmissionMessageLabel")}
                 </label>
                 <textarea
                   rows={4}
@@ -3403,9 +3399,7 @@ export function AdminDashboardClient({
                 onClick={() => setNotifyConfig(null)}
                 disabled={isPending}
                 className="px-5 py-2.5 rounded-xl bg-void-deep hover:bg-gray-800 text-gray-300 text-sm font-bold border border-void-border transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                Cancel
-              </button>
+              >{t("cancel")}</button>
               <button
                 type="button"
                 onClick={handleSendNotification}
@@ -3415,12 +3409,12 @@ export function AdminDashboardClient({
                 {isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Transmitting...</span>
+                    <span>{t("transmitting")}</span>
                   </>
                 ) : (
                   <>
                     <Send className="w-4 h-4" />
-                    <span>Send Notification</span>
+                    <span>{t("sendNotificationBtn")}</span>
                   </>
                 )}
               </button>
@@ -3450,9 +3444,7 @@ export function AdminDashboardClient({
                   onClick={() => setDeleteConfig(null)}
                   disabled={isPending}
                   className="w-full sm:flex-1 py-3 px-4 rounded-xl font-bold bg-void-deep hover:bg-gray-800 text-gray-300 hover:text-white transition-colors border border-void-border disabled:opacity-50 text-sm"
-                >
-                  Cancel
-                </button>
+                >{t("cancel")}</button>
                 <button
                   type="button"
                   onClick={handleConfirmDelete}
@@ -3460,14 +3452,14 @@ export function AdminDashboardClient({
                   className="w-full sm:flex-1 py-3 px-4 rounded-xl font-bold bg-nova-flare hover:bg-nova-flare/90 text-white transition-all shadow-[0_0_20px_rgba(255,46,99,0.35)] disabled:opacity-50 text-sm flex items-center justify-center gap-2"
                 >
                   <Trash2 className="w-4 h-4 shrink-0" />
-                  <span>Confirm Delete</span>
+                  <span>{t("confirmDelete")}</span>
                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
-      {/* 1. Request Admin Action (Escalation) Modal */}
+      {/* 1. {t("requestAdminAction")} (Escalation) Modal */}
       {escalateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-void-deep/90 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="bg-void-surface border border-amber-500/40 rounded-2xl p-6 sm:p-8 max-w-lg w-full shadow-[0_0_50px_rgba(245,158,11,0.2)] animate-in zoom-in-95 duration-200">
@@ -3478,13 +3470,13 @@ export function AdminDashboardClient({
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-                    <span>Request Admin Action</span>
+                    <span>{t("requestAdminAction")}</span>
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
                       ESCALATION
                     </span>
                   </h3>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    Forward to Level 4 Administrators for destructive review.
+                    {t("forwardToAdminDesc")}
                   </p>
                 </div>
               </div>
@@ -3501,7 +3493,7 @@ export function AdminDashboardClient({
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                  Target Entity
+                  {t("targetEntityLabel")}
                 </label>
                 <div className="px-3.5 py-2 rounded-xl bg-void-deep border border-void-border text-white text-sm font-semibold truncate">
                   {escalateModal.targetName}
@@ -3510,7 +3502,7 @@ export function AdminDashboardClient({
 
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                  Recommended Admin Action
+                  {t("recommendedAdminAction")}
                 </label>
                 <select
                   value={escalateAction}
@@ -3518,17 +3510,17 @@ export function AdminDashboardClient({
                   disabled={isPending}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-void-deep border border-void-border text-white text-sm focus:border-amber-400 focus:outline-none cursor-pointer"
                 >
-                  <option value="delete_survey">Delete Community Survey &amp; Strike Creator</option>
-                  <option value="ban_user">Permanent Account Ban</option>
-                  <option value="delete_org">Suspend Organization &amp; Revoke Publishing</option>
-                  <option value="emergency_lock">Emergency Lock Entity / Data Quarantine</option>
-                  <option value="investigate">Deep Administrative Investigation</option>
+                  <option value="delete_survey">{t("actionDeleteSurveyStrike")}</option>
+                  <option value="ban_user">{t("actionPermanentBan")}</option>
+                  <option value="delete_org">{t("actionSuspendOrgRevoke")}</option>
+                  <option value="emergency_lock">{t("actionLockQuarantine")}</option>
+                  <option value="investigate">{t("actionDeepInvestigate")}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                  Statement / Reason for Escalation *
+                  {t("statementReasonRequired")}
                 </label>
                 <textarea
                   rows={4}
@@ -3547,9 +3539,7 @@ export function AdminDashboardClient({
                 onClick={() => setEscalateModal(null)}
                 disabled={isPending}
                 className="px-5 py-2.5 rounded-xl bg-void-deep hover:bg-void-border text-gray-300 text-sm font-bold border border-void-border transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                Cancel
-              </button>
+              >{t("cancel")}</button>
               <button
                 type="button"
                 onClick={handleEscalateSubmit}
@@ -3559,12 +3549,12 @@ export function AdminDashboardClient({
                 {isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Escalating...</span>
+                    <span>{t("escalating")}</span>
                   </>
                 ) : (
                   <>
                     <ShieldAlert className="w-4 h-4" />
-                    <span>Transmit Escalation</span>
+                    <span>{t("transmitEscalation")}</span>
                   </>
                 )}
               </button>
@@ -3588,10 +3578,10 @@ export function AdminDashboardClient({
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-                    <span>{resolveEscalateModal.decision === "approved" ? "Approve & Execute Action" : "Dismiss Escalation"}</span>
+                    <span>{resolveEscalateModal.decision === "approved" ? t("approveExecuteAction") : t("dismissEscalation")}</span>
                   </h3>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    Target: {resolveEscalateModal.escalation.target_name || resolveEscalateModal.escalation.target_id}
+                    {t("targetPrefix", { type: resolveEscalateModal.escalation.target_name || resolveEscalateModal.escalation.target_id })}
                   </p>
                 </div>
               </div>
@@ -3607,16 +3597,16 @@ export function AdminDashboardClient({
 
             <div className="space-y-4">
               <div className="p-3.5 rounded-xl bg-void-deep/80 border border-void-border text-xs space-y-1">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Escalated Reason</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t("escalatedReason")}</p>
                 <p className="text-gray-300 whitespace-pre-wrap">{resolveEscalateModal.escalation.reason}</p>
                 <p className="text-amber-400 font-bold pt-1">
-                  Action: {resolveEscalateModal.escalation.recommended_action}
+                  {t("actionCol", { action: resolveEscalateModal.escalation.recommended_action })}
                 </p>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                  Administrative Resolution Notes (Optional)
+                  {t("adminResolutionNotesOptional")}
                 </label>
                 <textarea
                   rows={3}
@@ -3635,9 +3625,7 @@ export function AdminDashboardClient({
                 onClick={() => setResolveEscalateModal(null)}
                 disabled={isPending}
                 className="px-5 py-2.5 rounded-xl bg-void-deep hover:bg-void-border text-gray-300 text-sm font-bold border border-void-border transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                Cancel
-              </button>
+              >{t("cancel")}</button>
               <button
                 type="button"
                 onClick={handleResolveEscalateSubmit}
@@ -3651,7 +3639,7 @@ export function AdminDashboardClient({
                 {isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Resolving...</span>
+                    <span>{t("resolving")}</span>
                   </>
                 ) : (
                   <>
@@ -3676,7 +3664,7 @@ export function AdminDashboardClient({
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white tracking-tight">
-                    Reply to Volunteer Ticket
+                    {t("replyToVolunteerTicket")}
                   </h3>
                   <p className="text-xs text-gray-400 mt-0.5 truncate max-w-xs">
                     {ticketReplyModal.ticket.subject}
@@ -3696,18 +3684,18 @@ export function AdminDashboardClient({
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
-                  <span className="text-gray-400 block mb-0.5 font-bold uppercase text-[10px]">Recipient</span>
+                  <span className="text-gray-400 block mb-0.5 font-bold uppercase text-[10px]">{t("recipient")}</span>
                   <span className="text-white font-mono">{ticketReplyModal.ticket.email}</span>
                 </div>
                 <div>
-                  <span className="text-gray-400 block mb-0.5 font-bold uppercase text-[10px]">Reason</span>
+                  <span className="text-gray-400 block mb-0.5 font-bold uppercase text-[10px]">{t("reason")}</span>
                   <span className="text-plasma-cyan font-semibold">{ticketReplyModal.ticket.reason}</span>
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                  Ticket Status After Response
+                  {t("ticketStatusAfterResponse")}
                 </label>
                 <select
                   value={ticketReplyStatus}
@@ -3715,15 +3703,15 @@ export function AdminDashboardClient({
                   disabled={isPending}
                   className="w-full px-3.5 py-2 rounded-xl bg-void-deep border border-void-border text-white text-xs focus:border-plasma-cyan focus:outline-none cursor-pointer"
                 >
-                  <option value="resolved">Mark as Resolved</option>
-                  <option value="in_progress">Keep In Progress</option>
-                  <option value="open">Keep Open</option>
+                  <option value="resolved">{t("markAsResolved")}</option>
+                  <option value="in_progress">{t("keepInProgress")}</option>
+                  <option value="open">{t("keepOpen")}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                  In-App Notification Message
+                  {t("inAppNotificationMessage")}
                 </label>
                 <textarea
                   rows={4}
@@ -3742,9 +3730,7 @@ export function AdminDashboardClient({
                 onClick={() => setTicketReplyModal(null)}
                 disabled={isPending}
                 className="px-5 py-2.5 rounded-xl bg-void-deep hover:bg-void-border text-gray-300 text-sm font-bold border border-void-border transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                Cancel
-              </button>
+              >{t("cancel")}</button>
               <button
                 type="button"
                 onClick={handleTicketReplySubmit}
@@ -3754,12 +3740,12 @@ export function AdminDashboardClient({
                 {isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Dispatched...</span>
+                    <span>{t("dispatched")}</span>
                   </>
                 ) : (
                   <>
                     <Send className="w-4 h-4" />
-                    <span>Transmit Response</span>
+                    <span>{t("transmitResponse")}</span>
                   </>
                 )}
               </button>

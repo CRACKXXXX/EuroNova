@@ -114,16 +114,16 @@ export default async function AdminPage(props: {
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-nova-flare/10 border border-nova-flare/30 flex items-center justify-center text-nova-flare text-3xl font-black">
             403
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">Access Denied: Admin Clearance Required</h2>
+          <h2 className="text-xl font-bold text-white mb-2">{t("accessDeniedTitle")}</h2>
           <p className="text-sm text-gray-400 mb-6">
-            The requested terminal is strictly restricted to Level 4 EuroNova System Administrators. Moderators and Support personnel cannot access this clearance level.
+            {t("accessDeniedDesc")}
           </p>
           <Link
             href={currentUserRole === "support" ? "/dashboard/admin?tab=tickets" : "/dashboard/admin?tab=reports"}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-void-deep border border-void-border text-white hover:border-plasma-cyan/50 transition-colors text-sm font-semibold"
           >
             <ArrowLeft className="w-4 h-4" />
-            Return to Authorized Hub
+            <span>{t("returnToHub")}</span>
           </Link>
         </div>
       </div>
@@ -376,7 +376,7 @@ export default async function AdminPage(props: {
               className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="text-sm font-medium">Back to Home</span>
+              <span className="text-sm font-medium">{t("backToHome")}</span>
             </Link>
           </div>
           <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight flex items-center gap-3">
@@ -390,7 +390,7 @@ export default async function AdminPage(props: {
 
         <div className="hidden sm:flex flex-col items-end">
           <span className="text-xs text-gray-400 uppercase tracking-wider font-mono">
-            Signed in as [{currentUserRole.toUpperCase()}]
+            {t("signedInAs", { role: currentUserRole.toUpperCase() })}
           </span>
           <span className="text-sm font-bold text-plasma-cyan font-mono">
             {user.email}

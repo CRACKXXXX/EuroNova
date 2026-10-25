@@ -93,9 +93,9 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
         const leveledUp = Boolean(state.data?.leveledUp);
 
         if (xpGained > 0) {
-          toast.success(`Profile Dossier Completed! +${xpGained} XP awarded.`, { icon: "⚡" });
+          toast.success(t("profileCompletedXp", { xp: xpGained }), { icon: "⚡" });
           if (leveledUp && newLevel) {
-            toast.success(`LEVEL UP! You reached Level ${newLevel}!`, { icon: "🚀" });
+            toast.success(t("levelUp", { level: newLevel }), { icon: "🚀" });
           }
           if (typeof window !== "undefined") {
             window.dispatchEvent(
@@ -124,7 +124,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
 
     const MAX_AVATAR_SIZE = 1 * 1024 * 1024; // 1MB
     if (file.size > MAX_AVATAR_SIZE) {
-      toast.error("File is too large. Maximum allowed size is 1MB.");
+      toast.error(t("fileTooLarge"));
       e.target.value = "";
       return;
     }
@@ -188,13 +188,13 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
             {/* Type DELETE to confirm requirement */}
             <div className="w-full text-left space-y-2 pt-2">
               <label className="text-xs font-semibold text-gray-300 uppercase tracking-wider block">
-                {t("typeDeleteToConfirm") || "Type DELETE to confirm account deletion"}
+                {t("typeDeleteToConfirm")}
               </label>
               <input
                 type="text"
                 value={confirmDeleteInput}
                 onChange={(e) => setConfirmDeleteInput(e.target.value)}
-                placeholder="DELETE"
+                placeholder={t("deletePlaceholder")}
                 className="w-full bg-void-surface border border-red-500/40 rounded-lg px-4 py-3 text-white text-center font-mono font-bold tracking-widest placeholder-gray-600 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:shadow-[0_0_15px_rgba(239,68,68,0.3)]"
               />
             </div>
@@ -231,7 +231,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
                 {isDeleting || isDisintegrating ? (
                   <div className="flex items-center gap-2">
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>{t("disintegrating") || "Disintegrating into cosmic void..."}</span>
+                    <span>{t("disintegrating")}</span>
                   </div>
                 ) : (
                   t("confirmDelete")
@@ -346,7 +346,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
               </div>
               <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wider">
-                  {t("phone") || "Phone"}
+                  {t("phone")}
                 </p>
                 <p className="font-semibold text-white mt-1">
                   {youthPhone || "—"}
@@ -354,7 +354,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
               </div>
               <div className="md:col-span-2">
                 <p className="text-xs text-gray-500 uppercase tracking-wider">
-                  {t("bio") || "Bio"}
+                  {t("bio")}
                 </p>
                 <p className="text-sm text-gray-300 mt-1 whitespace-pre-wrap">
                   {youthBio || "—"}
@@ -362,7 +362,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
               </div>
               <div className="md:col-span-2">
                 <p className="text-xs text-gray-500 uppercase tracking-wider">
-                  {t("languages") || "Languages"}
+                  {t("languages")}
                 </p>
                 <p className="text-sm text-gray-300 mt-1">
                   {youthLanguages.length > 0 ? youthLanguages.join(", ") : "—"}
@@ -449,7 +449,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 uppercase tracking-wider">
-                    {t("contactEmail") || "Contact Email"}
+                    {t("contactEmail")}
                   </p>
                   <p className="font-semibold text-white mt-1">
                     {orgContactEmail || "—"}
@@ -457,7 +457,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
                 </div>
                 <div className="md:col-span-2">
                   <p className="text-xs text-gray-500 uppercase tracking-wider">
-                    {t("website") || "Website"}
+                    {t("website")}
                   </p>
                   {orgWebsite ? (
                     <a
@@ -478,7 +478,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
                 </div>
                 <div className="md:col-span-2">
                   <p className="text-xs text-gray-500 uppercase tracking-wider">
-                    {t("description") || "Description/Mission"}
+                    {t("description")}
                   </p>
                   <p className="text-sm text-gray-300 mt-1 whitespace-pre-wrap">
                     {orgDescription || "—"}
@@ -486,7 +486,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
                 </div>
                 <div className="md:col-span-2 mt-2 pt-4 border-t border-void-border/50">
                   <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">
-                    {t("socialMedia") || "Social Media"}
+                    {t("socialMedia")}
                   </p>
                   <div className="flex flex-col gap-2 text-sm">
                     {orgInstagram && (
@@ -496,7 +496,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
                         rel="noopener noreferrer"
                         className="text-plasma-cyan hover:underline"
                       >
-                        Instagram: {orgInstagram}
+                        {t("instagramLabel")}: {orgInstagram}
                       </a>
                     )}
                     {orgTiktok && (
@@ -506,7 +506,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
                         rel="noopener noreferrer"
                         className="text-plasma-cyan hover:underline"
                       >
-                        TikTok: {orgTiktok}
+                        {t("tiktokLabel")}: {orgTiktok}
                       </a>
                     )}
                     {orgYoutube && (
@@ -516,7 +516,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
                         rel="noopener noreferrer"
                         className="text-plasma-cyan hover:underline"
                       >
-                        YouTube: {orgYoutube}
+                        {t("youtubeLabel")}: {orgYoutube}
                       </a>
                     )}
                     {orgLinkedin && (
@@ -526,7 +526,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
                         rel="noopener noreferrer"
                         className="text-plasma-cyan hover:underline"
                       >
-                        LinkedIn: {orgLinkedin}
+                        {t("linkedinLabel")}: {orgLinkedin}
                       </a>
                     )}
                     {!orgInstagram &&
@@ -545,13 +545,13 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
           <div className="flex items-center gap-2 border-b border-void-border pb-3">
             <Bell className="w-5 h-5 text-plasma-cyan" />
             <h3 className="text-lg font-bold text-white">
-              {t("notificationPreferences") || "Notification Preferences"}
+              {t("notificationPreferences")}
             </h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-xs text-gray-500 uppercase tracking-wider">
-                {t("notificationEmail") || "Notification Email"}
+                {t("notificationEmail")}
               </p>
               <p className="font-semibold text-white mt-1">
                 {notificationEmail || "—"}
@@ -559,7 +559,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
             </div>
             <div>
               <p className="text-xs text-gray-500 uppercase tracking-wider">
-                {t("discordWebhook") || "Discord Webhook URL"}
+                {t("discordWebhook")}
               </p>
               <p className="font-mono text-xs text-gray-300 mt-1 truncate">
                 {discordWebhookUrl || "—"}
@@ -587,7 +587,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
           }`}
         >
           <Edit2 className="w-5 h-5" />
-          {t("editProfile") || "Edit Profile"}
+          {t("editProfile")}
         </button>
 
         {renderDangerZone()}
@@ -756,7 +756,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">
-              {t("phone") || "Phone"}
+              {t("phone")}
             </label>
             <input
               type="text"
@@ -768,20 +768,20 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">
-              {t("languages") || "Languages (comma separated)"}
+              {t("languages")}
             </label>
             <input
               type="text"
               name="languages"
               defaultValue={defaultYouthLanguages}
               className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all"
-              placeholder="ES, EN, FR..."
+              placeholder={t("languagesPlaceholder")}
             />
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">
-              {t("bio") || "Bio"}
+              {t("bio")}
             </label>
             <textarea
               name="bio"
@@ -809,14 +809,14 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300">
-                {t("picNumber") || "OID / PIC Number"}
+                {t("picNumber")}
               </label>
               <input
                 type="text"
                 name="oid_number"
                 defaultValue={defaultOrgOid}
                 className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet transition-all"
-                placeholder="Ej: E12345678"
+                placeholder={t("oidPlaceholder")}
               />
             </div>
 
@@ -834,7 +834,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300">
-                {t("contactEmail") || "Contact Email"}
+                {t("contactEmail")}
               </label>
               <input
                 type="email"
@@ -846,7 +846,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300">
-                {t("website") || "Website"}
+                {t("website")}
               </label>
               <input
                 type="url"
@@ -859,7 +859,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">
-              {t("description") || "Description"}
+              {t("description")}
             </label>
             <textarea
               name="description"
@@ -871,35 +871,35 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
 
           <div className="space-y-4 pt-4 border-t border-void-border/50">
             <h4 className="text-sm font-medium text-gray-300">
-              {t("socialMedia") || "Social Media"}
+              {t("socialMedia")}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input
                 type="url"
                 name="social_instagram"
                 defaultValue={defaultOrgInstagram}
-                placeholder={t("instagram") || "Instagram URL"}
+                placeholder={t("instagram")}
                 className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet transition-all text-sm"
               />
               <input
                 type="url"
                 name="social_tiktok"
                 defaultValue={defaultOrgTiktok}
-                placeholder={t("tiktok") || "TikTok URL"}
+                placeholder={t("tiktok")}
                 className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet transition-all text-sm"
               />
               <input
                 type="url"
                 name="social_youtube"
                 defaultValue={defaultOrgYoutube}
-                placeholder={t("youtube") || "YouTube URL"}
+                placeholder={t("youtube")}
                 className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet transition-all text-sm"
               />
               <input
                 type="url"
                 name="social_linkedin"
                 defaultValue={defaultOrgLinkedin}
-                placeholder={t("linkedin") || "LinkedIn URL"}
+                placeholder={t("linkedin")}
                 className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet transition-all text-sm"
               />
             </div>
@@ -912,34 +912,34 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
         <div className="flex items-center gap-2 border-b border-void-border pb-3">
           <Bell className="w-5 h-5 text-plasma-cyan" />
           <h3 className="text-base font-bold text-white">
-            {t("notificationPreferences") || "Notification Preferences"}
+            {t("notificationPreferences")}
           </h3>
         </div>
         <p className="text-xs text-gray-400">
-          {t("notificationPreferencesHelp") || "Configure your external notification channels for instant alerts on ticket replies and updates."}
+          {t("notificationPreferencesHelp")}
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">
-              {t("notificationEmail") || "Notification Email"}
+              {t("notificationEmail")}
             </label>
             <input
               type="email"
               name="notification_email"
               defaultValue={defaultNotificationEmail}
-              placeholder="alerts@example.com"
+              placeholder={t("emailAlertsPlaceholder")}
               className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all text-sm"
             />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">
-              {t("discordWebhook") || "Discord Webhook URL"}
+              {t("discordWebhook")}
             </label>
             <input
               type="url"
               name="discord_webhook_url"
               defaultValue={defaultDiscordWebhook}
-              placeholder="https://discord.com/api/webhooks/..."
+              placeholder={t("discordWebhookPlaceholder")}
               className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all text-sm font-mono"
             />
           </div>
@@ -952,7 +952,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
           onClick={() => setIsEditing(false)}
           className="px-6 py-3 rounded-lg text-gray-400 hover:text-white transition-colors border border-void-border hover:border-gray-600"
         >
-          {t("cancel") || "Cancel"}
+          {t("cancel")}
         </button>
         <button
           type="submit"

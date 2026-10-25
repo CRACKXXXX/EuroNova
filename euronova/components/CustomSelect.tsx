@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, ReactNode } from "react";
 import { ChevronDown, Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export interface CustomSelectOption {
   label: string;
@@ -30,6 +31,7 @@ export function CustomSelect({
   triggerClassName = "",
   icon,
 }: CustomSelectProps) {
+  const t = useTranslations("Common");
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -108,7 +110,7 @@ export function CustomSelect({
         >
           {options.length === 0 ? (
             <div className="p-3 text-xs text-gray-500 text-center">
-              No options available
+              {t("noOptions")}
             </div>
           ) : (
             options.map((option) => {

@@ -30,7 +30,7 @@ export default function NewProjectPage() {
 
     const MAX_IMAGE_SIZE = 1 * 1024 * 1024; // 1MB limit
     if (file.size > MAX_IMAGE_SIZE) {
-      toast.error("File is too large. Maximum allowed size is 1MB.");
+      toast.error(t("fileTooLarge"));
       e.target.value = "";
       return;
     }

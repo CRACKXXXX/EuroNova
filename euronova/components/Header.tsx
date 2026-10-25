@@ -225,8 +225,8 @@ export function Header({
           {isOrg && (
             <Link
               href={`/${locale}/dashboard/projects/new`}
-              title={t("publish") || "Publish Mission"}
-              aria-label={t("publish") || "Publish Mission"}
+              title={t("publish")}
+              aria-label={t("publish")}
               className="p-2 rounded-lg bg-plasma-cyan/10 hover:bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/30 hover:border-plasma-cyan transition-all shrink-0 flex items-center justify-center shadow-[0_0_10px_rgba(0,229,255,0.15)]"
             >
               <PlusCircle className="w-4 h-4" />
@@ -261,8 +261,8 @@ export function Header({
           {(isAdmin || staffRole === "admin" || staffRole === "root") && (
             <Link
               href={`/${locale}/dashboard/admin`}
-              title={t("adminPanel") || "Admin Panel"}
-              aria-label={t("adminPanel") || "Admin Panel"}
+              title={t("adminPanel")}
+              aria-label={t("adminPanel")}
               className="p-2 min-w-[44px] min-h-[44px] rounded-lg bg-nova-flare/10 hover:bg-nova-flare/20 text-nova-flare border border-nova-flare/30 hover:border-nova-flare focus-visible:ring-2 focus-visible:ring-nova-flare focus-visible:outline-none transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(255,46,99,0.15)]"
             >
               <ShieldAlert className="w-4 h-4" />
@@ -304,7 +304,7 @@ export function Header({
             type="button"
             onClick={() => setIsOpen(true)}
             className="min-w-[44px] min-h-[44px] p-2 rounded-lg border border-void-border bg-void-surface text-gray-300 hover:text-white hover:border-plasma-cyan focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-colors cursor-pointer flex items-center justify-center"
-            aria-label={t("toggleMenu") || "Toggle navigation menu"}
+            aria-label={t("toggleMenu")}
           >
             <Menu className="w-6 h-6" />
           </button>
@@ -322,7 +322,7 @@ export function Header({
             <Link
               href={`/${locale}/dashboard`}
               onClick={() => setIsOpen(false)}
-              aria-label={t("home") || "EuroNova"}
+              aria-label={t("home")}
               className="flex items-center group shrink-0 min-h-[44px] min-w-[44px] rounded-lg focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none"
             >
               <Image
@@ -340,7 +340,7 @@ export function Header({
               type="button"
               onClick={() => setIsOpen(false)}
               className="min-w-[44px] min-h-[44px] p-2.5 rounded-full border border-void-border bg-void-surface text-gray-300 hover:text-white hover:border-plasma-cyan focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-colors cursor-pointer flex items-center justify-center"
-              aria-label={t("closeMenu") || "Close menu"}
+              aria-label={t("closeMenu")}
             >
               <X className="w-7 h-7" />
             </button>
@@ -420,7 +420,7 @@ export function Header({
                 className="text-xl sm:text-2xl font-bold tracking-tight text-amber-400 hover:scale-105 transition-all flex items-center gap-2.5"
               >
                 <ShieldCheck className="w-5 h-5" />
-                <span>Moderator Panel</span>
+                <span>{t("moderatorPanel")}</span>
               </Link>
             )}
 
@@ -431,7 +431,7 @@ export function Header({
                 className="text-xl sm:text-2xl font-bold tracking-tight text-plasma-cyan hover:scale-105 transition-all flex items-center gap-2.5"
               >
                 <Headphones className="w-5 h-5" />
-                <span>Support Panel</span>
+                <span>{t("supportPanel")}</span>
               </Link>
             )}
 
@@ -451,7 +451,7 @@ export function Header({
           <div className="pb-8 pt-4 flex flex-col items-center gap-5 w-full max-w-sm mx-auto shrink-0 border-t border-void-border/40">
             <div className="flex items-center gap-3">
               <span className="text-xs text-gray-400 font-mono uppercase tracking-wider">
-                Language
+                {t("language")}
               </span>
               <LanguageSwitcher />
             </div>

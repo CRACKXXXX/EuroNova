@@ -339,7 +339,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all shrink-0"
                 >
                   <Globe className="w-3.5 h-3.5" />
-                  <span>Website</span>
+                  <span>{t("website")}</span>
                 </a>
               )}
               {instagram && (
@@ -350,7 +350,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all shrink-0"
                 >
                   <Camera className="w-3.5 h-3.5" />
-                  <span>Instagram</span>
+                  <span>{t("instagram")}</span>
                 </a>
               )}
               {tiktok && (
@@ -361,7 +361,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all shrink-0"
                 >
                   <Music className="w-3.5 h-3.5" />
-                  <span>TikTok</span>
+                  <span>{t("tiktok")}</span>
                 </a>
               )}
               {youtube && (
@@ -372,7 +372,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all shrink-0"
                 >
                   <PlaySquare className="w-3.5 h-3.5" />
-                  <span>YouTube</span>
+                  <span>{t("youtube")}</span>
                 </a>
               )}
               {linkedin && (
@@ -383,7 +383,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all shrink-0"
                 >
                   <Briefcase className="w-3.5 h-3.5" />
-                  <span>LinkedIn</span>
+                  <span>{t("linkedin")}</span>
                 </a>
               )}
             </div>
@@ -396,7 +396,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-rup-emerald animate-pulse" />
               <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">
-                Organization Command Center
+                {t("commandCenter")}
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -405,14 +405,14 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-plasma-cyan to-hyper-violet hover:from-plasma-cyan/90 hover:to-hyper-violet/90 text-void-deep font-black text-xs sm:text-sm shadow-[0_0_20px_rgba(0,229,255,0.35)] transition-all transform hover:-translate-y-0.5 cursor-pointer"
               >
                 <PlusCircle className="w-4 h-4" />
-                <span>Publish New Mission</span>
+                <span>{t("publishNewMission")}</span>
               </Link>
               <Link
                 href={`/${locale}/dashboard/profile`}
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-void-deep/90 border border-void-border hover:border-hyper-violet/60 text-gray-200 hover:text-white font-semibold text-xs sm:text-sm transition-all shadow-md cursor-pointer"
               >
                 <Edit3 className="w-4 h-4 text-hyper-violet" />
-                <span>Edit Profile</span>
+                <span>{t("editProfile")}</span>
               </Link>
             </div>
           </div>

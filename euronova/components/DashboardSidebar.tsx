@@ -319,7 +319,7 @@ export function DashboardSidebar() {
                 <div className="flex items-center justify-between px-2 py-1 mb-1 border-b border-void-border/40 text-[10px] uppercase font-bold text-gray-400">
                   <span className="flex items-center gap-1 text-plasma-cyan">
                     <History className="w-3 h-3" />
-                    <span>{t("recentSearches") || "Recent Searches"}</span>
+                    <span>{t("recentSearches")}</span>
                   </span>
                   <button
                     type="button"
@@ -329,7 +329,7 @@ export function DashboardSidebar() {
                     }}
                     className="text-gray-500 hover:text-nova-flare transition-colors cursor-pointer"
                   >
-                    {t("clearRecentSearches") || "Clear"}
+                    {t("clearRecentSearches")}
                   </button>
                 </div>
                 <div className="space-y-0.5">

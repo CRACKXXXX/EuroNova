@@ -43,9 +43,9 @@ export function ReviewForm({ orgId }: ReviewFormProps) {
         setReviewText("");
         setRating(5);
         if (res.xpGained) {
-          toast.success(`Verified Review Submitted! +${res.xpGained} XP awarded.`, { icon: "⭐" });
+          toast.success(t("reviewSubmittedToast", { xp: res.xpGained }), { icon: "⭐" });
           if (res.leveledUp && res.newLevel) {
-            toast.success(`LEVEL UP! You reached Level ${res.newLevel}!`, { icon: "🚀" });
+            toast.success(t("levelUpToast", { level: res.newLevel }), { icon: "🚀" });
           }
           if (typeof window !== "undefined") {
             window.dispatchEvent(

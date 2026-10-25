@@ -228,11 +228,11 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ loca
             )}
             {/* AI Anti-Scam Shield micro-badge */}
             <div 
-              title="Verified by EuroNova AI & Moderation Team"
+              title={t("antiScamVerifiedTitle")}
               className="px-3 py-1.5 text-xs font-bold rounded-full bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/40 shadow-[0_0_15px_rgba(0,230,118,0.25)] flex items-center gap-1.5 cursor-help"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-rup-emerald" />
-              <span>AI Anti-Scam Verified</span>
+              <span>{t("antiScamVerified")}</span>
             </div>
           </div>
 

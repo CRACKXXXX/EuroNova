@@ -182,10 +182,10 @@ export function CookieConsentGatekeeper({
           <div className="p-3 rounded-xl bg-void-deep/90 border border-void-border/80 text-xs text-gray-400 space-y-1">
             <div className="flex items-center gap-2 text-plasma-cyan font-mono text-[11px] font-semibold">
               <ShieldAlert className="w-3.5 h-3.5" />
-              <span>Zero Advertising / No Third-Party Tracking</span>
+              <span>{t("noTrackingTitle")}</span>
             </div>
             <p className="text-[11px] leading-snug">
-              Session credentials and security tokens are strictly necessary. You have full legal authority to grant or revoke non-essential telemetry anytime.
+              {t("noTrackingDesc")}
             </p>
           </div>
         </div>
@@ -193,7 +193,7 @@ export function CookieConsentGatekeeper({
         {/* Current Status Pill */}
         {consentStatus && (
           <div className="p-3 rounded-xl bg-void-deep/90 border border-void-border text-xs font-mono flex items-center justify-between relative z-10">
-            <span className="text-gray-400">Current Setting:</span>
+            <span className="text-gray-400">{t("currentSetting")}</span>
             <span
               className={`font-bold flex items-center gap-1.5 ${
                 consentStatus === "granted" ? "text-rup-emerald" : "text-gray-300"

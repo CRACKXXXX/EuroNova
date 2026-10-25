@@ -35,7 +35,7 @@ export function SupportForm() {
         <div className="p-4 rounded-xl bg-rup-emerald/10 border border-rup-emerald/30 text-rup-emerald text-xs flex items-center gap-3 animate-in fade-in">
           <Sparkles className="w-5 h-5 shrink-0" />
           <span>
-            <strong>Level 10+ Vanguard Application:</strong> Please outline your past Erasmus+/ESC mobility experiences, languages spoken, and your motivation to help fellow volunteers across Europe.
+            <strong>{t("vanguardAppPrefix")}</strong> {t("vanguardAppDesc")}
           </span>
         </div>
       )}
@@ -92,16 +92,16 @@ export function SupportForm() {
             onChange={(e) => setSelectedReason(e.target.value)}
             className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all appearance-none cursor-pointer"
           >
-            <option value="">{t("selectReason") || "Select inquiry category..."}</option>
-            <option value="apply_support">Apply for Support Role (Level 10+ Vanguard)</option>
-            <option value="survey_moderation">Survey Moderation & Community Polls</option>
-            <option value="trust_score_dispute">Trust Score / XP Telemetry Disputes</option>
-            <option value="scraper_issue">Auto-Scraper Project Indexing Issues</option>
-            <option value="technical">{t("reasonTechnical") || "Technical Bug or Platform Issue"}</option>
-            <option value="account">{t("reasonAccount") || "Account & Profile Inquiries"}</option>
-            <option value="projects">{t("reasonProjects") || "Mission Verification & Infopack Inquiries"}</option>
-            <option value="billing">{t("reasonBilling") || "Donations & Infrastructure Fund"}</option>
-            <option value="other">{t("reasonOther") || "General Community Inquiry"}</option>
+            <option value="">{t("selectReason")}</option>
+            <option value="apply_support">{t("reasonApplySupport")}</option>
+            <option value="survey_moderation">{t("reasonSurveyModeration")}</option>
+            <option value="trust_score_dispute">{t("reasonTrustScoreDispute")}</option>
+            <option value="scraper_issue">{t("reasonScraperIssue")}</option>
+            <option value="technical">{t("reasonTechnical")}</option>
+            <option value="account">{t("reasonAccount")}</option>
+            <option value="projects">{t("reasonProjects")}</option>
+            <option value="billing">{t("reasonBilling")}</option>
+            <option value="other">{t("reasonOther")}</option>
           </select>
         </div>
       </div>
