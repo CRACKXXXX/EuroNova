@@ -80,13 +80,15 @@ export async function generateMetadata({
 }
 
 export default async function Home({ params }: PageProps) {
-  const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "Landing" });
-  const supabase = await createClient();
+  const [{ locale }, supabase] = await Promise.all([
+    params,
+    createClient(),
+  ]);
 
-  const { count, error } = await supabase
-    .from("projects")
-    .select("*", { count: "exact", head: true });
+  const [t, { count, error }] = await Promise.all([
+    getTranslations({ locale, namespace: "Landing" }),
+    supabase.from("projects").select("*", { count: "exact", head: true }),
+  ]);
 
   if (error) {
     console.error("Error fetching projects count from Supabase:", error);

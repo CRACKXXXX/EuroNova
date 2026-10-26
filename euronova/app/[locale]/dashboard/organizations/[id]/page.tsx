@@ -1,7 +1,7 @@
-/* eslint-disable @next/next/no-img-element */
 import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { getTranslations, getFormatter } from "next-intl/server";
 import { 
   Building, 
@@ -39,12 +39,15 @@ interface OrganizationDetailPageProps {
 }
 
 export default async function OrganizationDetailPage(props: OrganizationDetailPageProps) {
-  const { id, locale } = await props.params;
-  const searchParams = (await props.searchParams) || {};
-  const supabase = await createClient();
-  const t = await getTranslations("OrgReviews");
-  const tOrg = await getTranslations("Organizations");
-  const format = await getFormatter();
+  const [{ id, locale }, rawSearchParams, supabase, t, tOrg, format] = await Promise.all([
+    props.params,
+    props.searchParams,
+    createClient(),
+    getTranslations("OrgReviews"),
+    getTranslations("Organizations"),
+    getFormatter(),
+  ]);
+  const searchParams = rawSearchParams || {};
 
   // Paginación independiente para reseñas y proyectos (50 elementos por página)
   const REVIEWS_PER_PAGE = 50;
@@ -160,7 +163,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
           isOwner = true;
         }
       } catch (e) {
-        console.warn("Could not check admin role in users_youth:", e);
+        console.error("Could not check admin role in users_youth:", e);
       }
     }
   }
@@ -247,9 +250,12 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
 
             <div className="flex items-center gap-4">
               {logoUrl ? (
-                <img
+                <Image
                   src={logoUrl}
                   alt={org.org_name || "Organization Logo"}
+                  width={64}
+                  height={64}
+                  unoptimized
                   className="w-16 h-16 rounded-full object-cover bg-void-deep border border-void-border shrink-0 shadow-[0_0_15px_rgba(99,102,241,0.2)]"
                 />
               ) : (
@@ -266,9 +272,12 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
               <MapPin className="w-4 h-4 text-plasma-cyan shrink-0" />
               {countryInfo ? (
                 <span className="flex items-center gap-2">
-                  <img
+                  <Image
                     src={countryInfo.flagUrl}
                     alt={countryInfo.name}
+                    width={16}
+                    height={12}
+                    unoptimized
                     className="w-4 h-auto rounded-[2px]"
                   />
                   <span>{countryInfo.name}</span>
@@ -469,10 +478,13 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-bold text-white text-sm">{authorName}</span>
                             {authorCountry && (
-                              <img
+                              <Image
                                 src={authorCountry.flagUrl}
                                 alt={authorCountry.name}
                                 title={authorCountry.name}
+                                width={16}
+                                height={12}
+                                unoptimized
                                 className="w-4 h-auto rounded-[2px]"
                               />
                             )}

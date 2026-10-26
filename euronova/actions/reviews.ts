@@ -125,8 +125,10 @@ export async function submitOrgReview(
     let newLevel: number | undefined;
 
     try {
-      const { awardUserXp } = await import("@/actions/gamification");
-      const { XP_CONFIG } = await import("@/lib/gamification");
+      const [{ awardUserXp }, { XP_CONFIG }] = await Promise.all([
+        import("@/actions/gamification"),
+        import("@/lib/gamification"),
+      ]);
       const xpResult = await awardUserXp({
         amount: XP_CONFIG.NGO_REVIEW.amount,
         reason: XP_CONFIG.NGO_REVIEW.reason,
@@ -141,7 +143,7 @@ export async function submitOrgReview(
         newLevel = xpResult.level;
       }
     } catch (xpErr) {
-      console.warn("Could not award XP for NGO review:", xpErr);
+      console.error("Could not award XP for NGO review:", xpErr);
     }
 
     return { 

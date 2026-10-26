@@ -129,6 +129,7 @@ export function ReviewForm({ orgId }: ReviewFormProps) {
             value={reviewText}
             onChange={(e) => setReviewText(e.target.value)}
             placeholder={t("reviewTextPlaceholder")}
+            maxLength={2000}
             disabled={isPending}
             className="w-full bg-void-deep border border-void-border rounded-xl p-4 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all resize-y custom-scrollbar"
           />

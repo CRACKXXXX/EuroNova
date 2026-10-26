@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { LogoutButton } from "@/components/LogoutButton";
-import { ConsoleEasterEgg } from "@/components/ConsoleEasterEgg";
 import { UserLevelBadge } from "@/components/UserLevelBadge";
 import { PassiveXpTracker } from "@/components/PassiveXpTracker";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -124,7 +123,6 @@ export function Header({
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-void-deep/90 backdrop-blur-md border-b border-void-border z-40">
-      <ConsoleEasterEgg />
       <PassiveXpTracker userId={currentUserId} role={role} />
       <div className="max-w-7xl mx-auto h-full flex justify-between items-center w-full px-4 md:px-8">
         {/* Left: Logo & Desktop Navigation Spaced Out */}
@@ -277,9 +275,12 @@ export function Header({
             {avatarUrl ? (
               <div className="relative h-8 w-8 rounded-full overflow-hidden border border-void-border/70 shrink-0 shadow-sm bg-void-deep">
                 <div className="absolute inset-0 bg-void-border/50 animate-pulse pointer-events-none" />
-                <img
+                <Image
                   src={avatarUrl}
                   alt={isOrg ? "Organization Logo" : "Profile Picture"}
+                  width={32}
+                  height={32}
+                  unoptimized
                   className="relative h-8 w-8 rounded-full object-cover"
                 />
               </div>
@@ -463,9 +464,12 @@ export function Header({
                 className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-void-surface hover:bg-hyper-violet/10 border border-void-border hover:border-hyper-violet/50 text-gray-300 hover:text-hyper-violet transition-all text-sm font-semibold"
               >
                 {avatarUrl ? (
-                  <img
+                  <Image
                     src={avatarUrl}
                     alt={isOrg ? "Organization Logo" : "Profile Picture"}
+                    width={32}
+                    height={32}
+                    unoptimized
                     className="h-8 w-8 rounded-full object-cover border border-void-border/70 shrink-0 shadow-sm"
                   />
                 ) : isOrg ? (

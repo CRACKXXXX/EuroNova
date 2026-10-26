@@ -2,7 +2,6 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { sanitizeErrorMessage } from "@/lib/errorSanitizer";
 import { validateSafeHttpsUrl, stripDangerousHtml } from "@/lib/securitySanitizer";
@@ -14,14 +13,17 @@ export type ProfileActionState = {
   data?: Record<string, unknown> | null;
 } | null;
 
+const noNullBytes = (val: string | null | undefined): boolean =>
+  !val || !val.includes("\u0000");
+
 const youthProfileSchema = z.object({
-  full_name: z.string().trim().max(100).optional().or(z.literal("")).nullable(),
+  full_name: z.string().trim().max(100).refine(noNullBytes, "Full name cannot contain null bytes.").optional().or(z.literal("")).nullable(),
   birth_date: z.string().trim().optional().or(z.literal("")).nullable(),
-  country_code: z.string().trim().max(10).optional().or(z.literal("")).nullable(),
+  country_code: z.string().trim().max(10).refine(noNullBytes, "Country code cannot contain null bytes.").optional().or(z.literal("")).nullable(),
   is_rup_region: z.boolean().default(false),
-  bio: z.string().trim().max(2000).optional().or(z.literal("")).nullable(),
-  phone: z.string().trim().max(30).optional().or(z.literal("")).nullable(),
-  languages: z.string().trim().max(200).optional().or(z.literal("")).nullable(),
+  bio: z.string().trim().max(2000).refine(noNullBytes, "Bio cannot contain null bytes.").optional().or(z.literal("")).nullable(),
+  phone: z.string().trim().max(30).refine(noNullBytes, "Phone cannot contain null bytes.").optional().or(z.literal("")).nullable(),
+  languages: z.string().trim().max(200).refine(noNullBytes, "Languages cannot contain null bytes.").optional().or(z.literal("")).nullable(),
   notification_email: z.string().trim().email().max(120).optional().or(z.literal("")).nullable(),
   discord_webhook_url: z
     .string()
@@ -36,10 +38,10 @@ const youthProfileSchema = z.object({
 });
 
 const orgProfileSchema = z.object({
-  org_name: z.string().trim().max(150).optional().or(z.literal("")).nullable(),
-  oid_number: z.string().trim().max(50).optional().or(z.literal("")).nullable(),
-  country_hq: z.string().trim().max(10).optional().or(z.literal("")).nullable(),
-  description: z.string().trim().max(5000).optional().or(z.literal("")).nullable(),
+  org_name: z.string().trim().max(150).refine(noNullBytes, "Organization name cannot contain null bytes.").optional().or(z.literal("")).nullable(),
+  oid_number: z.string().trim().max(50).refine(noNullBytes, "OID number cannot contain null bytes.").optional().or(z.literal("")).nullable(),
+  country_hq: z.string().trim().max(10).refine(noNullBytes, "Country HQ cannot contain null bytes.").optional().or(z.literal("")).nullable(),
+  description: z.string().trim().max(5000).refine(noNullBytes, "Description cannot contain null bytes.").optional().or(z.literal("")).nullable(),
   website: z
     .string()
     .trim()
@@ -417,9 +419,14 @@ export async function updateProfile(
       "size" in avatarFile &&
       avatarFile.size > 0
     ) {
-      const MAX_AVATAR_SIZE = 1 * 1024 * 1024; // Strictly 1MB limit
+      const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // Strictly 5MB limit
       if (avatarFile.size > MAX_AVATAR_SIZE) {
-        return { error: "File is too large. Maximum allowed size is 1MB." };
+        return { error: "File is too large. Maximum allowed size is 5MB." };
+      }
+
+      const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+      if (avatarFile.type && !ALLOWED_MIME_TYPES.includes(avatarFile.type)) {
+        return { error: "Invalid file format. Only JPG, PNG, WEBP, and GIF images are allowed." };
       }
 
       const fileExt = avatarFile.name ? avatarFile.name.split(".").pop() || "png" : "png";
@@ -500,8 +507,10 @@ export async function updateProfile(
 
       // Recompensa única de XP por completar el dossier de perfil (Anti-farming blindado)
       try {
-        const { awardUserXp } = await import("@/actions/gamification");
-        const { XP_CONFIG } = await import("@/lib/gamification");
+        const [{ awardUserXp }, { XP_CONFIG }] = await Promise.all([
+          import("@/actions/gamification"),
+          import("@/lib/gamification"),
+        ]);
         const hasCoreData = Boolean(
           payload.full_name && 
           (payload.country_code || payload.bio || (payload.languages && payload.languages.length > 0))
@@ -523,7 +532,7 @@ export async function updateProfile(
           }
         }
       } catch (xpErr) {
-        console.warn("Could not award XP for profile completion:", xpErr);
+        console.error("Could not award XP for profile completion:", xpErr);
       }
     } else {
       const rawData = {

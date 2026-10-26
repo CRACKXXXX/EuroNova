@@ -183,8 +183,10 @@ export async function logout() {
 }
 
 export async function signInWithGoogle() {
-  const supabase = await createClient();
-  const headersList = await headers();
+  const [supabase, headersList] = await Promise.all([
+    createClient(),
+    headers(),
+  ]);
   const origin = headersList.get("origin") || "http://localhost:3000";
 
   const { data, error } = await supabase.auth.signInWithOAuth({

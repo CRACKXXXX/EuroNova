@@ -12,9 +12,11 @@ export const dynamic = 'force-dynamic';
 export default async function OrganizationsPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const searchParams = await props.searchParams;
-  const supabase = await createClient();
-  const t = await getTranslations("Organizations");
+  const [searchParams, supabase, t] = await Promise.all([
+    props.searchParams,
+    createClient(),
+    getTranslations("Organizations"),
+  ]);
 
   const q = searchParams.q as string | undefined;
   const countriesParam = searchParams.countries as string | undefined;

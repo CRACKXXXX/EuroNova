@@ -110,7 +110,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
     } else if (state?.error) {
       toast.error(state.error);
     }
-  }, [state, role, router]);
+  }, [state, role, router, t]);
 
   const [avatarLocalPreview, setAvatarLocalPreview] = useState<string | null>(null);
 
@@ -122,7 +122,15 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const MAX_AVATAR_SIZE = 1 * 1024 * 1024; // 1MB
+    const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5MB
+    const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+      toast.error(t("fileTooLarge"));
+      e.target.value = "";
+      return;
+    }
+
     if (file.size > MAX_AVATAR_SIZE) {
       toast.error(t("fileTooLarge"));
       e.target.value = "";
@@ -137,9 +145,14 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
     setIsDisintegrating(true);
     startTransition(async () => {
       setDeleteError(null);
-      const result = await deleteMyAccount();
-      if (result?.error) {
-        setDeleteError(result.error);
+      try {
+        const result = await deleteMyAccount();
+        if (result?.error) {
+          setDeleteError(result.error);
+          setIsDisintegrating(false);
+        }
+      } catch (err: unknown) {
+        setDeleteError(err instanceof Error ? err.message : "Failed to delete account");
         setIsDisintegrating(false);
       }
     });
@@ -690,6 +703,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
             <input
               type="text"
               name="full_name"
+              maxLength={100}
               defaultValue={defaultYouthFullName}
               className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all"
               placeholder={t("fullNamePlaceholder")}
@@ -761,6 +775,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
             <input
               type="text"
               name="phone"
+              maxLength={30}
               defaultValue={defaultYouthPhone}
               className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all"
             />
@@ -773,6 +788,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
             <input
               type="text"
               name="languages"
+              maxLength={200}
               defaultValue={defaultYouthLanguages}
               className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all"
               placeholder={t("languagesPlaceholder")}
@@ -785,6 +801,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
             </label>
             <textarea
               name="bio"
+              maxLength={2000}
               defaultValue={defaultYouthBio}
               rows={4}
               className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all"
@@ -800,6 +817,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
             <input
               type="text"
               name="org_name"
+              maxLength={150}
               defaultValue={defaultOrgName}
               className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet transition-all"
               placeholder={t("orgNamePlaceholder")}
@@ -814,6 +832,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
               <input
                 type="text"
                 name="oid_number"
+                maxLength={50}
                 defaultValue={defaultOrgOid}
                 className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet transition-all"
                 placeholder={t("oidPlaceholder")}
@@ -839,6 +858,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
               <input
                 type="email"
                 name="contact_email"
+                maxLength={120}
                 defaultValue={defaultOrgContactEmail}
                 className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet transition-all"
               />
@@ -851,6 +871,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
               <input
                 type="url"
                 name="website"
+                maxLength={500}
                 defaultValue={defaultOrgWebsite}
                 className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet transition-all"
               />
@@ -863,6 +884,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
             </label>
             <textarea
               name="description"
+              maxLength={5000}
               defaultValue={defaultOrgDescription}
               rows={4}
               className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet transition-all"
@@ -877,6 +899,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
               <input
                 type="url"
                 name="social_instagram"
+                maxLength={500}
                 defaultValue={defaultOrgInstagram}
                 placeholder={t("instagram")}
                 className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet transition-all text-sm"
@@ -884,6 +907,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
               <input
                 type="url"
                 name="social_tiktok"
+                maxLength={500}
                 defaultValue={defaultOrgTiktok}
                 placeholder={t("tiktok")}
                 className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet transition-all text-sm"
@@ -891,6 +915,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
               <input
                 type="url"
                 name="social_youtube"
+                maxLength={500}
                 defaultValue={defaultOrgYoutube}
                 placeholder={t("youtube")}
                 className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet transition-all text-sm"
@@ -898,6 +923,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
               <input
                 type="url"
                 name="social_linkedin"
+                maxLength={500}
                 defaultValue={defaultOrgLinkedin}
                 placeholder={t("linkedin")}
                 className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet transition-all text-sm"
@@ -926,6 +952,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
             <input
               type="email"
               name="notification_email"
+              maxLength={120}
               defaultValue={defaultNotificationEmail}
               placeholder={t("emailAlertsPlaceholder")}
               className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all text-sm"
@@ -938,6 +965,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
             <input
               type="url"
               name="discord_webhook_url"
+              maxLength={500}
               defaultValue={defaultDiscordWebhook}
               placeholder={t("discordWebhookPlaceholder")}
               className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all text-sm font-mono"

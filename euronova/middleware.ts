@@ -7,7 +7,7 @@ const intlMiddleware = createMiddleware(routing)
 
 export async function middleware(request: NextRequest) {
   // Primero, dejamos que next-intl haga el match de rutas de idioma y devuelva la respuesta base
-  let response = intlMiddleware(request)
+  const response = intlMiddleware(request)
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

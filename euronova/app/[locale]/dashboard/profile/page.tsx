@@ -71,11 +71,13 @@ function getAccountAgeDays(createdAtString?: string | null): number {
 export default async function ProfilePage(props: {
   params?: Promise<{ locale?: string }>;
 }) {
-  const resolvedParams = await props?.params;
+  const [resolvedParams, t, format, supabase] = await Promise.all([
+    props?.params,
+    getTranslations("Profile"),
+    getFormatter(),
+    createClient(),
+  ]);
   const locale = resolvedParams?.locale || "en";
-  const t = await getTranslations("Profile");
-  const format = await getFormatter();
-  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -126,17 +128,18 @@ export default async function ProfilePage(props: {
   }
 
   // 3. Consultar interacciones reales del usuario para insignias dinámicas
-  const { count: favoritesCount } = await supabase
-    .from("user_project_interactions")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .eq("is_favorite", true);
-
-  const { count: appliedCount } = await supabase
-    .from("user_project_interactions")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .eq("is_applied", true);
+  const [{ count: favoritesCount }, { count: appliedCount }] = await Promise.all([
+    supabase
+      .from("user_project_interactions")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("is_favorite", true),
+    supabase
+      .from("user_project_interactions")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("is_applied", true),
+  ]);
 
   // 4. Cálculo dinámico de completitud del perfil
   let completionPercentage = 0;

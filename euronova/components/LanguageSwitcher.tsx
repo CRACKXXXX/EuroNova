@@ -26,6 +26,12 @@ const LANGUAGES: LanguageOption[] = [
   { code: "pt", label: "Português", short: "PT", flagUrl: "https://flagcdn.com/w20/pt.png" },
 ];
 
+function setLocaleCookie(locale: string) {
+  if (typeof document !== "undefined") {
+    document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=31536000; SameSite=Lax`;
+  }
+}
+
 function LanguageSwitcherInner() {
   const locale = useLocale();
   const t = useTranslations("Common");
@@ -43,7 +49,7 @@ function LanguageSwitcherInner() {
     if (newLocale === locale) return;
 
     // Explicitly update NEXT_LOCALE cookie on client side (1 year expiration)
-    document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
+    setLocaleCookie(newLocale);
 
     // Reconstruct full path preserving query parameters
     const queryString = searchParams?.toString();

@@ -16,6 +16,7 @@ import {
   ShieldCheck
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useTranslations, useFormatter } from "next-intl";
 import { COUNTRIES } from "@/lib/constants/countries";
 import { PROJECT_TYPE_COLORS } from "@/lib/constants/projectTypes";
@@ -245,10 +246,12 @@ export function ProjectCard({ project }: { project: ProjectData }) {
         {project.org_name && (
           <div className="flex items-center gap-2 text-sm text-gray-300 mb-4 min-w-0">
             {project.org_logo_url ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
+              <Image
                 src={project.org_logo_url}
                 alt={project.org_name}
+                width={20}
+                height={20}
+                unoptimized
                 className="w-5 h-5 rounded-full object-cover border border-void-border shrink-0"
               />
             ) : (
@@ -269,8 +272,7 @@ export function ProjectCard({ project }: { project: ProjectData }) {
                 const c = COUNTRIES.find((x) => x.code === project.dest_country);
                 return c ? (
                   <>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={c.flagUrl} alt={c.name} className="w-4 h-auto rounded-[2px]" title={c.name} />
+                    <Image src={c.flagUrl} alt={c.name} width={16} height={12} unoptimized className="w-4 h-auto rounded-[2px]" title={c.name} />
                     <span>{c.name}</span>
                   </>
                 ) : (

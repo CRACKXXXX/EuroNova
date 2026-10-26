@@ -28,7 +28,15 @@ export default function NewProjectPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const MAX_IMAGE_SIZE = 1 * 1024 * 1024; // 1MB limit
+    const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB limit
+    const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+    if (file.type && !ALLOWED_MIME_TYPES.includes(file.type)) {
+      toast.error("Invalid file format. Please upload a JPG, PNG, WEBP, or GIF image.");
+      e.target.value = "";
+      return;
+    }
+
     if (file.size > MAX_IMAGE_SIZE) {
       toast.error(t("fileTooLarge"));
       e.target.value = "";
@@ -89,7 +97,7 @@ export default function NewProjectPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300">{t("title")}</label>
-              <input type="text" name="title" required className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan" placeholder={t("titlePlaceholder")} />
+              <input type="text" name="title" required maxLength={150} className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan" placeholder={t("titlePlaceholder")} />
             </div>
             
             <div className="space-y-2">
@@ -115,18 +123,18 @@ export default function NewProjectPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300">{t("exactLocation")}</label>
-              <input type="text" name="exact_location" className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan" placeholder={t("cityRegionPlaceholder")} />
+              <input type="text" name="exact_location" maxLength={150} className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan" placeholder={t("cityRegionPlaceholder")} />
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300">{t("officialUrl")}</label>
-              <input type="url" name="official_url" className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan" placeholder={t("urlPlaceholder")} />
+              <input type="url" name="official_url" maxLength={500} className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan" placeholder={t("urlPlaceholder")} />
             </div>
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">{t("description")}</label>
-            <textarea name="description" required rows={4} className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan" placeholder={t("descriptionPlaceholder")} />
+            <textarea name="description" required rows={4} maxLength={10000} className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan" placeholder={t("descriptionPlaceholder")} />
           </div>
         </div>
 

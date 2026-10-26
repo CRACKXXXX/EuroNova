@@ -94,7 +94,7 @@ export async function toggleProjectFavorite(projectId: string): Promise<Interact
           });
         }
       } catch (notifErr) {
-        console.warn("Could not dispatch favorite traction notification:", notifErr);
+        console.error("Could not dispatch favorite traction notification:", notifErr);
       }
     }
 
@@ -168,8 +168,10 @@ export async function toggleProjectApplied(projectId: string): Promise<Interacti
 
     if (newApplied) {
       try {
-        const { awardUserXp } = await import("@/actions/gamification");
-        const { XP_CONFIG } = await import("@/lib/gamification");
+        const [{ awardUserXp }, { XP_CONFIG }] = await Promise.all([
+          import("@/actions/gamification"),
+          import("@/lib/gamification"),
+        ]);
         const xpResult = await awardUserXp({
           amount: XP_CONFIG.APPLY_MISSION.amount,
           reason: XP_CONFIG.APPLY_MISSION.reason,
@@ -184,7 +186,7 @@ export async function toggleProjectApplied(projectId: string): Promise<Interacti
           newLevel = xpResult.level;
         }
       } catch (xpErr) {
-        console.warn("Could not award XP for application:", xpErr);
+        console.error("Could not award XP for application:", xpErr);
       }
 
       // Recordatorio de intención para el voluntario y notificación de tracción para la ONG (EuroNova no es ATS)
@@ -218,7 +220,7 @@ export async function toggleProjectApplied(projectId: string): Promise<Interacti
           });
         }
       } catch (notifErr) {
-        console.warn("Could not dispatch application reminder notifications:", notifErr);
+        console.error("Could not dispatch application reminder notifications:", notifErr);
       }
     }
 

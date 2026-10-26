@@ -17,6 +17,22 @@ export function hasCookieConsent(): boolean {
   return localStorage.getItem("euronova_cookie_consent") === "granted";
 }
 
+function getConsentSnapshot(): "granted" | "denied" | null {
+  if (typeof window === "undefined") return null;
+  const val = localStorage.getItem("euronova_cookie_consent");
+  return val === "granted" || val === "denied" ? val : null;
+}
+
+function subscribeConsent(callback: () => void) {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener("storage", callback);
+  window.addEventListener("euronova:consent-changed", callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener("euronova:consent-changed", callback);
+  };
+}
+
 interface CookieConsentGatekeeperProps {
   isOpenOverride?: boolean;
   onCloseOverride?: () => void;
@@ -28,60 +44,52 @@ export function CookieConsentGatekeeper({
 }: CookieConsentGatekeeperProps) {
   const t = useTranslations("CookieGatekeeper");
   const tCommon = useTranslations("Common");
-  const [isOpen, setIsOpen] = useState(false);
-  const [consentStatus, setConsentStatus] = useState<"granted" | "denied" | null>(null);
 
   const mounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
     () => false
   );
+  const consentStatus = useSyncExternalStore(
+    subscribeConsent,
+    getConsentSnapshot,
+    () => null
+  );
+
+  const [hasDismissed, setHasDismissed] = useState(false);
+  const [manuallyOpened, setManuallyOpened] = useState(false);
+
+  // Derive isOpen:
+  // 1. If isOpenOverride is explicitly passed as boolean, respect it
+  // 2. If manually opened via custom event, open it
+  // 3. Otherwise, if mounted, not yet consented and not dismissed, open on first visit
+  const isFirstVisit = mounted && consentStatus === null && !hasDismissed;
+  const isOpen = typeof isOpenOverride === "boolean" ? isOpenOverride : (manuallyOpened || isFirstVisit);
 
   useEffect(() => {
-    if (!mounted) return;
-
-    // 1. Check existing consent choice in localStorage
-    const saved = localStorage.getItem("euronova_cookie_consent");
-    if (saved === "granted" || saved === "denied") {
-      setConsentStatus(saved);
-    } else {
-      // First visit: automatically open gatekeeper modal
-      setIsOpen(true);
-    }
-
-    // 2. Global event listener for revocation or preference changes from Footer, buttons, etc.
     const handleOpenPreferences = () => {
-      setIsOpen(true);
+      setHasDismissed(false);
+      setManuallyOpened(true);
     };
 
     window.addEventListener("euronova:open-cookie-preferences", handleOpenPreferences);
     return () => {
       window.removeEventListener("euronova:open-cookie-preferences", handleOpenPreferences);
     };
-  }, [mounted]);
-
-  // Sync with optional isOpenOverride from parent
-  useEffect(() => {
-    if (typeof isOpenOverride === "boolean") {
-      setIsOpen(isOpenOverride);
-    }
-  }, [isOpenOverride]);
+  }, []);
 
   // Lock body scroll when modal is open to prevent background scrolling
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || !isOpen) return;
 
-    if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = originalOverflow;
-      };
-    }
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
   }, [isOpen, mounted]);
 
   const handleChoice = (choice: "granted" | "denied") => {
-    setConsentStatus(choice);
     localStorage.setItem("euronova_cookie_consent", choice);
 
     // Set secure cookie for server-side / middleware compliance
@@ -90,12 +98,14 @@ export function CookieConsentGatekeeper({
     // Notify window for dynamic analytics script gatekeeping
     window.dispatchEvent(new CustomEvent("euronova:consent-changed", { detail: { choice } }));
 
-    setIsOpen(false);
+    setHasDismissed(true);
+    setManuallyOpened(false);
     onCloseOverride?.();
   };
 
   const handleClose = () => {
-    setIsOpen(false);
+    setHasDismissed(true);
+    setManuallyOpened(false);
     onCloseOverride?.();
   };
 

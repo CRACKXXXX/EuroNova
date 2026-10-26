@@ -76,8 +76,10 @@ export default async function AdminPage(props: {
 
   const adminDb = getAdminDb();
 
-  const searchParams = await props.searchParams;
-  const t = await getTranslations("AdminPanel");
+  const [searchParams, t] = await Promise.all([
+    props.searchParams,
+    getTranslations("AdminPanel"),
+  ]);
 
   const requestedTab = searchParams.tab as
     | "orgs"
@@ -186,7 +188,7 @@ export default async function AdminPage(props: {
     totalReports = reportsCountRes.count ?? 0;
     totalPendingReports = pendingReportsCountRes.count ?? 0;
   } catch (err) {
-    console.warn("Could not count project_reports:", err);
+    console.error("Could not count project_reports:", err);
   }
 
   const activeTabTotal =

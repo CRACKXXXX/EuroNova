@@ -14,8 +14,10 @@ export async function GET(request: Request) {
     
     if (!error && data.user) {
       // Check if user has a profile, if not create a youth profile by default
-      const { data: youthData } = await supabase.from('users_youth').select('id').eq('id', data.user.id).single()
-      const { data: orgData } = await supabase.from('users_org').select('id').eq('id', data.user.id).single()
+      const [{ data: youthData }, { data: orgData }] = await Promise.all([
+        supabase.from('users_youth').select('id').eq('id', data.user.id).single(),
+        supabase.from('users_org').select('id').eq('id', data.user.id).single(),
+      ]);
       
       if (!youthData && !orgData) {
         // Create default youth profile

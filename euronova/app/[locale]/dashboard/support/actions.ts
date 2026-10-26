@@ -83,7 +83,7 @@ export async function createTicket(prevState: unknown, formData: FormData) {
       content,
     });
   } catch (err) {
-    console.warn("Could not send external support alert:", err);
+    console.error("Could not send external support alert:", err);
   }
 
   try {
@@ -128,7 +128,7 @@ export async function createTicket(prevState: unknown, formData: FormData) {
         admin_notes: `Application Statement:\n${content}`,
       });
     } catch (err) {
-      console.warn("Could not register support application escalation:", err);
+      console.error("Could not register support application escalation:", err);
     }
   }
 

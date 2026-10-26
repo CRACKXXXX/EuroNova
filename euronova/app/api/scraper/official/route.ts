@@ -502,7 +502,7 @@ ${rawDescription.substring(0, 3000)}`;
     }
     return null;
   } catch (err: unknown) {
-    console.warn("[AI Extraction Note] AI extraction unavailable, relying on Tier 1 Native + Tier 3 Regex:", err instanceof Error ? err.message : String(err));
+    console.error("[AI Extraction Note] AI extraction unavailable, relying on Tier 1 Native + Tier 3 Regex:", err instanceof Error ? err.message : String(err));
     return null;
   }
 }
@@ -544,13 +544,11 @@ function sanitizeDates(
   // Typical YE/TC is 5-21 days. If > 25 days, it is a deadline caught as start date (e.g. 29 or 61 days).
   const isShortTermProject = ["YE", "TC", "PBA", "SE"].includes(projectType);
   if (isShortTermProject && durationDays > 25) {
-    console.warn(`[Guardrail Rejected] ${projectType} duration of ${durationDays} days exceeds 25-day limit. Confused deadline with start date.`);
     return { startDate: null, endDate: null, durationDays: null };
   }
 
   // ESC Volunteering Guardrail: Can last up to 395 days (~13 months)
   if (projectType === "ESC" && durationDays > 395) {
-    console.warn(`[Guardrail Rejected] ESC duration of ${durationDays} days exceeds 395-day limit.`);
     return { startDate: null, endDate: null, durationDays: null };
   }
 
@@ -558,7 +556,6 @@ function sanitizeDates(
   if (deadlineDate) {
     const dDead = new Date(deadlineDate);
     if (!isNaN(dDead.getTime()) && dStart < dDead) {
-      console.warn(`[Guardrail Rejected] Start date ${startDate} is before deadline ${deadlineDate}.`);
       return { startDate: null, endDate: null, durationDays: null };
     }
   }
@@ -669,7 +666,7 @@ async function fetchSaltoProjects(): Promise<ScrapedCandidate[]> {
       if (candidates.length >= 10) return false;
     });
   } catch (err) {
-    console.warn("SALTO fetch warning:", err instanceof Error ? err.message : String(err));
+    console.error("SALTO fetch error:", err instanceof Error ? err.message : String(err));
   }
   return candidates;
 }
@@ -741,7 +738,7 @@ async function fetchEypEscProjects(): Promise<ScrapedCandidate[]> {
       if (candidates.length >= 10) break;
     }
   } catch (err) {
-    console.warn("EYP ESC fetch warning:", err instanceof Error ? err.message : String(err));
+    console.error("EYP ESC fetch error:", err instanceof Error ? err.message : String(err));
   }
   return candidates;
 }
@@ -815,7 +812,7 @@ async function fetchProactiveProjects(): Promise<ScrapedCandidate[]> {
       if (candidates.length >= 10) break;
     }
   } catch (err) {
-    console.warn("ProActive Future fetch warning:", err instanceof Error ? err.message : String(err));
+    console.error("ProActive Future fetch error:", err instanceof Error ? err.message : String(err));
   }
   return candidates;
 }
@@ -862,7 +859,7 @@ async function fetchYeAggregatorProjects(): Promise<ScrapedCandidate[]> {
       if (candidates.length >= 10) return false;
     });
   } catch (err) {
-    console.warn("YE Aggregator fetch warning:", err instanceof Error ? err.message : String(err));
+    console.error("YE Aggregator fetch error:", err instanceof Error ? err.message : String(err));
   }
   return candidates;
 }
@@ -928,12 +925,11 @@ async function processCandidate(candidate: ScrapedCandidate): Promise<ValidatedP
 // ============================================================================
 
 export async function GET(request: NextRequest) {
-  // 1. Authorization check
-  const cronSecret = process.env.CRON_SECRET || "Euronova.2007";
-  const secret = request.nextUrl.searchParams.get("secret");
-  const authHeader = request.headers.get("authorization");
+  // 1. Authorization check (Fail-Closed)
+  const cronSecret = process.env.CRON_SECRET;
+  const authHeader = request.headers.get("authorization") || request.headers.get("Authorization");
 
-  if (secret !== cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return new Response("Unauthorized", { status: 401 });
   }
 

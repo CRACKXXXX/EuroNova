@@ -130,9 +130,14 @@ export async function createProject(formData: FormData): Promise<CreateProjectRe
       "size" in imageFile &&
       imageFile.size > 0
     ) {
-      const MAX_PROJECT_IMAGE_SIZE = 1 * 1024 * 1024; // Strictly 1MB limit
+      const MAX_PROJECT_IMAGE_SIZE = 5 * 1024 * 1024; // Strictly 5MB limit
       if (imageFile.size > MAX_PROJECT_IMAGE_SIZE) {
-        return { error: "File is too large. Maximum allowed size is 1MB." };
+        return { error: "File is too large. Maximum allowed size is 5MB." };
+      }
+
+      const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+      if (imageFile.type && !ALLOWED_MIME_TYPES.includes(imageFile.type)) {
+        return { error: "Invalid file format. Only JPG, PNG, WEBP, and GIF images are allowed." };
       }
 
       const fileExt = imageFile.name ? imageFile.name.split(".").pop() || "png" : "png";

@@ -29,7 +29,6 @@ export async function moderateContent(
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
-    console.warn("GEMINI_API_KEY is missing. Falling back to pending_review.");
     return {
       action: "pending_review",
       reason: "Fallback: AI Service Unavailable",

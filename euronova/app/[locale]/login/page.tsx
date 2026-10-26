@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Globe } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -14,16 +14,8 @@ function LoginContent() {
   const t = useTranslations("Login");
   const tCommon = useTranslations("Common");
   const searchParams = useSearchParams();
-  const [isViewLogin, setIsViewLogin] = useState(true);
-
-  useEffect(() => {
-    const mode = searchParams.get("mode") || searchParams.get("view");
-    if (mode === "signup" || mode === "register") {
-      setIsViewLogin(false);
-    } else {
-      setIsViewLogin(true);
-    }
-  }, [searchParams]);
+  const mode = searchParams.get("mode") || searchParams.get("view");
+  const [isViewLogin, setIsViewLogin] = useState(mode !== "signup" && mode !== "register");
 
   const handleGoogleLogin = async () => {
     const supabase = createClient();

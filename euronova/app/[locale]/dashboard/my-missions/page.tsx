@@ -17,9 +17,11 @@ interface MyMissionsPageProps {
 }
 
 export default async function MyMissionsPage(props: MyMissionsPageProps) {
-  const searchParams = await props.searchParams;
-  const supabase = await createClient();
-  const t = await getTranslations("MyMissions");
+  const [searchParams, supabase, t] = await Promise.all([
+    props.searchParams,
+    createClient(),
+    getTranslations("MyMissions"),
+  ]);
 
   // 1. Verificación de Autenticación
   const { data: { user } } = await supabase.auth.getUser();

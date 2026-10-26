@@ -6,6 +6,7 @@ import { getTranslations, getFormatter } from "next-intl/server";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { deleteProjectAction } from "./actions";
+import { getUserRole } from "@/lib/roles";
 import { COUNTRIES } from "@/lib/constants/countries";
 import { TermTooltip } from "@/components/TermTooltip";
 import { DistanceCalculator } from "@/components/DistanceCalculator";
@@ -21,8 +22,10 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata(
   props: { params: Promise<{ locale: string; id: string }> }
 ): Promise<Metadata> {
-  const { locale, id } = await props.params;
-  const supabase = await createClient();
+  const [{ locale, id }, supabase] = await Promise.all([
+    props.params,
+    createClient(),
+  ]);
   const { data: project } = await supabase
     .from("projects")
     .select("title, description, image_url, dest_country, project_type")
@@ -80,11 +83,13 @@ export async function generateMetadata(
 }
 
 export default async function ProjectDetailsPage(props: { params: Promise<{ locale: string; id: string }> }) {
-  const params = await props.params;
-  const t = await getTranslations("ProjectDetails");
-  const tGeneral = await getTranslations("NewProject"); // to reuse some generic keys if needed
-  const format = await getFormatter();
-  const supabase = await createClient();
+  const [params, t, tGeneral, format, supabase] = await Promise.all([
+    props.params,
+    getTranslations("ProjectDetails"),
+    getTranslations("NewProject"),
+    getFormatter(),
+    createClient(),
+  ]);
   
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -112,7 +117,11 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ loca
   }
 
   const isOwner = user?.id === project.org_id;
-  const isAdmin = user?.email === "euronovaofficial@gmail.com";
+  const userRole = user ? await getUserRole(user.id, user.email) : "user";
+  const isAdmin =
+    userRole === "admin" ||
+    userRole === "root" ||
+    user?.email === "euronovaofficial@gmail.com";
   const canDelete = isOwner || isAdmin;
 
   const orgData = Array.isArray(project.users_org) ? project.users_org[0] : project.users_org;

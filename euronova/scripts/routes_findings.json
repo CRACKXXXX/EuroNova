@@ -1,0 +1,77 @@
+[
+  {
+    "relPath": "app/[locale]/community/error.tsx",
+    "findings": [
+      {
+        "line": 17,
+        "category": "ATTR_HARDCODED",
+        "text": "Community Signal Disrupted"
+      }
+    ]
+  },
+  {
+    "relPath": "app/[locale]/dashboard/admin/error.tsx",
+    "findings": [
+      {
+        "line": 17,
+        "category": "ATTR_HARDCODED",
+        "text": "Admin Hub Transmission Interrupted"
+      }
+    ]
+  },
+  {
+    "relPath": "app/[locale]/dashboard/error.tsx",
+    "findings": [
+      {
+        "line": 17,
+        "category": "ATTR_HARDCODED",
+        "text": "Dashboard Subsystem Disruption"
+      }
+    ]
+  },
+  {
+    "relPath": "app/[locale]/dashboard/my-missions/error.tsx",
+    "findings": [
+      {
+        "line": 17,
+        "category": "ATTR_HARDCODED",
+        "text": "Missions Portfolio Offline"
+      }
+    ]
+  },
+  {
+    "relPath": "app/[locale]/dashboard/organizations/[id]/error.tsx",
+    "findings": [
+      {
+        "line": 17,
+        "category": "ATTR_HARDCODED",
+        "text": "Organization Dossier Inaccessible"
+      }
+    ]
+  },
+  {
+    "relPath": "app/[locale]/map/error.tsx",
+    "findings": [
+      {
+        "line": 17,
+        "category": "ATTR_HARDCODED",
+        "text": "Geospatial Radar Disconnected"
+      }
+    ]
+  },
+  {
+    "relPath": "app/[locale]/map/loading.tsx",
+    "findings": [
+      {
+        "line": 37,
+        "category": "JSX_TEXT_STANDALONE",
+        "text": "Calibrating Geospatial Radar"
+      },
+      {
+        "line": 40,
+        "category": "JSX_TEXT_STANDALONE",
+        "text": "Loading European project coordinates and Outermost Regions telemetry..."
+      }
+    ]
+  }
+]

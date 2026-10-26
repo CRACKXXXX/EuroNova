@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useEffect } from "react";
+import { useActionState, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createTicket } from "./actions";
 import { Mail, Phone, MessageSquare, Send, Sparkles } from "lucide-react";
@@ -17,15 +17,6 @@ export function SupportForm() {
       ? "Application for EuroNova Community Support Specialist (Level 10+)"
       : ""
   );
-
-  useEffect(() => {
-    if (defaultReason) {
-      setSelectedReason(defaultReason);
-      if (defaultReason === "apply_support" && !subjectValue) {
-        setSubjectValue("Application for EuroNova Community Support Specialist (Level 10+)");
-      }
-    }
-  }, [defaultReason, subjectValue]);
 
   const [state, action, isPending] = useActionState(createTicket, null);
 
@@ -49,6 +40,7 @@ export function SupportForm() {
               type="email"
               name="email"
               required
+              maxLength={120}
               className="w-full bg-void-deep border border-void-border rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all"
               placeholder={t("emailPlaceholder")}
             />
@@ -62,6 +54,7 @@ export function SupportForm() {
             <input
               type="text"
               name="phone"
+              maxLength={30}
               className="w-full bg-void-deep border border-void-border rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all"
               placeholder={t("phonePlaceholder")}
             />
@@ -76,6 +69,7 @@ export function SupportForm() {
             type="text"
             name="subject"
             required
+            maxLength={150}
             value={subjectValue}
             onChange={(e) => setSubjectValue(e.target.value)}
             className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all"
@@ -114,6 +108,7 @@ export function SupportForm() {
             name="content"
             required
             rows={5}
+            maxLength={5000}
             className="w-full bg-void-deep border border-void-border rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all"
             placeholder={
               selectedReason === "apply_support"
