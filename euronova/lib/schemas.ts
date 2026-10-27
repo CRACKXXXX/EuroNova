@@ -296,6 +296,21 @@ export const ProjectCreationSchema = z.object({
   eligible_countries: z.array(z.string().trim().max(10).refine(noNullBytes)).max(60).default([]),
 });
 
+export const ProjectThemeSchema = z.enum([
+  "environment",
+  "digital",
+  "inclusion",
+  "mental_health",
+  "arts_culture",
+  "sports",
+  "human_rights",
+  "entrepreneurship",
+  "civic_participation",
+  "media_literacy",
+  "rural_development",
+  "heritage",
+]);
+
 export type ProjectCreationInput = z.infer<typeof ProjectCreationSchema>;
 
 // 12. Webhook Dispatch Schema

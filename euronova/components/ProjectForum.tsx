@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition, useMemo } from "react";
+import { useState, useEffect, useTransition, useMemo, useRef } from "react";
 import {
   MessageSquare,
   Send,
@@ -8,7 +8,6 @@ import {
   ShieldCheck,
   AlertTriangle,
   Building,
-  User,
   Sparkles,
   Loader2,
   Lock,
@@ -25,7 +24,7 @@ import {
 } from "lucide-react";
 import { useTranslations, useFormatter } from "next-intl";
 import { toast } from "sonner";
-import Image from "next/image";
+import { AvatarFallback } from "@/components/AvatarFallback";
 import {
   getProjectMessages,
   postProjectMessage,
@@ -69,6 +68,8 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
   const [moderationError, setModerationError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState<ForumPaginationMetadata | null>(null);
+  const inFlightMessageRef = useRef(false);
+  const inFlightReplyRef = useRef(false);
 
   // Edit & Delete state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -95,6 +96,9 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
         if (msgRes.pagination) {
           setPagination(msgRes.pagination);
           setCurrentPage(msgRes.pagination.page);
+        }
+        if (typeof window !== "undefined") {
+          window.scrollTo({ top: 0, behavior: "smooth" });
         }
       } else {
         toast.error(msgRes.error || "Could not load forum messages.");
@@ -178,6 +182,7 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
 
   const handlePostMessage = (e: React.FormEvent) => {
     e.preventDefault();
+    if (inFlightMessageRef.current) return;
     setModerationError(null);
 
     if (isGated) {
@@ -196,6 +201,7 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
       return;
     }
 
+    inFlightMessageRef.current = true;
     startTransition(async () => {
       try {
         const res = await postProjectMessage(projectId, trimmed);
@@ -222,11 +228,15 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
             : "An unexpected error occurred while transmitting your message.";
         setModerationError(errorMsg);
         toast.error(errorMsg);
+      } finally {
+        inFlightMessageRef.current = false;
       }
     });
   };
 
   const handleSendReply = async (parentId: string) => {
+    if (inFlightReplyRef.current) return;
+
     if (eligibility && !eligibility.canReply) {
       toast.error(t("replyRestrictedError"));
       return;
@@ -246,6 +256,7 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
       return;
     }
 
+    inFlightReplyRef.current = true;
     setIsReplying(true);
     try {
       const res = await postProjectMessage(projectId, trimmed, undefined, parentId);
@@ -265,6 +276,7 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
       console.error("Error posting nested reply:", err);
       toast.error(t("replyPostError"));
     } finally {
+      inFlightReplyRef.current = false;
       setIsReplying(false);
     }
   };
@@ -369,12 +381,6 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
     const isCoordinator = msg.author_role === "coordinator";
     const isAdmin = msg.author_role === "admin";
     const authorLevel = msg.author_level ?? (isAdmin || isCoordinator ? 99 : 1);
-    const initials = msg.author_name
-      .split(" ")
-      .map((n) => n[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
 
     const currentUserId = eligibility?.userId;
     const isAuthor = Boolean(currentUserId && currentUserId === msg.user_id);
@@ -398,40 +404,20 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
         {/* Author Metadata Row */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            {msg.avatar_url ? (
-              <div
-                className={`relative w-9 h-9 rounded-full overflow-hidden shrink-0 border bg-void-deep ${
-                  isCoordinator
-                    ? "border-plasma-cyan/60 shadow-[0_0_10px_rgba(0,229,255,0.25)]"
-                    : isAdmin
-                    ? "border-hyper-violet/60 shadow-[0_0_10px_rgba(99,102,241,0.25)]"
-                    : "border-void-border"
-                }`}
-              >
-                <div className="absolute inset-0 bg-void-border/50 animate-pulse pointer-events-none" />
-                <Image
-                  src={msg.avatar_url}
-                  alt={msg.author_name}
-                  width={36}
-                  height={36}
-                  unoptimized
-                  style={{ width: "auto", height: "auto" }}
-                  className="relative w-9 h-9 rounded-full object-cover"
-                />
-              </div>
-            ) : (
-              <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shrink-0 border ${
-                  isCoordinator
-                    ? "bg-plasma-cyan/20 border-plasma-cyan text-plasma-cyan shadow-[0_0_10px_rgba(0,229,255,0.25)]"
-                    : isAdmin
-                    ? "bg-hyper-violet/20 border-hyper-violet text-hyper-violet shadow-[0_0_10px_rgba(99,102,241,0.25)]"
-                    : "bg-void-surface border-void-border text-gray-300"
-                }`}
-              >
-                {initials || <User className="w-4 h-4" />}
-              </div>
-            )}
+            <AvatarFallback
+              src={msg.avatar_url}
+              alt={msg.author_name}
+              fallbackType="user"
+              name={msg.author_name}
+              sizeClassName="w-9 h-9"
+              className={`shrink-0 border ${
+                isCoordinator
+                  ? "border-plasma-cyan/60 shadow-[0_0_10px_rgba(0,229,255,0.25)]"
+                  : isAdmin
+                  ? "border-hyper-violet/60 shadow-[0_0_10px_rgba(99,102,241,0.25)]"
+                  : "border-void-border"
+              }`}
+            />
 
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">

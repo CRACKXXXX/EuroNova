@@ -331,11 +331,17 @@ export function useAdminDashboard(props: AdminDashboardClientProps) {
 
   const handleTabChange = (tab: AdminTabType) => {
     router.push(`?tab=${tab}&page=1`);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return;
     router.push(`?tab=${activeTab}&page=${newPage}`);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   const handleAction = (actionFn: () => Promise<{ success?: boolean; error?: string }>) => {

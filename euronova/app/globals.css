@@ -10,6 +10,10 @@
   --color-rup-emerald: #00E676;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
   background-color: var(--color-void-deep);
   color: #FFFFFF;

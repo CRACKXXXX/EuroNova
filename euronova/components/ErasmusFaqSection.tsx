@@ -3,11 +3,11 @@
 import { useState, useMemo } from "react";
 import { HelpCircle, ChevronDown, Search, Star, FileText, ExternalLink, Sparkles, Quote, Users, Languages } from "lucide-react";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
-import { FAQ_DATA, FaqItem } from "@/lib/faqData";
+import { useLocale, useTranslations } from "next-intl";
+import { FAQ_DATA, FaqItem, getLocalizedFaq } from "@/lib/faqData";
 
 export type { FaqItem };
-export { FAQ_DATA };
+export { FAQ_DATA, getLocalizedFaq };
 
 type UnmaskedLang = "ES" | "EN" | "FR" | "DE" | "IT" | "RU" | "PT";
 
@@ -59,7 +59,15 @@ function parseUnmaskedAnswer(text: string): UnmaskedData {
 
 function UnmaskedWorkshopView({ rawAnswer }: { rawAnswer: string }) {
   const t = useTranslations("ErasmusFaq");
-  const [activeLang, setActiveLang] = useState<UnmaskedLang>("ES");
+  const locale = useLocale();
+  const defaultLang = useMemo((): UnmaskedLang => {
+    const upper = (locale || "es").toUpperCase();
+    if (upper === "ES" || upper === "EN" || upper === "FR" || upper === "DE" || upper === "IT" || upper === "RU" || upper === "PT") {
+      return upper as UnmaskedLang;
+    }
+    return "ES";
+  }, [locale]);
+  const [activeLang, setActiveLang] = useState<UnmaskedLang>(defaultLang);
   const parsed = useMemo(() => parseUnmaskedAnswer(rawAnswer), [rawAnswer]);
 
   const activeText = parsed.languages[activeLang] || parsed.languages.ES;
@@ -280,12 +288,15 @@ function formatAnswerWithLinks(text: string, t: (key: string) => string) {
 
 export function ErasmusFaqSection() {
   const t = useTranslations("ErasmusFaq");
+  const locale = useLocale();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [expandedId, setExpandedId] = useState<string | null>("surv-unmasked-workshop");
 
+  const localizedFaqs = useMemo(() => getLocalizedFaq(locale), [locale]);
+
   const filteredFaqs = useMemo(() => {
-    return FAQ_DATA.filter((item) => {
+    return localizedFaqs.filter((item) => {
       const matchesCategory = selectedCategory === "all" || item.category === selectedCategory;
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
@@ -294,7 +305,7 @@ export function ErasmusFaqSection() {
         item.answer.toLowerCase().includes(q);
       return matchesCategory && matchesSearch;
     });
-  }, [searchQuery, selectedCategory]);
+  }, [localizedFaqs, searchQuery, selectedCategory]);
 
   const toggleAccordion = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
@@ -325,7 +336,7 @@ export function ErasmusFaqSection() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t("searchPlaceholder", { count: FAQ_DATA.length })}
+              placeholder={t("searchPlaceholder", { count: localizedFaqs.length })}
               className="w-full bg-void-deep/90 border border-void-border rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-plasma-cyan transition-colors"
             />
           </div>
@@ -335,7 +346,7 @@ export function ErasmusFaqSection() {
       {/* Category Filter Pills */}
       <div className="flex flex-wrap items-center gap-2">
         {[
-          { key: "all", label: t("tabAll", { count: FAQ_DATA.length }) },
+          { key: "all", label: t("tabAll", { count: localizedFaqs.length }) },
           { key: "special", label: t("tabSpecial"), isSpecial: true },
           { key: "survival", label: t("tabSurvival") },
           { key: "types", label: t("tabTypes") },

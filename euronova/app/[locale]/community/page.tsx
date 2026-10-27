@@ -25,12 +25,18 @@ interface CommunityPageProps {
 }
 
 export default async function CommunityPage({ params, searchParams }: CommunityPageProps) {
-  const [{ locale }, { tab: activeTab = "forum" }, t, supabase] = await Promise.all([
+  const [{ locale }, resolvedParams, t, supabase] = await Promise.all([
     params,
     searchParams,
     getTranslations("Community"),
     createClient(),
   ]);
+
+  const rawTab = resolvedParams?.tab;
+  const validTabs = ["forum", "surveys", "faq"];
+  const activeTab = typeof rawTab === "string" && validTabs.includes(rawTab.toLowerCase())
+    ? rawTab.toLowerCase()
+    : "forum";
   const {
     data: { user },
   } = await supabase.auth.getUser();

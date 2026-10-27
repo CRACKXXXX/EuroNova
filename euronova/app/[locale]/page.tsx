@@ -44,7 +44,7 @@ export async function generateMetadata({
   }
   languageAlternates["x-default"] = `/${routing.defaultLocale}`;
 
-  const title = "EuroNova — European Mobility Gateway";
+  const title = "EuroNova";
   const description = t("subtitle");
 
   return {

@@ -169,23 +169,21 @@ export function DistanceCalculator({
       <div className="absolute top-0 right-0 w-40 h-40 bg-plasma-cyan/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* 1. Header Bar */}
-      <div className="relative z-10 flex items-center justify-between gap-3 pb-3 mb-4 border-b border-void-border/60">
+      <div className="relative z-10 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 pb-3 mb-4 border-b border-void-border/60">
         <div className="flex items-center gap-2 min-w-0">
           <div className="w-7 h-7 rounded-lg bg-plasma-cyan/15 border border-plasma-cyan/30 flex items-center justify-center shrink-0">
             <Plane className="w-3.5 h-3.5 text-plasma-cyan" />
           </div>
-          <div className="min-w-0">
-            <h4 className="text-[11px] font-bold text-gray-200 uppercase tracking-wider flex items-center gap-1.5 truncate">
-              <span>{t("distanceCalculator")}</span>
-              <Sparkles className="w-3 h-3 text-plasma-cyan shrink-0" />
-            </h4>
-          </div>
+          <h4 className="text-[11px] font-bold text-gray-200 uppercase tracking-wider flex items-center gap-1.5 leading-snug">
+            <span>{t("distanceCalculator")}</span>
+            <Sparkles className="w-3 h-3 text-plasma-cyan shrink-0" />
+          </h4>
         </div>
 
         <button
           type="button"
           onClick={() => setIsChangingOrigin((prev) => !prev)}
-          className="text-[10px] font-bold text-plasma-cyan hover:text-white px-2.5 py-1 rounded-md bg-plasma-cyan/10 hover:bg-plasma-cyan/20 border border-plasma-cyan/30 transition-all cursor-pointer flex items-center gap-1 shrink-0"
+          className="text-[10px] font-bold text-plasma-cyan hover:text-white px-2.5 py-1 rounded-md bg-plasma-cyan/10 hover:bg-plasma-cyan/20 border border-plasma-cyan/30 transition-all cursor-pointer flex items-center gap-1 shrink-0 ml-auto sm:ml-0"
         >
           <span>{t("changeOrigin")}</span>
           <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isChangingOrigin ? "rotate-180" : ""}`} />

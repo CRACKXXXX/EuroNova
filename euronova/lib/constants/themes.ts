@@ -1,4 +1,24 @@
-export const ERASMUS_THEMES = [
+export const PROJECT_THEMES = [
+  { id: "environment", labelKey: "environment", icon: "Leaf" },
+  { id: "digital", labelKey: "digital", icon: "Laptop" },
+  { id: "inclusion", labelKey: "inclusion", icon: "Users" },
+  { id: "mental_health", labelKey: "mental_health", icon: "HeartPulse" },
+  { id: "arts_culture", labelKey: "arts_culture", icon: "Palette" },
+  { id: "sports", labelKey: "sports", icon: "Trophy" },
+  { id: "human_rights", labelKey: "human_rights", icon: "Shield" },
+  { id: "entrepreneurship", labelKey: "entrepreneurship", icon: "Briefcase" },
+  { id: "civic_participation", labelKey: "civic_participation", icon: "Vote" },
+  { id: "media_literacy", labelKey: "media_literacy", icon: "Newspaper" },
+  { id: "rural_development", labelKey: "rural_development", icon: "Wheat" },
+  { id: "heritage", labelKey: "heritage", icon: "Landmark" },
+] as const;
+
+export type ProjectThemeId = (typeof PROJECT_THEMES)[number]["id"];
+
+export const PROJECT_THEME_IDS: ProjectThemeId[] = PROJECT_THEMES.map((t) => t.id);
+
+export const ERASMUS_THEMES: string[] = [
+  ...PROJECT_THEME_IDS,
   "Performing Arts",
   "Climate Change",
   "Digital Skills",

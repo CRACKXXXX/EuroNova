@@ -23,6 +23,13 @@ export function ScrollRestoration() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
+  // Guarantee that navigating to any route always releases leftover body scroll-lock traps
+  useEffect(() => {
+    if (typeof document !== "undefined" && document.body.style.overflow === "hidden") {
+      document.body.style.overflow = "";
+    }
+  }, [pathname]);
+
   useEffect(() => {
     const key = `euronova_scroll_${fullUrl}`;
 

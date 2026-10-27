@@ -417,7 +417,9 @@
     "appLoggedLevelUp": "NIVEAU SUPÉRIEUR ! Vous avez atteint le Niveau {level} !",
     "appLoggedAlreadyClaimed": "Candidature enregistrée ! (XP déjà réclamés pour cette mission)",
     "aiSecurityChecked": "Sécurité vérifiée par IA",
-    "aiSecurityTooltip": "Vérifié par l'équipe d'IA et de modération de EuroNova"
+    "aiSecurityTooltip": "Vérifié par l'équipe d'IA et de modération de EuroNova",
+    "antiScamVerified": "Mission Vérifiée",
+    "antiScamVerifiedTitle": "Vérifié par l'équipe d'IA et de modération de EuroNova"
   },
   "Organizations": {
     "backHome": "Retour à l'accueil",
@@ -502,6 +504,8 @@
   },
   "ProjectDetails": {
     "publisherProfile": "Profil de l'organisateur",
+    "antiScamVerified": "Mission Vérifiée",
+    "antiScamVerifiedTitle": "Vérifié par l'équipe d'IA et de modération de EuroNova",
     "deleteProject": "Supprimer le projet",
     "applyToMission": "Postuler à la mission",
     "themes": "Thèmes",
@@ -887,7 +891,7 @@
     "coversRupFlights": "Couvre les vols RUP / Îles Canaries",
     "lastMinuteUrgent": "Dernière minute urgent",
     "sendInAppNotificationTitle": "Envoyer une notification intégrée",
-    "recipientLabel": "Destinataire : <span className=\"text-plasma-cyan font-semibold\">{name}</span>",
+    "recipientLabel": "Destinataire : <span>{name}</span>",
     "notificationCategory": "Catégorie de notification",
     "catAnnouncement": "Système / Annonce",
     "catAlert": "Avis important / Alerte",
@@ -1162,7 +1166,9 @@
     "prompt1": "🐾 Refuge pour animaux sous climat nordique",
     "prompt2": "🌊 Préservation marine aux Açores",
     "prompt3": "🎨 Atelier de médias et arts numériques à Berlin",
-    "prompt4": "🌱 Agriculture biologique en Italie rurale"
+    "prompt4": "🌱 Agriculture biologique en Italie rurale",
+    "aiAnalyzing": "Analyse de la requête avec l'IA...",
+    "aiApply": "Rechercher"
   },
   "Webhooks": {
     "title": "Webhooks & Alertes en Temps Réel",
@@ -1567,14 +1573,14 @@
     "typeMultiDesc": "Les participants peuvent choisir plusieurs options",
     "updateSurvey": "Mettre à jour le sondage",
     "publishSurvey": "Publier le sondage",
-    "yourSurveysCount": "Vos sondages : <strong class=\"text-white font-bold\">{count}</strong> (Page {page} sur {totalPages})",
-    "pageOf": "Page <strong class=\"text-white font-bold\">{page}</strong> sur <strong class=\"text-white font-bold\">{totalPages}</strong>"
+    "yourSurveysCount": "Vos sondages : <strong>{count}</strong> (Page {page} sur {totalPages})",
+    "pageOf": "Page <strong>{page}</strong> sur <strong>{totalPages}</strong>"
   },
   "CommunitySurveys": {
     "headerBadge": "Participation Citoyenne & Dialogue ONG",
     "headerTitle": "Sondages d'opinion et consultations des ONG européennes",
     "headerDesc": "Votez sur les politiques de jeunesse européennes, les directives et initiatives associatives. Tous les votes sont anonymes et reflètent le consensus en direct.",
-    "showingSurveys": "Affichage de <strong class=\"text-white font-bold\">{count}</strong> sondages actifs (Page {page} sur {totalPages})",
+    "showingSurveys": "Affichage de <strong>{count}</strong> sondages actifs (Page {page} sur {totalPages})",
     "strictly50": "Strictement 50 Éléments / Page",
     "emptyTitle": "Aucun sondage communautaire actif trouvé",
     "emptyDesc": "Les organisations accréditées peuvent publier des sondages depuis leur tableau de bord ONG. Revenez bientôt.",
@@ -1587,7 +1593,7 @@
     "selectSingle": "Sélectionnez une option pour voter.",
     "transmittingVote": "Transmission du vote...",
     "castVote": "Voter",
-    "paginationPage": "Page <strong class=\"text-white font-bold\">{page}</strong> sur <strong class=\"text-white font-bold\">{totalPages}</strong> ({totalCount} sondages au total)",
+    "paginationPage": "Page <strong>{page}</strong> sur <strong>{totalPages}</strong> ({totalCount} sondages au total)",
     "prevPage": "Page Précédente",
     "nextPage": "Page Suivante",
     "surveyDeleted": "Sondage supprimé avec succès.",
@@ -1765,7 +1771,7 @@
     "applyMissionXp": "+50 XP Postulez à une mission",
     "reviewNgoXp": "+100 XP Évaluez une ONG",
     "goalXpNeeded": "Objectif 1 000 XP ({needed} XP nécessaires)",
-    "xpStatus": "Vous avez actuellement <strong class=\"text-plasma-cyan\">{xp} XP</strong> (Niveau {level})."
+    "xpStatus": "Vous avez actuellement <strong>{xp} XP</strong> (Niveau {level})."
   },
   "Community": {
     "tabForum": "Forums Globaux",
@@ -1922,5 +1928,19 @@
     "sec8Title": "8. Droit applicable et juridiction compétente",
     "sec8Desc": "Les présentes conditions sont régies par le droit espagnol. Tout litige relatif à la plateforme sera soumis aux tribunaux de <strong>Las Palmas de Gran Canaria, Espagne</strong>.",
     "sec8Contact": "Contact officiel : euronovaofficial@gmail.com"
+  },
+  "ProjectThemes": {
+    "environment": "Environnement & Action pour le Climat",
+    "digital": "Compétences Numériques, Tech & IA",
+    "inclusion": "Inclusion Sociale & Égalité",
+    "mental_health": "Santé Mentale & Bien-être",
+    "arts_culture": "Arts, Culture & Créativité",
+    "sports": "Sports & Mode de Vie Sain",
+    "human_rights": "Droits Humains & Consolidation de la Paix",
+    "entrepreneurship": "Entrepreneuriat & Employabilité",
+    "civic_participation": "Citoyenneté Active & Démocratie",
+    "media_literacy": "Éducation aux Médias & Information Jeunesse",
+    "rural_development": "Développement Rural & Nature",
+    "heritage": "Patrimoine Européen & Dialogue Interculturel"
   }
 }

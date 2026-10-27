@@ -41,8 +41,8 @@ export async function generateMetadata({
   return {
     metadataBase: new URL(siteUrl),
     title: {
-      default: "EuroNova — European Mobility Gateway",
-      template: "%s | EuroNova",
+      default: "EuroNova",
+      template: "EuroNova",
     },
     description:
       "Discover verified Erasmus+ and European Solidarity Corps youth mobility missions across 30+ European nations with 100% funding.",
@@ -61,7 +61,7 @@ export async function generateMetadata({
       locale,
       url: `/${locale}`,
       siteName: "EuroNova",
-      title: "EuroNova — European Mobility Gateway",
+      title: "EuroNova",
       description:
         "Discover verified Erasmus+ and European Solidarity Corps youth mobility missions across 30+ European nations with 100% funding.",
       images: [
@@ -69,13 +69,13 @@ export async function generateMetadata({
           url: "/logo-big.png",
           width: 1200,
           height: 630,
-          alt: "EuroNova — European Mobility Gateway",
+          alt: "EuroNova",
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: "EuroNova — European Mobility Gateway",
+      title: "EuroNova",
       description:
         "Discover verified Erasmus+ and European Solidarity Corps youth mobility missions across 30+ European nations with 100% funding.",
       images: ["/logo-big.png"],

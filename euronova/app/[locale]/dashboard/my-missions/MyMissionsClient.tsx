@@ -74,7 +74,28 @@ export function MyMissionsClient({
 
         const storedFolders = localStorage.getItem(foldersStorageKey) || localStorage.getItem(legacyFoldersKey);
         if (storedFolders) {
-          setCustomFolders(JSON.parse(storedFolders));
+          try {
+            const parsed = JSON.parse(storedFolders);
+            if (
+              Array.isArray(parsed) &&
+              parsed.every(
+                (f) =>
+                  f &&
+                  typeof f === "object" &&
+                  typeof f.id === "string" &&
+                  typeof f.name === "string" &&
+                  typeof f.color === "string"
+              )
+            ) {
+              setCustomFolders(parsed as CustomFolder[]);
+            } else {
+              setCustomFolders(DEFAULT_CUSTOM_FOLDERS);
+              localStorage.setItem(foldersStorageKey, JSON.stringify(DEFAULT_CUSTOM_FOLDERS));
+            }
+          } catch {
+            setCustomFolders(DEFAULT_CUSTOM_FOLDERS);
+            localStorage.setItem(foldersStorageKey, JSON.stringify(DEFAULT_CUSTOM_FOLDERS));
+          }
         } else {
           setCustomFolders(DEFAULT_CUSTOM_FOLDERS);
           localStorage.setItem(foldersStorageKey, JSON.stringify(DEFAULT_CUSTOM_FOLDERS));
@@ -82,12 +103,30 @@ export function MyMissionsClient({
 
         const storedAssignments = localStorage.getItem(assignmentsStorageKey) || localStorage.getItem(legacyAssignmentsKey);
         if (storedAssignments) {
-          setFolderAssignments(JSON.parse(storedAssignments));
+          try {
+            const parsed = JSON.parse(storedAssignments);
+            if (
+              parsed &&
+              typeof parsed === "object" &&
+              !Array.isArray(parsed) &&
+              Object.values(parsed).every(
+                (val) => Array.isArray(val) && val.every((id) => typeof id === "string")
+              )
+            ) {
+              setFolderAssignments(parsed as Record<string, string[]>);
+            } else {
+              setFolderAssignments({});
+              localStorage.setItem(assignmentsStorageKey, JSON.stringify({}));
+            }
+          } catch {
+            setFolderAssignments({});
+            localStorage.setItem(assignmentsStorageKey, JSON.stringify({}));
+          }
         } else {
           setFolderAssignments({});
         }
       } catch {
-        // LocalStorage access restricted
+        // LocalStorage access restricted (incognito/security policies)
       }
     });
     return () => {
@@ -206,12 +245,42 @@ export function MyMissionsClient({
     }
   };
 
+  // Estado reactivo local para permitir actualizaciones optimistas sin parpadeo ni bloqueos
+  const [interactions, setInteractions] = useState<MissionInteraction[]>(initialInteractions);
+  const [prevInitial, setPrevInitial] = useState(initialInteractions);
+
+  // Sincronizar durante render si la revalidación del servidor proporciona una lista actualizada
+  if (prevInitial !== initialInteractions) {
+    setPrevInitial(initialInteractions);
+    setInteractions(initialInteractions);
+  }
+
+  const handleToggleFavoriteOptimistic = (projectId: string, isFav: boolean) => {
+    setInteractions((prev) =>
+      prev.map((item) =>
+        item.projects?.id === projectId
+          ? { ...item, is_favorite: isFav, updated_at: new Date().toISOString() }
+          : item
+      )
+    );
+  };
+
+  const handleToggleAppliedOptimistic = (projectId: string, isApp: boolean) => {
+    setInteractions((prev) =>
+      prev.map((item) =>
+        item.projects?.id === projectId
+          ? { ...item, is_applied: isApp, updated_at: new Date().toISOString() }
+          : item
+      )
+    );
+  };
+
   // Filtrado de interacciones válidas del usuario autenticado
   const validInteractions = useMemo(() => {
-    return initialInteractions.filter(
+    return interactions.filter(
       (item) => item.projects && typeof item.projects === "object"
     );
-  }, [initialInteractions]);
+  }, [interactions]);
 
   const savedList = useMemo(() => {
     return validInteractions.filter((item) => item.is_favorite);
@@ -295,7 +364,8 @@ export function MyMissionsClient({
     if (searchQuery.trim()) params.set("q", searchQuery.trim());
 
     const qs = params.toString();
-    const nextUrl = `/dashboard/my-missions${qs ? `?${qs}` : ""}`;
+    const currentPath = typeof window !== "undefined" ? window.location.pathname : "/dashboard/my-missions";
+    const nextUrl = `${currentPath}${qs ? `?${qs}` : ""}`;
     window.history.replaceState(null, "", nextUrl);
   }, [activeFolderId, selectedType, selectedDest, searchQuery]);
 
@@ -327,6 +397,21 @@ export function MyMissionsClient({
     ).slice(0, 8);
   }, [currentFolderList]);
 
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const handleFolderChange = (folderId: string) => {
+    setActiveFolderId(folderId);
+    setCurrentPage(1);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   const activeCustomFolder = customFolders.find((f) => f.id === activeFolderId);
 
   return (
@@ -337,7 +422,7 @@ export function MyMissionsClient({
       <div className="flex flex-col lg:flex-row items-start gap-8">
         <MissionsSidebar
           activeFolderId={activeFolderId}
-          setActiveFolderId={setActiveFolderId}
+          setActiveFolderId={handleFolderChange}
           setCurrentPage={setCurrentPage}
           savedCount={savedList.length}
           appliedCount={appliedList.length}
@@ -379,10 +464,12 @@ export function MyMissionsClient({
             totalPages={totalPages}
             fromIndex={fromIndex}
             toIndex={toIndex}
-            onPageChange={setCurrentPage}
+            onPageChange={handlePageChange}
             onResetFilters={handleResetFilters}
-            onGoToAllFavorites={() => setActiveFolderId("all")}
+            onGoToAllFavorites={() => handleFolderChange("all")}
             onManageProject={setManagingProject}
+            onToggleFavorite={handleToggleFavoriteOptimistic}
+            onToggleApplied={handleToggleAppliedOptimistic}
             format={format}
             t={t}
           />

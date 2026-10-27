@@ -40,6 +40,8 @@ interface MissionsGridProps {
   onResetFilters: () => void;
   onGoToAllFavorites: () => void;
   onManageProject: (proj: { id: string; title: string }) => void;
+  onToggleFavorite?: (projectId: string, isFav: boolean) => void;
+  onToggleApplied?: (projectId: string, isApp: boolean) => void;
   format: MissionFormatter;
   t: MissionTranslator;
 }
@@ -60,6 +62,8 @@ export function MissionsGrid({
   onResetFilters,
   onGoToAllFavorites,
   onManageProject,
+  onToggleFavorite,
+  onToggleApplied,
   format,
   t,
 }: MissionsGridProps) {
@@ -137,7 +141,11 @@ export function MissionsGrid({
 
                 {/* Main Project Card */}
                 <div className="flex-1">
-                  <ProjectCard project={projectData} />
+                  <ProjectCard
+                    project={projectData}
+                    onToggleFavorite={onToggleFavorite}
+                    onToggleApplied={onToggleApplied}
+                  />
                 </div>
 
                 {/* Assigned Folder Pills preview under card */}

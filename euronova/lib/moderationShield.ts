@@ -99,6 +99,197 @@ export async function checkUserMuted(userId: string): Promise<MuteCheckResult> {
   }
 }
 
+export interface MidSessionStatusResult {
+  allowed: boolean;
+  isMuted?: boolean;
+  isBanned?: boolean;
+  isSuspended?: boolean;
+  remainingMinutes?: number;
+  error?: string;
+  errorCode?: "USER_MUTED" | "USER_BANNED" | "ORG_NOT_VERIFIED" | "ORG_SUSPENDED" | "ACCOUNT_RESTRICTED";
+}
+
+export interface MidSessionStatusOptions {
+  requireVerifiedOrg?: boolean;
+}
+
+/**
+ * Validates mid-session active status against the live database, bypassing stale JWT cookies.
+ * Rejects banned users (auth banned or trust_score <= 0), active mutes (muted_until > now),
+ * and unverified/suspended NGOs attempting write mutations.
+ */
+export async function verifyMidSessionActiveStatus(
+  userId: string,
+  options: MidSessionStatusOptions = {}
+): Promise<MidSessionStatusResult> {
+  try {
+    if (!userId || typeof userId !== "string") {
+      return {
+        allowed: false,
+        error: "Authentication required.",
+        errorCode: "ACCOUNT_RESTRICTED",
+      };
+    }
+
+    const adminDb = getServiceRoleClient();
+    const now = Date.now();
+
+    // 1. Check Supabase Auth admin record for permanent or active temporary ban
+    try {
+      const { data: authData, error: authErr } = await adminDb.auth.admin.getUserById(userId);
+      if (!authErr && authData?.user) {
+        const u = authData.user;
+        const meta = u.user_metadata || {};
+
+        if (meta.banned === true || meta.is_banned === true) {
+          return {
+            allowed: false,
+            isBanned: true,
+            error: "Your account has been banned due to violations of European youth safety protocols.",
+            errorCode: "USER_BANNED",
+          };
+        }
+
+        if (u.banned_until) {
+          const banExpiry = new Date(u.banned_until).getTime();
+          if (banExpiry > now) {
+            return {
+              allowed: false,
+              isBanned: true,
+              error: "Your account is temporarily suspended by platform administration.",
+              errorCode: "USER_BANNED",
+            };
+          }
+        }
+
+        if (meta.muted_until) {
+          const muteExpiry = new Date(meta.muted_until as string).getTime();
+          if (muteExpiry > now) {
+            const remainingMinutes = Math.max(1, Math.ceil((muteExpiry - now) / (60 * 1000)));
+            return {
+              allowed: false,
+              isMuted: true,
+              remainingMinutes,
+              error: `You are temporarily muted and cannot post for ${remainingMinutes} more minutes.`,
+              errorCode: "USER_MUTED",
+            };
+          }
+        }
+      }
+    } catch (authFetchErr) {
+      console.error("Auth admin check non-fatal exception:", authFetchErr);
+    }
+
+    // 2. Query users_youth profile (trust score & muted_until)
+    try {
+      const { data: youth } = await adminDb
+        .from("users_youth")
+        .select("trust_score, muted_until")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (youth) {
+        // Floor check: If trust_score <= 0, account is restricted/suspended
+        if (typeof youth.trust_score === "number" && youth.trust_score <= 0) {
+          return {
+            allowed: false,
+            isBanned: true,
+            error: "Your account is restricted due to severe trust score infractions (Score: 0/100). Write access is disabled.",
+            errorCode: "ACCOUNT_RESTRICTED",
+          };
+        }
+
+        if (youth.muted_until) {
+          const muteExpiry = new Date(youth.muted_until).getTime();
+          if (muteExpiry > now) {
+            const remainingMinutes = Math.max(1, Math.ceil((muteExpiry - now) / (60 * 1000)));
+            return {
+              allowed: false,
+              isMuted: true,
+              remainingMinutes,
+              error: `You are temporarily muted and cannot post for ${remainingMinutes} more minutes.`,
+              errorCode: "USER_MUTED",
+            };
+          }
+        }
+      }
+    } catch (youthErr) {
+      console.error("Youth mid-session status check error:", youthErr);
+    }
+
+    // 3. Query users_org profile (verification status & muted_until)
+    try {
+      const { data: org } = await adminDb
+        .from("users_org")
+        .select("is_verified, verified, verification_status, muted_until")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (org) {
+        if (org.muted_until) {
+          const muteExpiry = new Date(org.muted_until).getTime();
+          if (muteExpiry > now) {
+            const remainingMinutes = Math.max(1, Math.ceil((muteExpiry - now) / (60 * 1000)));
+            return {
+              allowed: false,
+              isMuted: true,
+              remainingMinutes,
+              error: `Your organization is temporarily muted and cannot post for ${remainingMinutes} more minutes.`,
+              errorCode: "USER_MUTED",
+            };
+          }
+        }
+
+        const vStatus = (org.verification_status || "").toLowerCase();
+        if (vStatus === "suspended" || vStatus === "rejected") {
+          return {
+            allowed: false,
+            isSuspended: true,
+            error: "Your organization accreditation has been suspended or rejected. Write access is revoked.",
+            errorCode: "ORG_SUSPENDED",
+          };
+        }
+
+        if (options.requireVerifiedOrg) {
+          const isVerified = org.is_verified === true || org.verified === true || vStatus === "verified";
+          if (!isVerified) {
+            return {
+              allowed: false,
+              isSuspended: true,
+              error: "Only verified European organizations can publish projects or surveys. Verification is pending or unapproved.",
+              errorCode: "ORG_NOT_VERIFIED",
+            };
+          }
+        }
+      } else if (options.requireVerifiedOrg) {
+        // If requireVerifiedOrg is true but no org record exists, check if elevated staff
+        const { getUserRole } = await import("@/lib/roles");
+        const role = await getUserRole(userId);
+        if (role !== "admin" && role !== "root") {
+          return {
+            allowed: false,
+            isSuspended: true,
+            error: "Only verified European organizations or administrators can perform this action.",
+            errorCode: "ORG_NOT_VERIFIED",
+          };
+        }
+      }
+    } catch (orgErr) {
+      console.error("Org mid-session status check error:", orgErr);
+    }
+
+    return { allowed: true };
+  } catch (err) {
+    console.error("verifyMidSessionActiveStatus exception:", err);
+    // Fail closed if critical database failure
+    return {
+      allowed: false,
+      error: "Security verification unavailable. Please try again later.",
+      errorCode: "ACCOUNT_RESTRICTED",
+    };
+  }
+}
+
 /**
  * Mutes a user for the specified duration (5m, 10m, 15m, 60m).
  * Updates database and auth metadata, dispatches full notification, and logs to Quarantine.
@@ -170,7 +361,7 @@ export async function muteUser({
       if (youth && typeof youth.trust_score === "number") {
         await adminDb
           .from("users_youth")
-          .update({ trust_score: Math.max(0, youth.trust_score - 30) })
+          .update({ trust_score: Math.max(0, Math.min(100, youth.trust_score - 30)) })
           .eq("id", targetUserId);
       }
     } catch (e) {
@@ -259,7 +450,7 @@ export async function warnUser({
       if (youth && typeof youth.trust_score === "number") {
         await adminDb
           .from("users_youth")
-          .update({ trust_score: Math.max(0, youth.trust_score - 15) })
+          .update({ trust_score: Math.max(0, Math.min(100, youth.trust_score - 15)) })
           .eq("id", targetUserId);
       }
     } catch (e) {

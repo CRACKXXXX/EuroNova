@@ -3,6 +3,7 @@
 import { type UserRole, ROLE_BADGE_CONFIG } from "@/lib/rolesConstants";
 import { type StaffSearchUser } from "../actions";
 import { type YouthUserItem, type AdminTranslator, formatId, maskEmail } from "./AdminTypes";
+import { AvatarFallback } from "@/components/AvatarFallback";
 import {
   ShieldCheck,
   Shield,
@@ -10,7 +11,6 @@ import {
   X,
   Loader2,
   ShieldAlert,
-  User,
   Check,
   Copy,
 } from "lucide-react";
@@ -305,18 +305,15 @@ export function RoleManager({
                 <div>
                   {/* User Header: Avatar, Name, Email */}
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 rounded-full border-2 border-void-border overflow-hidden flex items-center justify-center bg-void-deep shrink-0">
-                      {u.avatar_url ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
-                          src={u.avatar_url}
-                          alt={t("avatarAlt")}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <User className="w-6 h-6 text-gray-500" />
-                      )}
-                    </div>
+                    <AvatarFallback
+                      src={u.avatar_url}
+                      alt={t("avatarAlt")}
+                      fallbackType="user"
+                      name={u.full_name}
+                      sizeClassName="w-12 h-12"
+                      className="border-2 border-void-border shrink-0"
+                      iconClassName="w-6 h-6 text-gray-400"
+                    />
                     <div className="flex-1 min-w-0">
                       <h3 className="text-base font-bold text-white break-words">
                         {u.full_name || "Unnamed Volunteer"}

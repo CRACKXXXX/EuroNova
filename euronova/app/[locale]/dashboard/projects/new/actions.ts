@@ -7,6 +7,7 @@ import { sanitizeErrorMessage } from "@/lib/errorSanitizer";
 import { ProjectCreationSchema } from "@/lib/schemas";
 import { validateSafeHttpsUrl, stripDangerousHtml } from "@/lib/securitySanitizer";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimiter";
+import { verifyMidSessionActiveStatus } from "@/lib/moderationShield";
 
 export interface CreateProjectResult {
   error?: string;
@@ -32,6 +33,12 @@ export async function createProject(formData: FormData): Promise<CreateProjectRe
       return {
         error: rateCheck.error || "Project creation rate limit reached. Please wait before publishing another mission.",
       };
+    }
+
+    // VERIFY MID-SESSION ACTIVE STATUS & ACCREDITED NGO STATUS
+    const statusCheck = await verifyMidSessionActiveStatus(user.id, { requireVerifiedOrg: true });
+    if (!statusCheck.allowed) {
+      return { error: statusCheck.error || "Only verified, accredited organizations can publish projects." };
     }
 
     // Check if user is an organization

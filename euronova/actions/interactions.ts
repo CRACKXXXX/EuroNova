@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { sanitizeErrorMessage } from "@/lib/errorSanitizer";
 import { UuidSchema } from "@/lib/schemas";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimiter";
+import { verifyMidSessionActiveStatus } from "@/lib/moderationShield";
 
 export interface InteractionResult {
   success?: boolean;
@@ -38,6 +39,12 @@ export async function toggleProjectFavorite(projectId: string): Promise<Interact
       return { error: rateCheck.error || "Rate limit reached. Please wait." };
     }
 
+    // VERIFY MID-SESSION ACTIVE STATUS (Bans, Mutes, Suspensions)
+    const statusCheck = await verifyMidSessionActiveStatus(user.id);
+    if (!statusCheck.allowed) {
+      return { error: statusCheck.error || "Action restricted." };
+    }
+
     // Obtener la interacción actual
     const { data: existing, error: selectError } = await supabase
       .from("user_project_interactions")
@@ -68,6 +75,9 @@ export async function toggleProjectFavorite(projectId: string): Promise<Interact
       );
 
     if (upsertError) {
+      if ((upsertError as { code?: string }).code === "23505") {
+        return { success: true, is_favorite: newFavorite };
+      }
       return { error: sanitizeErrorMessage(upsertError) };
     }
 
@@ -100,6 +110,14 @@ export async function toggleProjectFavorite(projectId: string): Promise<Interact
 
     return { success: true, is_favorite: newFavorite };
   } catch (err: unknown) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code?: string }).code === "23505"
+    ) {
+      return { success: true };
+    }
     return { error: sanitizeErrorMessage(err) };
   }
 }
@@ -124,6 +142,12 @@ export async function toggleProjectApplied(projectId: string): Promise<Interacti
     const rateCheck = await checkRateLimit(user.id, RATE_LIMITS.MUTATION);
     if (!rateCheck.success) {
       return { error: rateCheck.error || "Rate limit reached. Please wait." };
+    }
+
+    // VERIFY MID-SESSION ACTIVE STATUS (Bans, Mutes, Suspensions)
+    const statusCheck = await verifyMidSessionActiveStatus(user.id);
+    if (!statusCheck.allowed) {
+      return { error: statusCheck.error || "Action restricted." };
     }
 
     // Obtener la interacción actual
@@ -156,6 +180,9 @@ export async function toggleProjectApplied(projectId: string): Promise<Interacti
       );
 
     if (upsertError) {
+      if ((upsertError as { code?: string }).code === "23505") {
+        return { success: true, is_applied: newApplied };
+      }
       return { error: sanitizeErrorMessage(upsertError) };
     }
 
@@ -232,6 +259,14 @@ export async function toggleProjectApplied(projectId: string): Promise<Interacti
       newLevel
     };
   } catch (err: unknown) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code?: string }).code === "23505"
+    ) {
+      return { success: true, is_applied: true };
+    }
     return { error: sanitizeErrorMessage(err) };
   }
 }

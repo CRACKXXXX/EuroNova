@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimiter";
 import { stripDangerousHtml } from "@/lib/securitySanitizer";
 import { SurveyCreationSchema, SurveyVoteSchema } from "@/lib/schemas";
+import { verifyMidSessionActiveStatus } from "@/lib/moderationShield";
 
 export type SurveyType = "boolean" | "single_choice" | "multiple_choice";
 export type SurveyStatus = "published" | "draft" | "closed";
@@ -71,47 +72,7 @@ interface FallbackSurvey {
   votes: { survey_id: string; option_id: string; user_id: string }[];
 }
 
-const globalSurveyStore: FallbackSurvey[] = [
-  {
-    id: "survey-sample-1",
-    org_id: "system-org-1",
-    org_name: "Erasmus Network Madrid",
-    question: "Should European youth mobilities prioritize Train Travel (Green Travel) over cheap flights?",
-    survey_type: "boolean",
-    status: "published",
-    created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
-    options: [
-      { id: "opt-1a", survey_id: "survey-sample-1", option_text: "Yes, 100% Green Rail", display_order: 1 },
-      { id: "opt-1b", survey_id: "survey-sample-1", option_text: "No, keep low-cost flights", display_order: 2 },
-    ],
-    votes: [
-      { survey_id: "survey-sample-1", option_id: "opt-1a", user_id: "user-seed-1" },
-      { survey_id: "survey-sample-1", option_id: "opt-1a", user_id: "user-seed-2" },
-      { survey_id: "survey-sample-1", option_id: "opt-1b", user_id: "user-seed-3" },
-    ],
-  },
-  {
-    id: "survey-sample-2",
-    org_id: "system-org-2",
-    org_name: "Youth Dynamics Berlin",
-    question: "What is your main hurdle when applying for European Solidarity Corps (ESC)?",
-    survey_type: "single_choice",
-    status: "published",
-    created_at: new Date(Date.now() - 3600000 * 12).toISOString(),
-    options: [
-      { id: "opt-2a", survey_id: "survey-sample-2", option_text: "Language anxiety / English fluency", display_order: 1 },
-      { id: "opt-2b", survey_id: "survey-sample-2", option_text: "Finding an accredited hosting NGO", display_order: 2 },
-      { id: "opt-2c", survey_id: "survey-sample-2", option_text: "Taking time off university or work", display_order: 3 },
-      { id: "opt-2d", survey_id: "survey-sample-2", option_text: "Visa & administrative paperwork", display_order: 4 },
-    ],
-    votes: [
-      { survey_id: "survey-sample-2", option_id: "opt-2a", user_id: "user-seed-1" },
-      { survey_id: "survey-sample-2", option_id: "opt-2b", user_id: "user-seed-2" },
-      { survey_id: "survey-sample-2", option_id: "opt-2b", user_id: "user-seed-3" },
-      { survey_id: "survey-sample-2", option_id: "opt-2c", user_id: "user-seed-4" },
-    ],
-  },
-];
+const globalSurveyStore: FallbackSurvey[] = [];
 
 /**
  * Creates a new NGO community survey.
@@ -138,6 +99,12 @@ export async function createNgoSurveyAction(
         success: false,
         error: rateCheck.error || "Rate limit reached. Please wait before creating another survey.",
       };
+    }
+
+    // VERIFY MID-SESSION ACTIVE STATUS & ACCREDITED NGO STATUS
+    const statusCheck = await verifyMidSessionActiveStatus(user.id, { requireVerifiedOrg: true });
+    if (!statusCheck.allowed) {
+      return { success: false, error: statusCheck.error || "Your organization cannot create surveys." };
     }
 
     // 1. Zod double-layer schema validation
@@ -277,6 +244,12 @@ export async function updateNgoSurveyAction(
 
     if (userError || !user) {
       return { success: false, error: "You are not authenticated. Please log in." };
+    }
+
+    // VERIFY MID-SESSION ACTIVE STATUS & ACCREDITED NGO STATUS
+    const statusCheck = await verifyMidSessionActiveStatus(user.id, { requireVerifiedOrg: true });
+    if (!statusCheck.allowed) {
+      return { success: false, error: statusCheck.error || "Your organization cannot modify surveys." };
     }
 
     const { surveyId, question, survey_type, options, status = "published" } = input;
@@ -606,6 +579,15 @@ export async function voteNgoSurveyAction(payload: {
       };
     }
 
+    // VERIFY MID-SESSION ACTIVE STATUS (Bans, Mutes, Suspensions)
+    const statusCheck = await verifyMidSessionActiveStatus(user.id);
+    if (!statusCheck.allowed) {
+      return {
+        success: false,
+        error: statusCheck.error || "You are temporarily restricted from voting.",
+      };
+    }
+
     // 1. Zod schema validation
     const parsed = SurveyVoteSchema.safeParse(payload);
     if (!parsed.success) {
@@ -650,6 +632,12 @@ export async function voteNgoSurveyAction(payload: {
 
       const { error: voteError } = await supabase.from("ngo_survey_votes").insert(voteInserts);
       if (voteError) {
+        if (voteError.code === "23505") {
+          return {
+            success: false,
+            error: "You have already cast your vote in this survey.",
+          };
+        }
         return { success: false, error: sanitizeErrorMessage(voteError) };
       }
 
@@ -717,6 +705,17 @@ export async function voteNgoSurveyAction(payload: {
       userVotedOptionIds: selectedOptionIds,
     };
   } catch (error: unknown) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      (error as { code?: string }).code === "23505"
+    ) {
+      return {
+        success: false,
+        error: "You have already cast your vote in this survey.",
+      };
+    }
     console.error("voteNgoSurveyAction exception:", error);
     return { success: false, error: sanitizeErrorMessage(error) };
   }

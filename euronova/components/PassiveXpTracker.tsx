@@ -36,7 +36,9 @@ export function PassiveXpTracker({ userId, role = "youth" }: PassiveXpTrackerPro
       let todayTotal = 0;
 
       if (lastDate === today) {
-        todayTotal = parseInt(localStorage.getItem(countKey) || "0", 10);
+        const rawCount = localStorage.getItem(countKey);
+        const parsed = parseInt(rawCount || "0", 10);
+        todayTotal = Number.isFinite(parsed) && parsed >= 0 ? Math.min(10, parsed) : 0;
       } else {
         localStorage.setItem(dateKey, today);
         localStorage.setItem(countKey, "0");

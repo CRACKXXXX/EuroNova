@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useSyncExternalStore } from "react";
+import { useState, useTransition, useSyncExternalStore, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Flag, X, CheckCircle2, ShieldAlert, AlertCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -21,6 +21,7 @@ export function ReportMissionButton({ projectId, projectTitle }: ReportMissionBu
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const inFlightRef = useRef(false);
   const mounted = useSyncExternalStore(subscribe, () => true, () => false);
 
   const safeT = (key: string, fallback: string) => {
@@ -35,30 +36,36 @@ export function ReportMissionButton({ projectId, projectTitle }: ReportMissionBu
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     setErrorMessage(null);
 
     startTransition(async () => {
-      const res = await submitProjectReportAction({
-        projectId,
-        projectTitle,
-        reason,
-        description: details,
-      });
+      try {
+        const res = await submitProjectReportAction({
+          projectId,
+          projectTitle,
+          reason,
+          description: details,
+        });
 
-      if (res.error) {
-        setErrorMessage(res.error);
-        return;
+        if (res.error) {
+          setErrorMessage(res.error);
+          return;
+        }
+
+        setIsOpen(false);
+        setDetails("");
+        setToastMessage(
+          safeT(
+            "reportSuccess",
+            "Report received! Orbital moderators will review this transmission within 24 hours."
+          )
+        );
+        setTimeout(() => setToastMessage(null), 4500);
+      } finally {
+        inFlightRef.current = false;
       }
-
-      setIsOpen(false);
-      setDetails("");
-      setToastMessage(
-        safeT(
-          "reportSuccess",
-          "Report received! Orbital moderators will review this transmission within 24 hours."
-        )
-      );
-      setTimeout(() => setToastMessage(null), 4500);
     });
   };
 

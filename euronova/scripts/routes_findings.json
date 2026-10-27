@@ -50,6 +50,16 @@
     ]
   },
   {
+    "relPath": "app/[locale]/dashboard/projects/new/page.tsx",
+    "findings": [
+      {
+        "line": 35,
+        "category": "toast.error()",
+        "text": "Invalid file format. Please upload a JPG, PNG, WEBP, or GIF image."
+      }
+    ]
+  },
+  {
     "relPath": "app/[locale]/map/error.tsx",
     "findings": [
       {

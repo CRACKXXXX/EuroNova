@@ -5,7 +5,7 @@ import { createClient as createClientWithKey } from "@supabase/supabase-js";
 import { autoModerateContent } from "@/lib/autoModerator";
 import { calculateLevelFromXp } from "@/lib/gamification";
 import {
-  checkUserMuted,
+  verifyMidSessionActiveStatus,
   muteUser,
   warnUser,
   logToQuarantine,
@@ -451,13 +451,13 @@ export async function createGlobalThreadAction(
       };
     }
 
-    // CHECK IF USER IS CURRENTLY MUTED
-    const muteCheck = await checkUserMuted(eligibility.userId);
-    if (muteCheck.isMuted) {
+    // VERIFY MID-SESSION ACTIVE STATUS (Bans, Mutes, Suspensions)
+    const statusCheck = await verifyMidSessionActiveStatus(eligibility.userId);
+    if (!statusCheck.allowed) {
       return {
         success: false,
-        errorCode: "USER_MUTED",
-        error: muteCheck.error || "You are temporarily muted from posting.",
+        errorCode: statusCheck.errorCode || "ACCOUNT_RESTRICTED",
+        error: statusCheck.error || "You are temporarily restricted from posting.",
       };
     }
 
@@ -673,13 +673,13 @@ export async function replyGlobalThreadAction(
       };
     }
 
-    // CHECK IF USER IS CURRENTLY MUTED
-    const muteCheck = await checkUserMuted(eligibility.userId);
-    if (muteCheck.isMuted) {
+    // VERIFY MID-SESSION ACTIVE STATUS (Bans, Mutes, Suspensions)
+    const statusCheck = await verifyMidSessionActiveStatus(eligibility.userId);
+    if (!statusCheck.allowed) {
       return {
         success: false,
-        errorCode: "USER_MUTED",
-        error: muteCheck.error || "You are temporarily muted from posting.",
+        errorCode: statusCheck.errorCode || "ACCOUNT_RESTRICTED",
+        error: statusCheck.error || "You are temporarily restricted from posting.",
       };
     }
 

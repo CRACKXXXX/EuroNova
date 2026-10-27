@@ -56,11 +56,22 @@ export function RecentlyViewedMissions({ userId: initialUserId }: RecentlyViewed
       try {
         const raw = localStorage.getItem(storageKey);
         if (raw) {
-          setItems(JSON.parse(raw));
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            setItems(parsed);
+          } else {
+            localStorage.setItem(storageKey, JSON.stringify([]));
+            setItems([]);
+          }
         } else {
           setItems([]);
         }
       } catch {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify([]));
+        } catch {
+          // Ignore private mode write restrictions
+        }
         setItems([]);
       }
     });

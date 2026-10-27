@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { 
   Home,
   Compass,
   Building,
   Briefcase,
-  User, 
   PlusCircle, 
   Menu, 
   X, 
@@ -27,6 +27,7 @@ import { calculateLevelFromXp } from "@/lib/gamification";
 import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/utils/supabase/client";
 import { type UserRole } from "@/lib/roles";
+import { AvatarFallback } from "@/components/AvatarFallback";
 
 export function Header({ 
   role, 
@@ -40,6 +41,7 @@ export function Header({
   orgId?: string | null; 
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname() || "";
   const locale = useLocale();
   const t = useTranslations("Header");
   const tCommon = useTranslations("Common");
@@ -48,6 +50,31 @@ export function Header({
   const [youthXp, setYouthXp] = useState<number>(0);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [staffRole, setStaffRole] = useState<UserRole>(propStaffRole || (isAdmin ? "admin" : "user"));
+
+  // Active navigation state calculations
+  const isHomeActive = pathname === `/${locale}/dashboard` || pathname === "/dashboard";
+  const isProjectsActive = pathname.startsWith(`/${locale}/dashboard/projects`) || pathname.startsWith("/dashboard/projects");
+  const isOrgsActive = pathname.startsWith(`/${locale}/dashboard/organizations`) || pathname.startsWith("/dashboard/organizations");
+  const isMissionsActive = pathname.startsWith(`/${locale}/dashboard/my-missions`) || pathname.startsWith("/dashboard/my-missions");
+  const isCommunityActive = pathname.startsWith(`/${locale}/community`) || pathname.startsWith("/community");
+  const isMapActive = pathname.startsWith(`/${locale}/map`) || pathname.startsWith("/map");
+
+  // Automatically dismiss mobile menu on route changes
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
+    setIsOpen(false);
+  }
+
+  // Lock body scroll while mobile drawer is open, and release safely on close or unmount
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow || "";
+    };
+  }, [isOpen]);
 
   // Detectar id de usuario, organización y avatar desde Supabase
   useEffect(() => {
@@ -162,48 +189,72 @@ export function Header({
             </div>
           </Link>
 
-          {/* Desktop Navigation Links - Strict single line */}
+          {/* Desktop Navigation Links - Strict single line with active indicators */}
           <nav className="hidden xl:flex items-center gap-4 2xl:gap-6 flex-nowrap shrink-0 whitespace-nowrap">
             <Link
               href={`/${locale}/dashboard`}
-              className="flex items-center gap-1.5 text-sm font-medium text-gray-300 hover:text-plasma-cyan border-b-2 border-transparent hover:border-plasma-cyan py-1 transition-all whitespace-nowrap shrink-0"
+              className={`flex items-center gap-1.5 text-sm py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
+                isHomeActive
+                  ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
+                  : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
+              }`}
             >
-              <Home className="w-4 h-4" />
+              <Home className={`w-4 h-4 transition-colors ${isHomeActive ? "text-plasma-cyan" : ""}`} />
               <span>{t("home")}</span>
             </Link>
             <Link
               href={`/${locale}/dashboard/projects`}
-              className="flex items-center gap-1.5 text-sm font-medium text-gray-300 hover:text-plasma-cyan border-b-2 border-transparent hover:border-plasma-cyan py-1 transition-all whitespace-nowrap shrink-0"
+              className={`flex items-center gap-1.5 text-sm py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
+                isProjectsActive
+                  ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
+                  : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
+              }`}
             >
-              <Compass className="w-4 h-4" />
+              <Compass className={`w-4 h-4 transition-colors ${isProjectsActive ? "text-plasma-cyan" : ""}`} />
               <span>{t("searchProjects")}</span>
             </Link>
             <Link
               href={`/${locale}/dashboard/organizations`}
-              className="flex items-center gap-1.5 text-sm font-medium text-gray-300 hover:text-plasma-cyan border-b-2 border-transparent hover:border-plasma-cyan py-1 transition-all whitespace-nowrap shrink-0"
+              className={`flex items-center gap-1.5 text-sm py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
+                isOrgsActive
+                  ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
+                  : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
+              }`}
             >
-              <Building className="w-4 h-4" />
+              <Building className={`w-4 h-4 transition-colors ${isOrgsActive ? "text-plasma-cyan" : ""}`} />
               <span>{t("searchOrgs")}</span>
             </Link>
             <Link
               href={`/${locale}/dashboard/my-missions`}
-              className="flex items-center gap-1.5 text-sm font-medium text-gray-300 hover:text-plasma-cyan border-b-2 border-transparent hover:border-plasma-cyan py-1 transition-all whitespace-nowrap shrink-0"
+              className={`flex items-center gap-1.5 text-sm py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
+                isMissionsActive
+                  ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
+                  : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
+              }`}
             >
-              <Briefcase className="w-4 h-4" />
+              <Briefcase className={`w-4 h-4 transition-colors ${isMissionsActive ? "text-plasma-cyan" : ""}`} />
               <span>{t("myMissions")}</span>
             </Link>
             <Link
               href={`/${locale}/community`}
-              className="flex items-center gap-1.5 text-sm font-medium text-gray-300 hover:text-plasma-cyan border-b-2 border-transparent hover:border-plasma-cyan py-1 transition-all whitespace-nowrap shrink-0"
+              className={`flex items-center gap-1.5 text-sm py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
+                isCommunityActive
+                  ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
+                  : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
+              }`}
             >
-              <Users className="w-4 h-4" />
+              <Users className={`w-4 h-4 transition-colors ${isCommunityActive ? "text-plasma-cyan" : ""}`} />
               <span>{t("community")}</span>
             </Link>
             <Link
               href={`/${locale}/map`}
-              className="flex items-center gap-1.5 text-sm font-medium text-plasma-cyan hover:text-plasma-cyan/80 border-b-2 border-plasma-cyan/50 hover:border-plasma-cyan py-1 transition-all whitespace-nowrap shrink-0"
+              className={`flex items-center gap-1.5 text-sm py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
+                isMapActive
+                  ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
+                  : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
+              }`}
             >
-              <MapIcon className="w-4 h-4" />
+              <MapIcon className={`w-4 h-4 transition-colors ${isMapActive ? "text-plasma-cyan" : ""}`} />
               <span>{t("map")}</span>
             </Link>
           </nav>
@@ -267,28 +318,17 @@ export function Header({
             </Link>
           )}
 
-          {/* Botón My Organization / My Profile con avatar dinámico y skeleton shimmer */}
+          {/* Botón My Organization / My Profile con avatar dinámico y fallback a prueba de fallos */}
           <Link
             href={orgOrProfileHref}
-            className="flex items-center gap-2 px-3 py-1.5 min-h-[44px] rounded-lg bg-void-surface hover:bg-hyper-violet/10 border border-void-border hover:border-hyper-violet/30 focus-visible:ring-2 focus-visible:ring-hyper-violet focus-visible:outline-none text-gray-300 hover:text-hyper-violet transition-all text-xs 2xl:text-sm font-semibold shrink-0 whitespace-nowrap"
+            className="flex items-center gap-2 px-3 py-1.5 min-h-[44px] rounded-lg bg-transparent hover:bg-hyper-violet/10 border border-void-border hover:border-hyper-violet/30 focus-visible:ring-2 focus-visible:ring-hyper-violet focus-visible:outline-none text-gray-300 hover:text-hyper-violet transition-all text-xs 2xl:text-sm font-semibold shrink-0 whitespace-nowrap"
           >
-            {avatarUrl ? (
-              <div className="relative h-8 w-8 rounded-full overflow-hidden border border-void-border/70 shrink-0 shadow-sm bg-void-deep">
-                <div className="absolute inset-0 bg-void-border/50 animate-pulse pointer-events-none" />
-                <Image
-                  src={avatarUrl}
-                  alt={isOrg ? "Organization Logo" : "Profile Picture"}
-                  width={32}
-                  height={32}
-                  unoptimized
-                  className="relative h-8 w-8 rounded-full object-cover"
-                />
-              </div>
-            ) : isOrg ? (
-              <Building className="w-4 h-4 shrink-0" />
-            ) : (
-              <User className="w-4 h-4 shrink-0" />
-            )}
+            <AvatarFallback
+              src={avatarUrl}
+              alt={isOrg ? "Organization Logo" : "Profile Picture"}
+              fallbackType={isOrg ? "org" : "user"}
+              sizeClassName="w-8 h-8"
+            />
             <span>{isOrg ? t("myOrg") : t("myProfile")}</span>
             {!isOrg && <UserLevelBadge level={youthLevel} size="sm" />}
           </Link>
@@ -352,52 +392,64 @@ export function Header({
             <Link
               href={`/${locale}/dashboard`}
               onClick={() => setIsOpen(false)}
-              className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-300 hover:text-plasma-cyan transition-all flex items-center gap-3.5 group"
+              className={`text-2xl sm:text-3xl tracking-tight transition-all flex items-center gap-3.5 group ${
+                isHomeActive ? "font-black text-plasma-cyan" : "font-extrabold text-gray-300 hover:text-plasma-cyan"
+              }`}
             >
-              <Home className="w-6 h-6 text-gray-500 group-hover:text-plasma-cyan transition-colors" />
+              <Home className={`w-6 h-6 transition-colors ${isHomeActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
               <span>{t("home")}</span>
             </Link>
 
             <Link
               href={`/${locale}/dashboard/projects`}
               onClick={() => setIsOpen(false)}
-              className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-300 hover:text-plasma-cyan transition-all flex items-center gap-3.5 group"
+              className={`text-2xl sm:text-3xl tracking-tight transition-all flex items-center gap-3.5 group ${
+                isProjectsActive ? "font-black text-plasma-cyan" : "font-extrabold text-gray-300 hover:text-plasma-cyan"
+              }`}
             >
-              <Compass className="w-6 h-6 text-gray-500 group-hover:text-plasma-cyan transition-colors" />
+              <Compass className={`w-6 h-6 transition-colors ${isProjectsActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
               <span>{t("searchProjects")}</span>
             </Link>
 
             <Link
               href={`/${locale}/dashboard/organizations`}
               onClick={() => setIsOpen(false)}
-              className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-300 hover:text-plasma-cyan transition-all flex items-center gap-3.5 group"
+              className={`text-2xl sm:text-3xl tracking-tight transition-all flex items-center gap-3.5 group ${
+                isOrgsActive ? "font-black text-plasma-cyan" : "font-extrabold text-gray-300 hover:text-plasma-cyan"
+              }`}
             >
-              <Building className="w-6 h-6 text-gray-500 group-hover:text-plasma-cyan transition-colors" />
+              <Building className={`w-6 h-6 transition-colors ${isOrgsActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
               <span>{t("searchOrgs")}</span>
             </Link>
 
             <Link
               href={`/${locale}/dashboard/my-missions`}
               onClick={() => setIsOpen(false)}
-              className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-300 hover:text-plasma-cyan transition-all flex items-center gap-3.5 group"
+              className={`text-2xl sm:text-3xl tracking-tight transition-all flex items-center gap-3.5 group ${
+                isMissionsActive ? "font-black text-plasma-cyan" : "font-extrabold text-gray-300 hover:text-plasma-cyan"
+              }`}
             >
-              <Briefcase className="w-6 h-6 text-gray-500 group-hover:text-plasma-cyan transition-colors" />
+              <Briefcase className={`w-6 h-6 transition-colors ${isMissionsActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
               <span>{t("myMissions")}</span>
             </Link>
 
             <Link
               href={`/${locale}/community`}
               onClick={() => setIsOpen(false)}
-              className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-300 hover:text-plasma-cyan transition-all flex items-center gap-3.5 group"
+              className={`text-2xl sm:text-3xl tracking-tight transition-all flex items-center gap-3.5 group ${
+                isCommunityActive ? "font-black text-plasma-cyan" : "font-extrabold text-gray-300 hover:text-plasma-cyan"
+              }`}
             >
-              <Users className="w-6 h-6 text-gray-500 group-hover:text-plasma-cyan transition-colors" />
+              <Users className={`w-6 h-6 transition-colors ${isCommunityActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
               <span>{t("community")}</span>
             </Link>
 
             <Link
               href={`/${locale}/map`}
               onClick={() => setIsOpen(false)}
-              className="text-2xl sm:text-3xl font-extrabold tracking-tight text-plasma-cyan hover:scale-105 transition-all flex items-center gap-3.5 group"
+              className={`text-2xl sm:text-3xl tracking-tight transition-all flex items-center gap-3.5 group ${
+                isMapActive ? "font-black text-plasma-cyan" : "font-extrabold text-gray-300 hover:text-plasma-cyan"
+              }`}
             >
               <MapIcon className="w-6 h-6 text-plasma-cyan transition-colors" />
               <span>{t("map")}</span>
@@ -461,22 +513,14 @@ export function Header({
               <Link
                 href={orgOrProfileHref}
                 onClick={() => setIsOpen(false)}
-                className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-void-surface hover:bg-hyper-violet/10 border border-void-border hover:border-hyper-violet/50 text-gray-300 hover:text-hyper-violet transition-all text-sm font-semibold"
+                className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-transparent hover:bg-hyper-violet/10 border border-void-border hover:border-hyper-violet/50 text-gray-300 hover:text-hyper-violet transition-all text-sm font-semibold"
               >
-                {avatarUrl ? (
-                  <Image
-                    src={avatarUrl}
-                    alt={isOrg ? "Organization Logo" : "Profile Picture"}
-                    width={32}
-                    height={32}
-                    unoptimized
-                    className="h-8 w-8 rounded-full object-cover border border-void-border/70 shrink-0 shadow-sm"
-                  />
-                ) : isOrg ? (
-                  <Building className="w-4 h-4 shrink-0" />
-                ) : (
-                  <User className="w-4 h-4 shrink-0" />
-                )}
+                <AvatarFallback
+                  src={avatarUrl}
+                  alt={isOrg ? "Organization Logo" : "Profile Picture"}
+                  fallbackType={isOrg ? "org" : "user"}
+                  sizeClassName="w-8 h-8"
+                />
                 <span>{isOrg ? t("myOrg") : t("myProfile")}</span>
                 {!isOrg && <UserLevelBadge level={youthLevel} size="sm" />}
               </Link>

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "@/i18n/routing";
+import { useSearchParams } from "next/navigation";
 import { Search, Building } from "lucide-react";
 import { MultiSelectCountry } from "@/components/MultiSelectCountry";
 import { CustomSelect } from "@/components/CustomSelect";
@@ -27,23 +28,53 @@ export function OrganizationsClient({
 }) {
   const t = useTranslations("OrgFilters");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isMountedRef = useRef(false);
+
   const [q, setQ] = useState(initialQ);
   const [countries, setCountries] = useState<string[]>(initialCountries);
   const [verified, setVerified] = useState(initialVerified);
   const [entityType, setEntityType] = useState(initialEntityType);
 
+  // Sync state during render if URL changes externally (e.g. back navigation)
+  const [prevParamsString, setPrevParamsString] = useState(searchParams.toString());
+  const currentParamsString = searchParams.toString();
+  if (prevParamsString !== currentParamsString) {
+    setPrevParamsString(currentParamsString);
+    setQ(searchParams.get("q") || "");
+    const cParam = searchParams.get("countries");
+    setCountries(cParam ? cParam.split(",") : []);
+    setVerified(searchParams.get("verified") === "true");
+    setEntityType(searchParams.get("entityType") || "");
+  }
+
   useEffect(() => {
+    // Avoid running on initial render when user hasn't touched any filters
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      return;
+    }
+
     const timer = setTimeout(() => {
       const params = new URLSearchParams();
-      if (q) params.set("q", q);
+      if (q.trim()) params.set("q", q.trim());
       if (countries.length > 0) params.set("countries", countries.join(","));
       if (verified) params.set("verified", "true");
       if (entityType) params.set("entityType", entityType);
 
-      router.push(`/dashboard/organizations?${params.toString()}`);
-    }, 500);
+      const newParams = new URLSearchParams(params.toString());
+      const curParams = new URLSearchParams(searchParams.toString());
+      newParams.sort();
+      curParams.sort();
+
+      if (newParams.toString() !== curParams.toString()) {
+        const newQuery = params.toString();
+        router.push(`/dashboard/organizations${newQuery ? `?${newQuery}` : ""}`);
+      }
+    }, 400);
+
     return () => clearTimeout(timer);
-  }, [q, countries, verified, entityType, router]);
+  }, [q, countries, verified, entityType, router, searchParams]);
 
   return (
     <div className="bg-void-surface border border-void-border rounded-xl p-6 flex flex-col gap-4">

@@ -6,6 +6,7 @@ import { sanitizeErrorMessage } from "@/lib/errorSanitizer";
 import { ReviewSubmissionSchema } from "@/lib/schemas";
 import { stripDangerousHtml } from "@/lib/securitySanitizer";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimiter";
+import { verifyMidSessionActiveStatus } from "@/lib/moderationShield";
 
 export interface ReviewResult {
   success?: boolean;
@@ -49,6 +50,12 @@ export async function submitOrgReview(
       return {
         error: rateCheck.error || "Rate limit exceeded. Please wait before submitting another review.",
       };
+    }
+
+    // VERIFY MID-SESSION ACTIVE STATUS (Bans, Mutes, Suspensions)
+    const statusCheck = await verifyMidSessionActiveStatus(user.id);
+    if (!statusCheck.allowed) {
+      return { error: statusCheck.error || "You are temporarily restricted from submitting reviews." };
     }
 
     // LÓGICA ANTI-SPAM: Verificar que el usuario pertenezca a users_youth
@@ -114,7 +121,11 @@ export async function submitOrgReview(
       );
 
     if (insertError) {
-      return { error: sanitizeErrorMessage(insertError) };
+      if ((insertError as { code?: string }).code === "23505") {
+        // High-concurrency conflict resolved idempotently
+      } else {
+        return { error: sanitizeErrorMessage(insertError) };
+      }
     }
 
     revalidatePath("/dashboard/organizations");
@@ -153,6 +164,14 @@ export async function submitOrgReview(
       newLevel,
     };
   } catch (err: unknown) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code?: string }).code === "23505"
+    ) {
+      return { success: true };
+    }
     return { error: sanitizeErrorMessage(err) };
   }
 }

@@ -574,7 +574,11 @@ export function ForumThreadDetail({
                 </h4>
                 <p className="text-xs text-gray-400 leading-relaxed">
                   {t("antiSpamShieldDesc")}{" "}
-                  {t("xpStatus", { xp: userEligibility.xp, level: userEligibility.level })}
+                  {t.rich("xpStatus", {
+                    xp: userEligibility.xp,
+                    level: userEligibility.level,
+                    strong: (c) => <strong className="text-plasma-cyan font-bold">{c}</strong>,
+                  })}
                 </p>
 
                 {/* XP Progress Bar */}

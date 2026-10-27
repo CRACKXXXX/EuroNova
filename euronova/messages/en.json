@@ -417,7 +417,9 @@
     "appLoggedLevelUp": "LEVEL UP! You reached Level {level}!",
     "appLoggedAlreadyClaimed": "Mission application logged! (XP already claimed for this mission)",
     "aiSecurityChecked": "AI Security Checked",
-    "aiSecurityTooltip": "Verified by EuroNova AI & Moderation Team"
+    "aiSecurityTooltip": "Verified by EuroNova AI & Moderation Team",
+    "antiScamVerified": "Verified Mission",
+    "antiScamVerifiedTitle": "Verified by EuroNova AI & Moderation Team"
   },
   "Organizations": {
     "backHome": "Back to Home",
@@ -502,6 +504,8 @@
   },
   "ProjectDetails": {
     "publisherProfile": "Publisher Profile",
+    "antiScamVerified": "Verified Mission",
+    "antiScamVerifiedTitle": "Verified by EuroNova AI & Moderation Team",
     "deleteProject": "Delete Project",
     "applyToMission": "Apply to Mission",
     "themes": "Themes",
@@ -887,7 +891,7 @@
     "coversRupFlights": "Covers RUP / Canary Islands Flights",
     "lastMinuteUrgent": "Last Minute Urgent",
     "sendInAppNotificationTitle": "Send In-App Notification",
-    "recipientLabel": "Recipient: <span className=\"text-plasma-cyan font-semibold\">{name}</span>",
+    "recipientLabel": "Recipient: <span>{name}</span>",
     "notificationCategory": "Notification Category",
     "catAnnouncement": "System / Announcement",
     "catAlert": "Important Notice / Alert",
@@ -1162,7 +1166,9 @@
     "prompt1": "🐾 Animal sanctuary in cold Nordic climate",
     "prompt2": "🌊 Marine conservation in the Azores",
     "prompt3": "🎨 Digital arts & media workshop in Berlin",
-    "prompt4": "🌱 Organic farming in rural Italy"
+    "prompt4": "🌱 Organic farming in rural Italy",
+    "aiAnalyzing": "Analyzing query with AI...",
+    "aiApply": "Search"
   },
   "Webhooks": {
     "title": "Webhooks & Real-time Alerts",
@@ -1567,14 +1573,14 @@
     "typeMultiDesc": "Participants may choose multiple options",
     "updateSurvey": "Update Survey",
     "publishSurvey": "Publish Survey",
-    "yourSurveysCount": "Your Surveys: <strong class=\"text-white font-bold\">{count}</strong> (Page {page} of {totalPages})",
-    "pageOf": "Page <strong class=\"text-white font-bold\">{page}</strong> of <strong class=\"text-white font-bold\">{totalPages}</strong>"
+    "yourSurveysCount": "Your Surveys: <strong>{count}</strong> (Page {page} of {totalPages})",
+    "pageOf": "Page <strong>{page}</strong> of <strong>{totalPages}</strong>"
   },
   "CommunitySurveys": {
     "headerBadge": "Civic Participation & NGO Dialogue",
     "headerTitle": "European NGO Opinion Polls & Surveys",
     "headerDesc": "Vote on real European youth policies, camp guidelines, and NGO initiatives. All votes are anonymous and reflect live consensus percentages across the continent.",
-    "showingSurveys": "Showing <strong class=\"text-white font-bold\">{count}</strong> active community surveys (Page {page} of {totalPages})",
+    "showingSurveys": "Showing <strong>{count}</strong> active community surveys (Page {page} of {totalPages})",
     "strictly50": "Strictly 50 Items / Page",
     "emptyTitle": "No active community surveys found",
     "emptyDesc": "Accredited organizations can publish opinion polls from their NGO Dashboard. Check back soon for new European consultations.",
@@ -1587,7 +1593,7 @@
     "selectSingle": "Select one option to cast your vote.",
     "transmittingVote": "Transmitting Vote...",
     "castVote": "Cast Vote",
-    "paginationPage": "Page <strong class=\"text-white font-bold\">{page}</strong> of <strong class=\"text-white font-bold\">{totalPages}</strong> ({totalCount} total surveys)",
+    "paginationPage": "Page <strong>{page}</strong> of <strong>{totalPages}</strong> ({totalCount} total surveys)",
     "prevPage": "Previous Page",
     "nextPage": "Next Page",
     "surveyDeleted": "Survey deleted successfully.",
@@ -1765,7 +1771,7 @@
     "applyMissionXp": "+50 XP Apply to a Mission",
     "reviewNgoXp": "+100 XP Review an NGO",
     "goalXpNeeded": "1,000 XP Goal ({needed} XP needed)",
-    "xpStatus": "You currently have <strong class=\"text-plasma-cyan\">{xp} XP</strong> (Level {level})."
+    "xpStatus": "You currently have <strong>{xp} XP</strong> (Level {level})."
   },
   "Community": {
     "tabForum": "Global Forums",
@@ -1922,5 +1928,19 @@
     "sec8Title": "8. Governing Law & Jurisdiction",
     "sec8Desc": "These Terms of Service are governed by Spanish law. Any disputes or claims arising in connection with the platform shall be submitted to the Courts of <strong>Las Palmas de Gran Canaria, Spain</strong>.",
     "sec8Contact": "Official contact: euronovaofficial@gmail.com"
+  },
+  "ProjectThemes": {
+    "environment": "Environment & Climate Action",
+    "digital": "Digital Skills, Tech & AI",
+    "inclusion": "Social Inclusion & Equality",
+    "mental_health": "Mental Health & Well-being",
+    "arts_culture": "Arts, Culture & Creativity",
+    "sports": "Sports & Healthy Lifestyle",
+    "human_rights": "Human Rights & Peacebuilding",
+    "entrepreneurship": "Entrepreneurship & Employability",
+    "civic_participation": "Active Citizenship & Democracy",
+    "media_literacy": "Media, Communication & Youth Info",
+    "rural_development": "Rural Development & Nature",
+    "heritage": "European Heritage & Intercultural Dialogue"
   }
 }

@@ -11,7 +11,6 @@ import {
   AlertTriangle,
   AlertCircle,
   CheckCircle2,
-  User,
   Upload,
   Bell,
 } from "lucide-react";
@@ -19,6 +18,7 @@ import { CountrySelect } from "@/components/CountrySelect";
 import { COUNTRIES } from "@/lib/constants/countries";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { AvatarFallback } from "@/components/AvatarFallback";
 import { toast } from "sonner";
 
 const emptySubscribe = () => () => {};
@@ -299,18 +299,14 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
                 role === "youth" ? "border-plasma-cyan shadow-[0_0_20px_rgba(0,229,255,0.2)]" : "border-hyper-violet shadow-[0_0_20px_rgba(99,102,241,0.2)]"
               } ${displayedAvatar ? "bg-void-surface" : "bg-gradient-to-br from-void-surface to-plasma-cyan/20"}`}
             >
-              {displayedAvatar ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                  src={displayedAvatar}
-                  alt="Avatar"
-                  className="w-full h-full object-cover"
-                />
-              ) : role === "youth" ? (
-                <User className="w-10 h-10 text-plasma-cyan" />
-              ) : (
-                <Building className="w-10 h-10 text-plasma-cyan" />
-              )}
+              <AvatarFallback
+                src={displayedAvatar}
+                alt="Avatar"
+                fallbackType={role === "youth" ? "user" : "org"}
+                sizeClassName="w-full h-full"
+                className="border-0 shadow-none"
+                iconClassName="w-10 h-10 text-plasma-cyan"
+              />
             </div>
           </div>
 
@@ -666,18 +662,14 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
             role === "youth" ? "border-plasma-cyan shadow-[0_0_20px_rgba(0,229,255,0.2)]" : "border-hyper-violet shadow-[0_0_20px_rgba(99,102,241,0.2)]"
           } ${displayedAvatar ? "bg-void-surface" : "bg-gradient-to-br from-void-surface to-plasma-cyan/20"}`}
         >
-          {displayedAvatar ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={displayedAvatar}
-              alt="Avatar"
-              className="w-full h-full object-cover"
-            />
-          ) : role === "youth" ? (
-            <User className="w-10 h-10 text-plasma-cyan" />
-          ) : (
-            <Building className="w-10 h-10 text-plasma-cyan" />
-          )}
+          <AvatarFallback
+            src={displayedAvatar}
+            alt="Avatar"
+            fallbackType={role === "youth" ? "user" : "org"}
+            sizeClassName="w-full h-full"
+            className="border-0 shadow-none"
+            iconClassName="w-10 h-10 text-plasma-cyan"
+          />
           <label className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
             <Upload className="w-6 h-6 text-white mb-1" />
             <span className="text-[10px] text-white font-medium uppercase">

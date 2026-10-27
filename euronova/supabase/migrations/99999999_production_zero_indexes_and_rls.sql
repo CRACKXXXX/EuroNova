@@ -502,3 +502,134 @@ BEGIN
     END IF;
   END LOOP;
 END $$;
+
+-- ----------------------------------------------------------------------------
+-- 9. DATA INTEGRITY & CONCURRENT CLAMPING CONSTRAINTS
+-- ----------------------------------------------------------------------------
+-- Idempotent check constraints for Trust Score [0, 100] and XP [>= 0] on users_youth
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'users_youth'
+  ) THEN
+    -- 1. Clamp legacy out-of-bounds values defensively prior to applying constraint
+    UPDATE public.users_youth
+    SET trust_score = LEAST(100, GREATEST(0, COALESCE(trust_score, 30))),
+        xp = GREATEST(0, COALESCE(xp, 0))
+    WHERE trust_score < 0 OR trust_score > 100 OR xp < 0;
+
+    -- 2. Add trust_score check constraint if not present
+    IF NOT EXISTS (
+      SELECT 1 FROM information_schema.constraint_column_usage 
+      WHERE table_schema = 'public' 
+        AND table_name = 'users_youth' 
+        AND constraint_name = 'chk_users_youth_trust_score_range'
+    ) THEN
+      ALTER TABLE public.users_youth 
+      ADD CONSTRAINT chk_users_youth_trust_score_range 
+      CHECK (trust_score >= 0 AND trust_score <= 100);
+      RAISE NOTICE 'Constraint chk_users_youth_trust_score_range added to users_youth';
+    END IF;
+
+    -- 3. Add xp check constraint if not present
+    IF NOT EXISTS (
+      SELECT 1 FROM information_schema.constraint_column_usage 
+      WHERE table_schema = 'public' 
+        AND table_name = 'users_youth' 
+        AND constraint_name = 'chk_users_youth_xp_positive'
+    ) THEN
+      ALTER TABLE public.users_youth 
+      ADD CONSTRAINT chk_users_youth_xp_positive 
+      CHECK (xp >= 0);
+      RAISE NOTICE 'Constraint chk_users_youth_xp_positive added to users_youth';
+    END IF;
+  END IF;
+END $$;
+
+-- ----------------------------------------------------------------------------
+-- 10. SCRAPED PROJECTS TRIPLE DEDUPLICATION & UNIQUE OFFICIAL URL INDEX
+-- ----------------------------------------------------------------------------
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'projects'
+  ) THEN
+    -- 1. Safely deduplicate existing scraped duplicate rows, keeping the earliest/published row
+    -- Guaranteed safety: Never deletes organic NGO projects (where org_id is not the scraper org)
+    DELETE FROM public.projects p
+    WHERE p.id IN (
+      SELECT id FROM (
+        SELECT id,
+               ROW_NUMBER() OVER (
+                 PARTITION BY official_url 
+                 ORDER BY 
+                   CASE WHEN status = 'published' THEN 0 ELSE 1 END,
+                   CASE WHEN org_id IS NOT NULL AND org_id <> '0610184a-a16e-4dcc-a8f6-b9ddef963bf5' THEN 0 ELSE 1 END,
+                   created_at ASC,
+                   id ASC
+               ) AS rn
+        FROM public.projects
+        WHERE official_url IS NOT NULL AND official_url <> ''
+      ) sub
+      WHERE sub.rn > 1
+        AND (p.org_id = '0610184a-a16e-4dcc-a8f6-b9ddef963bf5' OR p.org_id IS NULL)
+    );
+
+    -- 2. Idempotent partial unique index on official_url for non-empty URLs
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_projects_unique_official_url 
+    ON public.projects (official_url) 
+    WHERE official_url IS NOT NULL AND official_url <> '';
+
+    RAISE NOTICE 'Deduplication complete and idx_projects_unique_official_url ensured on public.projects';
+  END IF;
+END $$;
+
+-- ----------------------------------------------------------------------------
+-- 11. PURGE MOCK / SEED COMMUNITY SURVEYS ("Erasmus Network Madrid" & "Youth Dynamics Berlin")
+-- ----------------------------------------------------------------------------
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'surveys'
+  ) THEN
+    -- Delete votes linked to mock surveys
+    IF EXISTS (
+      SELECT 1 FROM information_schema.tables 
+      WHERE table_schema = 'public' AND table_name = 'survey_votes'
+    ) THEN
+      DELETE FROM public.survey_votes
+      WHERE survey_id IN ('survey-sample-1', 'survey-sample-2')
+         OR survey_id IN (
+           SELECT id::text FROM public.surveys 
+           WHERE question ILIKE '%Should European youth mobilities prioritize Train Travel%'
+              OR question ILIKE '%What is your main hurdle when applying for European Solidarity Corps%'
+         );
+    END IF;
+
+    -- Delete options linked to mock surveys
+    IF EXISTS (
+      SELECT 1 FROM information_schema.tables 
+      WHERE table_schema = 'public' AND table_name = 'survey_options'
+    ) THEN
+      DELETE FROM public.survey_options
+      WHERE survey_id IN ('survey-sample-1', 'survey-sample-2')
+         OR survey_id IN (
+           SELECT id::text FROM public.surveys 
+           WHERE question ILIKE '%Should European youth mobilities prioritize Train Travel%'
+              OR question ILIKE '%What is your main hurdle when applying for European Solidarity Corps%'
+         );
+    END IF;
+
+    -- Delete mock survey master records
+    DELETE FROM public.surveys
+    WHERE id::text IN ('survey-sample-1', 'survey-sample-2')
+       OR question ILIKE '%Should European youth mobilities prioritize Train Travel%'
+       OR question ILIKE '%What is your main hurdle when applying for European Solidarity Corps%';
+
+    RAISE NOTICE 'Mock community surveys successfully purged from public.surveys';
+  END IF;
+END $$;
+

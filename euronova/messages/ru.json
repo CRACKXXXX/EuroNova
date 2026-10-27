@@ -417,7 +417,9 @@
     "appLoggedLevelUp": "ПОВЫШЕНИЕ УРОВНЯ! Вы достигли Уровня {level}!",
     "appLoggedAlreadyClaimed": "Заявка зарегистрирована! (XP для этой миссии уже получены)",
     "aiSecurityChecked": "Безопасность проверена ИИ",
-    "aiSecurityTooltip": "Проверено командой модерации и ИИ EuroNova"
+    "aiSecurityTooltip": "Проверено командой модерации и ИИ EuroNova",
+    "antiScamVerified": "Проверенная миссия",
+    "antiScamVerifiedTitle": "Проверено командой модерации и ИИ EuroNova"
   },
   "Organizations": {
     "backHome": "Вернуться на главную",
@@ -502,6 +504,8 @@
   },
   "ProjectDetails": {
     "publisherProfile": "Профиль организатора",
+    "antiScamVerified": "Проверенная миссия",
+    "antiScamVerifiedTitle": "Проверено командой модерации и ИИ EuroNova",
     "deleteProject": "Удалить проект",
     "applyToMission": "Подать заявку на миссию",
     "themes": "Темы",
@@ -887,7 +891,7 @@
     "coversRupFlights": "Покрывает перелеты для RUP / Канарских островов",
     "lastMinuteUrgent": "Срочно (Last Minute)",
     "sendInAppNotificationTitle": "Отправить внутрисистемное уведомление",
-    "recipientLabel": "Получатель: <span className=\"text-plasma-cyan font-semibold\">{name}</span>",
+    "recipientLabel": "Получатель: <span>{name}</span>",
     "notificationCategory": "Категория уведомления",
     "catAnnouncement": "Система / Объявление",
     "catAlert": "Важное уведомление / Предупреждение",
@@ -1162,7 +1166,9 @@
     "prompt1": "Экологическое волонтерство на островах или в заповедниках",
     "prompt2": "Тренинги по театральным методикам и инклюзии",
     "prompt3": "Краткосрочные проекты для молодежи без опыта",
-    "prompt4": "Молодежные обмены по правам человека и цифровым медиа"
+    "prompt4": "Молодежные обмены по правам человека и цифровым медиа",
+    "aiAnalyzing": "Анализ запроса с помощью ИИ...",
+    "aiApply": "Поиск"
   },
   "Webhooks": {
     "title": "Вебхуки и автоматические уведомления",
@@ -1567,14 +1573,14 @@
     "typeMultiDesc": "Участники могут выбрать несколько вариантов",
     "updateSurvey": "Обновить опрос",
     "publishSurvey": "Опубликовать опрос",
-    "yourSurveysCount": "Ваши опросы: <strong class=\"text-white font-bold\">{count}</strong> (Страница {page} из {totalPages})",
-    "pageOf": "Страница <strong class=\"text-white font-bold\">{page}</strong> из <strong class=\"text-white font-bold\">{totalPages}</strong>"
+    "yourSurveysCount": "Ваши опросы: <strong>{count}</strong> (Страница {page} из {totalPages})",
+    "pageOf": "Страница <strong>{page}</strong> из <strong>{totalPages}</strong>"
   },
   "CommunitySurveys": {
     "headerBadge": "Гражданское участие и диалог с НКО",
     "headerTitle": "Опросы общественного мнения европейских НКО",
     "headerDesc": "Голосуйте по реальным европейским молодежным инициативам и правилам проектов. Все голоса анонимны и отображают консенсус по всему континенту.",
-    "showingSurveys": "Показано <strong class=\"text-white font-bold\">{count}</strong> активных опросов сообщества (Страница {page} из {totalPages})",
+    "showingSurveys": "Показано <strong>{count}</strong> активных опросов сообщества (Страница {page} из {totalPages})",
     "strictly50": "Строго 50 элементов на страницу",
     "emptyTitle": "Активные опросы сообщества не найдены",
     "emptyDesc": "Аккредитованные организации могут публиковать опросы из панели НКО. Загляните позже для участия в новых консультациях.",
@@ -1587,7 +1593,7 @@
     "selectSingle": "Выберите один вариант для голосования.",
     "transmittingVote": "Передача голоса...",
     "castVote": "Проголосовать",
-    "paginationPage": "Страница <strong class=\"text-white font-bold\">{page}</strong> из <strong class=\"text-white font-bold\">{totalPages}</strong> (всего {totalCount} опросов)",
+    "paginationPage": "Страница <strong>{page}</strong> из <strong>{totalPages}</strong> (всего {totalCount} опросов)",
     "prevPage": "Предыдущая страница",
     "nextPage": "Следующая страница",
     "surveyDeleted": "Опрос успешно удален.",
@@ -1765,7 +1771,7 @@
     "applyMissionXp": "+50 XP Подайте заявку на миссию",
     "reviewNgoXp": "+100 XP Оставьте отзыв об НКО",
     "goalXpNeeded": "Цель: 1 000 XP (осталось {needed} XP)",
-    "xpStatus": "У вас сейчас <strong class=\"text-plasma-cyan\">{xp} XP</strong> (Уровень {level})."
+    "xpStatus": "У вас сейчас <strong>{xp} XP</strong> (Уровень {level})."
   },
   "Community": {
     "tabForum": "Глобальные форумы",
@@ -1922,5 +1928,19 @@
     "sec8Title": "8. Применимое право и юрисдикция",
     "sec8Desc": "Настоящие Условия обслуживания регулируются законодательством Испании. Все споры подлежат рассмотрению в судах города <strong>Лас-Пальмас-де-Гран-Канария, Испания</strong>.",
     "sec8Contact": "Официальный контакт: euronovaofficial@gmail.com"
+  },
+  "ProjectThemes": {
+    "environment": "Окружающая среда и климатические действия",
+    "digital": "Цифровые навыки, технологии и ИИ",
+    "inclusion": "Социальная инклюзия и равенство",
+    "mental_health": "Психическое здоровье и благополучие",
+    "arts_culture": "Искусство, культура и творчество",
+    "sports": "Спорт и здоровый образ жизни",
+    "human_rights": "Права человека и миростроительство",
+    "entrepreneurship": "Предпринимательство и трудоустройство",
+    "civic_participation": "Активная гражданская позиция и демократия",
+    "media_literacy": "Медиаграмотность и молодежная информация",
+    "rural_development": "Сельское развитие и природа",
+    "heritage": "Европейское наследие и межкультурный диалог"
   }
 }

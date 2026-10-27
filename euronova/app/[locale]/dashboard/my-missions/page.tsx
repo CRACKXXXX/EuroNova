@@ -42,11 +42,14 @@ export default async function MyMissionsPage(props: MyMissionsPageProps) {
   const queryParam = Array.isArray(searchParams.q) ? searchParams.q[0] : searchParams.q;
   const searchQuery = queryParam || "";
 
+  const MAX_PAGE = 1000;
   const sPageParam = Array.isArray(searchParams.s_page) ? searchParams.s_page[0] : searchParams.s_page;
-  const initialSavedPage = parseInt(sPageParam || "1", 10) || 1;
+  const parsedSavedPage = parseInt(sPageParam || "1", 10);
+  const initialSavedPage = Math.max(1, Math.min(MAX_PAGE, Number.isFinite(parsedSavedPage) ? parsedSavedPage : 1));
 
   const aPageParam = Array.isArray(searchParams.a_page) ? searchParams.a_page[0] : searchParams.a_page;
-  const initialAppliedPage = parseInt(aPageParam || "1", 10) || 1;
+  const parsedAppliedPage = parseInt(aPageParam || "1", 10);
+  const initialAppliedPage = Math.max(1, Math.min(MAX_PAGE, Number.isFinite(parsedAppliedPage) ? parsedAppliedPage : 1));
 
   // 3. Consulta de interacciones del usuario con proyectos y organizaciones
   const { data: rawInteractions, error } = await supabase

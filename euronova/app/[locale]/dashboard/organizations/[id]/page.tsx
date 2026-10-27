@@ -53,13 +53,14 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
   const REVIEWS_PER_PAGE = 50;
   const PROJECTS_PER_PAGE = 50;
 
+  const MAX_PAGE = 1000;
   const rPageParam = searchParams.r_page ?? searchParams.reviews_page;
   const parsedRevPage = parseInt(Array.isArray(rPageParam) ? rPageParam[0] : (rPageParam || "1"), 10);
-  const revPage = isNaN(parsedRevPage) || parsedRevPage < 1 ? 1 : parsedRevPage;
+  const revPage = Math.max(1, Math.min(MAX_PAGE, Number.isFinite(parsedRevPage) ? parsedRevPage : 1));
 
   const pPageParam = searchParams.p_page ?? searchParams.projects_page;
   const parsedProjPage = parseInt(Array.isArray(pPageParam) ? pPageParam[0] : (pPageParam || "1"), 10);
-  const projPage = isNaN(parsedProjPage) || parsedProjPage < 1 ? 1 : parsedProjPage;
+  const projPage = Math.max(1, Math.min(MAX_PAGE, Number.isFinite(parsedProjPage) ? parsedProjPage : 1));
 
   const revFrom = (revPage - 1) * REVIEWS_PER_PAGE;
   const revTo = revFrom + REVIEWS_PER_PAGE - 1;

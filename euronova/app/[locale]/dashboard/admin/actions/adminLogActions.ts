@@ -176,7 +176,7 @@ export async function deleteReportedComment(
         if (userYouth && typeof userYouth.trust_score === "number") {
           await adminDb
             .from("users_youth")
-            .update({ trust_score: Math.max(0, userYouth.trust_score - 5) })
+            .update({ trust_score: Math.max(0, Math.min(100, userYouth.trust_score - 5)) })
             .eq("id", targetUserId);
         }
       } catch (err) {
@@ -243,7 +243,7 @@ export async function deleteCommentAndWarnUser(
           const currentTrust = userYouth.trust_score ?? 50;
           await adminDb
             .from("users_youth")
-            .update({ trust_score: Math.max(0, currentTrust - 15) })
+            .update({ trust_score: Math.max(0, Math.min(100, currentTrust - 15)) })
             .eq("id", targetUserId);
         }
 
@@ -440,7 +440,7 @@ export async function deleteSurveyAndWarnCreator(
           const currentTrust = userYouth.trust_score ?? 30;
           await adminDb
             .from("users_youth")
-            .update({ trust_score: Math.max(0, currentTrust - 15) })
+            .update({ trust_score: Math.max(0, Math.min(100, currentTrust - 15)) })
             .eq("id", resolvedCreatorId);
         }
 
@@ -529,7 +529,7 @@ export async function warnSurveyCreator(
           const currentTrust = userYouth.trust_score ?? 30;
           await adminDb
             .from("users_youth")
-            .update({ trust_score: Math.max(0, currentTrust - 15) })
+            .update({ trust_score: Math.max(0, Math.min(100, currentTrust - 15)) })
             .eq("id", resolvedCreatorId);
         }
 

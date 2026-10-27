@@ -5,7 +5,6 @@ import {
   Users,
   Search,
   X,
-  User,
   Phone,
   Languages,
   Bell,
@@ -18,6 +17,7 @@ import {
   maskEmail,
   maskPhone,
 } from "./AdminTypes";
+import { AvatarFallback } from "@/components/AvatarFallback";
 import {
   CountryBadge,
   AdminPagination,
@@ -117,14 +117,15 @@ export function AdminYouthTab({
             className="bg-void-surface border border-void-border hover:border-plasma-cyan/40 rounded-2xl p-6 sm:p-7 flex flex-col transition-all shadow-md"
           >
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-14 h-14 rounded-full border-2 border-plasma-cyan/60 overflow-hidden flex items-center justify-center bg-void-deep shrink-0 shadow-[0_0_15px_rgba(0,229,255,0.2)]">
-                {user.avatar_url ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={user.avatar_url} alt={t("avatarAlt")} className="w-full h-full object-cover" />
-                ) : (
-                  <User className="w-7 h-7 text-plasma-cyan/60" />
-                )}
-              </div>
+              <AvatarFallback
+                src={user.avatar_url}
+                alt={t("avatarAlt")}
+                fallbackType="user"
+                name={user.full_name}
+                sizeClassName="w-14 h-14"
+                className="border-2 border-plasma-cyan/60 shadow-[0_0_15px_rgba(0,229,255,0.2)]"
+                iconClassName="w-7 h-7 text-plasma-cyan/60"
+              />
               <div className="flex-1 min-w-0">
                 <h3 className="text-base font-bold text-white break-all whitespace-normal">
                   {user.full_name || t("unnamed")}

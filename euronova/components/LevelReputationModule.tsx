@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { 
   ShieldCheck, 
+  ShieldAlert,
   Zap, 
   CheckCircle2, 
   Layers, 
@@ -45,6 +46,8 @@ export function LevelReputationModule({
 
   const safeTrustScore = Math.max(0, Math.min(100, typeof trustScore === "number" && !isNaN(trustScore) ? trustScore : 30));
   const trustTier = getTrustScoreTier(safeTrustScore);
+  const isRestricted = safeTrustScore <= 29;
+  const TrustIcon = isRestricted ? ShieldAlert : ShieldCheck;
 
   // Curva de progresión exponencial matemática
   const progress = calculateLevelProgress(liveXp);
@@ -85,8 +88,13 @@ export function LevelReputationModule({
           </div>
 
           {/* Trust Score Pill Header */}
-          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-sm shrink-0 self-start sm:self-auto ${trustTier.badgeClass}`}>
-            <ShieldCheck className="w-4 h-4 shrink-0" />
+          <div
+            data-testid="trust-score-header-badge"
+            data-trust-score={safeTrustScore}
+            data-trust-tier={trustTier.tier}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-sm shrink-0 self-start sm:self-auto transition-colors duration-300 ${trustTier.badgeClass}`}
+          >
+            <TrustIcon className="w-4 h-4 shrink-0" />
             <span className="text-xs font-black tracking-wide">
               {trustTier.label} ({safeTrustScore}/100)
             </span>
@@ -145,7 +153,7 @@ export function LevelReputationModule({
           <div className="space-y-4 bg-void-deep/70 border border-void-border rounded-xl p-5 shadow-inner flex flex-col justify-between">
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-[11px] font-extrabold uppercase tracking-widest text-rup-emerald block">
+                <span className={`text-[11px] font-extrabold uppercase tracking-widest block transition-colors duration-300 ${trustTier.colorClass}`}>
                   {t("reputationScore")}
                 </span>
                 <div className="flex items-center gap-2 mt-0.5">
@@ -153,13 +161,16 @@ export function LevelReputationModule({
                     {safeTrustScore}
                   </span>
                   <span className="text-gray-400 font-semibold text-lg">/ 100</span>
-                  <span className={`text-xs font-black ml-1 px-2.5 py-0.5 rounded-full border ${trustTier.badgeClass}`}>
+                  <span className={`text-xs font-black ml-1 px-2.5 py-0.5 rounded-full border transition-colors duration-300 ${trustTier.badgeClass}`}>
                     {trustTier.label}
                   </span>
                 </div>
               </div>
-              <div className={`w-12 h-12 rounded-xl border flex items-center justify-center shadow-lg shrink-0 ${trustTier.badgeClass}`}>
-                <ShieldCheck className="w-7 h-7" />
+              <div
+                data-testid="trust-score-gauge-icon"
+                className={`w-12 h-12 rounded-xl border flex items-center justify-center shadow-lg shrink-0 transition-colors duration-300 ${trustTier.badgeClass}`}
+              >
+                <TrustIcon className="w-7 h-7" />
               </div>
             </div>
 

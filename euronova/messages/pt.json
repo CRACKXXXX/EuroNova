@@ -417,7 +417,9 @@
     "appLoggedLevelUp": "SUBIDA DE NÍVEL! Atingiste o Nível {level}!",
     "appLoggedAlreadyClaimed": "Candidatura registada! (XP já reivindicados para esta missão)",
     "aiSecurityChecked": "Segurança verificada por IA",
-    "aiSecurityTooltip": "Verificado pela equipa de IA e moderação da EuroNova"
+    "aiSecurityTooltip": "Verificado pela equipa de IA e moderação da EuroNova",
+    "antiScamVerified": "Missão Verificada",
+    "antiScamVerifiedTitle": "Verificado pela equipa de IA e moderação da EuroNova"
   },
   "Organizations": {
     "backHome": "Voltar ao Início",
@@ -502,6 +504,8 @@
   },
   "ProjectDetails": {
     "publisherProfile": "Perfil do Publicador",
+    "antiScamVerified": "Missão Verificada",
+    "antiScamVerifiedTitle": "Verificado pela equipa de IA e moderação da EuroNova",
     "deleteProject": "Eliminar Projeto",
     "applyToMission": "Candidatar-se à Missão",
     "themes": "Temas",
@@ -887,7 +891,7 @@
     "coversRupFlights": "Cobre Voos RUP / Ilhas Canárias",
     "lastMinuteUrgent": "Última Hora Urgente",
     "sendInAppNotificationTitle": "Enviar Notificação na Aplicação",
-    "recipientLabel": "Destinatário: <span className=\"text-plasma-cyan font-semibold\">{name}</span>",
+    "recipientLabel": "Destinatário: <span>{name}</span>",
     "notificationCategory": "Categoria da Notificação",
     "catAnnouncement": "Sistema / Anúncio",
     "catAlert": "Aviso Importante / Alerta",
@@ -1162,7 +1166,9 @@
     "prompt1": "Voluntariado ambiental em ilhas ou áreas protegidas",
     "prompt2": "Cursos de formação em metodologias teatrais e inclusão",
     "prompt3": "Projetos de curta duração para jovens sem experiência prévia",
-    "prompt4": "Intercâmbio juvenil focado em direitos humanos e media digital"
+    "prompt4": "Intercâmbio juvenil focado em direitos humanos e media digital",
+    "aiAnalyzing": "A analisar pesquisa com IA...",
+    "aiApply": "Pesquisar"
   },
   "Webhooks": {
     "title": "Webhooks e Transmissões Automatizadas",
@@ -1567,14 +1573,14 @@
     "typeMultiDesc": "Os participantes podem escolher múltiplas opções",
     "updateSurvey": "Atualizar Inquérito",
     "publishSurvey": "Publicar Inquérito",
-    "yourSurveysCount": "Os teus Inquéritos: <strong class=\"text-white font-bold\">{count}</strong> (Página {page} de {totalPages})",
-    "pageOf": "Página <strong class=\"text-white font-bold\">{page}</strong> de <strong class=\"text-white font-bold\">{totalPages}</strong>"
+    "yourSurveysCount": "Os teus Inquéritos: <strong>{count}</strong> (Página {page} de {totalPages})",
+    "pageOf": "Página <strong>{page}</strong> de <strong>{totalPages}</strong>"
   },
   "CommunitySurveys": {
     "headerBadge": "Participação Cívica e Diálogo com ONGs",
     "headerTitle": "Inquéritos de Opinião e Consultas de ONGs Europeias",
     "headerDesc": "Vota sobre políticas europeias de juventude, diretrizes e iniciativas de ONGs. Todos os votos são anónimos e refletem percentagens de consenso em direto.",
-    "showingSurveys": "A mostrar <strong class=\"text-white font-bold\">{count}</strong> inquéritos comunitários ativos (Página {page} de {totalPages})",
+    "showingSurveys": "A mostrar <strong>{count}</strong> inquéritos comunitários ativos (Página {page} de {totalPages})",
     "strictly50": "Estritamente 50 Itens / Página",
     "emptyTitle": "Nenhum inquérito comunitário ativo encontrado",
     "emptyDesc": "Organizações acreditadas podem publicar inquéritos a partir do seu Painel de ONG. Volta em breve para novas consultas.",
@@ -1587,7 +1593,7 @@
     "selectSingle": "Seleciona uma opção para votar.",
     "transmittingVote": "A transmitir voto...",
     "castVote": "Votar",
-    "paginationPage": "Página <strong class=\"text-white font-bold\">{page}</strong> de <strong class=\"text-white font-bold\">{totalPages}</strong> ({totalCount} inquéritos no total)",
+    "paginationPage": "Página <strong>{page}</strong> de <strong>{totalPages}</strong> ({totalCount} inquéritos no total)",
     "prevPage": "Página Anterior",
     "nextPage": "Página Seguinte",
     "surveyDeleted": "Inquérito eliminado com sucesso.",
@@ -1765,7 +1771,7 @@
     "applyMissionXp": "+50 XP Candidata-te a uma Missão",
     "reviewNgoXp": "+100 XP Avalia uma ONG",
     "goalXpNeeded": "Meta de 1.000 XP (faltam {needed} XP)",
-    "xpStatus": "Atualmente tens <strong class=\"text-plasma-cyan\">{xp} XP</strong> (Nível {level})."
+    "xpStatus": "Atualmente tens <strong>{xp} XP</strong> (Nível {level})."
   },
   "Community": {
     "tabForum": "Fóruns Globais",
@@ -1922,5 +1928,19 @@
     "sec8Title": "8. Legislação Aplicável e Jurisdição",
     "sec8Desc": "Estes Termos de Serviço regem-se pela lei espanhola. Qualquer litígio relacionado com a plataforma será submetido aos Tribunais de <strong>Las Palmas de Gran Canaria, Espanha</strong>.",
     "sec8Contact": "Contacto oficial: euronovaofficial@gmail.com"
+  },
+  "ProjectThemes": {
+    "environment": "Ambiente e Ação Climática",
+    "digital": "Competências Digitais, Tecnologia e IA",
+    "inclusion": "Inclusão Social e Igualdade",
+    "mental_health": "Saúde Mental e Bem-Estar",
+    "arts_culture": "Artes, Cultura e Criatividade",
+    "sports": "Desporto e Estilo de Vida Saudável",
+    "human_rights": "Direitos Humanos e Consolidação da Paz",
+    "entrepreneurship": "Empreendedorismo e Empregabilidade",
+    "civic_participation": "Cidadania Ativa e Democracia",
+    "media_literacy": "Literacia Mediática e Informação para Jovens",
+    "rural_development": "Desenvolvimento Rural e Natureza",
+    "heritage": "Património Europeu e Diálogo Intercultural"
   }
 }

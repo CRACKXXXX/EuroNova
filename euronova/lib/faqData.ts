@@ -55,6 +55,8 @@ export const FAQ_CATEGORIES = [
   { id: "euronova", label: "Platform Rules & XP" },
 ] as const;
 
+import { FAQ_LOCALIZATIONS } from "./faqTranslations/index";
+
 export interface FaqItem {
   id: string;
   category: FaqCategory;
@@ -63,7 +65,7 @@ export interface FaqItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-export const FAQ_DATA: FaqItem[] = [
+const FAQ_DATA_RAW: FaqItem[] = [
   // =========================================================================
   // 1. SURVIVAL TIPS & CULTURAL EXCHANGE (CRITICAL BACKPACKER ADVICE)
   // =========================================================================
@@ -984,3 +986,26 @@ Queria partilhar aqui uma atividade, mesmo que soe um pouco egocêntrico hahaha,
     icon: Sparkles,
   },
 ];
+
+/**
+ * Returns the localized FAQ dataset for the requested locale.
+ * Supported locales: en, es, de, fr, it, pt, ru.
+ */
+export function getLocalizedFaq(locale: string = "en"): FaqItem[] {
+  const norm = (locale || "en").toLowerCase().slice(0, 2);
+  const dict = FAQ_LOCALIZATIONS[norm];
+  if (!dict) return FAQ_DATA_RAW;
+
+  return FAQ_DATA_RAW.map((item) => {
+    const loc = dict[item.id];
+    if (!loc) return item;
+    return {
+      ...item,
+      question: loc.question || item.question,
+      answer: loc.answer || item.answer,
+    };
+  });
+}
+
+export const FAQ_DATA: FaqItem[] = FAQ_DATA_RAW;
+

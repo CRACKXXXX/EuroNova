@@ -1,6 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { Rocket, ChevronLeft, ChevronRight } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
@@ -48,13 +48,15 @@ export default async function ProjectsPage(props: {
   const endDate = searchParams.end_date as string | undefined;
   const funding = searchParams.funding as string | undefined;
 
-  // Pagination & Sorting parameters
+  // Pagination & Sorting parameters - Clamped against negative and excessive offsets
+  const MAX_PAGE = 1000;
   const pageParam = Array.isArray(searchParams.page) ? searchParams.page[0] : searchParams.page;
   const parsedPage = parseInt(pageParam || "1", 10);
-  const page = isNaN(parsedPage) || parsedPage < 1 ? 1 : parsedPage;
+  const page = Math.max(1, Math.min(MAX_PAGE, Number.isFinite(parsedPage) ? parsedPage : 1));
 
   const sortParam = Array.isArray(searchParams.sort) ? searchParams.sort[0] : searchParams.sort;
-  const sort = sortParam || "newest";
+  const validSorts = ["newest", "oldest", "urgent", "rup_first"];
+  const sort = typeof sortParam === "string" && validSorts.includes(sortParam) ? sortParam : "newest";
 
   const limit = 50;
   const from = (page - 1) * limit;
@@ -99,15 +101,33 @@ export default async function ProjectsPage(props: {
     query = query.overlaps("themes", themesArr);
   }
 
-  if (duration) query = query.lte("duration_days", parseInt(duration));
-  if (minBudget) query = query.gte("travel_budget_min", parseInt(minBudget));
-  if (maxBudget) query = query.lte("travel_budget_max", parseInt(maxBudget));
-  if (maxFee) query = query.lte("participation_fee", parseInt(maxFee));
+  if (duration) {
+    const parsedDuration = parseInt(duration, 10);
+    if (Number.isFinite(parsedDuration) && parsedDuration > 0) query = query.lte("duration_days", parsedDuration);
+  }
+  if (minBudget) {
+    const parsedMinBudget = parseInt(minBudget, 10);
+    if (Number.isFinite(parsedMinBudget) && parsedMinBudget >= 0) query = query.gte("travel_budget_min", parsedMinBudget);
+  }
+  if (maxBudget) {
+    const parsedMaxBudget = parseInt(maxBudget, 10);
+    if (Number.isFinite(parsedMaxBudget) && parsedMaxBudget >= 0) query = query.lte("travel_budget_max", parsedMaxBudget);
+  }
+  if (maxFee) {
+    const parsedMaxFee = parseInt(maxFee, 10);
+    if (Number.isFinite(parsedMaxFee) && parsedMaxFee >= 0) query = query.lte("participation_fee", parsedMaxFee);
+  }
   if (accommodation) query = query.eq("accommodation_covered", true);
   if (rup) query = query.eq("covers_rup_flights", true);
   if (lastMinute) query = query.eq("is_last_minute", true);
-  if (minAge) query = query.lte("min_age", parseInt(minAge));
-  if (maxAge) query = query.gte("max_age", parseInt(maxAge));
+  if (minAge) {
+    const parsedMinAge = parseInt(minAge, 10);
+    if (Number.isFinite(parsedMinAge) && parsedMinAge >= 0) query = query.lte("min_age", parsedMinAge);
+  }
+  if (maxAge) {
+    const parsedMaxAge = parseInt(maxAge, 10);
+    if (Number.isFinite(parsedMaxAge) && parsedMaxAge >= 0) query = query.gte("max_age", parsedMaxAge);
+  }
   if (startDate) query = query.gte("start_date", startDate);
   if (endDate) query = query.lte("end_date", endDate);
   if (funding) query = query.eq("financing_type", funding);

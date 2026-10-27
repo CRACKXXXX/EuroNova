@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { 
   Check, 
   ChevronLeft, 
@@ -55,11 +55,15 @@ export function CommunitySurveysView({
   const [isLoadingPage, startPageTransition] = useTransition();
   const [activeVotingSurveyId, setActiveVotingSurveyId] = useState<string | null>(null);
   const [deletingSurveyId, setDeletingSurveyId] = useState<string | null>(null);
+  const inFlightVotingRef = useRef(false);
+  const inFlightDeleteRef = useRef(false);
 
   const role = user?.role || userRole;
   const canModerate = role === "admin" || role === "moderator";
 
   const handleDeleteSurvey = async (surveyId: string) => {
+    if (inFlightDeleteRef.current) return;
+    inFlightDeleteRef.current = true;
     setDeletingSurveyId(surveyId);
     try {
       const res = await deleteNgoSurveyAction(surveyId);
@@ -76,6 +80,7 @@ export function CommunitySurveysView({
     } catch {
       toast.error(t("surveyDeleteError"));
     } finally {
+      inFlightDeleteRef.current = false;
       setDeletingSurveyId(null);
     }
   };
@@ -96,37 +101,44 @@ export function CommunitySurveysView({
   };
 
   const handleVoteSubmit = (survey: CommunitySurveyItem) => {
+    if (inFlightVotingRef.current) return;
     const chosen = selectedOptions[survey.id] || [];
     if (chosen.length === 0) {
       toast.error(t("selectOptionError"));
       return;
     }
 
+    inFlightVotingRef.current = true;
     setActiveVotingSurveyId(survey.id);
     startTransition(async () => {
-      const result = await voteNgoSurveyAction({
-        surveyId: survey.id,
-        optionIds: chosen,
-      });
+      try {
+        const result = await voteNgoSurveyAction({
+          surveyId: survey.id,
+          optionIds: chosen,
+        });
 
-      if (!result.success || !result.percentages) {
-        toast.error(result.error || t("surveyDeleteError"));
+        if (!result.success || !result.percentages) {
+          toast.error(result.error || t("surveyDeleteError"));
+          return;
+        }
+
+        setVotedSurveys((prev) => ({
+          ...prev,
+          [survey.id]: {
+            percentages: result.percentages!,
+            userOptionIds: result.userVotedOptionIds || chosen,
+          },
+        }));
+
+        toast.success(t("voteRecordedSuccess"), {
+          icon: "⚡",
+        });
+      } catch {
+        toast.error(t("surveyDeleteError"));
+      } finally {
+        inFlightVotingRef.current = false;
         setActiveVotingSurveyId(null);
-        return;
       }
-
-      setVotedSurveys((prev) => ({
-        ...prev,
-        [survey.id]: {
-          percentages: result.percentages!,
-          userOptionIds: result.userVotedOptionIds || chosen,
-        },
-      }));
-
-      toast.success(t("voteRecordedSuccess"), {
-        icon: "⚡",
-      });
-      setActiveVotingSurveyId(null);
     });
   };
 

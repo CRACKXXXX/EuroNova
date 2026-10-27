@@ -192,13 +192,14 @@ export async function awardUserXp(
       }
     }
 
-    // 6. Persistir nuevo XP y Trust Score en Supabase vía service_role
+    // 6. Persistir nuevo XP y Trust Score en Supabase vía service_role (estrictamente acotados)
+    const safeNewXp = Math.max(0, newXp);
     const currentTrust = typeof youth?.trust_score === "number" ? youth.trust_score : 30;
     const newTrustScore = typeof trustBoost === "number" && trustBoost !== 0
       ? Math.max(0, Math.min(100, currentTrust + trustBoost))
-      : currentTrust;
+      : Math.max(0, Math.min(100, currentTrust));
 
-    const updatePayload: { xp: number; trust_score?: number } = { xp: newXp };
+    const updatePayload: { xp: number; trust_score?: number } = { xp: safeNewXp };
     if (newTrustScore !== currentTrust) {
       updatePayload.trust_score = newTrustScore;
     }
@@ -247,6 +248,19 @@ export async function awardUserXp(
       reason,
     };
   } catch (err: unknown) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code?: string }).code === "23505"
+    ) {
+      return {
+        success: false,
+        gained: 0,
+        reason: "XP already awarded for this action.",
+        error: "XP already claimed.",
+      };
+    }
     const message = err instanceof Error ? err.message : "Unexpected error in XP engine.";
     return { success: false, error: message };
   }
@@ -266,9 +280,10 @@ export async function awardDailyEngagementXp(): Promise<AwardXpResult> {
     }
 
     const today = new Date().toISOString().slice(0, 10);
+    const adminDb = getAdminDb();
 
-    // Contar cuánto XP pasivo ya ha ganado hoy
-    const { data: todayLogs, error: logsError } = await supabase
+    // Contar cuánto XP pasivo ya ha ganado hoy con service_role para evitar stale reads
+    const { data: todayLogs, error: logsError } = await adminDb
       .from("user_xp_logs")
       .select("xp_amount")
       .eq("user_id", user.id)
@@ -281,8 +296,10 @@ export async function awardDailyEngagementXp(): Promise<AwardXpResult> {
 
     const totalToday = (todayLogs || []).reduce((sum, item) => sum + (item.xp_amount || 0), 0);
     const dailyCap = XP_CONFIG.DAILY_PASSIVE.dailyCap;
+    const maxSlots = Math.ceil(dailyCap / XP_CONFIG.DAILY_PASSIVE.amount);
+    const currentSlotCount = todayLogs?.length || 0;
 
-    if (totalToday >= dailyCap) {
+    if (totalToday >= dailyCap || currentSlotCount >= maxSlots) {
       return {
         success: false,
         gained: 0,
@@ -292,9 +309,9 @@ export async function awardDailyEngagementXp(): Promise<AwardXpResult> {
       };
     }
 
-    const remainingQuota = dailyCap - totalToday;
+    const remainingQuota = Math.max(0, dailyCap - totalToday);
     const amountToAward = Math.min(XP_CONFIG.DAILY_PASSIVE.amount, remainingQuota);
-    const slotIndex = (todayLogs?.length || 0) + 1;
+    const slotIndex = currentSlotCount + 1;
     const targetId = `${today}_slot_${slotIndex}`;
 
     return await awardUserXp({
@@ -304,6 +321,19 @@ export async function awardDailyEngagementXp(): Promise<AwardXpResult> {
       targetId,
     });
   } catch (err: unknown) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code?: string }).code === "23505"
+    ) {
+      return {
+        success: false,
+        gained: 0,
+        dailyCapReached: true,
+        error: "XP already claimed.",
+      };
+    }
     const message = err instanceof Error ? err.message : "Error awarding passive XP.";
     return { success: false, error: message };
   }
@@ -482,7 +512,7 @@ export async function awardVerifiedProjectCompletionAction({
       .update({ xp: newXp, trust_score: newTrust })
       .eq("id", volunteerId);
 
-    await adminDb.from("user_xp_logs").insert({
+    const { error: logInsertErr } = await adminDb.from("user_xp_logs").insert({
       user_id: volunteerId,
       amount: XP_CONFIG.PROJECT_COMPLETION.amount,
       xp_amount: XP_CONFIG.PROJECT_COMPLETION.amount,
@@ -491,6 +521,15 @@ export async function awardVerifiedProjectCompletionAction({
       reason: XP_CONFIG.PROJECT_COMPLETION.reason,
       created_at: new Date().toISOString(),
     });
+
+    if (logInsertErr && logInsertErr.code === "23505") {
+      return {
+        success: false,
+        gained: 0,
+        reason: "Project completion XP already awarded for this volunteer.",
+        error: "XP already claimed.",
+      };
+    }
 
     revalidatePath("/dashboard/profile");
     revalidatePath("/dashboard/my-missions");

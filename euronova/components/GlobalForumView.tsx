@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useTransition, useRef } from "react";
 import { 
   type GlobalCategoryItem, 
   type GlobalThreadItem, 
@@ -89,10 +89,12 @@ export function GlobalForumView({
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
   const [isSubmittingThread, startThreadTransition] = useTransition();
+  const inFlightThreadRef = useRef(false);
 
   // Reply state
   const [replyContent, setReplyContent] = useState("");
   const [isSubmittingReply, startReplyTransition] = useTransition();
+  const inFlightReplyRef = useRef(false);
 
   // Load threads for category with 50-item pagination
   const loadCategoryThreads = async (categoryId: string, pageToLoad: number) => {
@@ -104,6 +106,9 @@ export function GlobalForumView({
         if (res.pagination) {
           setPagination(res.pagination);
           setCurrentPage(res.pagination.page);
+        }
+        if (typeof window !== "undefined") {
+          window.scrollTo({ top: 0, behavior: "smooth" });
         }
       } else {
         toast.error(res.error || t("failedLoadDiscussions"));
@@ -129,6 +134,9 @@ export function GlobalForumView({
     setIsEditingThread(false);
     setEditingPostId(null);
     setIsLoadingDetails(true);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
     try {
       const res = await getThreadDetails(thread.id);
       if (res.success && res.data) {
@@ -147,6 +155,7 @@ export function GlobalForumView({
   // Submit new thread
   const handleCreateThread = (e: React.FormEvent) => {
     e.preventDefault();
+    if (inFlightThreadRef.current) return;
     if (!selectedCategory) return;
 
     if (!newTitle.trim() || !newContent.trim()) {
@@ -154,6 +163,7 @@ export function GlobalForumView({
       return;
     }
 
+    inFlightThreadRef.current = true;
     startThreadTransition(async () => {
       try {
         const res = await createGlobalThreadAction(
@@ -186,6 +196,8 @@ export function GlobalForumView({
         }
       } catch (err: unknown) {
         toast.error(err instanceof Error ? t("publishFailed", { error: err.message }) : t("unexpectedPublishError"));
+      } finally {
+        inFlightThreadRef.current = false;
       }
     });
   };
@@ -365,8 +377,10 @@ export function GlobalForumView({
   // Submit reply
   const handlePostReply = (e: React.FormEvent) => {
     e.preventDefault();
+    if (inFlightReplyRef.current) return;
     if (!activeThread || !replyContent.trim()) return;
 
+    inFlightReplyRef.current = true;
     startReplyTransition(async () => {
       try {
         const res = await replyGlobalThreadAction(activeThread.id, replyContent.trim());
@@ -398,6 +412,8 @@ export function GlobalForumView({
             ? `Reply Failed: ${err.message}`
             : "An unexpected error occurred while posting your reply."
         );
+      } finally {
+        inFlightReplyRef.current = false;
       }
     });
   };

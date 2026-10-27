@@ -5,6 +5,7 @@ import { WebhookDispatchSchema } from "@/lib/schemas";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimiter";
 import { createClient } from "@/utils/supabase/server";
 import { getUserRole } from "@/lib/roles";
+import { verifyMidSessionActiveStatus } from "@/lib/moderationShield";
 
 export interface WebhookPayload {
   event: "application.created" | "review.created" | "report.created" | "test.ping";
@@ -27,7 +28,7 @@ export interface TriggerWebhookResult {
 }
 
 /**
- * Server Action for dispatching and simulating outbound webhooks to Discord / Slack.
+ * Server Action for dispatching outbound webhooks to Discord / Slack.
  * Protected against SSRF, internal network scanning, unauthorized access, and IDOR spoofing.
  */
 export async function triggerWebhook(
@@ -59,14 +60,12 @@ export async function triggerWebhook(
     }
 
     if (!isElevated) {
-      const { data: orgProfile } = await supabase
-        .from("users_org")
-        .select("id")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (!orgProfile) {
-        return { success: false, error: "Only accredited organizations can manage webhooks." };
+      const activeCheck = await verifyMidSessionActiveStatus(user.id, { requireVerifiedOrg: true });
+      if (!activeCheck.allowed) {
+        return {
+          success: false,
+          error: activeCheck.error || "Organization is suspended or not verified to manage webhooks.",
+        };
       }
     }
 
@@ -82,9 +81,10 @@ export async function triggerWebhook(
       return { success: false, error: issue };
     }
 
-    // 4. Strict anti-SSRF URL validation
+    // 4. Strict anti-SSRF URL validation (enforcing https, blocking private IPs, cloud metadata, credentials)
     const urlValidation = validateSafeHttpsUrl(webhookUrl, {
       allowDiscordWebhookOnly: platform === "discord",
+      platform,
     });
 
     if (!urlValidation.isValid) {
@@ -106,21 +106,99 @@ export async function triggerWebhook(
       };
     }
 
-    const timestamp = new Date().toISOString();
+    // 6. Format platform-specific payload
+    let outboundBody: string;
+    if (platform === "discord") {
+      const isPing = payload.event === "test.ping";
+      const embed = {
+        title: payload.data.title,
+        description: payload.data.description,
+        color: isPing ? 0x00e5ff : 0x6366f1,
+        timestamp: new Date().toISOString(),
+        fields: [
+          ...(payload.data.projectName
+            ? [{ name: "Project", value: payload.data.projectName, inline: true }]
+            : []),
+          ...(payload.data.applicantEmail
+            ? [{ name: "Applicant", value: payload.data.applicantEmail, inline: true }]
+            : []),
+        ],
+        footer: {
+          text: "EuroNova Security Grid • Webhooks Gateway",
+        },
+      };
 
+      outboundBody = JSON.stringify({
+        username: "EuroNova Webhook Bot",
+        avatar_url: "https://euronova.vercel.app/logo-small.png",
+        content: `🛰️ **[EURONOVA EVENT: ${payload.event.toUpperCase()}]**`,
+        embeds: [embed],
+      });
+    } else {
+      outboundBody = JSON.stringify({
+        text: `🛰️ *[EuroNova Event: ${payload.event}]* ${payload.data.title}\n${payload.data.description}`,
+        blocks: [
+          {
+            type: "header",
+            text: {
+              type: "plain_text",
+              text: `EuroNova Event: ${payload.event}`,
+              emoji: true,
+            },
+          },
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `*${payload.data.title}*\n${payload.data.description}`,
+            },
+          },
+        ],
+      });
+    }
+
+    // 7. Dispatch outbound fetch with strict 5s timeout & disabled redirects (anti-SSRF)
+    const safeUrl = urlValidation.sanitizedUrl || webhookUrl.trim();
+
+    const response = await fetch(safeUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": "EuroNova-Orbital-Webhook/1.0",
+      },
+      body: outboundBody,
+      signal: AbortSignal.timeout(5000),
+      redirect: "error",
+    });
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: `Webhook recipient responded with error status ${response.status}.`,
+      };
+    }
+
+    const timestamp = new Date().toISOString();
 
     return {
       success: true,
       platform,
       timestamp,
-      message: `Transmission simulated successfully to ${platform.toUpperCase()}. Payload registered.`,
+      message: `Transmission dispatched successfully to ${platform.toUpperCase()}. Payload registered.`,
     };
   } catch (err: unknown) {
     console.error("[EuroNova Webhook Dispatcher Error]:", err);
-    const errorMessage = err instanceof Error ? err.message : "Internal Server Error during webhook dispatch";
+    let clientError = "Unable to complete webhook transmission. Remote endpoint unreachable.";
+    if (err instanceof Error) {
+      if (err.name === "TimeoutError" || err.message?.toLowerCase().includes("timeout")) {
+        clientError = "Webhook delivery timed out after 5000ms. Remote server unresponsive.";
+      } else if (err.message?.toLowerCase().includes("redirect")) {
+        clientError = "Webhook delivery rejected: redirects are not permitted for security reasons.";
+      }
+    }
     return {
       success: false,
-      error: errorMessage,
+      error: clientError,
     };
   }
 }
@@ -156,10 +234,10 @@ export async function testWebhookAction(
 
     return await triggerWebhook(webhookUrl.trim(), platform, testPayload);
   } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : "Error testing webhook connection";
+    console.error("[EuroNova Webhook Test Error]:", err);
     return {
       success: false,
-      error: errorMessage,
+      error: "Error testing webhook connection. Remote endpoint unreachable.",
     };
   }
 }

@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
-import { ArrowLeft, Euro, MapPin, Building, AlertTriangle, Trash2, ExternalLink, Users, Globe2, Clock, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Euro, MapPin, AlertTriangle, Trash2, ExternalLink, Users, Globe2, Clock, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations, getFormatter } from "next-intl/server";
@@ -16,6 +16,7 @@ import { ReportMissionButton } from "@/components/ReportMissionButton";
 import { TrackRecentlyViewed } from "@/components/TrackRecentlyViewed";
 import { ProjectForum } from "@/components/ProjectForum";
 import { routing } from "@/i18n/routing";
+import { AvatarFallback } from "@/components/AvatarFallback";
 
 export const dynamic = 'force-dynamic';
 
@@ -34,11 +35,11 @@ export async function generateMetadata(
 
   if (!project) {
     return {
-      title: "Mission Not Found",
+      title: "EuroNova",
     };
   }
 
-  const title = `${project.title} | EuroNova`;
+  const title = "EuroNova";
   const cleanDescription = project.description
     ? project.description.slice(0, 160).replace(/\s+/g, " ").trim()
     : "Discover Erasmus+ & ESC youth mobility opportunities across Europe on EuroNova.";
@@ -238,7 +239,7 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ loca
             {/* AI Anti-Scam Shield micro-badge */}
             <div 
               title={t("antiScamVerifiedTitle")}
-              className="px-3 py-1.5 text-xs font-bold rounded-full bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/40 shadow-[0_0_15px_rgba(0,230,118,0.25)] flex items-center gap-1.5 cursor-help"
+              className="px-3 py-1.5 text-xs font-bold rounded-full bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/40 shadow-[0_0_15px_rgba(0,230,118,0.25)] flex items-center gap-1.5 select-none"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-rup-emerald" />
               <span>{t("antiScamVerified")}</span>
@@ -251,23 +252,15 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ loca
 
           {/* PUBLISHER PROFILE CARD */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-xl bg-void-deep/80 border border-void-border backdrop-blur-sm mb-10 w-full sm:w-fit">
-            {orgLogo ? (
-              <div className="relative w-12 h-12 rounded-full shrink-0 overflow-hidden border border-void-border bg-void-deep shadow-[0_0_15px_rgba(0,229,255,0.15)]">
-                <div className="absolute inset-0 bg-void-border/50 animate-pulse pointer-events-none" />
-                <Image
-                  src={orgLogo}
-                  alt={orgName}
-                  width={48}
-                  height={48}
-                  unoptimized
-                  className="relative w-12 h-12 rounded-full object-cover"
-                />
-              </div>
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-void-surface to-plasma-cyan/20 flex items-center justify-center border border-plasma-cyan/30 shrink-0 shadow-[0_0_15px_rgba(0,229,255,0.15)]">
-                <Building className="w-6 h-6 text-plasma-cyan" />
-              </div>
-            )}
+            <AvatarFallback
+              src={orgLogo}
+              alt={orgName}
+              fallbackType="org"
+              name={orgName}
+              sizeClassName="w-12 h-12"
+              className="border border-void-border bg-void-deep shadow-[0_0_15px_rgba(0,229,255,0.15)]"
+              iconClassName="w-6 h-6 text-plasma-cyan"
+            />
             <div>
               <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-1">{t("publisherProfile")}</p>
               <div className="flex items-center gap-2.5 flex-wrap">

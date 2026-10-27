@@ -202,15 +202,7 @@ export default function NewProjectPage() {
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300">{t("participationFee")}</label>
               <input type="number" name="participation_fee" defaultValue={0} className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan" />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">{t("financingType")}</label>
-              <select name="financing_type" required className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan">
-                <option value="Total">{t("financingTotal")}</option>
-                <option value="Partial">{t("financingPartial")}</option>
-                <option value="None">{t("financingNone")}</option>
-              </select>
+              <input type="hidden" name="financing_type" value="Total" />
             </div>
           </div>
 

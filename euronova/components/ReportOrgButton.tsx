@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useSyncExternalStore } from "react";
+import { useState, useTransition, useSyncExternalStore, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Flag, X, ShieldAlert, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -22,30 +22,37 @@ export function ReportOrgButton({ orgId, orgName }: ReportOrgButtonProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const inFlightRef = useRef(false);
   const mounted = useSyncExternalStore(subscribe, () => true, () => false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     setErrorMessage(null);
 
     startTransition(async () => {
-      const res = await submitGlobalReportAction({
-        targetType: "organization",
-        targetId: orgId,
-        targetTitle: orgName,
-        reason,
-        description: details,
-      });
+      try {
+        const res = await submitGlobalReportAction({
+          targetType: "organization",
+          targetId: orgId,
+          targetTitle: orgName,
+          reason,
+          description: details,
+        });
 
-      if (res.error) {
-        setErrorMessage(res.error);
-        return;
+        if (res.error) {
+          setErrorMessage(res.error);
+          return;
+        }
+
+        setIsOpen(false);
+        setDetails("");
+        setToastMessage(t("reportOrgSuccess"));
+        setTimeout(() => setToastMessage(null), 5000);
+      } finally {
+        inFlightRef.current = false;
       }
-
-      setIsOpen(false);
-      setDetails("");
-      setToastMessage(t("reportOrgSuccess"));
-      setTimeout(() => setToastMessage(null), 5000);
     });
   };
 

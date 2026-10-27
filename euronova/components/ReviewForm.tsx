@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { Star, Send, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { submitOrgReview } from "@/actions/reviews";
 import { useTranslations } from "next-intl";
@@ -18,9 +18,11 @@ export function ReviewForm({ orgId }: ReviewFormProps) {
   const [isPending, startTransition] = useTransition();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const inFlightRef = useRef(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (inFlightRef.current) return;
     setErrorMsg(null);
     setSuccessMsg(null);
 
@@ -34,28 +36,33 @@ export function ReviewForm({ orgId }: ReviewFormProps) {
       return;
     }
 
+    inFlightRef.current = true;
     startTransition(async () => {
-      const res = await submitOrgReview(orgId, rating, reviewText);
-      if (res.error) {
-        setErrorMsg(res.error);
-      } else {
-        setSuccessMsg(t("successMessage"));
-        setReviewText("");
-        setRating(5);
-        if (res.xpGained) {
-          toast.success(t("reviewSubmittedToast", { xp: res.xpGained }), { icon: "⭐" });
-          if (res.leveledUp && res.newLevel) {
-            toast.success(t("levelUpToast", { level: res.newLevel }), { icon: "🚀" });
+      try {
+        const res = await submitOrgReview(orgId, rating, reviewText);
+        if (res.error) {
+          setErrorMsg(res.error);
+        } else {
+          setSuccessMsg(t("successMessage"));
+          setReviewText("");
+          setRating(5);
+          if (res.xpGained) {
+            toast.success(t("reviewSubmittedToast", { xp: res.xpGained }), { icon: "⭐" });
+            if (res.leveledUp && res.newLevel) {
+              toast.success(t("levelUpToast", { level: res.newLevel }), { icon: "🚀" });
+            }
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(
+                new CustomEvent("euronova:xp-updated", { 
+                  detail: { xpGained: res.xpGained, level: res.newLevel } 
+                })
+              );
+            }
           }
-          if (typeof window !== "undefined") {
-            window.dispatchEvent(
-              new CustomEvent("euronova:xp-updated", { 
-                detail: { xpGained: res.xpGained, level: res.newLevel } 
-              })
-            );
-          }
+          setTimeout(() => setSuccessMsg(null), 5000);
         }
-        setTimeout(() => setSuccessMsg(null), 5000);
+      } finally {
+        inFlightRef.current = false;
       }
     });
   };

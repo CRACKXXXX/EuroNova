@@ -26,7 +26,17 @@ export function TrackRecentlyViewed({
     try {
       const storageKey = userId ? `euronova_recently_viewed_${userId}` : `euronova_recently_viewed_guest`;
       const raw = localStorage.getItem(storageKey);
-      let list: ViewedProject[] = raw ? JSON.parse(raw) : [];
+      let list: ViewedProject[] = [];
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            list = parsed;
+          }
+        } catch {
+          list = [];
+        }
+      }
 
       // Filtrar duplicados del mismo ID
       list = list.filter((p) => p.id !== project.id);

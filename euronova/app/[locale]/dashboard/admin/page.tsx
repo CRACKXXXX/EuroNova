@@ -37,12 +37,13 @@ function getAdminDb() {
 }
 
 function parsePage(param: string | number | string[] | undefined): number {
+  const MAX_PAGE = 1000;
   if (typeof param === "number") {
-    return isNaN(param) || param < 1 ? 1 : Math.floor(param);
+    return Math.max(1, Math.min(MAX_PAGE, Number.isFinite(param) ? Math.floor(param) : 1));
   }
   const val = Array.isArray(param) ? param[0] : param;
   const num = parseInt(val || "1", 10);
-  return isNaN(num) || num < 1 ? 1 : num;
+  return Math.max(1, Math.min(MAX_PAGE, Number.isFinite(num) ? num : 1));
 }
 
 export default async function AdminPage(props: {

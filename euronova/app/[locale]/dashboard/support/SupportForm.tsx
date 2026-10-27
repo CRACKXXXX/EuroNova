@@ -1,15 +1,28 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { createTicket } from "./actions";
 import { Mail, Phone, MessageSquare, Send, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+const ALLOWED_REASONS = [
+  "apply_support",
+  "survey_moderation",
+  "trust_score_dispute",
+  "scraper_issue",
+  "technical",
+  "account",
+  "projects",
+  "billing",
+  "other",
+] as const;
+
 export function SupportForm() {
   const t = useTranslations("SupportForm");
   const searchParams = useSearchParams();
-  const defaultReason = searchParams.get("reason") || "";
+  const rawReason = searchParams.get("reason") || "";
+  const defaultReason = (ALLOWED_REASONS as readonly string[]).includes(rawReason) ? rawReason : "";
 
   const [selectedReason, setSelectedReason] = useState(defaultReason);
   const [subjectValue, setSubjectValue] = useState(
@@ -19,9 +32,20 @@ export function SupportForm() {
   );
 
   const [state, action, isPending] = useActionState(createTicket, null);
+  const inFlightRef = useRef(false);
+
+  const handleAction = async (formData: FormData) => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
+    try {
+      await action(formData);
+    } finally {
+      inFlightRef.current = false;
+    }
+  };
 
   return (
-    <form action={action} className="space-y-6">
+    <form action={handleAction} className="space-y-6">
       {selectedReason === "apply_support" && (
         <div className="p-4 rounded-xl bg-rup-emerald/10 border border-rup-emerald/30 text-rup-emerald text-xs flex items-center gap-3 animate-in fade-in">
           <Sparkles className="w-5 h-5 shrink-0" />

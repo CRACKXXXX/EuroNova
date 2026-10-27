@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { 
   MapPin, 
   Users, 
   Zap, 
   PlaneTakeoff, 
   AlertTriangle, 
-  Building, 
   Clock, 
   Euro, 
   Wallet,
@@ -15,13 +14,14 @@ import {
   Briefcase,
   ShieldCheck
 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import Image from "next/image";
 import { useTranslations, useFormatter } from "next-intl";
 import { COUNTRIES } from "@/lib/constants/countries";
 import { PROJECT_TYPE_COLORS } from "@/lib/constants/projectTypes";
 import { toggleProjectFavorite, toggleProjectApplied } from "@/actions/interactions";
 import { TermTooltip } from "@/components/TermTooltip";
+import { AvatarFallback } from "@/components/AvatarFallback";
 import { toast } from "sonner";
 
 export interface ProjectData {
@@ -47,9 +47,20 @@ export interface ProjectData {
   created_at?: string;
 }
 
-export function ProjectCard({ project }: { project: ProjectData }) {
+export interface ProjectCardProps {
+  project: ProjectData;
+  onToggleFavorite?: (projectId: string, isFavorite: boolean) => void;
+  onToggleApplied?: (projectId: string, isApplied: boolean) => void;
+}
+
+export function ProjectCard({
+  project,
+  onToggleFavorite,
+  onToggleApplied,
+}: ProjectCardProps) {
   const t = useTranslations("ProjectCard");
   const tTypes = useTranslations("ProjectTypes");
+  const tThemes = useTranslations("ProjectThemes");
   const format = useFormatter();
 
   const [isFavorite, setIsFavorite] = useState(project.is_favorite ?? false);
@@ -57,6 +68,21 @@ export function ProjectCard({ project }: { project: ProjectData }) {
   const [isPendingFav, startFavTransition] = useTransition();
   const [isPendingApp, startAppTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const inFlightFavoriteRef = useRef(false);
+  const inFlightAppliedRef = useRef(false);
+
+  // Sync state during render if prop changes from parent
+  const [prevFavProp, setPrevFavProp] = useState(project.is_favorite);
+  if (project.is_favorite !== prevFavProp) {
+    setPrevFavProp(project.is_favorite);
+    setIsFavorite(project.is_favorite ?? false);
+  }
+
+  const [prevAppProp, setPrevAppProp] = useState(project.is_applied);
+  if (project.is_applied !== prevAppProp) {
+    setPrevAppProp(project.is_applied);
+    setIsApplied(project.is_applied ?? false);
+  }
 
   // Calcula si el proyecto fue creado en las últimas 24 horas (Pure evaluation)
   const [isNew] = useState(() => {
@@ -69,18 +95,34 @@ export function ProjectCard({ project }: { project: ProjectData }) {
     e.preventDefault();
     e.stopPropagation();
 
+    if (inFlightFavoriteRef.current) return;
+    inFlightFavoriteRef.current = true;
+
     const previousState = isFavorite;
     const nextState = !previousState;
     setIsFavorite(nextState);
+    onToggleFavorite?.(project.id, nextState);
 
     startFavTransition(async () => {
-      const res = await toggleProjectFavorite(project.id);
-      if (res?.error) {
+      try {
+        const res = await toggleProjectFavorite(project.id);
+        if (res?.error) {
+          setIsFavorite(previousState);
+          onToggleFavorite?.(project.id, previousState);
+          setErrorMessage(res.error);
+          setTimeout(() => setErrorMessage(null), 3500);
+        } else if (res?.is_favorite !== undefined) {
+          setIsFavorite(res.is_favorite);
+          onToggleFavorite?.(project.id, res.is_favorite);
+        }
+      } catch (err: unknown) {
         setIsFavorite(previousState);
-        setErrorMessage(res.error);
+        onToggleFavorite?.(project.id, previousState);
+        const msg = err instanceof Error ? err.message : "Failed to update favorite status.";
+        setErrorMessage(msg);
         setTimeout(() => setErrorMessage(null), 3500);
-      } else if (res?.is_favorite !== undefined) {
-        setIsFavorite(res.is_favorite);
+      } finally {
+        inFlightFavoriteRef.current = false;
       }
     });
   };
@@ -89,31 +131,47 @@ export function ProjectCard({ project }: { project: ProjectData }) {
     e.preventDefault();
     e.stopPropagation();
 
+    if (inFlightAppliedRef.current) return;
+    inFlightAppliedRef.current = true;
+
     const previousState = isApplied;
     const nextState = !previousState;
     setIsApplied(nextState);
+    onToggleApplied?.(project.id, nextState);
 
     startAppTransition(async () => {
-      const res = await toggleProjectApplied(project.id);
-      if (res?.error) {
-        setIsApplied(previousState);
-        setErrorMessage(res.error);
-        setTimeout(() => setErrorMessage(null), 3500);
-      } else if (res?.is_applied !== undefined) {
-        setIsApplied(res.is_applied);
-        if (res.is_applied && res.xpGained) {
-          toast.success(t("appLoggedXp", { xp: res.xpGained }), { icon: "🚀" });
-          if (res.leveledUp) {
-            toast.success(t("appLoggedLevelUp", { level: res.newLevel ?? 1 }), { icon: "⚡" });
+      try {
+        const res = await toggleProjectApplied(project.id);
+        if (res?.error) {
+          setIsApplied(previousState);
+          onToggleApplied?.(project.id, previousState);
+          setErrorMessage(res.error);
+          setTimeout(() => setErrorMessage(null), 3500);
+        } else if (res?.is_applied !== undefined) {
+          setIsApplied(res.is_applied);
+          onToggleApplied?.(project.id, res.is_applied);
+          if (res.is_applied && res.xpGained) {
+            toast.success(t("appLoggedXp", { xp: res.xpGained }), { icon: "🚀" });
+            if (res.leveledUp) {
+              toast.success(t("appLoggedLevelUp", { level: res.newLevel ?? 1 }), { icon: "⚡" });
+            }
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new CustomEvent("euronova:xp-updated", { 
+                detail: { xpGained: res.xpGained, level: res.newLevel } 
+              }));
+            }
+          } else if (res.is_applied && !res.xpGained) {
+            toast.info(t("appLoggedAlreadyClaimed"), { icon: "📋" });
           }
-          if (typeof window !== "undefined") {
-            window.dispatchEvent(new CustomEvent("euronova:xp-updated", { 
-              detail: { xpGained: res.xpGained, level: res.newLevel } 
-            }));
-          }
-        } else if (res.is_applied && !res.xpGained) {
-          toast.info(t("appLoggedAlreadyClaimed"), { icon: "📋" });
         }
+      } catch (err: unknown) {
+        setIsApplied(previousState);
+        onToggleApplied?.(project.id, previousState);
+        const msg = err instanceof Error ? err.message : "Failed to update application status.";
+        setErrorMessage(msg);
+        setTimeout(() => setErrorMessage(null), 3500);
+      } finally {
+        inFlightAppliedRef.current = false;
       }
     });
   };
@@ -188,11 +246,11 @@ export function ProjectCard({ project }: { project: ProjectData }) {
 
             {/* AI Anti-Scam Shield micro-badge */}
             <div
-              title={t("aiSecurityTooltip")}
-              className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/40 shadow-[0_0_12px_rgba(0,230,118,0.25)] flex items-center gap-1 cursor-help shrink-0"
+              title={t("antiScamVerifiedTitle")}
+              className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/40 shadow-[0_0_12px_rgba(0,230,118,0.25)] flex items-center gap-1 shrink-0 select-none"
             >
               <ShieldCheck className="w-3 h-3 text-rup-emerald shrink-0" />
-              <span>{t("aiSecurityChecked")}</span>
+              <span>{t("antiScamVerified")}</span>
             </div>
           </div>
 
@@ -245,20 +303,14 @@ export function ProjectCard({ project }: { project: ProjectData }) {
         {/* Fallback de logo o avatar de la organización */}
         {project.org_name && (
           <div className="flex items-center gap-2 text-sm text-gray-300 mb-4 min-w-0">
-            {project.org_logo_url ? (
-              <Image
-                src={project.org_logo_url}
-                alt={project.org_name}
-                width={20}
-                height={20}
-                unoptimized
-                className="w-5 h-5 rounded-full object-cover border border-void-border shrink-0"
-              />
-            ) : (
-              <div className="w-5 h-5 rounded-full bg-gradient-to-br from-void-surface to-plasma-cyan/20 border border-plasma-cyan/30 flex items-center justify-center shrink-0">
-                <Building className="w-3 h-3 text-plasma-cyan" />
-              </div>
-            )}
+            <AvatarFallback
+              src={project.org_logo_url}
+              alt={project.org_name}
+              fallbackType="org"
+              name={project.org_name}
+              sizeClassName="w-5 h-5"
+              iconClassName="w-3 h-3 text-plasma-cyan"
+            />
             <span className="line-clamp-1 font-medium min-w-0 break-words">{project.org_name}</span>
           </div>
         )}
@@ -323,16 +375,20 @@ export function ProjectCard({ project }: { project: ProjectData }) {
         {/* Themes */}
         {project.themes && project.themes.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-1.5">
-            {project.themes.slice(0, 3).map((theme, i) => (
-              <span
-                key={i}
-                className="px-2 py-0.5 text-[10px] uppercase font-medium bg-void-deep text-gray-400 rounded-md border border-void-border"
-              >
-                {theme}
-              </span>
-            ))}
+            {project.themes.slice(0, 3).map((theme, i) => {
+              const label = tThemes.has(theme) ? tThemes(theme) : theme;
+              return (
+                <span
+                  key={i}
+                  className="px-2 py-0.5 text-[10px] font-medium bg-void-deep text-gray-300 rounded-md border border-void-border truncate max-w-[150px]"
+                  title={label}
+                >
+                  {label}
+                </span>
+              );
+            })}
             {project.themes.length > 3 && (
-              <span className="px-2 py-0.5 text-[10px] uppercase font-medium bg-void-deep text-gray-500 rounded-md border border-void-border">
+              <span className="px-2 py-0.5 text-[10px] font-medium bg-void-deep text-gray-500 rounded-md border border-void-border">
                 +{project.themes.length - 3}
               </span>
             )}

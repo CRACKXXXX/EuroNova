@@ -95,7 +95,7 @@ export function Breadcrumbs({ items, className = "" }: BreadcrumbsProps) {
     home: [
       { label: t("home"), href: "/dashboard", icon: LayoutDashboard },
       { label: t("allMissions"), href: "/dashboard/projects", icon: Compass },
-      { label: t("missionRadar"), href: "/dashboard/map", icon: Radio, badge: "GPS" },
+      { label: t("missionRadar"), href: "/map", icon: Radio, badge: "GPS" },
       { label: t("organizations"), href: "/dashboard/organizations", icon: Building2 },
       { label: t("savedMissions"), href: "/dashboard/my-missions", icon: Bookmark },
       { label: t("myProfile"), href: "/dashboard/profile", icon: User },
@@ -104,7 +104,7 @@ export function Breadcrumbs({ items, className = "" }: BreadcrumbsProps) {
       { label: t("allMissions"), href: "/dashboard/projects", icon: Compass },
       { label: t("lastMinute"), href: "/dashboard/projects?last_minute=true", icon: Flame, badge: "HOT" },
       { label: t("outermostRegions"), href: "/dashboard/projects?rup=true", icon: Sparkles, badge: "RUP" },
-      { label: t("missionRadar"), href: "/dashboard/map", icon: Radio },
+      { label: t("missionRadar"), href: "/map", icon: Radio },
       { label: t("publishMission"), href: "/dashboard/projects/new", icon: PlusCircle },
     ],
     organizations: [

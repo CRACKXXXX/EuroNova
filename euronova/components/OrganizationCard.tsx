@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { COUNTRIES } from "@/lib/constants/countries";
 import { TermTooltip } from "@/components/TermTooltip";
+import { AvatarFallback } from "@/components/AvatarFallback";
 
 export interface OrganizationData {
   id: string;
@@ -45,20 +46,15 @@ export function OrganizationCard({ org }: { org: OrganizationData }) {
     <div className="bg-void-surface border border-void-border rounded-2xl p-6 hover:border-hyper-violet/50 transition-all duration-300 hover:shadow-[0_0_20px_rgba(99,102,241,0.1)] group/org flex flex-col h-full relative overflow-visible">
       <div className="flex items-start gap-4 mb-4">
         {/* Default Avatar Fallback or Actual Logo */}
-        {logoUrl ? (
-          <Image
-            src={logoUrl}
-            alt={org.org_name || "Organization"}
-            width={48}
-            height={48}
-            unoptimized
-            className="w-12 h-12 rounded-full object-cover border border-void-border bg-void-deep shrink-0 shadow-[0_0_15px_rgba(99,102,241,0.15)]"
-          />
-        ) : (
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-void-surface to-plasma-cyan/20 border border-plasma-cyan/30 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(0,229,255,0.15)] group-hover/org:border-plasma-cyan/50 transition-colors">
-            <Building className="w-6 h-6 text-plasma-cyan" />
-          </div>
-        )}
+        <AvatarFallback
+          src={logoUrl}
+          alt={org.org_name || "Organization"}
+          fallbackType="org"
+          name={org.org_name}
+          sizeClassName="w-12 h-12"
+          className="border border-void-border bg-void-deep shadow-[0_0_15px_rgba(99,102,241,0.15)]"
+          iconClassName="w-6 h-6 text-plasma-cyan"
+        />
 
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
