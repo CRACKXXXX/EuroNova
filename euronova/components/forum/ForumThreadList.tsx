@@ -71,9 +71,13 @@ export function ForumThreadList({
             <span>{t("signInToPost")}</span>
           </Link>
         ) : !userEligibility.canPost ? (
-          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-void-deep border border-hyper-violet/40 text-gray-400 text-xs font-semibold shrink-0 cursor-not-allowed">
-            <Lock className="w-3.5 h-3.5 text-hyper-violet" />
-            <span>{t("lockedLevel5")}</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-void-deep border border-nova-flare/40 text-gray-400 text-xs font-semibold shrink-0 cursor-not-allowed">
+            <Lock className="w-3.5 h-3.5 text-nova-flare" />
+            <span>
+              {userEligibility.level < 2
+                ? t("lockedLevel2Required")
+                : t("lockedTrustRequired")}
+            </span>
           </div>
         ) : (
           <button

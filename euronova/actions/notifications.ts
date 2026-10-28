@@ -131,6 +131,21 @@ export async function dispatchNotification(
       return { success: false, error: insertError.message };
     }
 
+    // 3. Dispatch automated pending notification email (non-blocking)
+    try {
+      const { sendPendingNotificationEmail } = await import("@/lib/externalAlerts");
+      void sendPendingNotificationEmail({
+        userId,
+        subject: `[EuroNova] ${title.trim()}`,
+        title: title.trim(),
+        message: message.trim(),
+        actionUrl: actionUrl ? actionUrl.trim() : undefined,
+        priority: type === "moderation" || type === "action_required" ? "urgent" : "normal",
+      });
+    } catch (mailErr) {
+      console.error("Non-blocking email alert dispatch error:", mailErr);
+    }
+
     revalidatePath("/dashboard");
     return { success: true, data: inserted as NotificationItem };
   } catch (err: unknown) {

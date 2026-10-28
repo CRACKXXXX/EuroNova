@@ -2,10 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import * as cheerio from "cheerio";
 import { createClient } from "@supabase/supabase-js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { ERASMUS_THEMES } from "@/lib/constants/themes";
 import { stripDangerousHtml, sanitizeUnicode } from "@/lib/securitySanitizer";
 import { getUserRole } from "@/lib/roles";
 import { createClient as createServerClient } from "@/utils/supabase/server";
+import {
+  cleanScrapedTitle,
+  cleanProjectDescription,
+  parseEuropeanDateRange,
+  mapToCanonicalTopics,
+} from "@/lib/formatters/projectDescription";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -358,73 +363,10 @@ function toISODate(year: number, month: number, day: number): string | null {
 }
 
 /**
- * Resolves matched themes from description.
+ * Resolves matched themes from description and maps to canonical 12 themes.
  */
 function extractThemes(text: string): string[] {
-  const matched = new Set<string>();
-  const textLower = text.toLowerCase();
-
-  for (const theme of ERASMUS_THEMES) {
-    if (textLower.includes(theme.toLowerCase())) {
-      matched.add(theme);
-    }
-  }
-
-  // Common synonyms mapping to canonical 12 themes and official categories
-  if (textLower.includes("environment") || textLower.includes("medioambiente") || textLower.includes("climate") || textLower.includes("sostenib") || textLower.includes("ecolog") || textLower.includes("umwelt")) {
-    matched.add("environment");
-    matched.add("Eco-living & Sustainability");
-    matched.add("Climate Change");
-  }
-  if (textLower.includes("digital") || textLower.includes("tech") || textLower.includes("coding") || textLower.includes("ai") || textLower.includes("ia")) {
-    matched.add("digital");
-    matched.add("Digital Skills");
-  }
-  if (textLower.includes("inclusion") || textLower.includes("inclusión") || textLower.includes("equality") || textLower.includes("disability") || textLower.includes("discapacidad")) {
-    matched.add("inclusion");
-    matched.add("Social Inclusion");
-  }
-  if (textLower.includes("mental health") || textLower.includes("salud mental") || textLower.includes("wellbeing") || textLower.includes("bienestar")) {
-    matched.add("mental_health");
-    matched.add("Mental Health");
-  }
-  if (textLower.includes("art") || textLower.includes("arte") || textLower.includes("culture") || textLower.includes("cultura") || textLower.includes("theatre") || textLower.includes("music") || textLower.includes("música")) {
-    matched.add("arts_culture");
-    matched.add("Music & Arts");
-  }
-  if (textLower.includes("sport") || textLower.includes("deporte") || textLower.includes("fitness") || textLower.includes("healthy")) {
-    matched.add("sports");
-    matched.add("Sports & Physical Activities");
-  }
-  if (textLower.includes("human rights") || textLower.includes("derechos humanos") || textLower.includes("peace") || textLower.includes("paz")) {
-    matched.add("human_rights");
-    matched.add("Human Rights");
-    matched.add("Peacebuilding");
-  }
-  if (textLower.includes("entrepreneurship") || textLower.includes("emprendimiento") || textLower.includes("startup") || textLower.includes("employment") || textLower.includes("empleo")) {
-    matched.add("entrepreneurship");
-    matched.add("Entrepreneurship");
-  }
-  if (textLower.includes("civic") || textLower.includes("citizenship") || textLower.includes("ciudadanía") || textLower.includes("democracy") || textLower.includes("democracia")) {
-    matched.add("civic_participation");
-    matched.add("Civic Engagement");
-    matched.add("Democracy");
-  }
-  if (textLower.includes("media") || textLower.includes("medios") || textLower.includes("journalism") || textLower.includes("periodismo") || textLower.includes("communication")) {
-    matched.add("media_literacy");
-    matched.add("Media Literacy");
-  }
-  if (textLower.includes("rural") || textLower.includes("campo") || textLower.includes("agriculture") || textLower.includes("agricultura") || textLower.includes("nature")) {
-    matched.add("rural_development");
-    matched.add("Agriculture & Rural Development");
-  }
-  if (textLower.includes("heritage") || textLower.includes("patrimonio") || textLower.includes("intercultural") || textLower.includes("intercultural dialogue")) {
-    matched.add("heritage");
-    matched.add("Cultural Heritage");
-    matched.add("Intercultural Dialogue");
-  }
-
-  return Array.from(matched);
+  return mapToCanonicalTopics(text);
 }
 
 /**
@@ -838,25 +780,37 @@ async function fetchSaltoProjects(): Promise<ScrapedCandidate[]> {
 
     $('a[href*="/training/"]').each((_, el) => {
       const rawLink = $(el).attr("href");
-      const title = $(el).text().trim();
+      const rawTitle = $(el).text().trim();
       const container = $(el).closest("tr, li, div");
       const rawDesc = container.text().replace(/\s+/g, " ").trim();
 
-      if (rawLink && title && !rawLink.includes("contacttraining")) {
+      if (rawLink && rawTitle && !rawLink.includes("contacttraining")) {
         const official_url = normalizeUrl(rawLink, "https://www.salto-youth.net");
+        const title = cleanScrapedTitle(rawTitle);
+        const dateRange = parseEuropeanDateRange(rawDesc);
+        const cleanDesc = cleanProjectDescription(rawDesc, {
+          title,
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+          deadline: dateRange.deadline,
+        });
+
         candidates.push({
           source: "salto",
           title,
           official_url,
-          description: rawDesc,
-          project_type: /partnership/i.test(title + rawDesc) ? "PBA" : "TC",
+          description: cleanDesc,
+          project_type: /partnership/i.test(title + cleanDesc) ? "PBA" : "TC",
+          native_start_date: dateRange.startDate,
+          native_end_date: dateRange.endDate,
+          native_deadline: dateRange.deadline,
           financing_type: "Total",
           accommodation_covered: true,
           min_age: 18,
           max_age: 30,
           is_last_minute: /urgent|deadline|asap/i.test(rawDesc),
           covers_rup_flights: /outermost|canary|rup/i.test(rawDesc),
-          themes: extractThemes(`${title} ${rawDesc}`),
+          themes: extractThemes(`${title} ${cleanDesc}`),
         });
       }
       if (candidates.length >= 10) return false;
@@ -1065,18 +1019,30 @@ async function fetchYeAggregatorProjects(): Promise<ScrapedCandidate[]> {
 // ============================================================================
 
 async function processCandidate(candidate: ScrapedCandidate): Promise<ValidatedProject> {
-  const fullText = `${candidate.title}\n${candidate.description}`;
+  const cleanTitle = cleanScrapedTitle(candidate.title);
+  candidate.title = cleanTitle;
+
+  const fullText = `${cleanTitle}\n${candidate.description}`;
 
   // STEP 1: Trust native API data first (Locked in when present)
   let startDate: string | null = candidate.native_start_date ? candidate.native_start_date.split("T")[0] : null;
   let endDate: string | null = candidate.native_end_date ? candidate.native_end_date.split("T")[0] : null;
+  let deadline: string | null = candidate.native_deadline ? candidate.native_deadline.split("T")[0] : null;
   let destCountry: string | null = resolveCountryCode(candidate.native_dest_country);
   let exactLocation: string | null = candidate.native_location || null;
   let eligibleCountries: string[] = candidate.native_eligible_countries || [];
 
+  // Parse European date ranges from text if missing
+  if (!startDate || !endDate || !deadline) {
+    const range = parseEuropeanDateRange(fullText);
+    if (!startDate && range.startDate) startDate = range.startDate;
+    if (!endDate && range.endDate) endDate = range.endDate;
+    if (!deadline && range.deadline) deadline = range.deadline;
+  }
+
   // STEP 2: Use AI (Gemini) ONLY for what is missing
   if (!startDate || !endDate || !destCountry || !exactLocation) {
-    const aiResult = await extractWithAI(candidate.title, candidate.description);
+    const aiResult = await extractWithAI(cleanTitle, candidate.description);
     if (aiResult) {
       if (!startDate && aiResult.start_date) startDate = aiResult.start_date;
       if (!endDate && aiResult.end_date) endDate = aiResult.end_date;
@@ -1096,15 +1062,57 @@ async function processCandidate(candidate: ScrapedCandidate): Promise<ValidatedP
   }
 
   if (!destCountry || !exactLocation) {
-    const extracted = extractLocationAndCountry(candidate.title, candidate.description, exactLocation, destCountry);
+    const extracted = extractLocationAndCountry(cleanTitle, candidate.description, exactLocation, destCountry);
     if (!destCountry) destCountry = extracted.country;
     if (!exactLocation) exactLocation = extracted.location;
   }
 
   // STEP 4: Semantic Coherence & Sanity Checks (Rule 3)
-  const sanitized = sanitizeDates(candidate.project_type, startDate, endDate, candidate.native_deadline);
+  const sanitized = sanitizeDates(candidate.project_type, startDate, endDate, deadline);
 
-  // STEP 5: Validate against Data Contract
+  // STEP 5: Compute RUP and Last Minute flags accurately
+  const coversRupFlights =
+    candidate.covers_rup_flights ||
+    /canarias|canary|açores|azores|madeira|martinique|guadeloupe|guyane|reunion|réunion|mayotte|saint-martin|rup\b|outermost region/i.test(
+      `${cleanTitle} ${candidate.description} ${exactLocation || ""}`
+    );
+
+  let isLastMinute =
+    candidate.is_last_minute ||
+    /urgent|urgente|last\s*minute|últimas plazas|deadline approaching|apply asap/i.test(
+      `${cleanTitle} ${candidate.description}`
+    );
+
+  if (!isLastMinute && sanitized.startDate) {
+    const startMs = new Date(sanitized.startDate).getTime();
+    const nowMs = Date.now();
+    const daysToStart = (startMs - nowMs) / (1000 * 60 * 60 * 24);
+    if (daysToStart >= 0 && daysToStart <= 30) {
+      isLastMinute = true;
+    }
+  }
+
+  // STEP 6: Clean and structure multi-paragraph description
+  const cleanDescription = cleanProjectDescription(candidate.description, {
+    title: cleanTitle,
+    startDate: sanitized.startDate,
+    endDate: sanitized.endDate,
+    deadline,
+    location: exactLocation,
+    country: destCountry,
+    eligibleCountries,
+    accommodationCovered: candidate.accommodation_covered,
+  });
+
+  // STEP 7: Map topics to canonical 12 themes
+  const canonicalThemes = mapToCanonicalTopics(`${cleanTitle} ${cleanDescription}`, candidate.themes || []);
+
+  candidate.description = cleanDescription;
+  candidate.themes = canonicalThemes;
+  candidate.covers_rup_flights = coversRupFlights;
+  candidate.is_last_minute = isLastMinute;
+
+  // STEP 8: Validate against Data Contract
   return validateProjectContract(
     candidate,
     destCountry,

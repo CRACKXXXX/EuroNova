@@ -348,8 +348,8 @@ const FAQ_DATA_RAW: FaqItem[] = [
   {
     id: "euro-level5-forum-shield",
     category: "euronova",
-    question: "Why does EuroNova require Level 5 (1,000 XP) and True Trust Protocol gating to post in Global Forums?",
-    answer: "Level 5 gating acts as an automated anti-spam firewall preventing commercial bot spam, phishing, and scam links. Requiring 1,000 XP alongside a non-restricted True Trust Score ensures that only authentic European volunteers who have actively explored opportunities can start public discussions.",
+    question: "Why does EuroNova require Level 2 (100 XP) and True Trust Protocol gating to post in Global Forums?",
+    answer: "Level 2 gating acts as an automated anti-spam firewall preventing commercial bot spam, phishing, and scam links. Requiring 100 XP alongside a non-restricted True Trust Score (30+) ensures that authentic European volunteers can participate right after setting up their profile, while blocking automated disposable spam accounts.",
     icon: Lock,
   },
   {
@@ -790,7 +790,7 @@ const FAQ_DATA_RAW: FaqItem[] = [
     id: "euro-fast-leveling-xp",
     category: "euronova",
     question: "How can you level up fast on EuroNova and what does Level 10 unlock?",
-    answer: "Complete your Volunteer Profile (+50 XP), explore and save active missions (+50 XP first time), write authentic verified reviews of NGOs you traveled with (+100 XP), and return daily for orbital exploration (+2 XP). Advancing to Level 5 (1,000 XP) unlocks full forum authoring rights, while reaching Level 10 (4,500 XP) unlocks the Vanguard Milestone and an invitation to apply as an official EuroNova Support Specialist.",
+    answer: "Complete your Volunteer Profile (+75 XP), explore and apply to active missions (+75 XP), write authentic verified reviews of NGOs you traveled with (+150 XP), and return daily for orbital exploration (+3 XP). Advancing to Level 2 (100 XP) unlocks full forum authoring rights, while reaching Level 10 (4,500 XP) unlocks the Vanguard Milestone and an invitation to apply as an official EuroNova Support Specialist.",
     icon: TrendingUp,
   },
   {

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowLeft, PlusCircle, UploadCloud, AlertCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, PlusCircle, UploadCloud, AlertCircle, Calendar, Users, FileText } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { createProject } from "./actions";
@@ -12,6 +12,12 @@ import { MultiSelectCountry } from "@/components/MultiSelectCountry";
 import { MultiSelectTheme } from "@/components/MultiSelectTheme";
 import { CountrySelect } from "@/components/CountrySelect";
 import { PROJECT_TYPES } from "@/lib/constants/projectTypes";
+import { createClient } from "@/utils/supabase/client";
+
+interface SimpleTemplateOption {
+  id: string;
+  title: string;
+}
 
 export default function NewProjectPage() {
   const t = useTranslations("NewProject");
@@ -23,6 +29,35 @@ export default function NewProjectPage() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
+  const [dossierTemplates, setDossierTemplates] = useState<SimpleTemplateOption[]>([]);
+
+  useEffect(() => {
+    async function loadTemplates() {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data } = await supabase
+            .from("org_surveys")
+            .select("id, title")
+            .eq("org_id", user.id)
+            .order("updated_at", { ascending: false });
+
+          if (data && Array.isArray(data)) {
+            setDossierTemplates(
+              data.map((d) => ({
+                id: d.id,
+                title: d.title || "Candidate Application Dossier",
+              }))
+            );
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load organization dossier templates:", err);
+      }
+    }
+    loadTemplates();
+  }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -126,7 +161,7 @@ export default function NewProjectPage() {
               <input type="text" name="exact_location" maxLength={150} className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan" placeholder={t("cityRegionPlaceholder")} />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 md:col-span-2">
               <label className="text-sm font-medium text-gray-300">{t("officialUrl")}</label>
               <input type="url" name="official_url" maxLength={500} className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan" placeholder={t("urlPlaceholder")} />
             </div>
@@ -135,6 +170,84 @@ export default function NewProjectPage() {
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">{t("description")}</label>
             <textarea name="description" required rows={4} maxLength={10000} className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan" placeholder={t("descriptionPlaceholder")} />
+          </div>
+        </div>
+
+        {/* Attached Candidate Application Dossier Template */}
+        <div className="space-y-4">
+          <div className="border-b border-void-border pb-2 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <FileText className="w-5 h-5 text-plasma-cyan" />
+              <span>{t("attachedDossier")}</span>
+            </h2>
+          </div>
+          <div className="space-y-2 bg-void-deep/60 p-4 rounded-xl border border-void-border">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block">
+              {t("attachedDossier")}
+            </label>
+            <select
+              name="application_form_id"
+              defaultValue=""
+              className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan text-sm font-medium"
+            >
+              <option value="">{t("noDossierOption")}</option>
+              {dossierTemplates.map((template) => (
+                <option key={template.id} value={template.id}>
+                  📋 {template.title}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-400 mt-1">
+              {t("attachedDossierDesc")}
+            </p>
+          </div>
+        </div>
+
+        {/* Planning, Dates & Capacity */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold text-white border-b border-void-border pb-2 flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-plasma-cyan" />
+            <span>{t("planningAndDates")}</span>
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">{t("startDate")}</label>
+              <input
+                type="date"
+                name="start_date"
+                className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">{t("endDate")}</label>
+              <input
+                type="date"
+                name="end_date"
+                className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">{t("applicationDeadline")}</label>
+              <input
+                type="date"
+                name="application_deadline"
+                className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">{t("participantCount")}</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  name="participant_count"
+                  min={1}
+                  max={500}
+                  className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan text-sm pl-10"
+                  placeholder={t("participantCountPlaceholder")}
+                />
+                <Users className="w-4 h-4 text-gray-500 absolute left-3.5 top-3.5" />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -243,7 +356,7 @@ export default function NewProjectPage() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full bg-plasma-cyan hover:bg-plasma-cyan/90 text-void-deep font-bold py-4 px-6 rounded-lg transition-all shadow-[0_0_20px_rgba(0,229,255,0.2)] hover:shadow-[0_0_30px_rgba(0,229,255,0.4)] disabled:opacity-50 text-lg"
+          className="w-full bg-plasma-cyan hover:bg-plasma-cyan/90 text-void-deep font-bold py-4 px-6 rounded-lg transition-all shadow-[0_0_20px_rgba(0,229,255,0.2)] hover:shadow-[0_0_30px_rgba(0,229,255,0.4)] disabled:opacity-50 text-lg cursor-pointer"
         >
           {isPending ? t("publishing") : t("publish")}
         </button>

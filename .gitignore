@@ -53,9 +53,10 @@ Euronova.md
 .cursorrules
 .windsurfrules
 .cline/*
-*.rules
-.github/workflows/*
-.github/*
+# .github/ (allow workflows for CI/CD)
+!.github/
+!.github/workflows/
+!.github/workflows/*
 .vercel/
 *.suo
 *.ntvs*
@@ -157,7 +158,7 @@ list_tables.json
 
 # testing
 /coverage
-**
+/coverage/**
 
 # next.js
 /.next/

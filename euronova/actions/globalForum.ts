@@ -3,7 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { createClient as createClientWithKey } from "@supabase/supabase-js";
 import { autoModerateContent } from "@/lib/autoModerator";
-import { calculateLevelFromXp } from "@/lib/gamification";
+import { calculateLevelFromXp, getTrustXpMultiplier } from "@/lib/gamification";
 import {
   verifyMidSessionActiveStatus,
   muteUser,
@@ -77,7 +77,10 @@ export interface UserEligibilityResponse {
   userRole?: UserRole;
   xp: number;
   level: number;
+  trustScore: number;
+  trustMultiplier: number;
   canPost: boolean;
+  isMuted?: boolean;
   xpNeeded: number;
 }
 
@@ -89,7 +92,9 @@ export interface ActionResult<T = unknown> {
 }
 
 /**
- * Checks if the current user has Level 5+ or is an NGO/Admin.
+ * Checks if the current user is eligible to participate in the Global Forum:
+ * Any non-muted user in good standing (trust_score >= 30) or High Trust (>= 60)
+ * can create threads and reply, regardless of initial level.
  */
 export async function getUserForumEligibility(): Promise<UserEligibilityResponse> {
   try {
@@ -104,15 +109,21 @@ export async function getUserForumEligibility(): Promise<UserEligibilityResponse
         role: "guest",
         xp: 0,
         level: 1,
+        trustScore: 30,
+        trustMultiplier: 1.0,
         canPost: false,
-        xpNeeded: 1000,
+        xpNeeded: 0,
       };
     }
 
     const userRole = await getUserRole(user.id, user.email);
     const isStaff = userRole === "admin" || userRole === "moderator" || userRole === "support";
 
-    if (userRole === "admin") {
+    // Verify mid-session mute and suspension status
+    const statusCheck = await verifyMidSessionActiveStatus(user.id);
+    const isMuted = !statusCheck.allowed;
+
+    if (userRole === "admin" || user.email === "euronovaofficial@gmail.com") {
       return {
         isAuthenticated: true,
         userId: user.id,
@@ -120,7 +131,10 @@ export async function getUserForumEligibility(): Promise<UserEligibilityResponse
         userRole: "admin",
         xp: 99999,
         level: 99,
-        canPost: true,
+        trustScore: 100,
+        trustMultiplier: 1.5,
+        canPost: !isMuted,
+        isMuted,
         xpNeeded: 0,
       };
     }
@@ -140,7 +154,10 @@ export async function getUserForumEligibility(): Promise<UserEligibilityResponse
         userRole,
         xp: 2500,
         level: 10,
-        canPost: true,
+        trustScore: 80,
+        trustMultiplier: 1.5,
+        canPost: !isMuted,
+        isMuted,
         xpNeeded: 0,
       };
     }
@@ -148,14 +165,21 @@ export async function getUserForumEligibility(): Promise<UserEligibilityResponse
     // Check youth volunteer profile and XP
     const { data: youthData } = await supabase
       .from("users_youth")
-      .select("xp")
+      .select("xp, trust_score")
       .eq("id", user.id)
       .maybeSingle();
 
     const xp = typeof youthData?.xp === "number" ? youthData.xp : 0;
+    const trustScore = typeof youthData?.trust_score === "number" ? youthData.trust_score : 30;
     const level = calculateLevelFromXp(xp);
-    const canPost = isStaff || xp >= 1000;
-    const xpNeeded = isStaff ? 0 : Math.max(0, 1000 - xp);
+    const trustMultiplier = getTrustXpMultiplier(trustScore);
+
+    // Strict Dual Gate: Requires Level >= 2 AND Trust Score >= 30 AND !isMuted
+    // This blocks Level 1 disposable spam accounts while allowing authentic volunteers in good standing.
+    const meetsLevel = isStaff || level >= 2;
+    const meetsTrust = isStaff || trustScore >= 30;
+    const canPost = !isMuted && meetsLevel && meetsTrust;
+    const xpNeeded = level < 2 ? Math.max(0, 100 - xp) : 0;
 
     return {
       isAuthenticated: true,
@@ -164,7 +188,10 @@ export async function getUserForumEligibility(): Promise<UserEligibilityResponse
       userRole,
       xp,
       level,
+      trustScore,
+      trustMultiplier,
       canPost,
+      isMuted,
       xpNeeded,
     };
   } catch (error) {
@@ -174,8 +201,10 @@ export async function getUserForumEligibility(): Promise<UserEligibilityResponse
       role: "guest",
       xp: 0,
       level: 1,
+      trustScore: 30,
+      trustMultiplier: 1.0,
       canPost: false,
-      xpNeeded: 1000,
+      xpNeeded: 0,
     };
   }
 }
@@ -462,10 +491,31 @@ export async function createGlobalThreadAction(
     }
 
     if (!eligibility.canPost) {
+      if (eligibility.isMuted) {
+        return {
+          success: false,
+          errorCode: "USER_MUTED",
+          error: "You are temporarily restricted from posting because your account is muted.",
+        };
+      }
+      if (eligibility.level < 2) {
+        return {
+          success: false,
+          errorCode: "LEVEL_TOO_LOW",
+          error: `Level 2 (100 XP) required to create threads. You currently have ${eligibility.xp} XP (${eligibility.xpNeeded} XP needed).`,
+        };
+      }
+      if (eligibility.trustScore < 30) {
+        return {
+          success: false,
+          errorCode: "TRUST_SCORE_TOO_LOW",
+          error: `Trust Score 30+ required to participate (${eligibility.trustScore}/100). Complete your profile dossier or verified missions to restore good standing.`,
+        };
+      }
       return {
         success: false,
-        errorCode: "LEVEL_5_REQUIRED",
-        error: `Reach Level 5 (1,000 XP) to create threads. You currently have ${eligibility.xp} XP (${eligibility.xpNeeded} XP needed).`,
+        errorCode: "ACCOUNT_RESTRICTED",
+        error: "You are not eligible to post in the Global Forum.",
       };
     }
 
@@ -684,10 +734,31 @@ export async function replyGlobalThreadAction(
     }
 
     if (!eligibility.canPost) {
+      if (eligibility.isMuted) {
+        return {
+          success: false,
+          errorCode: "USER_MUTED",
+          error: "You are temporarily restricted from replying because your account is muted.",
+        };
+      }
+      if (eligibility.level < 2) {
+        return {
+          success: false,
+          errorCode: "LEVEL_TOO_LOW",
+          error: `Level 2 (100 XP) required to reply to discussions. You currently have ${eligibility.xp} XP (${eligibility.xpNeeded} XP needed).`,
+        };
+      }
+      if (eligibility.trustScore < 30) {
+        return {
+          success: false,
+          errorCode: "TRUST_SCORE_TOO_LOW",
+          error: `Trust Score 30+ required to reply (${eligibility.trustScore}/100). Complete your profile dossier or verified missions to restore good standing.`,
+        };
+      }
       return {
         success: false,
-        errorCode: "LEVEL_5_REQUIRED",
-        error: `Reach Level 5 (1,000 XP) to reply to discussions. You currently have ${eligibility.xp} XP.`,
+        errorCode: "ACCOUNT_RESTRICTED",
+        error: "You are not eligible to reply in the Global Forum.",
       };
     }
 

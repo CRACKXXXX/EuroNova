@@ -14,6 +14,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { useTranslations, useLocale, useFormatter } from "next-intl";
 import { getFlag } from "@/lib/constants/countries";
 import { MapPin, Clock, Calendar, ExternalLink, RotateCcw, Filter, Radio } from "lucide-react";
+import { disperseCoordinates } from "@/lib/map/coordinateDispersion";
 
 // ============================================================================
 // TYPES
@@ -251,16 +252,31 @@ export function ProjectsMap() {
     };
   }, []);
 
-  // Filter features according to selected project type
+  // Filter features according to selected project type with anti-overlap dispersion
   const filteredGeoJSON = useMemo<GeoJSONData | null>(() => {
     if (!geojsonData) return null;
-    if (selectedType === "ALL") return geojsonData;
+    const baseFeatures = selectedType === "ALL"
+      ? geojsonData.features
+      : geojsonData.features.filter((f) => f.properties.project_type === selectedType);
+
+    const items = baseFeatures.map((f) => ({
+      id: f.properties.id,
+      lat: f.geometry.coordinates[1],
+      lng: f.geometry.coordinates[0],
+      feature: f,
+    }));
+
+    const dispersed = disperseCoordinates(items);
 
     return {
       type: "FeatureCollection",
-      features: geojsonData.features.filter(
-        (f) => f.properties.project_type === selectedType
-      ),
+      features: dispersed.map((d) => ({
+        ...d.feature,
+        geometry: {
+          type: "Point",
+          coordinates: [d.lng, d.lat],
+        },
+      })),
     };
   }, [geojsonData, selectedType]);
 
@@ -317,9 +333,11 @@ export function ProjectsMap() {
       source.getClusterExpansionZoom(clusterId).then((zoom: number) => {
         const geometry = feature?.geometry;
         if (geometry && geometry.type === "Point") {
+          const currentZoom = mapInstance.getZoom();
+          const targetZoom = Math.min(Math.max(zoom || currentZoom + 2, currentZoom + 2), 16);
           mapInstance.flyTo({
             center: geometry.coordinates as [number, number],
-            zoom: Math.min(zoom, 17),
+            zoom: targetZoom,
             duration: 800,
             essential: true,
           });

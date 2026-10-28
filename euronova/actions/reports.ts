@@ -6,6 +6,7 @@ import { sanitizeErrorMessage } from "@/lib/errorSanitizer";
 import { ReportSubmissionSchema, type ReportSubmissionInput } from "@/lib/schemas";
 import { stripDangerousHtml } from "@/lib/securitySanitizer";
 import { checkRateLimit, RATE_LIMITS, getClientIp } from "@/lib/rateLimiter";
+import { checkSevereReportStreak } from "@/lib/moderationShield";
 
 export type ReportTargetType = ReportSubmissionInput["targetType"];
 
@@ -152,6 +153,14 @@ Timestamp:     ${new Date().toISOString()}
 --------------------------------------------------
 Review and moderate this transmission at https://euronova.space/dashboard/admin?tab=reports`,
     });
+
+    // 4. Anti-Troll Hardening: Check if a severe streak exists (>= 5 unique reporters in 24h)
+    // Isolated reports (1-4) NEVER penalize trust_score. Only severe streaks trigger automod action.
+    if (targetType === "user" && targetId) {
+      checkSevereReportStreak(targetId, targetTitle).catch((err) => {
+        console.error("Async checkSevereReportStreak error:", err);
+      });
+    }
 
     return {
       success: true,

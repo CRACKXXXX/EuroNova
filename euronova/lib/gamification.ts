@@ -212,6 +212,89 @@ export function getTrustScoreTier(rawScore: number): TrustScoreTier {
 }
 
 /**
+ * Deterministic Trust-Factor XP Multiplier.
+ * - Exemplary / High Trust (score >= 70): 1.5x Multiplier
+ * - Good Trust (score >= 60 && score < 70): 1.25x Multiplier
+ * - Neutral / Standard Trust (score >= 30 && score < 60): 1.0x Multiplier
+ * - Low / Restricted Trust (score < 30): 0.5x Multiplier
+ */
+export function getTrustXpMultiplier(trustScore: number): number {
+  const safeScore = boundTrustScore(trustScore);
+  if (safeScore >= 70) return 1.5;
+  if (safeScore >= 60) return 1.25;
+  if (safeScore >= 30) return 1.0;
+  return 0.5;
+}
+
+export type TrustMultiplierTier = "high" | "good" | "standard" | "low";
+
+export interface TrustMultiplierDetails {
+  multiplier: number;
+  tier: TrustMultiplierTier;
+  badgeClass: string;
+  colorClass: string;
+  translationKey: "xpBoostHighTrust" | "xpBoostGoodTrust" | "xpStandardTrust" | "xpPenaltyLowTrust";
+}
+
+/**
+ * Returns visual badge styling and i18n translation key for a given trust score.
+ */
+export function getTrustMultiplierDetails(trustScore: number): TrustMultiplierDetails {
+  const multiplier = getTrustXpMultiplier(trustScore);
+  if (multiplier >= 1.5) {
+    return {
+      multiplier: 1.5,
+      tier: "high",
+      badgeClass: "bg-plasma-cyan/15 text-plasma-cyan border-plasma-cyan/40 shadow-[0_0_12px_rgba(0,229,255,0.25)]",
+      colorClass: "text-plasma-cyan",
+      translationKey: "xpBoostHighTrust",
+    };
+  }
+  if (multiplier >= 1.25) {
+    return {
+      multiplier: 1.25,
+      tier: "good",
+      badgeClass: "bg-hyper-violet/15 text-hyper-violet border-hyper-violet/40 shadow-[0_0_12px_rgba(99,102,241,0.25)]",
+      colorClass: "text-hyper-violet",
+      translationKey: "xpBoostGoodTrust",
+    };
+  }
+  if (multiplier >= 1.0) {
+    return {
+      multiplier: 1.0,
+      tier: "standard",
+      badgeClass: "bg-void-surface text-gray-300 border-void-border",
+      colorClass: "text-gray-300",
+      translationKey: "xpStandardTrust",
+    };
+  }
+  return {
+    multiplier: 0.5,
+    tier: "low",
+    badgeClass: "bg-nova-flare/15 text-nova-flare border-nova-flare/40 shadow-[0_0_12px_rgba(255,46,99,0.25)]",
+    colorClass: "text-nova-flare",
+    translationKey: "xpPenaltyLowTrust",
+  };
+}
+
+/**
+ * Applies the Trust Multiplier to base XP deterministically.
+ * - 1.5x: Math.round(baseXp * 1.5)
+ * - 1.25x: Math.round(baseXp * 1.25)
+ * - 1.0x: baseXp
+ * - 0.5x: Math.max(1, Math.floor(baseXp * 0.5))
+ */
+export function calculateTrustMultiplierXp(baseXp: number, trustScore: number): number {
+  const safeBase = Math.max(0, Math.floor(baseXp));
+  if (safeBase === 0) return 0;
+  const mult = getTrustXpMultiplier(trustScore);
+  if (mult === 1.5) return Math.round(safeBase * 1.5);
+  if (mult === 1.25) return Math.round(safeBase * 1.25);
+  if (mult === 1.0) return safeBase;
+  return Math.max(1, Math.floor(safeBase * 0.5));
+}
+
+/**
  * Rebalanced, non-abusable XP triggers with +50% buff & True Trust Protocol boosts.
  */
 export const XP_CONFIG = {

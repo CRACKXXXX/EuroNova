@@ -9,6 +9,8 @@ import { FAQ_DATA, FaqItem, getLocalizedFaq } from "@/lib/faqData";
 export type { FaqItem };
 export { FAQ_DATA, getLocalizedFaq };
 
+export type FaqTranslator = ReturnType<typeof useTranslations<"ErasmusFaq">>;
+
 type UnmaskedLang = "ES" | "EN" | "FR" | "DE" | "IT" | "RU" | "PT";
 
 interface UnmaskedData {
@@ -196,7 +198,7 @@ function UnmaskedWorkshopView({ rawAnswer }: { rawAnswer: string }) {
   );
 }
 
-function formatAnswerWithLinks(text: string, t: (key: string) => string) {
+function formatAnswerWithLinks(text: string, t: FaqTranslator) {
   const paragraphs = text.split(/\n\n+/);
 
   return paragraphs.map((paragraph, pIdx) => {

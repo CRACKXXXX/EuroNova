@@ -349,7 +349,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all shrink-0"
                 >
                   <Globe className="w-3.5 h-3.5" />
-                  <span>{t("website")}</span>
+                  <span>{tOrg("website")}</span>
                 </a>
               )}
               {instagram && (
@@ -360,7 +360,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all shrink-0"
                 >
                   <Camera className="w-3.5 h-3.5" />
-                  <span>{t("instagram")}</span>
+                  <span>{tOrg("instagram")}</span>
                 </a>
               )}
               {tiktok && (
@@ -371,7 +371,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all shrink-0"
                 >
                   <Music className="w-3.5 h-3.5" />
-                  <span>{t("tiktok")}</span>
+                  <span>{tOrg("tiktok")}</span>
                 </a>
               )}
               {youtube && (
@@ -382,7 +382,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all shrink-0"
                 >
                   <PlaySquare className="w-3.5 h-3.5" />
-                  <span>{t("youtube")}</span>
+                  <span>{tOrg("youtube")}</span>
                 </a>
               )}
               {linkedin && (
@@ -393,7 +393,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-void-deep border border-void-border text-gray-300 hover:text-plasma-cyan hover:border-plasma-cyan text-xs font-semibold transition-all shrink-0"
                 >
                   <Briefcase className="w-3.5 h-3.5" />
-                  <span>{t("linkedin")}</span>
+                  <span>{tOrg("linkedin")}</span>
                 </a>
               )}
             </div>
@@ -406,7 +406,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-rup-emerald animate-pulse" />
               <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">
-                {t("commandCenter")}
+                {tOrg("commandCenter")}
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -415,14 +415,14 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-plasma-cyan to-hyper-violet hover:from-plasma-cyan/90 hover:to-hyper-violet/90 text-void-deep font-black text-xs sm:text-sm shadow-[0_0_20px_rgba(0,229,255,0.35)] transition-all transform hover:-translate-y-0.5 cursor-pointer"
               >
                 <PlusCircle className="w-4 h-4" />
-                <span>{t("publishNewMission")}</span>
+                <span>{tOrg("publishNewMission")}</span>
               </Link>
               <Link
                 href={`/${locale}/dashboard/profile`}
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-void-deep/90 border border-void-border hover:border-hyper-violet/60 text-gray-200 hover:text-white font-semibold text-xs sm:text-sm transition-all shadow-md cursor-pointer"
               >
                 <Edit3 className="w-4 h-4 text-hyper-violet" />
-                <span>{t("editProfile")}</span>
+                <span>{tOrg("editProfile")}</span>
               </Link>
             </div>
           </div>
@@ -603,7 +603,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
               </h2>
             </div>
             <span className="text-xs font-semibold text-gray-400">
-              {totalProjects} {totalProjects === 1 ? "mission" : "missions"}
+              {t("totalMissionsCount", { count: totalProjects })}
             </span>
           </div>
 

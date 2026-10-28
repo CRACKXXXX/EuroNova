@@ -77,6 +77,12 @@ export async function createProject(formData: FormData): Promise<CreateProjectRe
           .filter(Boolean)
       : [];
 
+    const rawApplicationFormId = (formData.get("application_form_id") as string | null)?.trim() || null;
+    const rawStartDate = (formData.get("start_date") as string | null)?.trim() || null;
+    const rawEndDate = (formData.get("end_date") as string | null)?.trim() || null;
+    const rawDeadline = (formData.get("application_deadline") as string | null)?.trim() || null;
+    const rawParticipantCount = parseInt(formData.get("participant_count") as string) || null;
+
     const rawProjectData = {
       title: (formData.get("title") as string | null)?.trim() || "",
       description: (formData.get("description") as string | null)?.trim() || "",
@@ -97,6 +103,11 @@ export async function createProject(formData: FormData): Promise<CreateProjectRe
       accommodation_covered: formData.get("accommodation_covered") === "on",
       themes,
       eligible_countries,
+      start_date: rawStartDate,
+      end_date: rawEndDate,
+      application_deadline: rawDeadline,
+      participant_count: rawParticipantCount,
+      application_form_id: rawApplicationFormId,
     };
 
     // Zod double-layer schema validation
@@ -164,7 +175,7 @@ export async function createProject(formData: FormData): Promise<CreateProjectRe
       }
     }
 
-    const { error: insertError } = await supabase.from("projects").insert({
+    const basePayload = {
       org_id: user.id,
       title,
       description,
@@ -187,7 +198,25 @@ export async function createProject(formData: FormData): Promise<CreateProjectRe
       financing_type: parsed.data.financing_type,
       image_url: imageUrl,
       status: projectStatus,
-    });
+    };
+
+    const extendedPayload = {
+      ...basePayload,
+      start_date: parsed.data.start_date || null,
+      end_date: parsed.data.end_date || null,
+      application_deadline: parsed.data.application_deadline || null,
+      participant_count: parsed.data.participant_count || null,
+      application_form_id: parsed.data.application_form_id || null,
+    };
+
+    let { error: insertError } = await supabase.from("projects").insert(extendedPayload);
+
+    // Defensive fallback: If database schema doesn't yet have extended columns, retry with base payload
+    if (insertError && (insertError.message.includes("column") || insertError.code === "42703")) {
+      console.warn("Retrying project insert with base schema payload:", insertError.message);
+      const retry = await supabase.from("projects").insert(basePayload);
+      insertError = retry.error;
+    }
 
     if (insertError) {
       return { error: sanitizeErrorMessage(insertError) };

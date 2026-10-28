@@ -74,13 +74,23 @@ export async function createTicket(prevState: unknown, formData: FormData) {
 
   // Dispatch external Discord & email alerts
   try {
-    const { sendCriticalSupportAlert } = await import("@/lib/externalAlerts");
+    const { sendCriticalSupportAlert, sendPendingNotificationEmail } = await import("@/lib/externalAlerts");
     void sendCriticalSupportAlert({
       ticketId: user.id,
       userEmail: email,
       subject,
       reason,
       content,
+    });
+
+    // Send user confirmation email
+    void sendPendingNotificationEmail({
+      recipientEmail: email,
+      subject: `[EuroNova Support] Ticket Confirmation: ${subject}`,
+      title: "Support Ticket Registered",
+      message: `Your inquiry regarding "${subject}" has been successfully received by EuroNova Orbital Command. Our support team has logged your case under reason [${reason.toUpperCase()}] and will review it shortly.`,
+      actionUrl: "/dashboard/support",
+      priority: "normal",
     });
   } catch (err) {
     console.error("Could not send external support alert:", err);

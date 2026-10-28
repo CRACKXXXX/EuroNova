@@ -21,7 +21,9 @@ import {
 } from "@/actions/globalForum";
 import { toast } from "sonner";
 import { useLocale, useFormatter, useTranslations } from "next-intl";
+import { Zap } from "lucide-react";
 import { GLOBAL_CATEGORIES } from "@/lib/globalForum";
+import { getTrustMultiplierDetails } from "@/lib/gamification";
 import { ForumCategoryBar } from "./forum/ForumCategoryBar";
 import { ForumThreadList } from "./forum/ForumThreadList";
 import { ForumThreadDetail } from "./forum/ForumThreadDetail";
@@ -175,8 +177,10 @@ export function GlobalForumView({
         if (!res.success) {
           if (res.errorCode === "MODERATION_BLOCKED") {
             toast.error(t("automodShieldPrefix") + (res.error || t("threadBlockedAutomod")));
-          } else if (res.errorCode === "LEVEL_5_REQUIRED") {
-            toast.error(t("level5RequiredCreate"));
+          } else if (res.errorCode === "LEVEL_TOO_LOW") {
+            toast.error(res.error || t("level2RequiredCreate"));
+          } else if (res.errorCode === "TRUST_SCORE_TOO_LOW") {
+            toast.error(res.error || t("trustRequiredCreate"));
           } else if (res.errorCode === "USER_MUTED") {
             toast.error(t("muteRestrictionPrefix") + (res.error || t("mutedFromCreatingTopics")));
           } else {
@@ -388,8 +392,10 @@ export function GlobalForumView({
         if (!res.success) {
           if (res.errorCode === "MODERATION_BLOCKED") {
             toast.error(t("automodShieldPrefix") + (res.error || t("replyBlockedAutomod")));
-          } else if (res.errorCode === "LEVEL_5_REQUIRED") {
-            toast.error(t("level5RequiredReply"));
+          } else if (res.errorCode === "LEVEL_TOO_LOW") {
+            toast.error(res.error || t("level2RequiredReply"));
+          } else if (res.errorCode === "TRUST_SCORE_TOO_LOW") {
+            toast.error(res.error || t("trustRequiredReply"));
           } else if (res.errorCode === "USER_MUTED") {
             toast.error(t("muteRestrictionPrefix") + (res.error || t("mutedFromCommenting")));
           } else {
@@ -436,8 +442,38 @@ export function GlobalForumView({
     return list;
   })();
 
+  const userTrustScore = userEligibility.trustScore ?? 30;
+  const multDetails = getTrustMultiplierDetails(userTrustScore);
+
   return (
     <div className="w-full space-y-8 animate-in fade-in duration-300">
+      {/* Global Forum Community Trust Multiplier Banner */}
+      {userEligibility.isAuthenticated && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3.5 rounded-2xl bg-gradient-to-r from-void-surface via-void-surface/90 to-void-deep border border-void-border backdrop-blur-xl shadow-inner">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-void-deep border border-void-border flex items-center justify-center shrink-0 shadow-inner">
+              <Zap className="w-4 h-4 text-plasma-cyan" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-white flex items-center gap-2">
+                <span>{t("forumXpRewardNotice")}</span>
+              </p>
+              <p className="text-[11px] text-gray-400">
+                {t("forumXpRewardSubtitle")}
+              </p>
+            </div>
+          </div>
+
+          <div
+            data-testid="forum-trust-xp-multiplier-badge"
+            data-multiplier={multDetails.multiplier}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-black shrink-0 self-start sm:self-auto ${multDetails.badgeClass}`}
+          >
+            <span>{t(multDetails.translationKey)}</span>
+          </div>
+        </div>
+      )}
+
       {/* Categories Bar */}
       <ForumCategoryBar
         categoriesList={categoriesList}

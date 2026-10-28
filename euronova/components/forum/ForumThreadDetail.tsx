@@ -24,7 +24,9 @@ import {
   Compass,
   UserCheck,
   Send,
+  Zap,
 } from "lucide-react";
+import { calculateTrustMultiplierXp } from "@/lib/gamification";
 import {
   type GlobalCategoryItem,
   type GlobalThreadItem,
@@ -559,59 +561,91 @@ export function ForumThreadDetail({
             </div>
           </div>
         ) : !userEligibility.canPost ? (
-          /* GATED BANNER FOR LEVEL < 5 */
-          <div className="bg-gradient-to-r from-void-surface via-void-deep to-void-surface border border-hyper-violet/40 rounded-2xl p-6 relative overflow-hidden space-y-4 shadow-[0_0_25px_rgba(99,102,241,0.1)]">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-2xl bg-hyper-violet/15 border border-hyper-violet/30 flex items-center justify-center shrink-0">
-                <Lock className="w-5 h-5 text-hyper-violet" />
-              </div>
-              <div className="space-y-1.5 flex-1 min-w-0">
-                <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                  <span>{t("reachLevel5")}</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-hyper-violet/20 text-hyper-violet border border-hyper-violet/30">
-                    {t("antiSpamShield")}
-                  </span>
-                </h4>
-                <p className="text-xs text-gray-400 leading-relaxed">
-                  {t("antiSpamShieldDesc")}{" "}
-                  {t.rich("xpStatus", {
-                    xp: userEligibility.xp,
-                    level: userEligibility.level,
-                    strong: (c) => <strong className="text-plasma-cyan font-bold">{c}</strong>,
-                  })}
-                </p>
+          userEligibility.level < 2 ? (
+            /* GATED BANNER FOR LEVEL < 2 (100 XP Required) */
+            <div className="bg-gradient-to-r from-void-surface via-void-deep to-void-surface border border-hyper-violet/40 rounded-2xl p-6 relative overflow-hidden space-y-4 shadow-[0_0_25px_rgba(99,102,241,0.12)]">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-hyper-violet/15 border border-hyper-violet/30 flex items-center justify-center shrink-0">
+                  <Lock className="w-5 h-5 text-hyper-violet" />
+                </div>
+                <div className="space-y-1.5 flex-1 min-w-0">
+                  <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                    <span>{t("reachLevel5")}</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-hyper-violet/20 text-hyper-violet border border-hyper-violet/30">
+                      {t("antiSpamShield")}
+                    </span>
+                  </h4>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    {t("antiSpamShieldDesc")}
+                  </p>
 
-                {/* XP Progress Bar */}
-                <div className="space-y-1.5 pt-2 max-w-md">
-                  <div className="flex justify-between text-[10px] font-mono text-gray-400">
-                    <span>{userEligibility.xp} XP</span>
-                    <span>{t("goalXpNeeded", { needed: userEligibility.xpNeeded })}</span>
-                  </div>
-                  <div className="h-2 w-full bg-void-deep rounded-full overflow-hidden border border-void-border">
-                    <div
-                      className="h-full bg-gradient-to-r from-plasma-cyan to-hyper-violet transition-all duration-500 rounded-full"
-                      style={{
-                        width: `${Math.min(100, Math.max(5, (userEligibility.xp / 1000) * 100))}%`,
-                      }}
-                    />
+                  {/* Level 2 Progress Track (0-100 XP) */}
+                  <div className="space-y-1.5 pt-2 max-w-md">
+                    <div className="flex justify-between text-[10px] font-mono text-gray-400">
+                      <span>{userEligibility.xp} XP (Lv.{userEligibility.level})</span>
+                      <span>{t("goalXpNeeded", { needed: userEligibility.xpNeeded })}</span>
+                    </div>
+                    <div className="h-2 w-full bg-void-deep rounded-full overflow-hidden border border-void-border">
+                      <div
+                        className="h-full bg-gradient-to-r from-plasma-cyan to-hyper-violet transition-all duration-500 rounded-full"
+                        style={{
+                          width: `${Math.min(100, Math.max(5, (userEligibility.xp / 100) * 100))}%`,
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="pt-2 border-t border-void-border/40 flex flex-wrap items-center gap-4 text-[11px] text-gray-400">
-              <span className="font-semibold text-gray-300">{t("quickXpWays")}</span>
-              <span className="flex items-center gap-1 text-rup-emerald">
-                <ShieldCheck className="w-3.5 h-3.5" /> {t("completeProfileXp")}
-              </span>
-              <span className="flex items-center gap-1 text-plasma-cyan">
-                <Compass className="w-3.5 h-3.5" /> {t("applyMissionXp")}
-              </span>
-              <span className="flex items-center gap-1 text-hyper-violet">
-                <UserCheck className="w-3.5 h-3.5" /> {t("reviewNgoXp")}
-              </span>
+              <div className="pt-2 border-t border-void-border/40 flex flex-wrap items-center gap-4 text-[11px] text-gray-400">
+                <span className="font-semibold text-gray-300">{t("quickXpWays")}</span>
+                <span className="flex items-center gap-1 text-rup-emerald">
+                  <ShieldCheck className="w-3.5 h-3.5" /> {t("completeProfileXp")}
+                </span>
+                <span className="flex items-center gap-1 text-plasma-cyan">
+                  <Compass className="w-3.5 h-3.5" /> {t("applyMissionXp")}
+                </span>
+                <span className="flex items-center gap-1 text-hyper-violet">
+                  <UserCheck className="w-3.5 h-3.5" /> {t("reviewNgoXp")}
+                </span>
+              </div>
             </div>
-          </div>
+          ) : (
+            /* GATED BANNER FOR RESTRICTED TRUST (trust_score < 30) OR MUTED USERS */
+            <div className="bg-gradient-to-r from-void-surface via-void-deep to-void-surface border border-nova-flare/40 rounded-2xl p-6 relative overflow-hidden space-y-4 shadow-[0_0_25px_rgba(255,46,99,0.12)]">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-nova-flare/15 border border-nova-flare/30 flex items-center justify-center shrink-0">
+                  <Lock className="w-5 h-5 text-nova-flare" />
+                </div>
+                <div className="space-y-1.5 flex-1 min-w-0">
+                  <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                    <span>{t("trustRestrictedBannerTitle")}</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-nova-flare/20 text-nova-flare border border-nova-flare/30">
+                      {t("antiSpamShield")}
+                    </span>
+                  </h4>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    {t("trustRestrictedBannerDesc", {
+                      score: userEligibility.trustScore ?? 30,
+                    })}
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-void-border/40 flex flex-wrap items-center gap-4 text-[11px] text-gray-400">
+                <span className="font-semibold text-gray-300">{t("quickXpWays")}</span>
+                <span className="flex items-center gap-1 text-rup-emerald">
+                  <ShieldCheck className="w-3.5 h-3.5" /> {t("completeProfileXp")}
+                </span>
+                <span className="flex items-center gap-1 text-plasma-cyan">
+                  <Compass className="w-3.5 h-3.5" /> {t("applyMissionXp")}
+                </span>
+                <span className="flex items-center gap-1 text-hyper-violet">
+                  <UserCheck className="w-3.5 h-3.5" /> {t("reviewNgoXp")}
+                </span>
+              </div>
+            </div>
+          )
         ) : (
           /* ACTIVE REPLY FORM */
           <form onSubmit={onSubmitReply} className="space-y-3">
@@ -626,11 +660,18 @@ export function ForumThreadDetail({
                 className="w-full bg-void-surface border border-void-border rounded-2xl p-4 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-plasma-cyan transition-colors resize-none leading-relaxed"
               />
             </div>
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-[11px] text-gray-500 flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-plasma-cyan" />
-                <span>{t("protectedByAutomod")}</span>
-              </span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3 text-[11px] text-gray-500 flex-wrap">
+                <span className="flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-plasma-cyan" />
+                  <span>{t("protectedByAutomod")}</span>
+                </span>
+                <span className="hidden sm:inline text-void-border">•</span>
+                <span className="text-plasma-cyan font-bold flex items-center gap-1">
+                  <Zap className="w-3 h-3 text-plasma-cyan" />
+                  <span>{t("replyBonusPrefix")} +{calculateTrustMultiplierXp(30, userEligibility.trustScore ?? 30)} XP</span>
+                </span>
+              </div>
               <button
                 type="submit"
                 disabled={isSubmittingReply || !replyContent.trim()}

@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
-import { ArrowLeft, Euro, MapPin, AlertTriangle, Trash2, ExternalLink, Users, Globe2, Clock, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Euro, MapPin, AlertTriangle, Trash2, ExternalLink, Users, Globe2, Clock, ShieldCheck, Calendar } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations, getFormatter } from "next-intl/server";
@@ -17,6 +17,10 @@ import { TrackRecentlyViewed } from "@/components/TrackRecentlyViewed";
 import { ProjectForum } from "@/components/ProjectForum";
 import { routing } from "@/i18n/routing";
 import { AvatarFallback } from "@/components/AvatarFallback";
+import { cleanProjectDescription } from "@/lib/formatters/projectDescription";
+import { ProjectDossierApplyModal } from "@/components/ProjectDossierApplyModal";
+import { EditProjectModal } from "@/components/EditProjectModal";
+import type { DossierTemplate, DossierSubmission } from "@/actions/dossier";
 
 export const dynamic = 'force-dynamic';
 
@@ -124,6 +128,65 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ loca
     userRole === "root" ||
     user?.email === "euronovaofficial@gmail.com";
   const canDelete = isOwner || isAdmin;
+
+  // Fetch attached dossier template if defined
+  let attachedTemplate: DossierTemplate | null = null;
+  let volunteerSubmission: DossierSubmission | null = null;
+
+  if (project.application_form_id) {
+    const { data: tplData } = await supabase
+      .from("org_surveys")
+      .select("id, org_id, title, description, questions, created_at, updated_at")
+      .eq("id", project.application_form_id)
+      .maybeSingle();
+
+    if (tplData) {
+      attachedTemplate = {
+        id: tplData.id,
+        org_id: tplData.org_id,
+        title: tplData.title || "Candidate Application Dossier",
+        description: tplData.description || null,
+        questions: Array.isArray(tplData.questions) ? (tplData.questions as unknown as DossierTemplate["questions"]) : [],
+        created_at: tplData.created_at || new Date().toISOString(),
+        updated_at: tplData.updated_at || new Date().toISOString(),
+      };
+    }
+
+    if (user) {
+      const { data: subData } = await supabase
+        .from("project_dossier_submissions")
+        .select("id, project_id, survey_id, user_id, answers, status, created_at, updated_at")
+        .eq("project_id", project.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (subData) {
+        volunteerSubmission = {
+          id: subData.id,
+          project_id: subData.project_id,
+          survey_id: subData.survey_id,
+          user_id: subData.user_id,
+          answers: (subData.answers as Record<string, unknown>) || {},
+          status: subData.status as "submitted" | "shortlisted" | "accepted" | "rejected",
+          created_at: subData.created_at,
+          updated_at: subData.updated_at,
+        };
+      }
+    }
+  }
+
+  // Load org templates if owner or admin for EditProjectModal
+  let orgTemplates: { id: string; title: string }[] = [];
+  if (canDelete && project.org_id) {
+    const { data: tpls } = await supabase
+      .from("org_surveys")
+      .select("id, title")
+      .eq("org_id", project.org_id)
+      .order("updated_at", { ascending: false });
+    if (tpls && Array.isArray(tpls)) {
+      orgTemplates = tpls.map((t) => ({ id: t.id, title: t.title || "Application Dossier" }));
+    }
+  }
 
   const orgData = Array.isArray(project.users_org) ? project.users_org[0] : project.users_org;
   const orgName = orgData?.org_name || "Unknown Organization";
@@ -291,7 +354,17 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ loca
 
               <div className="prose prose-invert max-w-none">
                 <h3 className="text-2xl font-bold text-white mb-4">{t("projectDescription")}</h3>
-                <p className="text-gray-300 leading-relaxed whitespace-pre-wrap text-lg">{project.description}</p>
+                <p className="text-gray-300 leading-relaxed whitespace-pre-wrap text-lg">
+                  {cleanProjectDescription(project.description, {
+                    title: project.title,
+                    startDate: project.start_date,
+                    endDate: project.end_date,
+                    location: project.exact_location,
+                    country: project.dest_country,
+                    eligibleCountries: project.eligible_countries,
+                    accommodationCovered: project.accommodation_covered,
+                  })}
+                </p>
               </div>
 
               {project.themes && project.themes.length > 0 && (
@@ -373,11 +446,67 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ loca
                     </div>
                   </div>
                 )}
+
+                {(project.start_date || project.end_date) && (
+                  <div className="flex items-start gap-3">
+                    <Calendar className="w-5 h-5 text-plasma-cyan shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm text-gray-400 font-medium">{t("dates")}</p>
+                      <p className="text-white font-semibold">
+                        {project.start_date || ""} {project.end_date ? `— ${project.end_date}` : ""}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {project.application_deadline && (
+                  <div className="flex items-start gap-3">
+                    <Clock className="w-5 h-5 text-nova-flare shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm text-gray-400 font-medium">{t("deadline")}</p>
+                      <p className="text-nova-flare font-bold">{project.application_deadline}</p>
+                    </div>
+                  </div>
+                )}
+
+                {project.participant_count && (
+                  <div className="flex items-start gap-3">
+                    <Users className="w-5 h-5 text-plasma-cyan shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm text-gray-400 font-medium">{t("participants")}</p>
+                      <p className="text-white font-semibold">{project.participant_count}</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* ACTION BUTTONS */}
               <div className="space-y-4 pt-4">
-                {project.official_url ? (
+                {attachedTemplate ? (
+                  <div className="space-y-3">
+                    <ProjectDossierApplyModal
+                      projectId={project.id}
+                      projectTitle={project.title}
+                      orgName={orgName}
+                      template={attachedTemplate}
+                      initialSubmission={volunteerSubmission}
+                      isLoggedIn={!!user}
+                      userEmail={user?.email}
+                      locale={params.locale}
+                    />
+                    {project.official_url && (
+                      <a
+                        href={project.official_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full px-4 py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-gray-400 hover:text-white bg-void-deep hover:bg-void-surface border border-void-border text-xs transition-colors"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>External Portal / Infopack</span>
+                      </a>
+                    )}
+                  </div>
+                ) : project.official_url ? (
                   <a 
                     href={project.official_url}
                     target="_blank"
@@ -409,16 +538,50 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ loca
                   }}
                 />
 
+                {/* Owner / Staff Management Controls: Edit Mission & Delete */}
                 {canDelete && (
-                  <form action={async () => {
-                    "use server";
-                    await deleteProjectAction(project.id);
-                  }}>
-                    <button type="submit" className="w-full px-6 py-3 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-sm cursor-pointer">
-                      <Trash2 className="w-4 h-4" />
-                      {t("deleteProject")}
-                    </button>
-                  </form>
+                  <div className="pt-2 space-y-2 border-t border-void-border/70">
+                    <EditProjectModal
+                      project={{
+                        id: project.id,
+                        title: project.title,
+                        description: project.description,
+                        project_type: project.project_type || "ESC",
+                        dest_country: project.dest_country || project.country || "ES",
+                        exact_location: project.exact_location,
+                        official_url: project.official_url,
+                        target_profile: project.target_profile,
+                        min_age: project.min_age ?? 18,
+                        max_age: project.max_age ?? 30,
+                        duration_days: project.duration_days,
+                        travel_budget_min: project.travel_budget_min,
+                        travel_budget_max: project.travel_budget_max,
+                        participation_fee: project.participation_fee,
+                        financing_type: project.financing_type,
+                        covers_rup_flights: !!project.covers_rup_flights,
+                        is_last_minute: !!project.is_last_minute,
+                        accommodation_covered: !!project.accommodation_covered,
+                        themes: project.themes || [],
+                        eligible_countries: project.eligible_countries || [],
+                        start_date: project.start_date,
+                        end_date: project.end_date,
+                        application_deadline: project.application_deadline,
+                        participant_count: project.participant_count,
+                        application_form_id: project.application_form_id,
+                        image_url: project.image_url,
+                      }}
+                      dossierTemplates={orgTemplates}
+                    />
+                    <form action={async () => {
+                      "use server";
+                      await deleteProjectAction(project.id);
+                    }}>
+                      <button type="submit" className="w-full px-6 py-2.5 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-xs cursor-pointer">
+                        <Trash2 className="w-4 h-4" />
+                        <span>{t("deleteProject")}</span>
+                      </button>
+                    </form>
+                  </div>
                 )}
               </div>
 

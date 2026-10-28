@@ -1,0 +1,60 @@
+name: EuroNova Production CI/CD Gatekeeper
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+# Cancel in-progress runs on duplicate branches to conserve GitHub Actions compute
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  production-zero-gate:
+    name: Production Zero Quality Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: ./euronova
+
+    steps:
+      - name: 🛰️ Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js 20 & NPM Cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: euronova/package-lock.json
+
+      - name: 📦 1. Install Clean Dependencies (Frozen Lockfile)
+        run: npm ci
+
+      - name: 🌐 2. I18N Strict Parity Gate (100% Coverage Enforced)
+        run: node scripts/validate-i18n.mjs --strict
+
+      - name: 🔍 3. Hardcoded String & Route Gate
+        run: |
+          node scripts/scan-hardcoded.mjs
+          node scripts/scan-routes.mjs
+
+      - name: 🛡️ 4. TypeScript Strict Lockdown Gate (Zero Any / Zero Errors)
+        run: npx tsc --noEmit
+
+      - name: 🧹 5. ESLint Zero-Warning Gate (Strict Cleanliness)
+        run: npx eslint app components lib actions --max-warnings=0
+
+      - name: 🚀 6. Production Turbopack Build Gate
+        env:
+          NODE_ENV: production
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://mock-ci-project.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.mockAnonKeyForStaticAnalysisOnly' }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL || 'https://euronova.vercel.app' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.mockServiceRoleKeyForStaticAnalysisOnly' }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET || 'mock_cron_secret_for_ci_pipeline_32chars_min' }}
+        run: npm run build

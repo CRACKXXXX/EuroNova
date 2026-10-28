@@ -6,7 +6,9 @@ import { revalidatePath } from "next/cache";
 import { 
   calculateLevelFromXp, 
   calculateLevelProgress, 
-  XP_CONFIG 
+  XP_CONFIG,
+  getTrustXpMultiplier,
+  calculateTrustMultiplierXp,
 } from "@/lib/gamification";
 import { getUserRole } from "@/lib/roles";
 
@@ -25,6 +27,8 @@ export interface AwardXpResult {
   prevLevel?: number;
   leveledUp?: boolean;
   gained?: number;
+  baseXp?: number;
+  multiplier?: number;
   reason?: string;
   error?: string;
   dailyCapReached?: boolean;
@@ -147,8 +151,10 @@ export async function awardUserXp(
     }
 
     let currentXp = 0;
+    let currentTrust = 30;
     if (youth && typeof youth.xp === "number") {
       currentXp = Math.max(0, youth.xp);
+      currentTrust = typeof youth.trust_score === "number" ? youth.trust_score : 30;
     } else {
       // Si el registro de voluntario no existía, inicializarlo de forma segura
       const { error: insertError } = await adminDb
@@ -158,10 +164,13 @@ export async function awardUserXp(
         return { success: false, error: insertError.message };
       }
       currentXp = 0;
+      currentTrust = 30;
     }
 
-    // 4. Cálculos matemáticos con Curva Exponencial
-    const gained = Math.max(0, Math.floor(amount));
+    // 4. Cálculos matemáticos con Curva Exponencial y Multiplicador Dinámico por Trust Factor
+    const baseXp = Math.max(0, Math.floor(amount));
+    const multiplier = getTrustXpMultiplier(currentTrust);
+    const gained = calculateTrustMultiplierXp(baseXp, currentTrust);
     const newXp = currentXp + gained;
     const prevLevel = calculateLevelFromXp(currentXp);
     const newLevel = calculateLevelFromXp(newXp);
@@ -176,7 +185,7 @@ export async function awardUserXp(
           action_type: actionType,
           target_id: targetId,
           xp_amount: gained,
-          reason,
+          reason: multiplier !== 1.0 ? `${reason} (${multiplier}x Trust Multiplier)` : reason,
         });
 
       if (logInsertError) {
@@ -194,7 +203,6 @@ export async function awardUserXp(
 
     // 6. Persistir nuevo XP y Trust Score en Supabase vía service_role (estrictamente acotados)
     const safeNewXp = Math.max(0, newXp);
-    const currentTrust = typeof youth?.trust_score === "number" ? youth.trust_score : 30;
     const newTrustScore = typeof trustBoost === "number" && trustBoost !== 0
       ? Math.max(0, Math.min(100, currentTrust + trustBoost))
       : Math.max(0, Math.min(100, currentTrust));
@@ -245,6 +253,8 @@ export async function awardUserXp(
       prevLevel,
       leveledUp,
       gained,
+      baseXp,
+      multiplier,
       reason,
     };
   } catch (err: unknown) {
@@ -503,8 +513,10 @@ export async function awardVerifiedProjectCompletionAction({
     }
 
     const currentXp = Math.max(0, typeof youth.xp === "number" ? youth.xp : 0);
-    const newXp = currentXp + XP_CONFIG.PROJECT_COMPLETION.amount;
     const currentTrust = typeof youth.trust_score === "number" ? youth.trust_score : 30;
+    const multiplier = getTrustXpMultiplier(currentTrust);
+    const gained = calculateTrustMultiplierXp(XP_CONFIG.PROJECT_COMPLETION.amount, currentTrust);
+    const newXp = currentXp + gained;
     const newTrust = Math.max(0, Math.min(100, currentTrust + XP_CONFIG.PROJECT_COMPLETION.trustBoost));
 
     await adminDb
@@ -514,11 +526,13 @@ export async function awardVerifiedProjectCompletionAction({
 
     const { error: logInsertErr } = await adminDb.from("user_xp_logs").insert({
       user_id: volunteerId,
-      amount: XP_CONFIG.PROJECT_COMPLETION.amount,
-      xp_amount: XP_CONFIG.PROJECT_COMPLETION.amount,
+      amount: gained,
+      xp_amount: gained,
       action_type: XP_CONFIG.PROJECT_COMPLETION.actionType,
       target_id: targetId,
-      reason: XP_CONFIG.PROJECT_COMPLETION.reason,
+      reason: multiplier !== 1.0 
+        ? `${XP_CONFIG.PROJECT_COMPLETION.reason} (${multiplier}x Trust Multiplier)` 
+        : XP_CONFIG.PROJECT_COMPLETION.reason,
       created_at: new Date().toISOString(),
     });
 
@@ -537,7 +551,9 @@ export async function awardVerifiedProjectCompletionAction({
     return {
       success: true,
       xp: newXp,
-      gained: XP_CONFIG.PROJECT_COMPLETION.amount,
+      gained,
+      baseXp: XP_CONFIG.PROJECT_COMPLETION.amount,
+      multiplier,
       reason: XP_CONFIG.PROJECT_COMPLETION.reason,
     };
   } catch (err: unknown) {

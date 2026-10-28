@@ -294,6 +294,11 @@ export const ProjectCreationSchema = z.object({
   accommodation_covered: z.boolean().default(false),
   themes: z.array(z.string().trim().max(60).refine(noNullBytes)).max(20).default([]),
   eligible_countries: z.array(z.string().trim().max(10).refine(noNullBytes)).max(60).default([]),
+  start_date: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid start date format").optional().nullable(),
+  end_date: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid end date format").optional().nullable(),
+  application_deadline: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid application deadline format").optional().nullable(),
+  participant_count: z.number().int().positive().max(5000).optional().nullable(),
+  application_form_id: z.string().trim().uuid("Invalid application form ID").optional().nullable(),
 });
 
 export const ProjectThemeSchema = z.enum([

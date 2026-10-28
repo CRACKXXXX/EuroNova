@@ -11,7 +11,12 @@ import {
 } from "lucide-react";
 import { useTranslations, useFormatter } from "next-intl";
 import { getLevelTierDetails, UserLevelBadge } from "@/components/UserLevelBadge";
-import { calculateLevelProgress, TIER_THRESHOLDS, getTrustScoreTier } from "@/lib/gamification";
+import { 
+  calculateLevelProgress, 
+  TIER_THRESHOLDS, 
+  getTrustScoreTier,
+  getTrustMultiplierDetails,
+} from "@/lib/gamification";
 
 interface LevelReputationModuleProps {
   xp?: number;
@@ -46,6 +51,7 @@ export function LevelReputationModule({
 
   const safeTrustScore = Math.max(0, Math.min(100, typeof trustScore === "number" && !isNaN(trustScore) ? trustScore : 30));
   const trustTier = getTrustScoreTier(safeTrustScore);
+  const multDetails = getTrustMultiplierDetails(safeTrustScore);
   const isRestricted = safeTrustScore <= 29;
   const TrustIcon = isRestricted ? ShieldAlert : ShieldCheck;
 
@@ -68,36 +74,49 @@ export function LevelReputationModule({
       <div className="relative z-10 space-y-6">
         {/* Cabecera del Módulo */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-void-border/80">
-          <div className="flex items-center gap-3.5">
+          <div className="flex items-center gap-3.5 min-w-0">
             <div className={`w-12 h-12 rounded-2xl bg-void-deep border border-void-border p-1 shadow-inner flex items-center justify-center shrink-0 ${tier.shadow}`}>
               <TierIcon className={`w-7 h-7 ${tier.color}`} />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-lg sm:text-xl font-black text-white tracking-tight">
                   {t("moduleTitle")}
                 </h3>
-                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-plasma-cyan/15 text-plasma-cyan border border-plasma-cyan/30">
+                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-plasma-cyan/15 text-plasma-cyan border border-plasma-cyan/30 shrink-0">
                   {t("tierFraction", { current: tier.tierIndex + 1, total: 20 })}
                 </span>
               </div>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-xs text-gray-400 mt-0.5 truncate">
                 {t("levelSubtitle")}
               </p>
             </div>
           </div>
 
-          {/* Trust Score Pill Header */}
-          <div
-            data-testid="trust-score-header-badge"
-            data-trust-score={safeTrustScore}
-            data-trust-tier={trustTier.tier}
-            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-sm shrink-0 self-start sm:self-auto transition-colors duration-300 ${trustTier.badgeClass}`}
-          >
-            <TrustIcon className="w-4 h-4 shrink-0" />
-            <span className="text-xs font-black tracking-wide">
-              {trustTier.label} ({safeTrustScore}/100)
-            </span>
+          {/* Trust Score & Dynamic XP Multiplier Badges - Responsive Flex Wrap */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto justify-start sm:justify-end">
+            {/* Dynamic Trust Factor XP Multiplier Badge */}
+            <div
+              data-testid="trust-xp-multiplier-badge"
+              data-multiplier={multDetails.multiplier}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border font-black text-[11px] sm:text-xs shadow-sm transition-all max-w-full ${multDetails.badgeClass}`}
+            >
+              <Zap className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">{t(multDetails.translationKey)}</span>
+            </div>
+
+            {/* Trust Score Pill Header */}
+            <div
+              data-testid="trust-score-header-badge"
+              data-trust-score={safeTrustScore}
+              data-trust-tier={trustTier.tier}
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-sm shrink-0 transition-colors duration-300 text-[11px] sm:text-xs font-black tracking-wide ${trustTier.badgeClass}`}
+            >
+              <TrustIcon className="w-4 h-4 shrink-0" />
+              <span>
+                {trustTier.label} ({safeTrustScore}/100)
+              </span>
+            </div>
           </div>
         </div>
 
@@ -174,17 +193,28 @@ export function LevelReputationModule({
               </div>
             </div>
 
-            {/* Badges de Confianza - No truncation! */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-3 border-t border-void-border/70">
-              <div className="flex items-center gap-2 text-xs font-semibold text-gray-300">
+            {/* Trust Multiplier Status Row */}
+            <div className="pt-2 border-t border-void-border/70 flex items-center justify-between text-xs">
+              <span className="text-gray-400 font-medium flex items-center gap-1.5">
+                <Zap className="w-3.5 h-3.5 text-plasma-cyan" />
+                <span>{t("xpMultiplier")}:</span>
+              </span>
+              <span className={`font-black ${multDetails.colorClass}`}>
+                {t(multDetails.translationKey)}
+              </span>
+            </div>
+
+            {/* Badges de Confianza - Responsive Wrapping */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-2.5 pt-3 border-t border-void-border/70 flex-wrap">
+              <div className="flex items-center gap-2 text-xs font-semibold text-gray-300 min-w-0">
                 <CheckCircle2 className="w-4 h-4 text-rup-emerald shrink-0" />
                 <span className="whitespace-normal leading-tight">{t("kycVerified")}</span>
               </div>
-              <div className="flex items-center gap-2 text-xs font-semibold text-gray-300">
+              <div className="flex items-center gap-2 text-xs font-semibold text-gray-300 min-w-0">
                 <CheckCircle2 className="w-4 h-4 text-plasma-cyan shrink-0" />
                 <span className="whitespace-normal leading-tight">{t("antiScamScore")}</span>
               </div>
-              <div className="flex items-center gap-2 text-xs font-semibold text-gray-300">
+              <div className="flex items-center gap-2 text-xs font-semibold text-gray-300 min-w-0">
                 <CheckCircle2 className="w-4 h-4 text-hyper-violet shrink-0" />
                 <span className="whitespace-normal leading-tight">{t("peerReviews")}</span>
               </div>

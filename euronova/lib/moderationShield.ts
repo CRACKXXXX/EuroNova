@@ -560,3 +560,50 @@ export async function logToQuarantine({
     console.error("Failed to log to Quarantine tray:", err);
   }
 }
+
+/**
+ * Anti-Troll Hardening: Severe report streak check.
+ * Simply creating a report NEVER automatically deducts trust_score from the reported user.
+ * 1 or 2 isolated reports from trolls have absolutely zero impact.
+ * Only if >= 5 UNIQUE reporters report the same target user within a 24-hour window,
+ * an automated temporary safety mute and trust penalty is triggered.
+ */
+export async function checkSevereReportStreak(
+  targetUserId: string,
+  targetTitle?: string
+): Promise<boolean> {
+  if (!targetUserId) return false;
+  try {
+    const adminDb = getServiceRoleClient();
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data: recentReports, error } = await adminDb
+      .from("project_reports")
+      .select("reporter_id")
+      .eq("target_type", "user")
+      .eq("target_user_id", targetUserId)
+      .gte("created_at", oneDayAgo);
+
+    if (error || !recentReports) return false;
+
+    const uniqueReporters = new Set(
+      recentReports
+        .map((r: { reporter_id?: string | null }) => r.reporter_id)
+        .filter((id): id is string => typeof id === "string" && id.length > 0)
+    );
+
+    if (uniqueReporters.size >= 5) {
+      await muteUser({
+        targetUserId,
+        durationMinutes: 60, // 1 hour temporary hold until human moderator review
+        reason: "Automod severe report streak (5+ unique community reports within 24h)",
+        contextTitle: targetTitle ? `Automod Streak: ${targetTitle}` : "Automod Report Streak",
+        mutedByUserId: "system_automod",
+      });
+      return true;
+    }
+    return false;
+  } catch (err) {
+    console.error("checkSevereReportStreak error:", err);
+    return false;
+  }
+}

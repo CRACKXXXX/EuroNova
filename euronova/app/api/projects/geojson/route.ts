@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { checkRateLimit, RATE_LIMITS, getClientIp } from "@/lib/rateLimiter";
+import { disperseCoordinates } from "@/lib/map/coordinateDispersion";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -120,17 +121,14 @@ async function geocode(location: string | null, country: string | null): Promise
     if (locOnly) return locOnly;
   }
 
-  // 3. Fallback to capital of destination country with jitter
+  // 3. Fallback to capital of destination country
   if (country) {
     const capital = COUNTRY_CAPITALS[country.toUpperCase()] || country;
     const fallback = await queryNominatim(`${capital}, ${country}`);
     if (fallback) {
-      // Add slight jitter (~1-2km) so multiple projects in the same country don't overlap completely
-      const jitterLat = (Math.random() - 0.5) * 0.04;
-      const jitterLng = (Math.random() - 0.5) * 0.04;
       return {
-        lat: Number((fallback.lat + jitterLat).toFixed(6)),
-        lng: Number((fallback.lng + jitterLng).toFixed(6)),
+        lat: Number(fallback.lat.toFixed(6)),
+        lng: Number(fallback.lng.toFixed(6)),
       };
     }
   }
@@ -186,7 +184,7 @@ export async function GET(): Promise<NextResponse> {
       });
     }
 
-    const features: GeoJSONFeature[] = [];
+    const validProjects: (ProjectRow & { lat: number; lng: number })[] = [];
     let geocodedCount = 0;
     const MAX_GEOCODE_PER_REQUEST = 25; // Avoid hitting Nominatim too hard
 
@@ -214,32 +212,41 @@ export async function GET(): Promise<NextResponse> {
         }
       }
 
-      // Only include projects with valid coordinates
+      // Collect projects with valid coordinates
       if (lat !== null && lng !== null) {
-        features.push({
-          type: "Feature",
-          geometry: {
-            type: "Point",
-            coordinates: [lng, lat], // GeoJSON uses [longitude, latitude]
-          },
-          properties: {
-            id: project.id,
-            title: project.title,
-            description: project.description,
-            project_type: project.project_type,
-            dest_country: project.dest_country,
-            exact_location: project.exact_location,
-            start_date: project.start_date,
-            end_date: project.end_date,
-            duration_days: project.duration_days,
-            is_last_minute: project.is_last_minute,
-            covers_rup_flights: project.covers_rup_flights,
-            themes: project.themes,
-            financing_type: project.financing_type,
-          },
+        validProjects.push({
+          ...project,
+          lat,
+          lng,
         });
       }
     }
+
+    // Apply deterministic golden-angle dispersion so pins in the same city/cluster never stack
+    const dispersedProjects = disperseCoordinates(validProjects);
+
+    const features: GeoJSONFeature[] = dispersedProjects.map((project) => ({
+      type: "Feature",
+      geometry: {
+        type: "Point",
+        coordinates: [project.lng, project.lat], // GeoJSON uses [longitude, latitude]
+      },
+      properties: {
+        id: project.id,
+        title: project.title,
+        description: project.description,
+        project_type: project.project_type,
+        dest_country: project.dest_country,
+        exact_location: project.exact_location,
+        start_date: project.start_date,
+        end_date: project.end_date,
+        duration_days: project.duration_days,
+        is_last_minute: project.is_last_minute,
+        covers_rup_flights: project.covers_rup_flights,
+        themes: project.themes,
+        financing_type: project.financing_type,
+      },
+    }));
 
     const geojson = {
       type: "FeatureCollection" as const,
