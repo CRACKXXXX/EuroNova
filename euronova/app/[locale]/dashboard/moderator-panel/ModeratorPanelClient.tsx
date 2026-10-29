@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ShieldAlert,
@@ -10,6 +11,9 @@ import {
   X,
   Send,
   Flag,
+  Search,
+  ExternalLink,
+  Radio,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useFormatter, useTranslations } from "next-intl";
@@ -20,6 +24,7 @@ import {
   escalateReportToAdmin,
 } from "../admin/actions";
 import type { UserRole } from "@/lib/roles";
+import { StaffLiveChatHub } from "@/components/staff/StaffLiveChatHub";
 
 interface ModeratorPanelClientProps {
   currentUserRole: UserRole;
@@ -29,14 +34,16 @@ interface ModeratorPanelClientProps {
 }
 
 export function ModeratorPanelClient({
+  currentUserRole,
   reports,
   escalations,
 }: ModeratorPanelClientProps) {
   const t = useTranslations("ModeratorPanel");
   const router = useRouter();
   const format = useFormatter();
-  const [activeTab, setActiveTab] = useState<"reports" | "escalations">("reports");
-  const [reportsFilter, setReportsFilter] = useState<"active" | "resolved">("active");
+  const [activeTab, setActiveTab] = useState<"reports" | "escalations" | "staff_chat">("reports");
+  const [reportsFilter, setReportsFilter] = useState<"active" | "resolved" | "all">("active");
+  const [searchQuery, setSearchQuery] = useState("");
   const [isPending, startTransition] = useTransition();
   const [currentTime] = useState(() => Date.now());
 
@@ -57,7 +64,22 @@ export function ModeratorPanelClient({
   );
   const resolvedReports = reports.filter((r) => r.status === "resolved");
 
-  const displayedReports = reportsFilter === "active" ? activeReports : resolvedReports;
+  const statusFilteredReports =
+    reportsFilter === "active"
+      ? activeReports
+      : reportsFilter === "resolved"
+      ? resolvedReports
+      : reports;
+
+  const displayedReports = statusFilteredReports.filter((r) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    const targetName = (r.target_name || r.projects?.title || r.users_org?.org_name || "").toLowerCase();
+    const reason = (r.reason || "").toLowerCase();
+    const desc = (r.description || "").toLowerCase();
+    const id = (r.id || "").toLowerCase();
+    return targetName.includes(q) || reason.includes(q) || desc.includes(q) || id.includes(q);
+  });
 
   const handleDismissReport = (reportId: string) => {
     startTransition(async () => {
@@ -131,7 +153,7 @@ export function ModeratorPanelClient({
         </div>
 
         {/* Tab Controls */}
-        <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-void-deep border border-void-border shrink-0">
+        <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-void-deep border border-void-border shrink-0 flex-wrap">
           <button
             type="button"
             onClick={() => setActiveTab("reports")}
@@ -144,6 +166,7 @@ export function ModeratorPanelClient({
             <Flag className="w-3.5 h-3.5" />
             <span>{t("tabReports", { count: activeReports.length })}</span>
           </button>
+
           <button
             type="button"
             onClick={() => setActiveTab("escalations")}
@@ -156,41 +179,88 @@ export function ModeratorPanelClient({
             <ShieldAlert className="w-3.5 h-3.5" />
             <span>{t("tabEscalations", { count: escalations.length })}</span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("staff_chat")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+              activeTab === "staff_chat"
+                ? "bg-plasma-cyan text-void-deep shadow-[0_0_15px_rgba(0,229,255,0.3)]"
+                : "text-gray-400 hover:text-white"
+            }`}
+          >
+            <Radio className="w-3.5 h-3.5 animate-pulse text-plasma-cyan" />
+            <span>{t("tabStaffChat")}</span>
+          </button>
         </div>
       </div>
 
       {/* TAB 1: REPORTS VIEW */}
       {activeTab === "reports" && (
         <div className="space-y-6">
-          {/* Sub-Filter (Active vs Resolved) */}
-          <div className="flex items-center justify-between pb-2 border-b border-void-border">
+          {/* Sub-Filters & Instant Search Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-void-border">
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setReportsFilter("active")}
-                className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
                   reportsFilter === "active"
                     ? "bg-void-surface text-amber-300 border border-amber-500/40"
                     : "text-gray-400 hover:text-white"
                 }`}
               >
-                {t("activeTriage", { count: activeReports.length })}
+                {t("filterActive", { count: activeReports.length })}
               </button>
               <button
                 type="button"
                 onClick={() => setReportsFilter("resolved")}
-                className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
                   reportsFilter === "resolved"
                     ? "bg-void-surface text-rup-emerald border border-rup-emerald/40"
                     : "text-gray-400 hover:text-white"
                 }`}
               >
-                {t("resolvedLog", { count: resolvedReports.length })}
+                {t("filterResolved", { count: resolvedReports.length })}
+              </button>
+              <button
+                type="button"
+                onClick={() => setReportsFilter("all")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                  reportsFilter === "all"
+                    ? "bg-void-surface text-plasma-cyan border border-plasma-cyan/40"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                {t("filterAll", { count: reports.length })}
               </button>
             </div>
-            <p className="text-[11px] text-gray-500 font-mono">
-              {t("autoPurgeNotice")}
-            </p>
+
+            {/* Instant Search Bar */}
+            <div className="relative w-full sm:w-72">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-gray-500" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t("searchPlaceholder")}
+                className="w-full bg-void-deep/90 border border-void-border focus:border-amber-400/60 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-gray-500 outline-none transition-all"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 top-2.5 text-gray-500 hover:text-white"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-[11px] text-gray-500 font-mono px-1">
+            <span>{displayedReports.length} reports matched</span>
+            <span>{t("autoPurgeNotice")}</span>
           </div>
 
           {displayedReports.length === 0 ? (
@@ -210,6 +280,8 @@ export function ModeratorPanelClient({
                 const isEscalated = report.status === "escalated";
                 const isResolved = report.status === "resolved";
                 const countdown = getAutoDeleteCountdown(report.resolved_at, report.updated_at);
+                const projectTargetId = report.project_id;
+                const orgTargetId = report.org_id;
 
                 return (
                   <div
@@ -250,7 +322,13 @@ export function ModeratorPanelClient({
                         </span>
                       </div>
                       <span className="text-[11px] text-gray-500 font-mono">
-                        {format.dateTime(new Date(report.created_at), { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        {format.dateTime(new Date(report.created_at), {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </span>
                     </div>
 
@@ -259,13 +337,35 @@ export function ModeratorPanelClient({
                         <span className="text-gray-400 font-bold block mb-1 uppercase tracking-wider text-[10px]">
                           {t("reportedTarget")}
                         </span>
-                        <p className="text-white font-semibold text-sm">
-                          {report.target_name ||
-                            report.projects?.title ||
-                            report.users_org?.org_name ||
-                            report.target_user_name ||
-                            `Target ID: ${report.target_user_id || report.project_id || report.org_id}`}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-white font-semibold text-sm">
+                            {report.target_name ||
+                              report.projects?.title ||
+                              report.users_org?.org_name ||
+                              report.target_user_name ||
+                              `Target ID: ${report.target_user_id || report.project_id || report.org_id}`}
+                          </p>
+                          {projectTargetId && (
+                            <Link
+                              href={`/dashboard/projects/${projectTargetId}`}
+                              target="_blank"
+                              className="text-plasma-cyan hover:underline inline-flex items-center gap-1 text-[11px] font-bold"
+                            >
+                              <span>{t("view")}</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </Link>
+                          )}
+                          {orgTargetId && (
+                            <Link
+                              href={`/dashboard/organizations/${orgTargetId}`}
+                              target="_blank"
+                              className="text-plasma-cyan hover:underline inline-flex items-center gap-1 text-[11px] font-bold"
+                            >
+                              <span>{t("org")}</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </Link>
+                          )}
+                        </div>
                       </div>
 
                       <div>
@@ -332,9 +432,10 @@ export function ModeratorPanelClient({
           </div>
 
           {escalations.length === 0 ? (
-            <div className="p-12 text-center rounded-3xl bg-void-surface/40 border border-dashed border-void-border">
+            <div className="p-12 text-center rounded-3xl bg-void-surface/40 border border-dashed border-void-border space-y-2">
+              <ShieldAlert className="w-8 h-8 text-amber-500 mx-auto" />
               <p className="text-sm font-bold text-white">{t("noEscalations")}</p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-400">
                 {t("noEscalationsDesc")}
               </p>
             </div>
@@ -345,32 +446,30 @@ export function ModeratorPanelClient({
                   key={esc.id}
                   className="p-5 rounded-2xl bg-void-surface border border-void-border space-y-3"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-void-border/60 pb-2">
                     <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-void-deep text-plasma-cyan border border-void-border uppercase">
-                        [{esc.target_type}]
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 uppercase">
+                        {esc.target_type}
                       </span>
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                          esc.status === "pending"
-                            ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
-                            : esc.status === "approved"
-                            ? "bg-rup-emerald/20 text-rup-emerald border border-rup-emerald/40"
-                            : "bg-gray-700/40 text-gray-400 border border-gray-600/40"
-                        }`}
-                      >
-                        {esc.status}
+                      <span className="font-bold text-white text-sm">
+                        {esc.target_name || "Target Entity"}
                       </span>
-                      <span className="text-xs text-amber-300 font-semibold font-mono">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-void-deep text-plasma-cyan border border-void-border">
                         {t("actionLabel", { action: esc.recommended_action })}
                       </span>
                     </div>
                     <span className="text-[11px] text-gray-500 font-mono">
-                      {format.dateTime(new Date(esc.created_at), { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      {format.dateTime(new Date(esc.created_at), {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </span>
                   </div>
 
-                  <p className="text-xs text-gray-300 bg-void-deep/80 p-3 rounded-xl border border-void-border whitespace-pre-wrap">
+                  <p className="text-xs text-gray-300 leading-relaxed bg-void-deep/60 p-3 rounded-xl border border-void-border">
                     {esc.reason}
                   </p>
 
@@ -384,6 +483,17 @@ export function ModeratorPanelClient({
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* TAB 3: STAFF LIVE COMMS */}
+      {activeTab === "staff_chat" && (
+        <div className="space-y-4">
+          <StaffLiveChatHub
+            currentUserRole={currentUserRole}
+            initialChannel="moderation-ops"
+            embedded
+          />
         </div>
       )}
 
@@ -419,7 +529,16 @@ export function ModeratorPanelClient({
                 </label>
                 <select
                   value={escalateAction}
-                  onChange={(e) => setEscalateAction(e.target.value as "ban_user" | "delete_org" | "delete_survey" | "emergency_lock" | "investigate")}
+                  onChange={(e) =>
+                    setEscalateAction(
+                      e.target.value as
+                        | "ban_user"
+                        | "delete_org"
+                        | "delete_survey"
+                        | "emergency_lock"
+                        | "investigate"
+                    )
+                  }
                   className="w-full p-2.5 rounded-xl bg-void-deep border border-void-border text-white focus:border-amber-400 focus:outline-none"
                 >
                   <option value="ban_user">{t("actionBanUser")}</option>

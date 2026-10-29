@@ -71,7 +71,7 @@ export function EditProjectModal({ project, dossierTemplates }: EditProjectModal
     const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
     if (file.type && !ALLOWED_MIME_TYPES.includes(file.type)) {
-      toast.error("Invalid image format. Allowed: JPG, PNG, WEBP, GIF.");
+      toast.error(tNew("invalidImageFormat"));
       return;
     }
 

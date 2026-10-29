@@ -4,7 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { getUserRole } from "@/lib/roles";
 import { sanitizeErrorMessage } from "@/lib/errorSanitizer";
 import { stripDangerousHtml } from "@/lib/securitySanitizer";
-import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimiter";
+import { checkRateLimit, RATE_LIMITS, getClientIp } from "@/lib/rateLimiter";
 import { verifyMidSessionActiveStatus } from "@/lib/moderationShield";
 import { revalidatePath } from "next/cache";
 
@@ -32,6 +32,7 @@ export interface DossierTemplate {
   title: string;
   description?: string | null;
   questions: DossierQuestion[];
+  is_archived?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -76,13 +77,14 @@ export async function getOrgDossierTemplatesAction(orgId: string): Promise<{
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("org_surveys")
-      .select("id, org_id, title, description, questions, created_at, updated_at")
+      .select("id, org_id, title, description, questions, is_archived, created_at, updated_at")
       .eq("org_id", orgId)
+      .or("is_archived.is.null,is_archived.eq.false")
       .order("updated_at", { ascending: false });
 
     if (error) {
       console.warn("DB query failed for org_surveys, falling back to memory:", error.message);
-      const filtered = inMemoryTemplates.filter((t) => t.org_id === orgId);
+      const filtered = inMemoryTemplates.filter((t) => t.org_id === orgId && !t.is_archived);
       return { success: true, templates: filtered };
     }
 
@@ -92,6 +94,7 @@ export async function getOrgDossierTemplatesAction(orgId: string): Promise<{
       title: row.title || "Candidate Application Dossier",
       description: row.description || null,
       questions: Array.isArray(row.questions) ? (row.questions as DossierQuestion[]) : [],
+      is_archived: row.is_archived || false,
       created_at: row.created_at || new Date().toISOString(),
       updated_at: row.updated_at || new Date().toISOString(),
     }));
@@ -285,22 +288,24 @@ export async function deleteDossierTemplateAction(
       return { success: false, error: "Unauthorized: You do not have permission to delete this template." };
     }
 
-    // Unlink from projects first
+    // Unlink from active projects first
     await supabase
       .from("projects")
       .update({ application_form_id: null })
       .eq("application_form_id", templateId);
 
+    // Soft Delete: Mark template as archived instead of deleting to preserve historical submissions
     const { error } = await supabase
       .from("org_surveys")
-      .delete()
+      .update({ is_archived: true, updated_at: new Date().toISOString() })
       .eq("id", templateId)
       .eq("org_id", orgId);
 
     if (error) {
-      const idx = inMemoryTemplates.findIndex((t) => t.id === templateId);
-      if (idx !== -1) {
-        inMemoryTemplates.splice(idx, 1);
+      const target = inMemoryTemplates.find((t) => t.id === templateId);
+      if (target) {
+        target.is_archived = true;
+        target.updated_at = new Date().toISOString();
       }
     }
 
@@ -342,9 +347,30 @@ export async function submitProjectDossierAction(input: {
       return { success: false, error: statusCheck.error || "Action restricted." };
     }
 
-    const rateCheck = await checkRateLimit(user.id, RATE_LIMITS.MUTATION);
-    if (!rateCheck.success) {
-      return { success: false, error: rateCheck.error || "Please wait before submitting another application." };
+    const clientIp = await getClientIp();
+    const ipRateCheck = await checkRateLimit(`dossier_ip_${clientIp}`, RATE_LIMITS.DOSSIER_SUBMISSION);
+    if (!ipRateCheck.success) {
+      return { success: false, error: ipRateCheck.error || "Too many applications submitted from this IP. Please wait before trying again." };
+    }
+
+    const userRateCheck = await checkRateLimit(`dossier_user_${user.id}`, RATE_LIMITS.DOSSIER_SUBMISSION);
+    if (!userRateCheck.success) {
+      return { success: false, error: userRateCheck.error || "Please wait before submitting another application." };
+    }
+
+    // Role-based guard: Organizations cannot apply to projects
+    if (user.user_metadata?.role === "org") {
+      return { success: false, error: "Organizations cannot apply to missions." };
+    }
+
+    const { data: orgProfile } = await supabase
+      .from("users_org")
+      .select("id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (orgProfile) {
+      return { success: false, error: "Organizations cannot apply to missions." };
     }
 
     // Fetch project to retrieve org_id and title
@@ -356,6 +382,10 @@ export async function submitProjectDossierAction(input: {
 
     if (projError || !project) {
       return { success: false, error: "Project not found or inactive." };
+    }
+
+    if (project.org_id === user.id) {
+      return { success: false, error: "You cannot apply to your own organization's missions." };
     }
 
     const orgId = project.org_id;
@@ -627,6 +657,57 @@ export async function updateSubmissionStatusAction(input: {
     const isAuthorized = await verifyOrgOwnership(user.id, user.email, input.orgId);
     if (!isAuthorized) {
       return { success: false, error: "Unauthorized: Access denied." };
+    }
+
+    // STRICT CAPACITY RACE-CONDITION GUARD:
+    // If setting status to 'accepted', verify that project participant_count is not exceeded
+    if (input.status === "accepted") {
+      let targetProjectId: string | null = null;
+      let currentStatus: string | null = null;
+      const { data: subData } = await supabase
+        .from("project_dossier_submissions")
+        .select("project_id, status")
+        .eq("id", input.submissionId)
+        .eq("org_id", input.orgId)
+        .maybeSingle();
+
+      if (subData?.project_id) {
+        targetProjectId = subData.project_id;
+        currentStatus = subData.status;
+      } else {
+        const mem = inMemorySubmissions.find((s) => s.id === input.submissionId);
+        if (mem) {
+          targetProjectId = mem.project_id;
+          currentStatus = mem.status;
+        }
+      }
+
+      if (targetProjectId && currentStatus !== "accepted") {
+        const { data: project } = await supabase
+          .from("projects")
+          .select("participant_count, title")
+          .eq("id", targetProjectId)
+          .maybeSingle();
+
+        if (project && typeof project.participant_count === "number" && project.participant_count > 0) {
+          const { count: acceptedCount, error: countErr } = await supabase
+            .from("project_dossier_submissions")
+            .select("id", { count: "exact", head: true })
+            .eq("project_id", targetProjectId)
+            .eq("status", "accepted");
+
+          const safeAcceptedCount = !countErr && typeof acceptedCount === "number"
+            ? acceptedCount
+            : inMemorySubmissions.filter((s) => s.project_id === targetProjectId && s.status === "accepted").length;
+
+          if (safeAcceptedCount >= project.participant_count) {
+            return {
+              success: false,
+              error: `Mission capacity reached (${safeAcceptedCount}/${project.participant_count} spots filled). You cannot accept more candidates than available spots.`,
+            };
+          }
+        }
+      }
     }
 
     const { error } = await supabase

@@ -13,13 +13,14 @@ export interface RateLimitConfig {
 }
 
 export const RATE_LIMITS = {
-  AUTH: { maxRequests: 5, windowSeconds: 60 },
+  AUTH: { maxRequests: 10, windowSeconds: 60 },
   MUTATION: { maxRequests: 5, windowSeconds: 60 },
   PROJECT_CREATION: { maxRequests: 3, windowSeconds: 60 },
   REPORT: { maxRequests: 5, windowSeconds: 60 },
   TICKET: { maxRequests: 3, windowSeconds: 60 },
   PUBLIC_API: { maxRequests: 30, windowSeconds: 60 },
   TELEMETRY: { maxRequests: 30, windowSeconds: 60 },
+  DOSSIER_SUBMISSION: { maxRequests: 5, windowSeconds: 60 },
 } as const;
 
 export const MAX_TRACKED_KEYS = 10000;

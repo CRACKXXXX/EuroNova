@@ -335,10 +335,19 @@ CALL public.euronova_safe_create_index(
 );
 
 -- Organization Surveys Blueprint: Builder query
+ALTER TABLE public.org_surveys 
+ADD COLUMN IF NOT EXISTS is_archived BOOLEAN NOT NULL DEFAULT false;
+
 CALL public.euronova_safe_create_index(
   'idx_org_surveys_org_updated_desc',
   'org_surveys',
   '(org_id, updated_at DESC)'
+);
+
+CALL public.euronova_safe_create_index(
+  'idx_org_surveys_org_archived',
+  'org_surveys',
+  '(org_id, is_archived)'
 );
 
 -- Organization Reviews: Reviews by organization
@@ -691,6 +700,87 @@ BEGIN
     TO authenticated
     USING (auth.uid() = org_id OR auth.email() = 'euronovaofficial@gmail.com')
     WITH CHECK (auth.uid() = org_id OR auth.email() = 'euronovaofficial@gmail.com');
+
+  -- ============================================================
+  -- Section 13: Staff Live Multi-Channel Comms Hub
+  -- ============================================================
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'staff_chat_messages'
+  ) THEN
+    CREATE TABLE public.staff_chat_messages (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      channel VARCHAR(50) NOT NULL DEFAULT 'general-staff',
+      user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+      author_name TEXT NOT NULL DEFAULT 'Staff Member',
+      author_role VARCHAR(20) NOT NULL DEFAULT 'support',
+      author_avatar TEXT,
+      content TEXT NOT NULL,
+      is_pinned BOOLEAN NOT NULL DEFAULT false,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+  END IF;
+
+  CREATE INDEX IF NOT EXISTS idx_staff_chat_channel_created ON public.staff_chat_messages(channel, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_staff_chat_is_pinned ON public.staff_chat_messages(is_pinned) WHERE is_pinned = true;
+
+  ALTER TABLE public.staff_chat_messages ENABLE ROW LEVEL SECURITY;
+
+  -- Allow staff members to view staff chat
+  DROP POLICY IF EXISTS "Staff members can view staff chat messages" ON public.staff_chat_messages;
+  CREATE POLICY "Staff members can view staff chat messages"
+    ON public.staff_chat_messages FOR SELECT
+    TO authenticated
+    USING (
+      auth.email() = 'euronovaofficial@gmail.com' OR
+      EXISTS (
+        SELECT 1 FROM public.users_youth 
+        WHERE id = auth.uid() AND role IN ('root', 'admin', 'moderator', 'support')
+      )
+    );
+
+  -- Allow staff members to insert staff chat messages
+  DROP POLICY IF EXISTS "Staff members can insert staff chat messages" ON public.staff_chat_messages;
+  CREATE POLICY "Staff members can insert staff chat messages"
+    ON public.staff_chat_messages FOR INSERT
+    TO authenticated
+    WITH CHECK (
+      auth.uid() = user_id AND (
+        auth.email() = 'euronovaofficial@gmail.com' OR
+        EXISTS (
+          SELECT 1 FROM public.users_youth 
+          WHERE id = auth.uid() AND role IN ('root', 'admin', 'moderator', 'support')
+        )
+      )
+    );
+
+  -- Allow staff members to delete staff chat messages
+  DROP POLICY IF EXISTS "Staff members can delete staff chat messages" ON public.staff_chat_messages;
+  CREATE POLICY "Staff members can delete staff chat messages"
+    ON public.staff_chat_messages FOR DELETE
+    TO authenticated
+    USING (
+      auth.uid() = user_id OR
+      auth.email() = 'euronovaofficial@gmail.com' OR
+      EXISTS (
+        SELECT 1 FROM public.users_youth 
+        WHERE id = auth.uid() AND role IN ('root', 'admin', 'moderator')
+      )
+    );
+
+  -- Allow admins/mods to pin/update staff chat messages
+  DROP POLICY IF EXISTS "Staff admins and mods can update staff chat messages" ON public.staff_chat_messages;
+  CREATE POLICY "Staff admins and mods can update staff chat messages"
+    ON public.staff_chat_messages FOR UPDATE
+    TO authenticated
+    USING (
+      auth.email() = 'euronovaofficial@gmail.com' OR
+      EXISTS (
+        SELECT 1 FROM public.users_youth 
+        WHERE id = auth.uid() AND role IN ('root', 'admin', 'moderator')
+      )
+    );
 END $$;
 
 

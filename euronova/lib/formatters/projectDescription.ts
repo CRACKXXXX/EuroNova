@@ -103,7 +103,63 @@ function parseDateParts(d: number, m: number, y: number): string | null {
   if (fullYear < currentYear - 2 || fullYear > currentYear + 10) return null;
   if (m < 1 || m > 12 || d < 1 || d > 31) return null;
 
+  // Validate exact days in month (prevents Feb 30/31, April 31, etc.)
+  const daysInMonth = new Date(fullYear, m, 0).getDate();
+  if (d > daysInMonth) return null;
+
   return `${fullYear}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+}
+
+/**
+ * Normalizes all strange Erasmus acronyms and program codes into the canonical 8 types.
+ */
+export type CanonicalProjectType = "YE" | "TC" | "ESC" | "PBA" | "SV" | "SE" | "VET" | "CBY";
+
+export function normalizeErasmusProjectType(rawTypeOrText: string): CanonicalProjectType {
+  if (!rawTypeOrText) return "YE";
+  const text = rawTypeOrText.toUpperCase();
+
+  // 1. ESC / Solidarity Corps (ESC, ESC-50, ESC-51, ESC-11, ESC-HUM, etc.)
+  if (/\bESC(?:[-_\s]?\d+|[-_\s]?HUM)?\b|SOLIDARITY|VOLUNTEER|VOLUNTARI/i.test(text)) {
+    return "ESC";
+  }
+
+  // 2. Training Course / TCA (TC, TCA, KA153, Training, Formación, Corso)
+  if (/\b(?:TCA|TC|KA153)\b|TRAINING|FORMACI[OÓ]N|CORSO DI FORMAZIONE/i.test(text)) {
+    return "TC";
+  }
+
+  // 3. Partnership Building Activity (PBA, KA2, KA210, KA220, Partnership)
+  if (/\b(?:PBA|KA2|KA210|KA220)\b|PARTNERSHIP|PARTNER BUILDING/i.test(text)) {
+    return "PBA";
+  }
+
+  // 4. Vocational Education and Training (VET, FP)
+  if (/\b(?:VET|FP)\b|VOCATIONAL|FORMACI[OÓ]N PROFESIONAL/i.test(text)) {
+    return "VET";
+  }
+
+  // 5. Study Visit (SV)
+  if (/\bSV\b|STUDY VISIT|VISITA DE ESTUDIO/i.test(text)) {
+    return "SV";
+  }
+
+  // 6. Seminar (SE)
+  if (/\bSE\b|SEMINAR|SEMINARIO/i.test(text)) {
+    return "SE";
+  }
+
+  // 7. Capacity Building in Youth (CBY)
+  if (/\bCBY\b|CAPACITY BUILDING|DESARROLLO DE CAPACIDADES/i.test(text)) {
+    return "CBY";
+  }
+
+  // 8. Youth Exchange (YE, KA152, Youth Exchange, Intercambio)
+  if (/\b(?:YE|KA152)\b|YOUTH EXCHANGE|INTERCAMBIO JUVENIL|SCAMBIO GIOVANILE/i.test(text)) {
+    return "YE";
+  }
+
+  return "YE";
 }
 
 /**
@@ -204,6 +260,10 @@ export function cleanProjectDescription(
 
   let text = decodeHtmlEntities(rawText);
 
+  // Normalize Unicode invisible characters & non-breaking spaces
+  text = text.replace(/[\u200B-\u200D\uFEFF]/g, "");
+  text = text.replace(/[\u00A0\u202F\u2007]/g, " ");
+
   // Convert HTML linebreaks to real newlines
   text = text.replace(/<br\s*\/?>/gi, "\n");
   text = text.replace(/<\/(p|div|tr|li|h[1-6])>/gi, "\n\n");
@@ -218,47 +278,69 @@ export function cleanProjectDescription(
   // Collapse 3+ newlines into 2
   text = text.replace(/\n{3,}/g, "\n\n").trim();
 
-  // Strip concatenated title from start if present
-  if (meta?.title) {
-    const cleanTitleTrimmed = meta.title.trim();
-    if (text.toLowerCase().startsWith(cleanTitleTrimmed.toLowerCase())) {
-      text = text.slice(cleanTitleTrimmed.length).trim();
-    } else {
-      const normTitle = cleanTitleTrimmed.toLowerCase().replace(/[^a-z0-9]+/g, " ");
-      const textSample = text.slice(0, cleanTitleTrimmed.length + 30).toLowerCase().replace(/[^a-z0-9]+/g, " ");
-      if (textSample.startsWith(normTitle)) {
-        let charCount = 0;
-        let cutIdx = 0;
-        const targetAlnum = cleanTitleTrimmed.replace(/[^a-zA-Z0-9]/g, "").length;
-        for (let i = 0; i < text.length && charCount < targetAlnum; i++) {
-          if (/[a-zA-Z0-9]/.test(text[i])) {
-            charCount++;
+  // Multi-pass greedy header stripping (up to 3 passes to clean stacked banners)
+  for (let pass = 0; pass < 3; pass++) {
+    // 1. Strip leading decorative banners and symbols: ***, ###, ///, ===, ---, ~~~, |||
+    text = text.replace(/^\s*(?:[*#=~_|\/\-]{2,}\s*)+/g, "").trim();
+
+    // 2. Strip concatenated title from start if present
+    if (meta?.title) {
+      const cleanTitleTrimmed = meta.title.trim();
+      if (text.toLowerCase().startsWith(cleanTitleTrimmed.toLowerCase())) {
+        text = text.slice(cleanTitleTrimmed.length).trim();
+      } else {
+        const normTitle = cleanTitleTrimmed.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+        const textSample = text.slice(0, cleanTitleTrimmed.length + 40).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+        if (normTitle && textSample.startsWith(normTitle)) {
+          let charCount = 0;
+          let cutIdx = 0;
+          const targetAlnum = cleanTitleTrimmed.replace(/[^a-zA-Z0-9]/g, "").length;
+          for (let i = 0; i < text.length && charCount < targetAlnum; i++) {
+            if (/[a-zA-Z0-9]/.test(text[i])) {
+              charCount++;
+            }
+            cutIdx = i + 1;
           }
-          cutIdx = i + 1;
+          text = text.slice(cutIdx).trim();
+        } else {
+          // Check for unspaced title concatenation (e.g. "TitleThe project...")
+          const rawAlnumTitle = cleanTitleTrimmed.toLowerCase().replace(/[^a-z0-9]/g, "");
+          const rawAlnumText = text.slice(0, cleanTitleTrimmed.length + 10).toLowerCase().replace(/[^a-z0-9]/g, "");
+          if (rawAlnumTitle && rawAlnumText.startsWith(rawAlnumTitle)) {
+            let count = 0;
+            let cutPos = 0;
+            for (let i = 0; i < text.length && count < rawAlnumTitle.length; i++) {
+              if (/[a-zA-Z0-9]/.test(text[i])) count++;
+              cutPos = i + 1;
+            }
+            text = text.slice(cutPos).trim();
+          }
         }
-        text = text.slice(cutIdx).trim();
       }
     }
-  }
 
-  // Strip concatenated date headers like "26 October - 30 November 2026" or "10/05/2026 to 20/05/2026"
-  text = text.replace(
-    /^\s*(?:Dates?|Fechas?|Periodo|When)?[:\s]*\d{1,2}(?:st|nd|rd|th)?\s+[a-záéíóúñA-Z]+\s*(?:[-–—]|\s+(?:to|al|au|bis|a|until)\s+)?\s*(?:\d{1,2}(?:st|nd|rd|th)?\s+[a-záéíóúñA-Z]+)?\s+\d{4}[,.\s-]*/i,
-    ""
-  ).trim();
-  text = text.replace(
-    /^\s*\d{1,2}[./-]\d{1,2}[./-]\d{2,4}\s*(?:[-–—]|\s+(?:to|al|au|bis|a|until)\s+)\s*\d{1,2}[./-]\d{1,2}[./-]\d{2,4}[,.\s-]*/i,
-    ""
-  ).trim();
+    // 3. Strip concatenated date headers like "26 October - 30 November 2026" or "10/05/2026 to 20/05/2026"
+    text = text.replace(
+      /^\s*(?:Dates?|Fechas?|Periodo|When)?[:\s]*\d{1,2}(?:st|nd|rd|th)?\s+[a-záéíóúñA-Z]+\s*(?:[-–—]|\s+(?:to|al|au|bis|a|until)\s+)?\s*(?:\d{1,2}(?:st|nd|rd|th)?\s+[a-záéíóúñA-Z]+)?\s+\d{4}[,.\s-]*/i,
+      ""
+    ).trim();
+    text = text.replace(
+      /^\s*\d{1,2}[./-]\d{1,2}[./-]\d{2,4}\s*(?:[-–—]|\s+(?:to|al|au|bis|a|until)\s+)\s*\d{1,2}[./-]\d{1,2}[./-]\d{2,4}[,.\s-]*/i,
+      ""
+    ).trim();
 
-  // Strip venue prefixes matching location/country
-  if (meta?.location) {
-    const locEscaped = meta.location.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const locReg = new RegExp(
-      `^\\s*(?:Venue|Location|Lugar|Where)?[:\\s]*${locEscaped}(?:\\s*,\\s*[A-Z][a-zA-Z]+(?:\\s+[A-Z][a-zA-Z]+)?)?[,.\\s-]*`,
-      "i"
-    );
-    text = text.replace(locReg, "").trim();
+    // 4. Strip venue prefixes matching location/country
+    if (meta?.location) {
+      const locEscaped = meta.location.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const locReg = new RegExp(
+        `^\\s*(?:Venue|Location|Lugar|Where)?[:\\s]*${locEscaped}(?:\\s*,\\s*[A-Z][a-zA-Z]+(?:\\s+[A-Z][a-zA-Z]+)?)?[,.\\s-]*`,
+        "i"
+      );
+      text = text.replace(locReg, "").trim();
+    }
+
+    // 5. Strip residual leading separator noise
+    text = text.replace(/^[:\-\u2013\u2014|*#=~/\\]+\s*/, "").trim();
   }
 
   // Ensure paragraphs have proper structure
@@ -315,7 +397,7 @@ export function mapToCanonicalTopics(text: string, existingTopics: string[] = []
   if (/digital|tech|coding|comput|ai\b|ia\b|software|cyber|internet|stem/i.test(lower)) {
     matched.add("digital");
   }
-  if (/inclusion|inclusi|equality|igualdad|disab|discapacidad|marginal|refugee|migra|vulnerab/i.test(lower)) {
+  if (/inclusion|inclusi|equality|igualdad|disab|discapacidad|marginal|refugee|migra|vulnerab|\b(?:esc|solidarity)\b/i.test(lower)) {
     matched.add("inclusion");
   }
   if (/mental health|salud mental|wellbeing|bienestar|psychol|mindful|stress|ansiedad/i.test(lower)) {
@@ -330,10 +412,10 @@ export function mapToCanonicalTopics(text: string, existingTopics: string[] = []
   if (/human rights|derechos humanos|peace|paz|justice|justicia|equality|law|conflict/i.test(lower)) {
     matched.add("human_rights");
   }
-  if (/entrepreneur|emprend|startup|business|negocio|career|empleo|employment|job/i.test(lower)) {
+  if (/entrepreneur|emprend|startup|business|negocio|career|empleo|employment|job|\b(?:vet|fp)\b/i.test(lower)) {
     matched.add("entrepreneurship");
   }
-  if (/civic|citizenship|ciudadanía|democra|voting|participa|eu policy|parliament/i.test(lower)) {
+  if (/civic|citizenship|ciudadanía|democra|voting|participa|eu policy|parliament|\b(?:pba|tca|ka2|cby|se)\b/i.test(lower)) {
     matched.add("civic_participation");
   }
   if (/media|journalism|periodismo|fake news|disinformation|communication|podcast|press/i.test(lower)) {
@@ -342,7 +424,7 @@ export function mapToCanonicalTopics(text: string, existingTopics: string[] = []
   if (/rural|campo|village|agricultur|nature|farming|pueblo|remote area/i.test(lower)) {
     matched.add("rural_development");
   }
-  if (/heritage|patrimonio|history|historia|intercultural|tradition|archaeol/i.test(lower)) {
+  if (/heritage|patrimonio|history|historia|intercultural|tradition|archaeol|\b(?:sv)\b/i.test(lower)) {
     matched.add("heritage");
   }
 
@@ -352,4 +434,93 @@ export function mapToCanonicalTopics(text: string, existingTopics: string[] = []
   }
 
   return Array.from(matched);
+}
+
+// ============================================================================
+// DEDUPLICATION & SEMANTIC SIMILARITY HELPERS
+// ============================================================================
+
+export const COMMON_STOP_WORDS = new Set([
+  "youth", "exchange", "training", "course", "erasmus", "solidarity", "corps",
+  "esc", "tc", "ye", "pba", "tca", "vet", "cby", "sv", "se", "project", "mobility",
+  "intercambio", "juvenil", "formacion", "formación", "curso", "formazione", "scambio",
+  "voluntariado", "volunteering", "the", "and", "for", "in", "on", "at", "to",
+  "de", "del", "en", "para", "por", "con", "di", "per", "und", "von",
+  "der", "die", "das", "pour", "dans", "des", "les", "une", "call", "participants",
+  "infopack", "spain", "italy", "france", "germany", "online", "application",
+  "europe", "european", "europa", "europeo", "europea", "europei", "européen",
+  "européenne", "europäische", "europäischer", "international", "internacional",
+]);
+
+/**
+ * Extracts canonical external ID from official European portal URLs.
+ */
+export function extractPortalExternalId(url: string): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+
+    // 1. SALTO-YOUTH European Training Calendar: .../training/slug.12345/
+    if (parsed.hostname.includes("salto-youth.net")) {
+      const saltoMatch = parsed.pathname.match(/\/training\/[^\/]*?\.(\d+)(?:\/|$)/i);
+      if (saltoMatch) return `salto:${saltoMatch[1]}`;
+    }
+
+    // 2. European Youth Portal (EYP ESC): /solidarity/placement/12345_en
+    if (parsed.hostname.includes("youth.europa.eu")) {
+      const eypMatch = parsed.pathname.match(/\/solidarity\/placement\/([a-zA-Z0-9_\-]+?)(?:_[a-z]{2})?(?:\/|$)/i);
+      if (eypMatch) return `eyp:${eypMatch[1]}`;
+    }
+
+    // 3. ProActive Future: ?o=12345 or /api/map
+    if (parsed.hostname.includes("proactivefuture.eu")) {
+      const idParam = parsed.searchParams.get("o") || parsed.searchParams.get("id");
+      if (idParam) return `proactive:${idParam.trim()}`;
+    }
+
+    // 4. Scambieuropei / Aggregators: canonical trailing slug
+    if (parsed.hostname.includes("scambieuropei.info")) {
+      const slugMatch = parsed.pathname.replace(/\/feed\/?$/, "").match(/\/([^\/]+)\/?$/);
+      if (slugMatch && slugMatch[1] && slugMatch[1] !== "category") {
+        return `scambi:${slugMatch[1]}`;
+      }
+    }
+  } catch {
+    // Malformed URL handled gracefully
+  }
+  return null;
+}
+
+/**
+ * Normalizes title into distinctive semantic tokens (removing stop words).
+ */
+export function extractDistinctiveTokens(title: string): string[] {
+  if (!title) return [];
+  const normalized = title
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ");
+
+  const words = normalized.split(/\s+/).filter(Boolean);
+  const distinctive = words.filter((w) => w.length >= 3 && !COMMON_STOP_WORDS.has(w));
+  return Array.from(new Set(distinctive)).sort();
+}
+
+/**
+ * Calculates Jaccard token similarity (0.0 to 1.0) between two titles.
+ */
+export function calculateSemanticTitleSimilarity(titleA: string, titleB: string): number {
+  const tokensA = new Set(extractDistinctiveTokens(titleA));
+  const tokensB = new Set(extractDistinctiveTokens(titleB));
+
+  if (tokensA.size === 0 || tokensB.size === 0) return 0;
+
+  let intersectionCount = 0;
+  for (const t of tokensA) {
+    if (tokensB.has(t)) intersectionCount++;
+  }
+
+  const unionSize = new Set([...tokensA, ...tokensB]).size;
+  return unionSize > 0 ? intersectionCount / unionSize : 0;
 }

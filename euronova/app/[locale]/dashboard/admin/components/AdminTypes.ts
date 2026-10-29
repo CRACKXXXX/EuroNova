@@ -8,7 +8,15 @@ import { type useTranslations, type useFormatter } from "next-intl";
 export type AdminTranslator = ReturnType<typeof useTranslations>;
 export type AdminFormatter = ReturnType<typeof useFormatter>;
 
-export type AdminTabType = "orgs" | "youth" | "projects" | "reports" | "staff" | "escalations" | "tickets";
+export type AdminTabType =
+  | "orgs"
+  | "youth"
+  | "projects"
+  | "reports"
+  | "staff"
+  | "escalations"
+  | "tickets"
+  | "staff_chat";
 
 export interface OrgItem {
   id: string;

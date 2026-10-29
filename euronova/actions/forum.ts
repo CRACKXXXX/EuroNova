@@ -74,15 +74,18 @@ export interface ProjectForumEligibility {
   userRole?: UserRole;
   xp: number;
   level: number;
+  trustScore?: number;
+  isMuted?: boolean;
   canPost: boolean;
   canReply?: boolean;
   isProjectCoordinator?: boolean;
   reason?: string;
+  errorCode?: string;
 }
 
 /**
  * Checks the user's eligibility to post in a project Q&A forum.
- * - Volunteers must have Level 2+ (100+ XP) to prevent spam.
+ * - Volunteers must have Level 2+ (100+ XP) and Trust Score >= 30 and not be muted.
  * - Coordinators and Admins always have permission.
  */
 export async function getProjectForumEligibility(projectId: string): Promise<ProjectForumEligibility> {
@@ -117,6 +120,8 @@ export async function getProjectForumEligibility(projectId: string): Promise<Pro
         userRole: "admin",
         xp: 99999,
         level: 99,
+        trustScore: 100,
+        isMuted: false,
         canPost: true,
         canReply: true,
         isProjectCoordinator: true,
@@ -139,6 +144,8 @@ export async function getProjectForumEligibility(projectId: string): Promise<Pro
         userRole,
         xp: 99999,
         level: 99,
+        trustScore: 100,
+        isMuted: false,
         canPost: true,
         canReply: true,
         isProjectCoordinator: true,
@@ -160,24 +167,46 @@ export async function getProjectForumEligibility(projectId: string): Promise<Pro
         userRole,
         xp: 99999,
         level: 99,
+        trustScore: 100,
+        isMuted: false,
         canPost: true,
         canReply: isStaff || true,
         isProjectCoordinator: false,
       };
     }
 
-    // Check volunteer XP and Level
+    // Check volunteer XP, Level, Trust Score and Mute Status
     const { data: youthData } = await supabase
       .from("users_youth")
-      .select("xp")
+      .select("xp, trust_score, muted_until")
       .eq("id", user.id)
       .maybeSingle();
 
     const xp = youthData?.xp || 0;
+    const trustScore = typeof youthData?.trust_score === "number" ? youthData.trust_score : 50;
+    const isMuted = youthData?.muted_until ? new Date(youthData.muted_until).getTime() > Date.now() : false;
     const level = calculateLevelFromXp(xp);
-    const canPost = isStaff || (level >= 2 && xp >= 100);
-    // Reply Gating Rule: Only Level > 10 (11+), Staff, or Project Coordinator
-    const canReply = isStaff || isProjectCoordinator || level > 10;
+
+    const meetsVolunteerGate = !isMuted && level >= 2 && xp >= 100 && trustScore >= 30;
+    const canPost = isStaff || meetsVolunteerGate;
+    // Reply Gating Rule: Only Level > 10 (11+), Staff, or Project Coordinator (and not muted/trust >= 30)
+    const canReply = isStaff || isProjectCoordinator || (!isMuted && trustScore >= 30 && level > 10);
+
+    let reason: string | undefined = undefined;
+    let errorCode: string | undefined = undefined;
+
+    if (!canPost) {
+      if (isMuted) {
+        reason = "You are temporarily restricted from posting because your account is muted.";
+        errorCode = "USER_MUTED";
+      } else if (level < 2 || xp < 100) {
+        reason = "Reach Level 2 (100 XP) to participate in project Q&A to prevent spam.";
+        errorCode = "LEVEL_INSUFFICIENT";
+      } else if (trustScore < 30) {
+        reason = `Trust Score 30+ required to participate (${trustScore}/100). Complete your profile dossier or verified missions to restore good standing.`;
+        errorCode = "TRUST_SCORE_TOO_LOW";
+      }
+    }
 
     return {
       isAuthenticated: true,
@@ -186,12 +215,13 @@ export async function getProjectForumEligibility(projectId: string): Promise<Pro
       userRole,
       xp,
       level,
+      trustScore,
+      isMuted,
       canPost,
       canReply,
       isProjectCoordinator: false,
-      reason: canPost
-        ? undefined
-        : "Reach Level 2 (100 XP) to participate in project Q&A to prevent spam.",
+      reason,
+      errorCode,
     };
   } catch (err) {
     console.error("Error checking project forum eligibility:", err);
@@ -477,22 +507,40 @@ export async function postProjectMessage(
         authorLevel = 99;
         authorTitle = "Organization Coordinator";
       } else {
-        // Volunteer: Verify Level 2 gating (XP >= 100)
+        // Volunteer: Verify Level 2 gating (XP >= 100), Trust Score >= 30, and not muted
         const { data: youthData } = await supabase
           .from("users_youth")
-          .select("xp")
+          .select("xp, trust_score, muted_until")
           .eq("id", user.id)
           .maybeSingle();
 
         const xp = youthData?.xp || 0;
+        const trustScore = typeof youthData?.trust_score === "number" ? youthData.trust_score : 50;
+        const isMuted = youthData?.muted_until ? new Date(youthData.muted_until).getTime() > Date.now() : false;
         authorLevel = calculateLevelFromXp(xp);
 
-        if (!isStaff && (authorLevel < 2 || xp < 100)) {
-          return {
-            success: false,
-            error: "Reach Level 2 (100 XP) to participate in project Q&A to prevent spam.",
-            errorCode: "LEVEL_INSUFFICIENT",
-          };
+        if (!isStaff) {
+          if (isMuted) {
+            return {
+              success: false,
+              error: "You are temporarily restricted from posting because your account is muted.",
+              errorCode: "USER_MUTED",
+            };
+          }
+          if (authorLevel < 2 || xp < 100) {
+            return {
+              success: false,
+              error: "Reach Level 2 (100 XP) to participate in project Q&A to prevent spam.",
+              errorCode: "LEVEL_INSUFFICIENT",
+            };
+          }
+          if (trustScore < 30) {
+            return {
+              success: false,
+              error: `Trust Score 30+ required to participate (${trustScore}/100). Complete your profile dossier or verified missions to restore good standing.`,
+              errorCode: "TRUST_SCORE_TOO_LOW",
+            };
+          }
         }
       }
     }

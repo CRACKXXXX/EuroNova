@@ -295,7 +295,7 @@ export function SurveyBuilderClient({ orgId }: SurveyBuilderClientProps) {
   const handleDeleteTemplate = () => {
     if (!selectedTemplateId) return;
     if (templates.length <= 1) {
-      toast.error("You must maintain at least one application dossier template.");
+      toast.error(t("minOneTemplateError"));
       return;
     }
 
@@ -579,7 +579,7 @@ export function SurveyBuilderClient({ orgId }: SurveyBuilderClientProps) {
                 </span>
               </h2>
               <p className="text-xs text-gray-400">
-                Create multiple customized application forms and attach them when publishing missions.
+                {t("subtitleTemplates")}
               </p>
             </div>
           </div>
@@ -620,11 +620,11 @@ export function SurveyBuilderClient({ orgId }: SurveyBuilderClientProps) {
             <button
               type="button"
               onClick={handleDuplicateTemplate}
-              title="Duplicate Template"
+              title={t("duplicateTemplate")}
               className="p-2 rounded-xl bg-void-deep hover:bg-void-deep/80 border border-void-border text-gray-300 hover:text-white text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <Copy className="w-3.5 h-3.5 text-hyper-violet" />
-              <span className="hidden sm:inline">Duplicate</span>
+              <span className="hidden sm:inline">{t("duplicate")}</span>
             </button>
 
             <button
@@ -990,14 +990,14 @@ export function SurveyBuilderClient({ orgId }: SurveyBuilderClientProps) {
                     onChange={(e) => handlePreviewAnswerChange(questions[previewStep].id, e.target.value)}
                     className="w-full p-4 rounded-2xl bg-void-deep border border-void-border focus:border-plasma-cyan text-sm text-white outline-none"
                   >
-                    <option value="">Select Level</option>
-                    <option value="A1">A1 — Beginner</option>
-                    <option value="A2">A2 — Elementary</option>
-                    <option value="B1">B1 — Intermediate</option>
-                    <option value="B2">B2 — Upper Intermediate</option>
-                    <option value="C1">C1 — Advanced</option>
-                    <option value="C2">C2 — Proficient</option>
-                    <option value="Native">Native Speaker</option>
+                    <option value="">{t("selectLevel")}</option>
+                    <option value="A1">{t("levelA1")}</option>
+                    <option value="A2">{t("levelA2")}</option>
+                    <option value="B1">{t("levelB1")}</option>
+                    <option value="B2">{t("levelB2")}</option>
+                    <option value="C1">{t("levelC1")}</option>
+                    <option value="C2">{t("levelC2")}</option>
+                    <option value="Native">{t("levelNative")}</option>
                   </select>
                 )}
 
@@ -1175,7 +1175,7 @@ export function SurveyBuilderClient({ orgId }: SurveyBuilderClientProps) {
                         </span>
                       </div>
                       <p className="text-xs text-plasma-cyan font-medium truncate">
-                        Mission: {sub.project_title || "Erasmus+ Mission"}
+                        {t("missionLabel", { title: sub.project_title || t("defaultMissionTitle") })}
                       </p>
                       <p className="text-[11px] text-gray-500 font-mono">
                         {t("submittedOn")}: {new Date(sub.created_at).toLocaleDateString()}
@@ -1189,7 +1189,7 @@ export function SurveyBuilderClient({ orgId }: SurveyBuilderClientProps) {
                         className="px-3.5 py-2 rounded-xl bg-void-deep hover:bg-void-surface border border-void-border text-xs font-bold text-white transition-all flex items-center gap-1.5 cursor-pointer"
                       >
                         <Eye className="w-3.5 h-3.5 text-plasma-cyan" />
-                        <span>View Dossier</span>
+                        <span>{t("viewDossier")}</span>
                       </button>
 
                       <button
@@ -1263,7 +1263,7 @@ export function SurveyBuilderClient({ orgId }: SurveyBuilderClientProps) {
                             className="text-plasma-cyan hover:underline inline-flex items-center gap-1.5"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
-                            <span>View Attached Document</span>
+                            <span>{t("viewAttachedDocument")}</span>
                           </a>
                         ) : (
                           String(val || "—")

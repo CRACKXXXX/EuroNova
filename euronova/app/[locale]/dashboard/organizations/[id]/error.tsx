@@ -14,12 +14,8 @@ export default function OrganizationDetailError({
     <RouteErrorBoundary
       error={error}
       reset={reset}
-      title="Organization Dossier Inaccessible"
-      badge="ACCREDITATION NETWORK ANOMALY"
-      description="The NGO dossier or associated European mobility opportunities could not be retrieved from the database. Please try again."
       icon={Building2}
       returnHref="/dashboard/organizations"
-      returnLabel="All Organizations"
     />
   );
 }

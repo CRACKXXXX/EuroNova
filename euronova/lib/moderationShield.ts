@@ -314,6 +314,15 @@ export async function muteUser({
       return { success: false, error: "Target user ID is required." };
     }
 
+    // Staff immunity guard: Root, Admin, and Moderator are immune to mutes
+    const targetRole = await getUserRole(targetUserId);
+    if (targetRole === "root" || targetRole === "admin" || targetRole === "moderator") {
+      return {
+        success: false,
+        error: "Permission Denied: Staff members (Root, Admin, Moderator) are immune to disciplinary mutes.",
+      };
+    }
+
     // Role-based permission guard: Support cannot mute
     if (mutedByUserId) {
       const executorRole = await getUserRole(mutedByUserId);
@@ -424,6 +433,15 @@ export async function warnUser({
   try {
     if (!targetUserId) {
       return { success: false, error: "Target user ID is required." };
+    }
+
+    // Staff immunity guard: Root, Admin, and Moderator are immune to warnings
+    const targetRole = await getUserRole(targetUserId);
+    if (targetRole === "root" || targetRole === "admin" || targetRole === "moderator") {
+      return {
+        success: false,
+        error: "Permission Denied: Staff members (Root, Admin, Moderator) are immune to disciplinary warnings.",
+      };
     }
 
     // Role-based permission guard: Support cannot warn
@@ -574,6 +592,12 @@ export async function checkSevereReportStreak(
 ): Promise<boolean> {
   if (!targetUserId) return false;
   try {
+    // Staff immunity guard: Root, Admin, and Moderator are immune to automated streaks
+    const targetRole = await getUserRole(targetUserId);
+    if (targetRole === "root" || targetRole === "admin" || targetRole === "moderator") {
+      return false;
+    }
+
     const adminDb = getServiceRoleClient();
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { data: recentReports, error } = await adminDb

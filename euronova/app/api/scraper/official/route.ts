@@ -10,6 +10,8 @@ import {
   cleanProjectDescription,
   parseEuropeanDateRange,
   mapToCanonicalTopics,
+  normalizeErasmusProjectType,
+  calculateSemanticTitleSimilarity,
 } from "@/lib/formatters/projectDescription";
 
 export const dynamic = "force-dynamic";
@@ -119,6 +121,7 @@ const MONTH_NAMES_PATTERN = Object.keys(MONTH_MAP).sort((a, b) => b.length - a.l
 
 export interface ScrapedCandidate {
   source: "salto" | "eyp_esc" | "ye_aggregator" | "proactive_future" | "aktivekosmos";
+  external_id?: string | null;
   title: string;
   official_url: string;
   description: string;
@@ -753,10 +756,122 @@ function validateProjectContract(
 // MODULAR SOURCE FETCHERS (PILLAR 1)
 // ============================================================================
 
-async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 12000): Promise<Response> {
-  return await fetch(url, {
-    ...options,
-    signal: AbortSignal.timeout(timeoutMs),
+// ============================================================================
+// NETWORK RESILIENCE & ANTI-BOT EVASION (PILLAR 1)
+// ============================================================================
+
+const BROWSER_PROFILES = [
+  {
+    userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    secChUa: '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+    platform: '"Windows"',
+  },
+  {
+    userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    secChUa: '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+    platform: '"macOS"',
+  },
+  {
+    userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0",
+    secChUa: undefined,
+    platform: '"Windows"',
+  },
+  {
+    userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Safari/605.1.15",
+    secChUa: undefined,
+    platform: '"macOS"',
+  },
+  {
+    userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0",
+    secChUa: '"Chromium";v="124", "Microsoft Edge";v="124", "Not-A.Brand";v="99"',
+    platform: '"Windows"',
+  },
+];
+
+function getRealisticHeaders(isJson = false): Record<string, string> {
+  const profile = BROWSER_PROFILES[Math.floor(Math.random() * BROWSER_PROFILES.length)];
+  const headers: Record<string, string> = {
+    "User-Agent": profile.userAgent,
+    "Accept-Language": "en-US,en;q=0.9,es;q=0.8,de;q=0.7",
+    "Accept": isJson
+      ? "application/json, text/plain, */*"
+      : "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Sec-Fetch-Dest": isJson ? "empty" : "document",
+    "Sec-Fetch-Mode": isJson ? "cors" : "navigate",
+    "Sec-Fetch-Site": isJson ? "same-origin" : "none",
+  };
+  if (profile.secChUa) {
+    headers["Sec-Ch-Ua"] = profile.secChUa;
+    headers["Sec-Ch-Ua-Mobile"] = "?0";
+    headers["Sec-Ch-Ua-Platform"] = profile.platform;
+  }
+  if (!isJson) {
+    headers["Sec-Fetch-User"] = "?1";
+    headers["Upgrade-Insecure-Requests"] = "1";
+  }
+  return headers;
+}
+
+/**
+ * Enterprise HTTP client with anti-bot evasion and exponential backoff retry.
+ * Handles 429 Too Many Requests, 5xx server errors and network aborts.
+ */
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit = {},
+  maxRetries = 3,
+  timeoutMs = 12000
+): Promise<Response> {
+  let attempt = 0;
+  let lastError: unknown = null;
+  const isJson = Boolean(options.headers && JSON.stringify(options.headers).toLowerCase().includes("application/json"));
+
+  while (attempt <= maxRetries) {
+    try {
+      const dynamicHeaders = {
+        ...getRealisticHeaders(isJson),
+        ...((options.headers as Record<string, string>) || {}),
+      };
+
+      const res = await fetch(url, {
+        ...options,
+        headers: dynamicHeaders,
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+
+      // 429 Rate Limit or 5xx Server Error -> Exponential Backoff
+      if ((res.status === 429 || res.status >= 500) && attempt < maxRetries) {
+        attempt++;
+        let delayMs = Math.min(1000 * Math.pow(2.2, attempt) + Math.random() * 500, 8000);
+        const retryAfter = res.headers.get("retry-after");
+        if (retryAfter) {
+          const parsed = parseInt(retryAfter, 10);
+          if (!isNaN(parsed) && parsed > 0 && parsed <= 8) {
+            delayMs = parsed * 1000;
+          }
+        }
+        console.warn(`[Scraper Backoff] ${url} HTTP ${res.status}. Retrying in ${Math.round(delayMs)}ms (${attempt}/${maxRetries})...`);
+        await new Promise((r) => setTimeout(r, delayMs));
+        continue;
+      }
+
+      return res;
+    } catch (err: unknown) {
+      lastError = err;
+      attempt++;
+      if (attempt <= maxRetries) {
+        const delayMs = Math.min(1000 * Math.pow(2, attempt) + Math.random() * 400, 6000);
+        console.warn(`[Scraper Retry] ${url} error (${err instanceof Error ? err.message : String(err)}). Retrying in ${Math.round(delayMs)}ms (${attempt}/${maxRetries})...`);
+        await new Promise((r) => setTimeout(r, delayMs));
+      }
+    }
+  }
+
+  console.error(`[Scraper Exhausted] ${url} failed after ${maxRetries} retries:`, lastError);
+  return new Response(JSON.stringify({ error: "Source fetch exhausted retries", url }), {
+    status: 503,
+    statusText: "Service Unavailable",
+    headers: { "Content-Type": "application/json" },
   });
 }
 
@@ -767,12 +882,7 @@ async function fetchSaltoProjects(): Promise<ScrapedCandidate[]> {
   const candidates: ScrapedCandidate[] = [];
   try {
     const browseUrl = "https://www.salto-youth.net/tools/european-training-calendar/browse/";
-    const res = await fetchWithTimeout(browseUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-      },
-      cache: "no-store",
-    });
+    const res = await fetchWithRetry(browseUrl, { cache: "no-store" });
 
     if (!res.ok) return candidates;
     const html = await res.text();
@@ -795,12 +905,19 @@ async function fetchSaltoProjects(): Promise<ScrapedCandidate[]> {
           deadline: dateRange.deadline,
         });
 
+        const saltoIdMatch = official_url.match(/\.(\d+)(?:\/|$)/);
+        const external_id = saltoIdMatch ? `salto:${saltoIdMatch[1]}` : null;
+        const projectType = normalizeErasmusProjectType(
+          /partnership/i.test(title + cleanDesc) ? "PBA" : /seminar/i.test(title + cleanDesc) ? "SE" : "TC"
+        );
+
         candidates.push({
           source: "salto",
+          external_id,
           title,
           official_url,
           description: cleanDesc,
-          project_type: /partnership/i.test(title + cleanDesc) ? "PBA" : "TC",
+          project_type: projectType,
           native_start_date: dateRange.startDate,
           native_end_date: dateRange.endDate,
           native_deadline: dateRange.deadline,
@@ -829,11 +946,8 @@ async function fetchEypEscProjects(): Promise<ScrapedCandidate[]> {
   const candidates: ScrapedCandidate[] = [];
   try {
     const apiUrl = "https://youth.europa.eu/api/rest/eyp/v1/search?type=Opportunity&limit=30";
-    const res = await fetchWithTimeout(apiUrl, {
-      headers: {
-        Accept: "application/json",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-      },
+    const res = await fetchWithRetry(apiUrl, {
+      headers: { Accept: "application/json" },
       cache: "no-store",
     });
 
@@ -847,6 +961,7 @@ async function fetchEypEscProjects(): Promise<ScrapedCandidate[]> {
 
       const rawId = src.id || src.opid || hit._id;
       if (!rawId) continue;
+      const external_id = `eyp:${rawId}`;
 
       const title = src.title?.trim() || "European Solidarity Corps Volunteering Opportunity";
       const official_url = normalizeUrl(`/solidarity/placement/${rawId}_en`, "https://youth.europa.eu");
@@ -866,6 +981,7 @@ async function fetchEypEscProjects(): Promise<ScrapedCandidate[]> {
 
       candidates.push({
         source: "eyp_esc",
+        external_id,
         title,
         official_url,
         description,
@@ -901,11 +1017,8 @@ async function fetchProactiveProjects(): Promise<ScrapedCandidate[]> {
   const candidates: ScrapedCandidate[] = [];
   try {
     const apiUrl = "https://mapa.proactivefuture.eu/api/map";
-    const res = await fetchWithTimeout(apiUrl, {
-      headers: {
-        Accept: "application/json",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-      },
+    const res = await fetchWithRetry(apiUrl, {
+      headers: { Accept: "application/json" },
       cache: "no-store",
     });
 
@@ -920,6 +1033,8 @@ async function fetchProactiveProjects(): Promise<ScrapedCandidate[]> {
       const rawUrl = item.application_url || item.infopack_url || (item.identifier ? `https://mapa.proactivefuture.eu/?o=${item.identifier}` : null);
       if (!title || !rawUrl) continue;
 
+      const rawId = item.identifier || item.id;
+      const external_id = rawId ? `proactive:${rawId}` : null;
       const official_url = normalizeUrl(rawUrl, "https://mapa.proactivefuture.eu");
       const descParts = [
         item.summary || "",
@@ -929,17 +1044,12 @@ async function fetchProactiveProjects(): Promise<ScrapedCandidate[]> {
       ].filter(Boolean);
 
       const description = descParts.join("\n\n").replace(/<[^>]*>/g, "").trim();
-
-      let projectType: "YE" | "TC" | "ESC" = "YE";
-      const typeText = `${item.type || ""} ${title} ${description}`.toLowerCase();
-      if (typeText.includes("formaci") || typeText.includes("training") || item.type === "TRAINING_COURSE") {
-        projectType = "TC";
-      } else if (typeText.includes("voluntaria") || item.type === "VOLUNTEERING" || item.type === "ESC") {
-        projectType = "ESC";
-      }
+      const typeText = `${item.type || ""} ${title} ${description}`;
+      const projectType = normalizeErasmusProjectType(typeText);
 
       candidates.push({
         source: "proactive_future",
+        external_id,
         title,
         official_url,
         description,
@@ -974,12 +1084,7 @@ async function fetchYeAggregatorProjects(): Promise<ScrapedCandidate[]> {
   const candidates: ScrapedCandidate[] = [];
   try {
     const rssUrl = "https://www.scambieuropei.info/category/scambi-culturali/feed/";
-    const res = await fetchWithTimeout(rssUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-      },
-      cache: "no-store",
-    });
+    const res = await fetchWithRetry(rssUrl, { cache: "no-store" });
 
     if (!res.ok) return candidates;
     const xml = await res.text();
@@ -991,12 +1096,18 @@ async function fetchYeAggregatorProjects(): Promise<ScrapedCandidate[]> {
       const rawDesc = $(el).find("description").text().replace(/<[^>]*>/g, "").trim();
 
       if (title && rawLink) {
+        const official_url = normalizeUrl(rawLink, "https://www.scambieuropei.info");
+        const slugMatch = official_url.replace(/\/feed\/?$/, "").match(/\/([^\/]+)\/?$/);
+        const external_id = slugMatch && slugMatch[1] ? `scambi:${slugMatch[1]}` : null;
+        const projectType = normalizeErasmusProjectType(`${title} ${rawDesc}`);
+
         candidates.push({
           source: "ye_aggregator",
+          external_id,
           title,
-          official_url: normalizeUrl(rawLink, "https://www.scambieuropei.info"),
+          official_url,
           description: rawDesc,
-          project_type: "YE",
+          project_type: projectType,
           financing_type: "Total",
           accommodation_covered: true,
           min_age: 18,
@@ -1209,23 +1320,39 @@ export async function GET(request: NextRequest) {
     const insertedProjects: Array<{ id: string; title: string; status: string; duration_days: number | null }> = [];
     const errors: Array<{ title: string; error: string }> = [];
 
+    const startTime = Date.now();
+    const MAX_EXECUTION_TIME_MS = 45000;
+    let isTimeBudgetExceeded = false;
+
     // Layer 3a: In-memory batch deduplication sets
     const batchSeenUrls = new Set<string>();
     const batchSeenFingerprints = new Set<string>();
+    const batchSeenExternalIds = new Set<string>();
 
     // 4. Process each candidate through Clean Extraction Hierarchy
     for (const candidate of candidates) {
+      if (Date.now() - startTime > MAX_EXECUTION_TIME_MS) {
+        isTimeBudgetExceeded = true;
+        break;
+      }
       try {
         const canonicalUrl = normalizeOfficialUrl(candidate.official_url);
         const fingerprint = computeMissionFingerprint(candidate.title, candidate.native_dest_country);
 
         // In-batch deduplication: reject if already encountered in this batch
-        if (batchSeenUrls.has(canonicalUrl) || batchSeenFingerprints.has(fingerprint)) {
+        if (
+          batchSeenUrls.has(canonicalUrl) ||
+          batchSeenFingerprints.has(fingerprint) ||
+          (candidate.external_id && batchSeenExternalIds.has(candidate.external_id))
+        ) {
           duplicateCount++;
           continue;
         }
         batchSeenUrls.add(canonicalUrl);
         batchSeenFingerprints.add(fingerprint);
+        if (candidate.external_id) {
+          batchSeenExternalIds.add(candidate.external_id);
+        }
 
         // Layer 3b: Database deduplication by canonical official_url
         const { data: existingByUrl } = await adminDb
@@ -1239,22 +1366,47 @@ export async function GET(request: NextRequest) {
           continue;
         }
 
+        // Layer 3c: Database deduplication by external ID (if present)
+        if (candidate.external_id) {
+          const idCore = candidate.external_id.split(":")[1];
+          if (idCore && idCore.length >= 4) {
+            const { data: existingById } = await adminDb
+              .from("projects")
+              .select("id")
+              .ilike("official_url", `%${idCore}%`)
+              .limit(1)
+              .maybeSingle();
+
+            if (existingById) {
+              duplicateCount++;
+              continue;
+            }
+          }
+        }
+
         // Process candidate through extraction hierarchy
         const projectPayload = await processCandidate(candidate);
         projectPayload.official_url = canonicalUrl;
 
-        // Layer 3c: Database deduplication by semantic title + destination country
+        // Layer 3d: Database deduplication by semantic title + destination country
         if (projectPayload.dest_country && candidate.title.trim()) {
-          const { data: existingByTitle } = await adminDb
+          const { data: existingCandidates } = await adminDb
             .from("projects")
             .select("id, title")
-            .ilike("title", candidate.title.trim())
             .eq("dest_country", projectPayload.dest_country)
-            .maybeSingle();
+            .limit(50);
 
-          if (existingByTitle) {
-            duplicateCount++;
-            continue;
+          if (existingCandidates && existingCandidates.length > 0) {
+            const isSemanticDup = existingCandidates.some((existing) => {
+              if (existing.title.toLowerCase().trim() === candidate.title.toLowerCase().trim()) return true;
+              const sim = calculateSemanticTitleSimilarity(existing.title, candidate.title);
+              return sim >= 0.8;
+            });
+
+            if (isSemanticDup) {
+              duplicateCount++;
+              continue;
+            }
           }
         }
 
@@ -1321,6 +1473,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      partial: isTimeBudgetExceeded,
+      execution_time_ms: Date.now() - startTime,
       summary: {
         total_scraped: candidates.length,
         total_inserted: insertedCount,

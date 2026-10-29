@@ -443,6 +443,89 @@ export async function penalizeTrustScore(
 }
 
 /**
+ * Revierte matemáticamente el XP y Trust Score otorgados por una respuesta en el foro cuando
+ * el autor elimina su propio post, neutralizando el exploit de farming (Post & Delete loop).
+ */
+export async function revertForumPostXpAction(
+  userId: string,
+  postId: string
+): Promise<{ success: boolean; xpReverted?: number; error?: string }> {
+  try {
+    if (!userId || !postId) {
+      return { success: false, error: "Missing required parameters." };
+    }
+
+    const adminDb = getAdminDb();
+    const targetId = `global_reply_${postId}`;
+
+    // 1. Consultar el log de XP original para saber el monto exacto otorgado
+    const { data: existingLog, error: logError } = await adminDb
+      .from("user_xp_logs")
+      .select("id, xp_amount")
+      .eq("user_id", userId)
+      .eq("action_type", "forum_answer")
+      .eq("target_id", targetId)
+      .maybeSingle();
+
+    if (logError) {
+      console.warn("Could not query user_xp_logs for revert:", logError.message);
+    }
+
+    // Default to FORUM_ANSWER amount if log was not found or has null amount
+    const xpToDeduct = existingLog?.xp_amount || XP_CONFIG.FORUM_ANSWER.amount;
+    const trustToDeduct = XP_CONFIG.FORUM_ANSWER.trustBoost || 1;
+
+    // 2. Consultar perfil actual de users_youth
+    const { data: youth, error: youthError } = await adminDb
+      .from("users_youth")
+      .select("xp, trust_score")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (youthError || !youth) {
+      return { success: false, error: "Youth profile not found for XP reversal." };
+    }
+
+    const currentXp = youth.xp || 0;
+    const currentTrust = typeof youth.trust_score === "number" ? youth.trust_score : 50;
+    const newXp = Math.max(0, currentXp - xpToDeduct);
+    const newTrust = Math.max(0, Math.min(100, currentTrust - trustToDeduct));
+
+    // 3. Actualizar perfil de usuario
+    const { error: updateError } = await adminDb
+      .from("users_youth")
+      .update({
+        xp: newXp,
+        trust_score: newTrust,
+      })
+      .eq("id", userId);
+
+    if (updateError) {
+      return { success: false, error: updateError.message };
+    }
+
+    // 4. Eliminar el registro en user_xp_logs para reflejar la revocación
+    if (existingLog?.id) {
+      await adminDb.from("user_xp_logs").delete().eq("id", existingLog.id);
+    } else {
+      await adminDb
+        .from("user_xp_logs")
+        .delete()
+        .eq("user_id", userId)
+        .eq("target_id", targetId);
+    }
+
+    revalidatePath("/dashboard/profile");
+    return { success: true, xpReverted: xpToDeduct };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Error reverting forum post XP",
+    };
+  }
+}
+
+/**
  * Otorga recompensa por finalización verificada de proyecto a un voluntario:
  * +25 Trust Score, +150 XP (protegido contra farming y ejecutado con service_role).
  * Requiere que el invocador sea la ONG propietaria del proyecto o un Administrador.

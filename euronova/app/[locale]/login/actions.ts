@@ -18,7 +18,7 @@ export async function login(prevState: unknown, formData: FormData) {
     return { error: issue };
   }
 
-  // 2. Anti-brute-force Rate Limiter (5 attempts per minute per IP)
+  // 2. Anti-brute-force Rate Limiter (10 attempts per minute per IP)
   const clientIp = await getClientIp();
   const rateCheck = await checkRateLimit(`login_${clientIp}`, RATE_LIMITS.AUTH);
   if (!rateCheck.success) {

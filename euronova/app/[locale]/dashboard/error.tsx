@@ -14,12 +14,8 @@ export default function DashboardError({
     <RouteErrorBoundary
       error={error}
       reset={reset}
-      title="Dashboard Subsystem Disruption"
-      badge="TERMINAL SUBSYSTEM FAULT"
-      description="An unhandled error occurred inside this dashboard segment. You can reset the boundary state or reload the current terminal view."
       icon={LayoutDashboard}
       returnHref="/dashboard"
-      returnLabel="Reload Dashboard"
     />
   );
 }

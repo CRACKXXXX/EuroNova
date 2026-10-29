@@ -31,23 +31,42 @@ export async function generateMetadata(
     props.params,
     createClient(),
   ]);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://euronova.space";
+
   const { data: project } = await supabase
     .from("projects")
-    .select("title, description, image_url, dest_country, project_type")
+    .select("title, description, dest_country, project_type, org_id, users_org(org_name, avatar_url)")
     .eq("id", id)
     .maybeSingle();
 
   if (!project) {
     return {
-      title: "EuroNova",
+      title: "Mission Not Found",
+      description: "The requested Erasmus+ or ESC mobility project could not be found.",
     };
   }
 
-  const title = "EuroNova";
-  const cleanDescription = project.description
-    ? project.description.slice(0, 160).replace(/\s+/g, " ").trim()
-    : "Discover Erasmus+ & ESC youth mobility opportunities across Europe on EuroNova.";
-  const imageUrl = project.image_url || "/logo-big.png";
+  const projectTitle = project.title ? project.title.trim() : "EuroNova Mobility Mission";
+  const rawDescription = project.description || "";
+  // Strip markdown formatting, headers, brackets, and excessive whitespace for SEO snippet
+  const cleanDescription =
+    rawDescription
+      .replace(/[#*_`~>\[\]\(\)]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 160) || "Discover verified Erasmus+ and European Solidarity Corps youth mobility missions on EuroNova.";
+
+  // Safe cover image resolution with fallback to EuroNova brand assets
+  const orgData = Array.isArray(project.users_org) ? project.users_org[0] : project.users_org;
+  const candidateImage =
+    (project as { cover_image_url?: string; image_url?: string }).cover_image_url ||
+    (project as { cover_image_url?: string; image_url?: string }).image_url ||
+    orgData?.avatar_url ||
+    "/logo-big.png";
+
+  const absoluteImageUrl = candidateImage.startsWith("http")
+    ? candidateImage
+    : `${siteUrl.replace(/\/$/, "")}${candidateImage.startsWith("/") ? "" : "/"}${candidateImage}`;
 
   const languageAlternates: Record<string, string> = {};
   for (const l of routing.locales) {
@@ -55,34 +74,36 @@ export async function generateMetadata(
   }
   languageAlternates["x-default"] = `/${routing.defaultLocale}/dashboard/projects/${id}`;
 
+  const canonicalUrl = `${siteUrl.replace(/\/$/, "")}/${locale}/dashboard/projects/${id}`;
+
   return {
-    title,
+    title: projectTitle,
     description: cleanDescription,
     alternates: {
-      canonical: `/${locale}/dashboard/projects/${id}`,
+      canonical: canonicalUrl,
       languages: languageAlternates,
     },
     openGraph: {
       type: "article",
       locale,
-      url: `/${locale}/dashboard/projects/${id}`,
+      url: canonicalUrl,
       siteName: "EuroNova",
-      title,
+      title: projectTitle,
       description: cleanDescription,
       images: [
         {
-          url: imageUrl,
+          url: absoluteImageUrl,
           width: 1200,
           height: 630,
-          alt: project.title,
+          alt: projectTitle,
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: projectTitle,
       description: cleanDescription,
-      images: [imageUrl],
+      images: [absoluteImageUrl],
     },
   };
 }
@@ -447,17 +468,19 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ loca
                   </div>
                 )}
 
-                {(project.start_date || project.end_date) && (
-                  <div className="flex items-start gap-3">
-                    <Calendar className="w-5 h-5 text-plasma-cyan shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm text-gray-400 font-medium">{t("dates")}</p>
-                      <p className="text-white font-semibold">
-                        {project.start_date || ""} {project.end_date ? `— ${project.end_date}` : ""}
-                      </p>
-                    </div>
+                <div className="flex items-start gap-3">
+                  <Calendar className="w-5 h-5 text-plasma-cyan shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-gray-400 font-medium">{t("dates")}</p>
+                    <p className="text-white font-semibold">
+                      {project.start_date && project.end_date
+                        ? `${project.start_date} — ${project.end_date}`
+                        : project.start_date
+                        ? `${project.start_date} (${t("datesTba")})`
+                        : t("datesTba")}
+                    </p>
                   </div>
-                )}
+                </div>
 
                 {project.application_deadline && (
                   <div className="flex items-start gap-3">
@@ -502,7 +525,7 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ loca
                         className="w-full px-4 py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-gray-400 hover:text-white bg-void-deep hover:bg-void-surface border border-void-border text-xs transition-colors"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
-                        <span>External Portal / Infopack</span>
+                        <span>{t("externalPortalInfopack")}</span>
                       </a>
                     )}
                   </div>

@@ -196,7 +196,7 @@ function matchesWord(text: string, term: string): boolean {
  * Deterministic multi-language NLP parser fallback.
  * Guarantees 100% availability even when Gemini API is offline or rate-limited.
  */
-export function parseLocalMultilingualQuery(rawQuery: string): AiSearchFilters {
+function parseLocalMultilingualQuery(rawQuery: string): AiSearchFilters {
   const query = rawQuery.toLowerCase().trim();
   const destSet = new Set<string>();
   const typesSet = new Set<string>();

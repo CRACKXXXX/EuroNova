@@ -509,7 +509,8 @@
     "endDate": "Enddatum",
     "applicationDeadline": "Bewerbungsfrist",
     "participantCount": "Teilnehmerkapazität",
-    "participantCountPlaceholder": "z.B. 24"
+    "participantCountPlaceholder": "z.B. 24",
+    "invalidImageFormat": "Ungültiges Bildformat. Erlaubt: JPG, PNG, WEBP, GIF."
   },
   "ProjectDetails": {
     "publisherProfile": "Herausgeberprofil",
@@ -603,7 +604,9 @@
     "candidateSubmissions": "Kandidatenbewerbungen",
     "viewMySubmission": "Eingereichtes Dossier ansehen",
     "submissionSuccessToast": "Bewerbung eingereicht! Du hast +75 XP erhalten.",
-    "applicationReviewNotice": "Deine Bewerbung wird derzeit von der Aufnahmeorganisation geprüft."
+    "applicationReviewNotice": "Deine Bewerbung wird derzeit von der Aufnahmeorganisation geprüft.",
+    "externalPortalInfopack": "Externes Portal / Infopack",
+    "datesTba": "Termine werden noch bekannt gegeben (TBA)"
   },
   "Footer": {
     "rights": "EuroNova. Alle Rechte vorbehalten.",
@@ -717,7 +720,14 @@
     "failedEscalateReport": "Fehler beim Eskalieren der Meldung.",
     "autoDeletingIn": "Automatisches Löschen in {hours}h",
     "autoDeletingDefault": "Automatisches Löschen in 48h",
-    "pendingCronPurge": "Ausstehende Cron-Bereinigung"
+    "pendingCronPurge": "Ausstehende Cron-Bereinigung",
+    "tabStaffChat": "Team-Live-Chat",
+    "searchPlaceholder": "Meldungen nach Benutzer, Ziel, ID oder Grund durchsuchen...",
+    "filterAll": "Alle ({count})",
+    "filterActive": "Aktives Triage ({count})",
+    "filterResolved": "Gelöstes Protokoll ({count})",
+    "view": "Ansehen",
+    "org": "Org"
   },
   "AdminPanel": {
     "title": "God Mode: Kommandozentrale",
@@ -982,7 +992,32 @@
     "saving": "Speichern...",
     "verifiedStaff": "Verifiziert",
     "requestAdminAction": "Administrative Maßnahme Anfordern",
-    "pendingPurge": "Löschung Ausstehend"
+    "pendingPurge": "Löschung Ausstehend",
+    "tabStaffChat": "Team-Live-Chat",
+    "searchTicketsPlaceholder": "Tickets nach E-Mail, Betreff, Telefon oder Grund durchsuchen...",
+    "quickTemplates": "Schnellantwort-Vorlagen",
+    "templateAck": "In Prüfung: Unser Team untersucht Ihre Übertragung.",
+    "templateDocs": "Aktion erforderlich: Zusätzliche Unterlagen zur Bearbeitung erforderlich.",
+    "templateResolved": "Gelöst: Ihre Anfrage wurde geprüft und erfolgreich abgeschlossen.",
+    "templateEscalated": "Eskaliert: Ihr Fall wurde an technische Spezialisten weitergeleitet.",
+    "allClearStream": "Alles frei in diesem Stream",
+    "statusResolved": "Gelöst",
+    "statusInProgress": "In Bearbeitung",
+    "statusOpen": "Offen",
+    "senderIdentity": "Absender-Identität",
+    "inquiryContent": "Anfrageinhalt",
+    "autoPurgeNotice": "Automatische Bereinigung gelöster Einträge nach 48 Std.",
+    "phoneLabel": "Telefon: {phone}",
+    "officialResolutionResponse": "Offizielle Rückmeldung des Fachspezialisten",
+    "templateAckShort": "Untersuchung läuft",
+    "templateDocsShort": "Unterlagen erforderlich",
+    "templateResolvedShort": "Gelöst & Verifiziert",
+    "templateEscalatedShort": "An Technik eskaliert",
+    "updateResolution": "Lösung aktualisieren",
+    "replyAndResolve": "Antworten & Lösen",
+    "ticketsMatched": "{count} passende Tickets",
+    "noTicketsMatchSearch": "Keine Tickets entsprechen Ihrer Suchanfrage.",
+    "noSupportInquiriesPending": "Keine Support-Anfragen in dieser Warteschlange anhängig."
   },
   "ProjectTypes": {
     "YE": "Jugendaustausch",
@@ -1102,7 +1137,9 @@
     "allTypes": "Alle Typen",
     "searchLocation": "Ort suchen...",
     "noCoordinates": "Geodaten für diese Übertragung derzeit nicht verfügbar.",
-    "durationDaysCount": "{count, plural, =0 {0 Tage} one {# Tag} other {# Tage}}"
+    "durationDaysCount": "{count, plural, =0 {0 Tage} one {# Tag} other {# Tage}}",
+    "calibratingRadar": "Georäumliches Radar wird kalibriert",
+    "loadingTelemetry": "Laden europäischer Projektkoordinaten und Telemetrie der Gebiete in äußerster Randlage..."
   },
   "Pagination": {
     "previous": "Zurück",
@@ -1500,7 +1537,27 @@
     "templateCreatedSuccess": "Neue Bewerbungsvorlage erstellt!",
     "templateDeletedSuccess": "Vorlage erfolgreich gelöscht.",
     "templateDuplicateSuccess": "Vorlage dupliziert.",
-    "statusUpdatedSuccess": "Kandidatenstatus aktualisiert auf {status}."
+    "statusUpdatedSuccess": "Kandidatenstatus aktualisiert auf {status}.",
+    "attachedDocument": "Angehängtes Dokument",
+    "selectLanguageLevel": "Sprachkompetenzniveau Auswählen",
+    "levelA1": "A1 — Anfänger",
+    "levelA2": "A2 — Grundlegend",
+    "levelB1": "B1 — Mittelstufe",
+    "levelB2": "B2 — Gute Mittelstufe",
+    "levelC1": "C1 — Fortgeschritten",
+    "levelC2": "C2 — Exzellente Kenntnisse",
+    "levelNative": "Muttersprachler",
+    "transmittingDossier": "Dossier Wird Übertragen...",
+    "submitApplicationXp": "Bewerbung Absenden (+75 XP)",
+    "minOneTemplateError": "Sie müssen mindestens eine Bewerbungsdossier-Vorlage beibehalten.",
+    "subtitleTemplates": "Erstellen Sie mehrere individuelle Bewerbungsformulare und fügen Sie sie bei Veröffentlichung von Missionen bei.",
+    "duplicate": "Duplizieren",
+    "duplicateTemplate": "Vorlage duplizieren",
+    "missionLabel": "Mission: {title}",
+    "defaultMissionTitle": "Erasmus+-Mission",
+    "viewDossier": "Dossier ansehen",
+    "viewAttachedDocument": "Angehängtes Dokument ansehen",
+    "selectLevel": "Niveau auswählen"
   },
   "Notifications": {
     "title": "Orbitale Übertragungen",
@@ -2063,5 +2120,41 @@
     "media_literacy": "Medienkompetenz & Jugendinformation",
     "rural_development": "Ländliche Entwicklung & Natur",
     "heritage": "Europäisches Erbe & Interkultureller Dialog"
+  },
+  "StaffChat": {
+    "terminalBadge": "Team-Live-Kommunikations-Hub",
+    "liveGrid": "Live-Netzwerk",
+    "encryptedSub": "Verschlüsselter Kommunikationskanal, streng beschränkt auf verifiziertes EuroNova-Personal.",
+    "dedicatedChannels": "Themenspezifische Kanäle",
+    "activeClearance": "Sicherheitsfreigabe",
+    "pinnedAnnouncement": "Angeheftete Ankündigung",
+    "transmissions": "Übertragungen",
+    "welcomeChannel": "Willkommen bei #{channel}",
+    "noTransmissions": "Dieser Kanal ist derzeit ruhig. Seien Sie der Erste, der eine Übertragung sendet.",
+    "restrictedBanner": "Übertragung eingeschränkt: Nur Root-Administratoren und Admins können in #admin-command posten.",
+    "placeholder": "Nachricht an #{channel} senden (Enter zum Senden, Shift+Enter für neue Zeile)...",
+    "markdownSupport": "Markdown-Formatierung unterstützt",
+    "pressEnter": "Drücken Sie Enter zum Senden",
+    "pinMessage": "Nachricht anheften",
+    "unpinMessage": "Nachricht lösen",
+    "deleteMessage": "Nachricht löschen"
+  },
+  "CookieBanner": {
+    "title": "Datenschutz- & Cookie-Einstellungen",
+    "description": "Wir verwenden unbedingt erforderliche Cookies für einen sicheren Plattformbetrieb. Mit Ihrer Einwilligung nutzen wir auch nicht-essenzielle Performance-Cookies. Werbe-Tracking ist streng untersagt.",
+    "acceptAll": "Alle akzeptieren",
+    "rejectNonEssential": "Nicht-essenzielle ablehnen",
+    "managePreferences": "Einstellungen verwalten",
+    "preferencesTitle": "Cookie-Einstellungen & Einwilligung",
+    "preferencesDescription": "Passen Sie Ihre Cookie-Einstellungen an. Unbedingt erforderliche Cookies können nicht deaktiviert werden, da sie für Sicherheit und Authentifizierung nötig sind.",
+    "essentialTitle": "Unbedingt erforderliche Cookies",
+    "essentialDesc": "Erforderlich für Authentifizierung, Sitzungssicherheit, CSRF-Schutz und Navigation. Immer aktiv.",
+    "analyticsTitle": "Leistung & Telemetrie",
+    "analyticsDesc": "Anonyme Kennzahlen, die uns helfen, die Plattformleistung und Navigation für Erasmus+ Mobilitäten zu optimieren.",
+    "savePreferences": "Einstellungen speichern",
+    "alwaysActive": "Immer aktiv",
+    "policyLink": "Cookie-Richtlinie lesen",
+    "statusAccepted": "Einwilligung erteilt",
+    "statusRejected": "Nicht-essenzielle abgelehnt"
   }
 }

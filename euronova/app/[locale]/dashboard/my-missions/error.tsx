@@ -14,12 +14,8 @@ export default function MyMissionsError({
     <RouteErrorBoundary
       error={error}
       reset={reset}
-      title="Missions Portfolio Offline"
-      badge="DOSSIER TELEMETRY WARNING"
-      description="We could not synchronize your mobility applications and saved missions. Try re-establishing the session link."
       icon={FolderGit2}
       returnHref="/dashboard"
-      returnLabel="Back to Dashboard"
     />
   );
 }

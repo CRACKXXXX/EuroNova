@@ -1244,6 +1244,16 @@ export async function deleteGlobalPostAction(
       return { success: false, error: deleteError.message };
     }
 
+    // If deleted by the author (self-delete), revert the awarded XP and Trust Score to prevent farming
+    if (isAuthor) {
+      try {
+        const { revertForumPostXpAction } = await import("@/actions/gamification");
+        await revertForumPostXpAction(user.id, postId);
+      } catch (revertErr) {
+        console.error("Could not revert forum post XP on delete:", revertErr);
+      }
+    }
+
     // If deleted by thread creator or admin (and not author's self delete), log to Quarantine tray
     if ((isSuspicious || !isAuthor) && (isAdmin || isThreadCreator)) {
       await logToQuarantine({

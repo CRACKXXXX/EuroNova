@@ -509,7 +509,8 @@
     "endDate": "End Date",
     "applicationDeadline": "Application Deadline",
     "participantCount": "Participant Capacity",
-    "participantCountPlaceholder": "e.g. 24"
+    "participantCountPlaceholder": "e.g. 24",
+    "invalidImageFormat": "Invalid image format. Allowed: JPG, PNG, WEBP, GIF."
   },
   "ProjectDetails": {
     "publisherProfile": "Publisher Profile",
@@ -603,7 +604,9 @@
     "candidateSubmissions": "Candidate Submissions",
     "viewMySubmission": "View My Submitted Dossier",
     "submissionSuccessToast": "Application submitted! You earned +75 XP.",
-    "applicationReviewNotice": "Your application is currently under review by the host organization."
+    "applicationReviewNotice": "Your application is currently under review by the host organization.",
+    "externalPortalInfopack": "External Portal / Infopack",
+    "datesTba": "Dates TBA (To Be Announced)"
   },
   "Footer": {
     "rights": "EuroNova. All rights reserved.",
@@ -717,7 +720,14 @@
     "failedEscalateReport": "Failed to escalate report.",
     "autoDeletingIn": "Auto-deleting in {hours}h",
     "autoDeletingDefault": "Auto-deleting in 48h",
-    "pendingCronPurge": "Pending cron purge"
+    "pendingCronPurge": "Pending cron purge",
+    "tabStaffChat": "Staff Live Comms",
+    "searchPlaceholder": "Search reports by user, target, ID or reason...",
+    "filterAll": "All ({count})",
+    "filterActive": "Active Triage ({count})",
+    "filterResolved": "Resolved Log ({count})",
+    "view": "View",
+    "org": "Org"
   },
   "AdminPanel": {
     "title": "God Mode: Command Center",
@@ -982,7 +992,32 @@
     "saving": "Saving...",
     "verifiedStaff": "Verified",
     "requestAdminAction": "Request Administrative Action",
-    "pendingPurge": "Pending Purge"
+    "pendingPurge": "Pending Purge",
+    "tabStaffChat": "Staff Live Comms",
+    "searchTicketsPlaceholder": "Search tickets by email, subject, phone or reason...",
+    "quickTemplates": "Quick Reply Templates",
+    "templateAck": "Under review: Our team is investigating your transmission.",
+    "templateDocs": "Action required: Additional documentation is required to proceed.",
+    "templateResolved": "Resolved: Your inquiry has been verified and resolved.",
+    "templateEscalated": "Escalated: Your case has been transferred to technical specialists.",
+    "allClearStream": "All clear in this stream",
+    "statusResolved": "Resolved",
+    "statusInProgress": "In Progress",
+    "statusOpen": "Open",
+    "senderIdentity": "Sender Identity",
+    "inquiryContent": "Inquiry Content",
+    "autoPurgeNotice": "Auto-purging resolved records after 48h",
+    "phoneLabel": "Phone: {phone}",
+    "officialResolutionResponse": "Official Specialist Resolution Response",
+    "templateAckShort": "Investigation Underway",
+    "templateDocsShort": "Documentation Required",
+    "templateResolvedShort": "Resolved & Verified",
+    "templateEscalatedShort": "Escalated to Tech",
+    "updateResolution": "Update Resolution",
+    "replyAndResolve": "Reply & Resolve",
+    "ticketsMatched": "{count} tickets matched",
+    "noTicketsMatchSearch": "No tickets matched your search query.",
+    "noSupportInquiriesPending": "No support inquiries pending in this queue."
   },
   "ProjectTypes": {
     "YE": "Youth Exchange",
@@ -1102,7 +1137,9 @@
     "allTypes": "All Types",
     "searchLocation": "Search location...",
     "noCoordinates": "Geospatial data currently unavailable for this transmission.",
-    "durationDaysCount": "{count, plural, =0 {0 days} one {# day} other {# days}}"
+    "durationDaysCount": "{count, plural, =0 {0 days} one {# day} other {# days}}",
+    "calibratingRadar": "Calibrating Geospatial Radar",
+    "loadingTelemetry": "Loading European project coordinates and Outermost Regions telemetry..."
   },
   "Pagination": {
     "previous": "Previous",
@@ -1500,7 +1537,27 @@
     "templateCreatedSuccess": "New application form template created!",
     "templateDeletedSuccess": "Template removed successfully.",
     "templateDuplicateSuccess": "Template duplicated.",
-    "statusUpdatedSuccess": "Candidate status updated to {status}."
+    "statusUpdatedSuccess": "Candidate status updated to {status}.",
+    "attachedDocument": "Attached Document",
+    "selectLanguageLevel": "Select Language Competence Level",
+    "levelA1": "A1 — Beginner",
+    "levelA2": "A2 — Elementary",
+    "levelB1": "B1 — Intermediate",
+    "levelB2": "B2 — Upper Intermediate",
+    "levelC1": "C1 — Advanced",
+    "levelC2": "C2 — Proficient / Master",
+    "levelNative": "Native Speaker",
+    "transmittingDossier": "Transmitting Dossier...",
+    "submitApplicationXp": "Submit Application (+75 XP)",
+    "minOneTemplateError": "You must maintain at least one application dossier template.",
+    "subtitleTemplates": "Create multiple customized application forms and attach them when publishing missions.",
+    "duplicate": "Duplicate",
+    "duplicateTemplate": "Duplicate Template",
+    "missionLabel": "Mission: {title}",
+    "defaultMissionTitle": "Erasmus+ Mission",
+    "viewDossier": "View Dossier",
+    "viewAttachedDocument": "View Attached Document",
+    "selectLevel": "Select Level"
   },
   "Notifications": {
     "title": "Orbital Transmissions",
@@ -2063,5 +2120,41 @@
     "media_literacy": "Media, Communication & Youth Info",
     "rural_development": "Rural Development & Nature",
     "heritage": "European Heritage & Intercultural Dialogue"
+  },
+  "StaffChat": {
+    "terminalBadge": "Staff Live Comms Hub",
+    "liveGrid": "Live Grid",
+    "encryptedSub": "Encrypted communication stream strictly restricted to verified EuroNova staff.",
+    "dedicatedChannels": "Dedicated Channels",
+    "activeClearance": "Active Clearance",
+    "pinnedAnnouncement": "Pinned Announcement",
+    "transmissions": "transmissions",
+    "welcomeChannel": "Welcome to #{channel}",
+    "noTransmissions": "This channel is currently quiet. Be the first staff specialist to initiate a transmission.",
+    "restrictedBanner": "Broadcasting Restricted: Only Root Administrators and Admins can publish in #admin-command.",
+    "placeholder": "Transmit message to #{channel} (Enter to send, Shift+Enter for new line)...",
+    "markdownSupport": "Markdown formatting supported",
+    "pressEnter": "Press Enter to send",
+    "pinMessage": "Pin message",
+    "unpinMessage": "Unpin message",
+    "deleteMessage": "Delete message"
+  },
+  "CookieBanner": {
+    "title": "Privacy & Cookie Preferences",
+    "description": "We use strictly necessary cookies to ensure the platform functions securely. With your consent, we also use non-essential performance cookies to improve your experience. Commercial tracking is strictly forbidden.",
+    "acceptAll": "Accept All",
+    "rejectNonEssential": "Reject Non-Essential",
+    "managePreferences": "Manage Preferences",
+    "preferencesTitle": "Cookie Settings & Consent",
+    "preferencesDescription": "Customize your cookie preferences. Strictly necessary cookies cannot be disabled as they are required for security and authentication.",
+    "essentialTitle": "Strictly Necessary Cookies",
+    "essentialDesc": "Required for authentication, session integrity, CSRF defense, and core navigation. Always active.",
+    "analyticsTitle": "Performance & Telemetry",
+    "analyticsDesc": "Anonymous metrics helping us diagnose platform performance and improve Erasmus+ mobility navigation.",
+    "savePreferences": "Save Preferences",
+    "alwaysActive": "Always Active",
+    "policyLink": "Read Cookie Policy",
+    "statusAccepted": "Consent Granted",
+    "statusRejected": "Non-Essential Rejected"
   }
 }

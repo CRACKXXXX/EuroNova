@@ -265,7 +265,7 @@ export function ProjectDossierApplyModal({
                           className="text-plasma-cyan hover:underline inline-flex items-center gap-1.5"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
-                          <span>Attached Document</span>
+                          <span>{tBuilder("attachedDocument")}</span>
                         </a>
                       ) : (
                         String(answers[q.id] || "—")
@@ -437,14 +437,14 @@ export function ProjectDossierApplyModal({
                       required={q.required}
                       className="w-full bg-void-deep border border-void-border rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-plasma-cyan"
                     >
-                      <option value="">Select Language Competence Level</option>
-                      <option value="A1">A1 — Beginner</option>
-                      <option value="A2">A2 — Elementary</option>
-                      <option value="B1">B1 — Intermediate</option>
-                      <option value="B2">B2 — Upper Intermediate</option>
-                      <option value="C1">C1 — Advanced</option>
-                      <option value="C2">C2 — Proficient / Master</option>
-                      <option value="Native">Native Speaker</option>
+                      <option value="">{tBuilder("selectLanguageLevel")}</option>
+                      <option value="A1">{tBuilder("levelA1")}</option>
+                      <option value="A2">{tBuilder("levelA2")}</option>
+                      <option value="B1">{tBuilder("levelB1")}</option>
+                      <option value="B2">{tBuilder("levelB2")}</option>
+                      <option value="C1">{tBuilder("levelC1")}</option>
+                      <option value="C2">{tBuilder("levelC2")}</option>
+                      <option value="Native">{tBuilder("levelNative")}</option>
                     </select>
                   )}
 
@@ -537,12 +537,12 @@ export function ProjectDossierApplyModal({
                   {isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Transmitting Dossier...</span>
+                      <span>{tBuilder("transmittingDossier")}</span>
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="w-4 h-4" />
-                      <span>Submit Application (+75 XP)</span>
+                      <span>{tBuilder("submitApplicationXp")}</span>
                     </>
                   )}
                 </button>

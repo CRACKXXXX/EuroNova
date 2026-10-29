@@ -41,6 +41,7 @@ export default function NewProjectPage() {
             .from("org_surveys")
             .select("id, title")
             .eq("org_id", user.id)
+            .or("is_archived.is.null,is_archived.eq.false")
             .order("updated_at", { ascending: false });
 
           if (data && Array.isArray(data)) {
@@ -67,7 +68,7 @@ export default function NewProjectPage() {
     const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
     if (file.type && !ALLOWED_MIME_TYPES.includes(file.type)) {
-      toast.error("Invalid file format. Please upload a JPG, PNG, WEBP, or GIF image.");
+      toast.error(t("invalidImageFormat"));
       e.target.value = "";
       return;
     }

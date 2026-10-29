@@ -509,7 +509,8 @@
     "endDate": "Дата окончания",
     "applicationDeadline": "Крайний срок подачи заявок",
     "participantCount": "Количество участников",
-    "participantCountPlaceholder": "напр. 24"
+    "participantCountPlaceholder": "напр. 24",
+    "invalidImageFormat": "Недопустимый формат изображения. Разрешены: JPG, PNG, WEBP, GIF."
   },
   "ProjectDetails": {
     "publisherProfile": "Профиль организатора",
@@ -603,7 +604,9 @@
     "candidateSubmissions": "Заявки кандидатов",
     "viewMySubmission": "Посмотреть отправленную анкету",
     "submissionSuccessToast": "Заявка отправлена! Вы получили +75 XP.",
-    "applicationReviewNotice": "Ваша заявка находится на рассмотрении принимающей организации."
+    "applicationReviewNotice": "Ваша заявка находится на рассмотрении принимающей организации.",
+    "externalPortalInfopack": "Внешний портал / Инфопак",
+    "datesTba": "Даты уточняются (TBA)"
   },
   "Footer": {
     "rights": "Все права защищены.",
@@ -717,7 +720,14 @@
     "failedEscalateReport": "Не удалось передать жалобу.",
     "autoDeletingIn": "Автоудаление через {hours}ч",
     "autoDeletingDefault": "Автоудаление через 48ч",
-    "pendingCronPurge": "Ожидает плановой очистки"
+    "pendingCronPurge": "Ожидает плановой очистки",
+    "tabStaffChat": "Чат Команды в Реальном Времени",
+    "searchPlaceholder": "Поиск жалоб по пользователю, цели, ID или причине...",
+    "filterAll": "Все ({count})",
+    "filterActive": "Активная Проверка ({count})",
+    "filterResolved": "Архив Решенных ({count})",
+    "view": "Просмотр",
+    "org": "Орг"
   },
   "AdminPanel": {
     "title": "Режим бога: командный центр",
@@ -982,7 +992,32 @@
     "saving": "Сохранение...",
     "verifiedStaff": "Верифицирован",
     "requestAdminAction": "Запросить административное действие",
-    "pendingPurge": "Ожидает удаления"
+    "pendingPurge": "Ожидает удаления",
+    "tabStaffChat": "Чат Команды в Реальном Времени",
+    "searchTicketsPlaceholder": "Поиск тикетов по email, теме, телефону или причине...",
+    "quickTemplates": "Шаблоны Быстрых Ответов",
+    "templateAck": "На рассмотрении: Наша команда изучает ваше обращение.",
+    "templateDocs": "Требуется действие: Для продолжения необходимы дополнительные документы.",
+    "templateResolved": "Решено: Ваше обращение успешно проверено и закрыто.",
+    "templateEscalated": "Передано: Ваше дело направлено техническим специалистам.",
+    "allClearStream": "В этом потоке всё спокойно",
+    "statusResolved": "Решено",
+    "statusInProgress": "В Процессе",
+    "statusOpen": "Открыт",
+    "senderIdentity": "Данные Отправителя",
+    "inquiryContent": "Содержание Запроса",
+    "autoPurgeNotice": "Автоудаление решенных записей через 48 часов",
+    "phoneLabel": "Телефон: {phone}",
+    "officialResolutionResponse": "Официальный ответ специалиста по разрешению",
+    "templateAckShort": "Ведется расследование",
+    "templateDocsShort": "Требуется документация",
+    "templateResolvedShort": "Решено и проверено",
+    "templateEscalatedShort": "Передано в техподдержку",
+    "updateResolution": "Обновить решение",
+    "replyAndResolve": "Ответить и решить",
+    "ticketsMatched": "{count} подходящих тикетов",
+    "noTicketsMatchSearch": "По вашему запросу тикеты не найдены.",
+    "noSupportInquiriesPending": "В этой очереди нет ожидающих запросов техподдержки."
   },
   "ProjectTypes": {
     "YE": "Молодежный обмен",
@@ -1102,7 +1137,9 @@
     "allTypes": "Все типы",
     "searchLocation": "Поиск города или страны...",
     "noCoordinates": "Координаты недоступны для этого места.",
-    "durationDaysCount": "{count, plural, =0 {0 дней} one {# день} few {# дня} many {# дней} other {# дня}}"
+    "durationDaysCount": "{count, plural, =0 {0 дней} one {# день} few {# дня} many {# дней} other {# дня}}",
+    "calibratingRadar": "Калибровка геопространственного радара",
+    "loadingTelemetry": "Загрузка координат европейских проектов и телеметрии самых отдаленных регионов..."
   },
   "Pagination": {
     "previous": "Назад",
@@ -1500,7 +1537,27 @@
     "templateCreatedSuccess": "Новый шаблон анкеты успешно создан!",
     "templateDeletedSuccess": "Шаблон успешно удален.",
     "templateDuplicateSuccess": "Шаблон продублирован.",
-    "statusUpdatedSuccess": "Статус кандидата изменен на {status}."
+    "statusUpdatedSuccess": "Статус кандидата изменен на {status}.",
+    "attachedDocument": "Прикрепленный Документ",
+    "selectLanguageLevel": "Выберите Уровень Владения Языком",
+    "levelA1": "A1 — Начальный",
+    "levelA2": "A2 — Элементарный",
+    "levelB1": "B1 — Средний",
+    "levelB2": "B2 — Выше Среднего",
+    "levelC1": "C1 — Продвинутый",
+    "levelC2": "C2 — Профессиональный",
+    "levelNative": "Родной Язык",
+    "transmittingDossier": "Передача Досье...",
+    "submitApplicationXp": "Отправить Заявку (+75 XP)",
+    "minOneTemplateError": "Необходимо сохранить как минимум один шаблон досье заявки.",
+    "subtitleTemplates": "Создавайте несколько настраиваемых форм заявок и прикрепляйте их при публикации миссий.",
+    "duplicate": "Дублировать",
+    "duplicateTemplate": "Дублировать шаблон",
+    "missionLabel": "Миссия: {title}",
+    "defaultMissionTitle": "Миссия Erasmus+",
+    "viewDossier": "Просмотреть досье",
+    "viewAttachedDocument": "Посмотреть прикрепленный документ",
+    "selectLevel": "Выберите уровень"
   },
   "Notifications": {
     "title": "Центр уведомлений",
@@ -2063,5 +2120,41 @@
     "media_literacy": "Медиаграмотность и молодежная информация",
     "rural_development": "Сельское развитие и природа",
     "heritage": "Европейское наследие и межкультурный диалог"
+  },
+  "StaffChat": {
+    "terminalBadge": "Хаб Связи Команды",
+    "liveGrid": "Сеть в Реальном Времени",
+    "encryptedSub": "Зашифрованный канал связи, доступный исключительно верифицированной команде EuroNova.",
+    "dedicatedChannels": "Тематические Каналы",
+    "activeClearance": "Уровень Доступа",
+    "pinnedAnnouncement": "Закрепленное Объявление",
+    "transmissions": "сообщений",
+    "welcomeChannel": "Добро пожаловать в #{channel}",
+    "noTransmissions": "В этом канале пока тихо. Станьте первым специалистом команды, отправившим сообщение.",
+    "restrictedBanner": "Ограничение Вещания: Только Root-Администраторы и Администраторы могут писать в #admin-command.",
+    "placeholder": "Передать сообщение в #{channel} (Enter для отправки, Shift+Enter для новой строки)...",
+    "markdownSupport": "Поддержка разметки Markdown",
+    "pressEnter": "Нажмите Enter для отправки",
+    "pinMessage": "Закрепить сообщение",
+    "unpinMessage": "Открепить сообщение",
+    "deleteMessage": "Удалить сообщение"
+  },
+  "CookieBanner": {
+    "title": "Настройки конфиденциальности и файлов cookie",
+    "description": "Мы используем строго необходимые файлы cookie для безопасной работы платформы. С вашего согласия мы также используем файлы cookie производительности. Рекламное отслеживание строго запрещено.",
+    "acceptAll": "Принять все",
+    "rejectNonEssential": "Отклонить необязательные",
+    "managePreferences": "Настроить параметры",
+    "preferencesTitle": "Настройки файлов cookie и согласие",
+    "preferencesDescription": "Настройте параметры файлов cookie. Строго необходимые файлы cookie нельзя отключить, так как они обязательны для безопасности и аутентификации.",
+    "essentialTitle": "Строго необходимые файлы cookie",
+    "essentialDesc": "Необходимы для аутентификации, целостности сессии, защиты от CSRF и навигации. Всегда активны.",
+    "analyticsTitle": "Производительность и телеметрия",
+    "analyticsDesc": "Анонимные метрики, помогающие анализировать работу платформы и улучшать поиск проектов Erasmus+.",
+    "savePreferences": "Сохранить настройки",
+    "alwaysActive": "Всегда активно",
+    "policyLink": "Политика использования cookie",
+    "statusAccepted": "Согласие предоставлено",
+    "statusRejected": "Необязательные отклонены"
   }
 }

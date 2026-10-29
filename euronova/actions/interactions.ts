@@ -150,6 +150,31 @@ export async function toggleProjectApplied(projectId: string): Promise<Interacti
       return { error: statusCheck.error || "Action restricted." };
     }
 
+    // Role-based guard: Organizations cannot apply to projects
+    if (user.user_metadata?.role === "org") {
+      return { error: "Organizations cannot apply to missions." };
+    }
+
+    const { data: orgProfile } = await supabase
+      .from("users_org")
+      .select("id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (orgProfile) {
+      return { error: "Organizations cannot apply to missions." };
+    }
+
+    const { data: targetProject } = await supabase
+      .from("projects")
+      .select("org_id")
+      .eq("id", projectId)
+      .maybeSingle();
+
+    if (targetProject?.org_id === user.id) {
+      return { error: "You cannot apply to your own organization's missions." };
+    }
+
     // Obtener la interacción actual
     const { data: existing, error: selectError } = await supabase
       .from("user_project_interactions")

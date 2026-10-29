@@ -6,6 +6,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { BackToTop } from "@/components/BackToTop";
 import { ScrollRestoration } from "@/components/ScrollRestoration";
+import { CookieBanner } from "@/components/Legal/CookieBanner";
 import { routing } from "@/i18n/routing";
 
 const geistSans = Geist({
@@ -41,8 +42,8 @@ export async function generateMetadata({
   return {
     metadataBase: new URL(siteUrl),
     title: {
-      default: "EuroNova",
-      template: "EuroNova",
+      default: "EuroNova — The Gateway to Erasmus+ & European Solidarity Corps",
+      template: "%s | EuroNova",
     },
     description:
       "Discover verified Erasmus+ and European Solidarity Corps youth mobility missions across 30+ European nations with 100% funding.",
@@ -61,7 +62,7 @@ export async function generateMetadata({
       locale,
       url: `/${locale}`,
       siteName: "EuroNova",
-      title: "EuroNova",
+      title: "EuroNova — The Gateway to Erasmus+ & European Solidarity Corps",
       description:
         "Discover verified Erasmus+ and European Solidarity Corps youth mobility missions across 30+ European nations with 100% funding.",
       images: [
@@ -75,7 +76,7 @@ export async function generateMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: "EuroNova",
+      title: "EuroNova — The Gateway to Erasmus+ & European Solidarity Corps",
       description:
         "Discover verified Erasmus+ and European Solidarity Corps youth mobility missions across 30+ European nations with 100% funding.",
       images: ["/logo-big.png"],
@@ -104,11 +105,23 @@ export default async function RootLayout({
         <meta name="theme-color" content="#0A0D18" />
       </head>
       <body className="min-h-full flex flex-col bg-void-deep text-white">
-        <NextIntlClientProvider messages={messages}>
+        <NextIntlClientProvider
+          messages={messages}
+          onError={(error) => {
+            if (process.env.NODE_ENV !== "production" && process.env.DEBUG_I18N === "true") {
+              console.warn(`[next-intl client] ${error.code}: ${error.message}`);
+            }
+          }}
+          getMessageFallback={({ key }) => {
+            const segments = key.split(".");
+            return segments[segments.length - 1] || key;
+          }}
+        >
           <Suspense fallback={null}>
             <ScrollRestoration />
           </Suspense>
           {children}
+          <CookieBanner />
           <BackToTop />
         </NextIntlClientProvider>
       </body>

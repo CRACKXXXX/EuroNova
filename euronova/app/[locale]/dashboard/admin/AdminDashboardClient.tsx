@@ -20,6 +20,7 @@ import { RoleManager } from "./components/RoleManager";
 import { EscalationQueue } from "./components/EscalationQueue";
 import { AdminTicketsTab } from "./components/AdminTicketsTab";
 import { AdminModals } from "./components/AdminModals";
+import { StaffLiveChatHub } from "@/components/staff/StaffLiveChatHub";
 
 export type {
   OrgItem,
@@ -303,6 +304,16 @@ export function AdminDashboardClient(props: AdminDashboardClientProps) {
           t={t}
           format={format}
         />
+      )}
+
+      {activeTab === "staff_chat" && (
+        <div className="space-y-4">
+          <StaffLiveChatHub
+            currentUserRole={currentUserRole}
+            initialChannel="admin-command"
+            embedded
+          />
+        </div>
       )}
 
       {/* 3. Global Modal Dialogs */}

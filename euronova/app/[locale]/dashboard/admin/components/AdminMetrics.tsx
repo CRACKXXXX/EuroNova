@@ -16,6 +16,7 @@ import {
   EyeOff,
   AlertCircle,
   CheckCircle2,
+  Radio,
 } from "lucide-react";
 
 interface AdminMetricsProps {
@@ -195,6 +196,20 @@ export function AdminMetrics({
               </span>
             </button>
           )}
+
+          {/* Staff Live Chat Hub Tab */}
+          <button
+            type="button"
+            onClick={() => onTabChange("staff_chat")}
+            className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 border cursor-pointer ${
+              activeTab === "staff_chat"
+                ? "bg-plasma-cyan/20 border-plasma-cyan text-white shadow-[0_0_20px_rgba(0,229,255,0.25)]"
+                : "bg-void-surface border-void-border text-gray-400 hover:text-white hover:border-gray-700"
+            }`}
+          >
+            <Radio className="w-4 h-4 text-plasma-cyan animate-pulse" />
+            <span>{t("tabStaffChat")}</span>
+          </button>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 shrink-0 self-start sm:self-auto">

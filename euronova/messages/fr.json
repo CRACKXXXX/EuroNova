@@ -509,7 +509,8 @@
     "endDate": "Date de Fin",
     "applicationDeadline": "Date Limite de Candidature",
     "participantCount": "Capacité de Participants",
-    "participantCountPlaceholder": "ex. 24"
+    "participantCountPlaceholder": "ex. 24",
+    "invalidImageFormat": "Format d'image invalide. Autorisés : JPG, PNG, WEBP, GIF."
   },
   "ProjectDetails": {
     "publisherProfile": "Profil de l'organisateur",
@@ -603,7 +604,9 @@
     "candidateSubmissions": "Candidatures Reçues",
     "viewMySubmission": "Voir Mon Dossier Envoyé",
     "submissionSuccessToast": "Candidature envoyée ! Vous avez gagné +75 XP.",
-    "applicationReviewNotice": "Votre candidature est actuellement examinée par l'organisation d'accueil."
+    "applicationReviewNotice": "Votre candidature est actuellement examinée par l'organisation d'accueil.",
+    "externalPortalInfopack": "Portail Externe / Infopack",
+    "datesTba": "Dates à confirmer (TBA)"
   },
   "Footer": {
     "rights": "EuroNova. Tous droits réservés.",
@@ -717,7 +720,14 @@
     "failedEscalateReport": "Échec du transfert du signalement.",
     "autoDeletingIn": "Suppression automatique dans {hours}h",
     "autoDeletingDefault": "Suppression automatique dans 48h",
-    "pendingCronPurge": "Purge cron en attente"
+    "pendingCronPurge": "Purge cron en attente",
+    "tabStaffChat": "Comms d'Équipe en Direct",
+    "searchPlaceholder": "Rechercher des signalements par utilisateur, cible, identifiant ou motif...",
+    "filterAll": "Tous ({count})",
+    "filterActive": "Triage Actif ({count})",
+    "filterResolved": "Historique Résolu ({count})",
+    "view": "Voir",
+    "org": "Org"
   },
   "AdminPanel": {
     "title": "Mode Dieu : Centre de commandement",
@@ -982,7 +992,32 @@
     "saving": "Enregistrement...",
     "verifiedStaff": "Vérifié",
     "requestAdminAction": "Demander une Action Administrative",
-    "pendingPurge": "Purge en Attente"
+    "pendingPurge": "Purge en Attente",
+    "tabStaffChat": "Comms d'Équipe en Direct",
+    "searchTicketsPlaceholder": "Rechercher des tickets par e-mail, objet, téléphone ou motif...",
+    "quickTemplates": "Modèles de Réponses Rapides",
+    "templateAck": "En cours d'examen : Notre équipe analyse votre transmission.",
+    "templateDocs": "Action requise : Des justificatifs supplémentaires sont demandés.",
+    "templateResolved": "Résolu : Votre demande a été vérifiée et résolue avec succès.",
+    "templateEscalated": "Escaladé : Votre dossier a été transféré aux spécialistes techniques.",
+    "allClearStream": "Tout est dégagé dans ce flux",
+    "statusResolved": "Résolu",
+    "statusInProgress": "En Cours",
+    "statusOpen": "Ouvert",
+    "senderIdentity": "Identité de l'Expéditeur",
+    "inquiryContent": "Contenu de la Demande",
+    "autoPurgeNotice": "Purge automatique des dossiers résolus après 48h",
+    "phoneLabel": "Téléphone : {phone}",
+    "officialResolutionResponse": "Réponse Officielle de Résolution Spécialisée",
+    "templateAckShort": "Enquête en Cours",
+    "templateDocsShort": "Documentation Requise",
+    "templateResolvedShort": "Résolu et Vérifié",
+    "templateEscalatedShort": "Transmis au Support Technique",
+    "updateResolution": "Mettre à jour la Résolution",
+    "replyAndResolve": "Répondre et Résoudre",
+    "ticketsMatched": "{count} tickets correspondants",
+    "noTicketsMatchSearch": "Aucun ticket ne correspond à votre recherche.",
+    "noSupportInquiriesPending": "Aucune demande d'assistance en attente dans cette file."
   },
   "ProjectTypes": {
     "YE": "Échange de jeunes",
@@ -1102,7 +1137,9 @@
     "allTypes": "Tous les Types",
     "searchLocation": "Rechercher un lieu...",
     "noCoordinates": "Données géospatiales indisponibles actuellement pour cette transmission.",
-    "durationDaysCount": "{count, plural, =0 {0 jour} one {# jour} other {# jours}}"
+    "durationDaysCount": "{count, plural, =0 {0 jour} one {# jour} other {# jours}}",
+    "calibratingRadar": "Calibrage du Radar Géospatial",
+    "loadingTelemetry": "Chargement des coordonnées des projets européens et de la télémétrie des Régions Ultra-Périphériques..."
   },
   "Pagination": {
     "previous": "Précédent",
@@ -1500,7 +1537,27 @@
     "templateCreatedSuccess": "Nouveau modèle de formulaire créé !",
     "templateDeletedSuccess": "Modèle supprimé avec succès.",
     "templateDuplicateSuccess": "Modèle dupliqué.",
-    "statusUpdatedSuccess": "Statut du candidat mis à jour : {status}."
+    "statusUpdatedSuccess": "Statut du candidat mis à jour : {status}.",
+    "attachedDocument": "Document Joint",
+    "selectLanguageLevel": "Sélectionner le Niveau de Compétence Linguistique",
+    "levelA1": "A1 — Débutant",
+    "levelA2": "A2 — Élémentaire",
+    "levelB1": "B1 — Intermédiaire",
+    "levelB2": "B2 — Intermédiaire Supérieur",
+    "levelC1": "C1 — Avancé",
+    "levelC2": "C2 — Maîtrise",
+    "levelNative": "Locuteur Natif",
+    "transmittingDossier": "Transmission du Dossier...",
+    "submitApplicationXp": "Soumettre la Candidature (+75 XP)",
+    "minOneTemplateError": "Vous devez conserver au moins un modèle de dossier de candidature.",
+    "subtitleTemplates": "Créez plusieurs formulaires de candidature personnalisés et joignez-les lors de la publication de missions.",
+    "duplicate": "Dupliquer",
+    "duplicateTemplate": "Dupliquer le Modèle",
+    "missionLabel": "Mission : {title}",
+    "defaultMissionTitle": "Mission Erasmus+",
+    "viewDossier": "Voir le Dossier",
+    "viewAttachedDocument": "Voir le Document Joint",
+    "selectLevel": "Sélectionner le Niveau"
   },
   "Notifications": {
     "title": "Transmissions Orbitales",
@@ -2063,5 +2120,41 @@
     "media_literacy": "Éducation aux Médias & Information Jeunesse",
     "rural_development": "Développement Rural & Nature",
     "heritage": "Patrimoine Européen & Dialogue Interculturel"
+  },
+  "StaffChat": {
+    "terminalBadge": "Centre de Communication de l'Équipe",
+    "liveGrid": "Réseau en Direct",
+    "encryptedSub": "Canal de communication chiffré strictement réservé au personnel vérifié d'EuroNova.",
+    "dedicatedChannels": "Canaux Dédiés",
+    "activeClearance": "Niveau d'Autorisation",
+    "pinnedAnnouncement": "Annonce Épinglée",
+    "transmissions": "transmissions",
+    "welcomeChannel": "Bienvenue sur #{channel}",
+    "noTransmissions": "Ce canal est calme pour l'instant. Soyez le premier spécialiste à envoyer un message.",
+    "restrictedBanner": "Diffusion Restreinte : Seuls les Administrateurs Root et Admins peuvent publier dans #admin-command.",
+    "placeholder": "Transmettre un message à #{channel} (Entrée pour envoyer, Maj+Entrée pour saut de ligne)...",
+    "markdownSupport": "Formatage Markdown pris en charge",
+    "pressEnter": "Appuyez sur Entrée pour envoyer",
+    "pinMessage": "Épingler le message",
+    "unpinMessage": "Désépingler le message",
+    "deleteMessage": "Supprimer le message"
+  },
+  "CookieBanner": {
+    "title": "Préférences de Confidentialité et Cookies",
+    "description": "Nous utilisons des cookies strictement nécessaires au fonctionnement sécurisé de la plateforme. Avec votre accord, nous utilisons aussi des cookies de performance. Le traçage publicitaire est strictement interdit.",
+    "acceptAll": "Tout accepter",
+    "rejectNonEssential": "Refuser les non-essentiels",
+    "managePreferences": "Gérer les préférences",
+    "preferencesTitle": "Paramètres et Consentement des Cookies",
+    "preferencesDescription": "Personnalisez vos préférences de cookies. Les cookies strictement nécessaires ne peuvent pas être désactivés car ils garantissent la sécurité et l'authentification.",
+    "essentialTitle": "Cookies Strictement Nécessaires",
+    "essentialDesc": "Requis pour l'authentification, l'intégrité de session, la protection CSRF et la navigation. Toujours actifs.",
+    "analyticsTitle": "Performance et Télémétrie",
+    "analyticsDesc": "Mesures anonymes nous aidant à diagnostiquer la performance et à améliorer l'accès aux mobilités Erasmus+.",
+    "savePreferences": "Enregistrer les préférences",
+    "alwaysActive": "Toujours actif",
+    "policyLink": "Lire la Politique de Cookies",
+    "statusAccepted": "Consentement accordé",
+    "statusRejected": "Non-essentiels refusés"
   }
 }

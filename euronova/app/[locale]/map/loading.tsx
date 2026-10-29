@@ -1,6 +1,9 @@
 import { Compass, MapPin } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
-export default function MapLoading() {
+export default async function MapLoading() {
+  const t = await getTranslations("Map");
+
   return (
     <div className="relative w-full h-[calc(100vh-5rem)] bg-void-deep overflow-hidden flex items-center justify-center animate-pulse">
       {/* Background Radar Grid Pattern */}
@@ -34,10 +37,10 @@ export default function MapLoading() {
         </div>
         <div className="space-y-1.5">
           <p className="text-sm font-bold text-white tracking-wide uppercase font-mono">
-            Calibrating Geospatial Radar
+            {t("calibratingRadar")}
           </p>
           <p className="text-xs text-gray-400 font-light">
-            Loading European project coordinates and Outermost Regions telemetry...
+            {t("loadingTelemetry")}
           </p>
         </div>
       </div>
