@@ -297,6 +297,11 @@ export async function parseAiSearchAction(naturalQuery: string): Promise<AiSearc
     return { success: true, filters: {} };
   }
 
+  // Defensive sanitization: escape quotes, backslashes, and control characters to prevent prompt injection / JSON delimiter break
+  const sanitizedQuery = trimmed
+    .replace(/["\\]/g, "\\$&")
+    .replace(/[\u0000-\u001F]+/g, " ");
+
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (apiKey) {
@@ -305,7 +310,7 @@ export async function parseAiSearchAction(naturalQuery: string): Promise<AiSearc
       const timeoutId = setTimeout(() => controller.abort(), 4000);
 
       const prompt = `You are a strict JSON extraction engine for European mobility projects (Erasmus+ and European Solidarity Corps).
-Extract search filters from the user query: "${trimmed}".
+Extract search filters from the user query: "${sanitizedQuery}".
 Allowed countries: ISO 2-letter country codes in Europe (IT, ES, DE, FR, PT, GR, PL, NL, BE, AT, SE, NO, FI, DK, CZ, HU, RO, BG, HR, CY, MT, IS, EE, LV, LT, SI, SK, TR, etc.).
 Allowed project types: ["YE", "TC", "ESC"].
 Allowed themes: ["environment", "digital", "inclusion", "mental_health", "arts_culture", "sports", "human_rights", "entrepreneurship", "civic_participation", "media_literacy", "rural_development", "heritage"].

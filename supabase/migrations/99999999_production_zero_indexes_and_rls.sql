@@ -204,6 +204,22 @@ CALL public.euronova_safe_create_index(
   '(reporter_id)'
 );
 
+-- Guard: Ensure support_tickets table exists idempotently before indexing or configuring RLS
+CREATE TABLE IF NOT EXISTS public.support_tickets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  email TEXT NOT NULL,
+  phone TEXT,
+  subject TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  content TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'open',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  resolved_at TIMESTAMPTZ,
+  resolution_action TEXT
+);
+
 -- Support Tickets: Purge Cron index (48h retention threshold on resolved tickets)
 CALL public.euronova_safe_create_index(
   'idx_support_tickets_purge_cron',
@@ -782,5 +798,89 @@ BEGIN
       )
     );
 END $$;
+
+-- ----------------------------------------------------------------------------
+-- 14. AUTOMATE STORAGE BUCKETS PROVISIONING (avatars & documents)
+-- ----------------------------------------------------------------------------
+DO $$
+BEGIN
+  -- 1. Ensure storage buckets exist idempotently
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'storage' AND table_name = 'buckets'
+  ) THEN
+    -- Avatars bucket (public profile pictures)
+    INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+    VALUES (
+      'avatars', 
+      'avatars', 
+      true, 
+      5242880, -- 5 MB
+      ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']
+    )
+    ON CONFLICT (id) DO UPDATE SET public = true;
+
+    -- Documents bucket (private dossiers and verification documents)
+    INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+    VALUES (
+      'documents', 
+      'documents', 
+      false, 
+      10485760, -- 10 MB
+      ARRAY['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+    )
+    ON CONFLICT (id) DO NOTHING;
+  END IF;
+
+  -- 2. Ensure storage object RLS policies exist idempotently
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'storage' AND table_name = 'objects'
+  ) THEN
+    -- Avatars: Public read
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_policies 
+      WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Public Avatars Access'
+    ) THEN
+      CREATE POLICY "Public Avatars Access"
+        ON storage.objects FOR SELECT
+        USING (bucket_id = 'avatars');
+    END IF;
+
+    -- Avatars: Authenticated upload
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_policies 
+      WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Authenticated Upload Avatars'
+    ) THEN
+      CREATE POLICY "Authenticated Upload Avatars"
+        ON storage.objects FOR INSERT
+        TO authenticated
+        WITH CHECK (bucket_id = 'avatars');
+    END IF;
+
+    -- Documents: Authenticated upload
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_policies 
+      WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Authenticated Upload Documents'
+    ) THEN
+      CREATE POLICY "Authenticated Upload Documents"
+        ON storage.objects FOR INSERT
+        TO authenticated
+        WITH CHECK (bucket_id = 'documents');
+    END IF;
+
+    -- Documents: Authenticated read
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_policies 
+      WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Users and Staff Access Documents'
+    ) THEN
+      CREATE POLICY "Users and Staff Access Documents"
+        ON storage.objects FOR SELECT
+        TO authenticated
+        USING (bucket_id = 'documents');
+    END IF;
+  END IF;
+END $$;
+
 
 

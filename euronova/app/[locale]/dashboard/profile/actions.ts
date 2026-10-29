@@ -606,7 +606,7 @@ export async function updateProfile(
         .from("users_youth")
         .select("*")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
       updatedData = {
         ...(data as Record<string, unknown> | null),
         xpGained,
@@ -618,7 +618,7 @@ export async function updateProfile(
         .from("users_org")
         .select("*")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
       updatedData = data as Record<string, unknown> | null;
     }
 

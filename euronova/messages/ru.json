@@ -606,7 +606,8 @@
     "submissionSuccessToast": "Заявка отправлена! Вы получили +75 XP.",
     "applicationReviewNotice": "Ваша заявка находится на рассмотрении принимающей организации.",
     "externalPortalInfopack": "Внешний портал / Инфопак",
-    "datesTba": "Даты уточняются (TBA)"
+    "datesTba": "Даты уточняются (TBA)",
+    "exploreVerifiedOpportunity": "Ознакомьтесь с этой проверенной европейской возможностью для молодежи."
   },
   "Footer": {
     "rights": "Все права защищены.",

@@ -1,7 +1,21 @@
 import { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { Header } from "@/components/Header";
-import { ProjectsMap } from "@/components/map/ProjectsMap";
 import { createClient } from "@/utils/supabase/server";
+
+const ProjectsMap = dynamic(
+  () => import("@/components/map/ProjectsMap").then((mod) => mod.ProjectsMap),
+  {
+    loading: () => (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-void-deep text-white border border-void-border/40 select-none">
+        <div className="relative flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full border-2 border-plasma-cyan/20 border-t-plasma-cyan animate-spin" />
+          <div className="absolute w-8 h-8 rounded-full border border-hyper-violet/40 border-b-hyper-violet animate-spin [animation-direction:reverse]" />
+        </div>
+      </div>
+    ),
+  }
+);
 
 export const metadata: Metadata = {
   title: "EuroNova",

@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { ReportUserButton } from "@/components/ReportUserButton";
-import { MUTE_DURATION_OPTIONS } from "@/lib/moderationConstants";
+import { MUTE_DURATION_OPTIONS } from "@/lib/moderationShield";
 import { type MuteDuration } from "@/actions/globalForum";
 import {
   ArrowLeft,

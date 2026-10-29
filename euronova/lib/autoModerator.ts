@@ -47,6 +47,14 @@ const SCAM_PATTERNS: string[] = [
   "pago por adelantado", "pago anticipado",
   "adult dating", "escort service", "viagra",
   "hack instagram", "hack account", "bot followers",
+  "scam", "scammer", "scammers", "fraud", "fraude", "estafa", "estafador", "estafadores",
+];
+
+// Word-boundary aware fraud, scam, and phishing detection patterns
+const ROOT_FRAUD_PATTERNS: RegExp[] = [
+  /\b(?:scam|scams|scammer|scammers|scammed|scamming)\b/i,
+  /\b(?:fraud|frauds|fraude|fraudes|fraudulento|fraudulenta|fraudulent)\b/i,
+  /\b(?:estafa|estafas|estafador|estafadores|estafadora|estafadoras)\b/i,
 ];
 
 // 3. Disallowed suspicious link signatures (Telegram channels, WhatsApp groups, shorteners)
@@ -114,8 +122,8 @@ export function autoModerateContent(rawText: string, options?: AutoModOptions): 
       };
     }
 
-    // 2. Block Phone Numbers (detect sequences with 8+ total digits formatted with spaces, dashes, or plus)
-    const phoneRegex = /(?:\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4}/;
+    // 2. Block Phone Numbers (detect sequences with 8+ total digits formatted with spaces, dashes, or plus, or spaced digits)
+    const phoneRegex = /(?:\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4}|(?:\d[\s.-]){7,}\d/;
     const digitsOnly = text.replace(/\D/g, "");
     if (digitsOnly.length >= 8 && phoneRegex.test(text)) {
       return {
@@ -202,10 +210,23 @@ export function autoModerateContent(rawText: string, options?: AutoModOptions): 
     }
   }
 
-  // CHECK 4: Scam, Crypto, Casino & Phishing keywords
+  // CHECK 4: Scam, Crypto, Casino & Phishing keywords (with word boundary awareness)
   const lowerText = text.toLowerCase();
+  const normalizedText = normalizeLeetSpeak(text);
+
+  // Check word-boundary fraud patterns on both raw and normalized text
+  for (const regex of ROOT_FRAUD_PATTERNS) {
+    if (regex.test(lowerText) || regex.test(normalizedText)) {
+      return {
+        allowed: false,
+        reason: "Message blocked: content matches prohibited fraudulent solicitation or scam patterns.",
+        errorCode: "SPAM_DETECTED",
+      };
+    }
+  }
+
   for (const scam of SCAM_PATTERNS) {
-    if (lowerText.includes(scam)) {
+    if (lowerText.includes(scam) || normalizedText.includes(scam)) {
       return {
         allowed: false,
         reason: "Message blocked: content matches prohibited promotional, crypto, or financial solicitation patterns.",
@@ -215,7 +236,6 @@ export function autoModerateContent(rawText: string, options?: AutoModOptions): 
   }
 
   // CHECK 5: Profanity & Hate Speech (with leetspeak normalization)
-  const normalizedText = normalizeLeetSpeak(text);
   const words = normalizedText.split(/[\s,.;:!?()[\]{}"'\\/+-]+/);
 
   for (const word of words) {

@@ -247,6 +247,14 @@ export function parseEuropeanDateRange(text: string): {
 }
 
 /**
+ * Escapes all regular expression metacharacters to safely construct RegExp instances.
+ */
+export function escapeRegExp(str: string): string {
+  if (!str) return "";
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
  * Normalizes and formats the project description:
  * - Strips concatenated title/date/venue headers from the beginning.
  * - Formats multi-paragraph structure.
@@ -254,9 +262,12 @@ export function parseEuropeanDateRange(text: string): {
  */
 export function cleanProjectDescription(
   rawText: string,
-  meta?: ProjectMetadata
+  meta?: ProjectMetadata,
+  fallbackText: string = ""
 ): string {
-  if (!rawText) return "Explore this verified European youth opportunity.";
+  if (!rawText || typeof rawText !== "string" || !rawText.trim()) {
+    return fallbackText;
+  }
 
   let text = decodeHtmlEntities(rawText);
 
@@ -317,6 +328,17 @@ export function cleanProjectDescription(
           }
         }
       }
+
+      // Safe regex title prefix stripping with full metacharacter escaping
+      const escapedTitle = escapeRegExp(cleanTitleTrimmed);
+      if (escapedTitle) {
+        try {
+          const titleRegex = new RegExp(`^\\s*${escapedTitle}[:\\-\\s]*`, "i");
+          text = text.replace(titleRegex, "").trim();
+        } catch {
+          // Safe non-blocking fallback
+        }
+      }
     }
 
     // 3. Strip concatenated date headers like "26 October - 30 November 2026" or "10/05/2026 to 20/05/2026"
@@ -329,14 +351,35 @@ export function cleanProjectDescription(
       ""
     ).trim();
 
-    // 4. Strip venue prefixes matching location/country
+    // 4. Strip venue prefixes matching location/country safely
     if (meta?.location) {
-      const locEscaped = meta.location.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const locReg = new RegExp(
-        `^\\s*(?:Venue|Location|Lugar|Where)?[:\\s]*${locEscaped}(?:\\s*,\\s*[A-Z][a-zA-Z]+(?:\\s+[A-Z][a-zA-Z]+)?)?[,.\\s-]*`,
-        "i"
-      );
-      text = text.replace(locReg, "").trim();
+      const locEscaped = escapeRegExp(meta.location.trim());
+      if (locEscaped) {
+        try {
+          const locReg = new RegExp(
+            `^\\s*(?:Venue|Location|Lugar|Where)?[:\\s]*${locEscaped}(?:\\s*,\\s*[A-Z][a-zA-Z]+(?:\\s+[A-Z][a-zA-Z]+)?)?[,.\\s-]*`,
+            "i"
+          );
+          text = text.replace(locReg, "").trim();
+        } catch {
+          // Safe fallback
+        }
+      }
+    }
+
+    if (meta?.country) {
+      const countryEscaped = escapeRegExp(meta.country.trim());
+      if (countryEscaped) {
+        try {
+          const countryReg = new RegExp(
+            `^\\s*(?:Country|País|Destination)?[:\\s]*${countryEscaped}[,.\\s-]*`,
+            "i"
+          );
+          text = text.replace(countryReg, "").trim();
+        } catch {
+          // Safe fallback
+        }
+      }
     }
 
     // 5. Strip residual leading separator noise
@@ -373,7 +416,7 @@ export function cleanProjectDescription(
     text = `${text}\n\n${additions.join("\n\n")}`;
   }
 
-  return text.trim();
+  return text.trim() || fallbackText;
 }
 
 /**

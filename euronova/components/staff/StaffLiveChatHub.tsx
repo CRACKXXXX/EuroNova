@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useTransition, useCallback } from "react";
+import React, { useState, useEffect, useRef, useTransition, useCallback, useOptimistic } from "react";
 import {
   Send,
   Hash,
@@ -44,6 +44,10 @@ export function StaffLiveChatHub({
 }: StaffLiveChatHubProps) {
   const [selectedChannel, setSelectedChannel] = useState<StaffChatChannel>(initialChannel);
   const [messages, setMessages] = useState<StaffChatMessage[]>([]);
+  const [optimisticMessages, addOptimisticMessage] = useOptimistic<
+    StaffChatMessage[],
+    StaffChatMessage
+  >(messages, (state, newMsg) => [...state, newMsg]);
   const [inputContent, setInputContent] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -129,7 +133,7 @@ export function StaffLiveChatHub({
     if (!isLoading) {
       scrollToBottom();
     }
-  }, [messages.length, isLoading, scrollToBottom]);
+  }, [optimisticMessages.length, isLoading, scrollToBottom]);
 
   const handleSelectChannel = (channel: StaffChatChannel) => {
     if (channel === selectedChannel) return;
@@ -137,7 +141,7 @@ export function StaffLiveChatHub({
     setSelectedChannel(channel);
   };
 
-  // Transmit Message
+  // Transmit Message with React 19 Optimistic UI
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const trimmed = inputContent.trim();
@@ -148,21 +152,44 @@ export function StaffLiveChatHub({
       return;
     }
 
-    setIsSubmitting(true);
-    startTransition(async () => {
-      const res = await postStaffChatMessage({
-        channel: selectedChannel,
-        content: trimmed,
-      });
+    const tempId = `optimistic-${Date.now()}`;
+    const optimisticMsg: StaffChatMessage = {
+      id: tempId,
+      channel: selectedChannel,
+      userId: currentUserId || "staff-optimistic-id",
+      authorName: "You",
+      authorRole: currentUserRole,
+      content: trimmed,
+      isPinned: false,
+      createdAt: new Date().toISOString(),
+    };
 
-      if (res.success && res.data) {
-        setMessages((prev) => [...prev, res.data as StaffChatMessage]);
-        setInputContent("");
-        scrollToBottom();
-      } else {
-        toast.error(res.error || "Failed to send message.");
+    setInputContent("");
+    setIsSubmitting(true);
+    scrollToBottom();
+
+    startTransition(async () => {
+      addOptimisticMessage(optimisticMsg);
+      try {
+        const res = await postStaffChatMessage({
+          channel: selectedChannel,
+          content: trimmed,
+        });
+
+        if (res.success && res.data) {
+          setMessages((prev) => [...prev, res.data as StaffChatMessage]);
+          scrollToBottom();
+        } else {
+          toast.error(res.error || "Failed to send message.");
+          setInputContent(trimmed);
+        }
+      } catch (err) {
+        console.error("Optimistic send error:", err);
+        toast.error("Failed to transmit message.");
+        setInputContent(trimmed);
+      } finally {
+        setIsSubmitting(false);
       }
-      setIsSubmitting(false);
     });
   };
 
@@ -344,7 +371,7 @@ export function StaffLiveChatHub({
                 <Loader2 className="w-4 h-4 animate-spin text-plasma-cyan" />
                 <span>Connecting to staff communication stream...</span>
               </div>
-            ) : messages.length === 0 ? (
+            ) : optimisticMessages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-3">
                 <div className="w-12 h-12 rounded-2xl bg-void-surface border border-void-border flex items-center justify-center text-gray-500">
                   <Hash className="w-6 h-6 text-plasma-cyan" />
@@ -357,24 +384,29 @@ export function StaffLiveChatHub({
                 </p>
               </div>
             ) : (
-              messages.map((msg) => {
+              optimisticMessages.map((msg) => {
+                const isOptimistic = msg.id.startsWith("optimistic-");
                 const badgeInfo = ROLE_BADGE_CONFIG[msg.authorRole];
                 const isAuthor = currentUserId ? msg.userId === currentUserId : false;
                 const canModerate =
-                  isAuthor ||
-                  currentUserRole === "root" ||
-                  currentUserRole === "admin" ||
-                  currentUserRole === "moderator";
+                  !isOptimistic &&
+                  (isAuthor ||
+                    currentUserRole === "root" ||
+                    currentUserRole === "admin" ||
+                    currentUserRole === "moderator");
                 const canPin =
-                  currentUserRole === "root" ||
-                  currentUserRole === "admin" ||
-                  currentUserRole === "moderator";
+                  !isOptimistic &&
+                  (currentUserRole === "root" ||
+                    currentUserRole === "admin" ||
+                    currentUserRole === "moderator");
 
                 return (
                   <div
                     key={msg.id}
                     className={`group rounded-2xl p-4 transition-all border ${
-                      msg.isPinned
+                      isOptimistic
+                        ? "bg-plasma-cyan/5 border-plasma-cyan/40 opacity-80 animate-pulse"
+                        : msg.isPinned
                         ? "bg-amber-500/5 border-amber-500/30"
                         : "bg-void-surface/70 border-void-border hover:border-void-border/90"
                     }`}
@@ -396,12 +428,19 @@ export function StaffLiveChatHub({
                           </span>
                         )}
 
-                        <span className="text-[10px] text-gray-500 font-mono">
-                          {new Date(msg.createdAt).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
+                        {isOptimistic ? (
+                          <span className="text-[10px] text-plasma-cyan font-mono flex items-center gap-1">
+                            <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                            TRANSMITTING...
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-gray-500 font-mono">
+                            {new Date(msg.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        )}
 
                         {msg.isPinned && (
                           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
@@ -412,34 +451,36 @@ export function StaffLiveChatHub({
                       </div>
 
                       {/* Message Actions */}
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                        {canPin && (
-                          <button
-                            type="button"
-                            onClick={() => handleTogglePin(msg.id)}
-                            disabled={isPending}
-                            title={msg.isPinned ? "Unpin message" : "Pin message"}
-                            className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
-                              msg.isPinned
-                                ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
-                                : "bg-void-deep border-void-border text-gray-400 hover:text-white"
-                            }`}
-                          >
-                            <Pin className="w-3 h-3" />
-                          </button>
-                        )}
-                        {canModerate && (
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteMessage(msg.id)}
-                            disabled={isPending}
-                            title="Delete message"
-                            className="p-1.5 rounded-lg bg-void-deep border border-void-border text-gray-400 hover:text-nova-flare hover:border-nova-flare/40 transition-all cursor-pointer"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
+                      {!isOptimistic && (
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                          {canPin && (
+                            <button
+                              type="button"
+                              onClick={() => handleTogglePin(msg.id)}
+                              disabled={isPending}
+                              title={msg.isPinned ? "Unpin message" : "Pin message"}
+                              className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                                msg.isPinned
+                                  ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
+                                  : "bg-void-deep border-void-border text-gray-400 hover:text-white"
+                              }`}
+                            >
+                              <Pin className="w-3 h-3" />
+                            </button>
+                          )}
+                          {canModerate && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteMessage(msg.id)}
+                              disabled={isPending}
+                              title="Delete message"
+                              className="p-1.5 rounded-lg bg-void-deep border border-void-border text-gray-400 hover:text-nova-flare hover:border-nova-flare/40 transition-all cursor-pointer"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <p className="text-xs text-gray-300 mt-2.5 leading-relaxed whitespace-pre-wrap break-words">

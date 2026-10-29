@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import {
   verifyStaff,
   getServiceRoleClient,
-} from "@/app/[locale]/dashboard/admin/actions/adminActionUtils";
+} from "@/lib/staffAuth";
 import { stripDangerousHtml } from "@/lib/securitySanitizer";
 import type { UserRole } from "@/lib/roles";
 

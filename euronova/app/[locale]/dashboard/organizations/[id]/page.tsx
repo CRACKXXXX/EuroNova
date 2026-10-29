@@ -73,7 +73,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
     .from("users_org")
     .select("*")
     .eq("id", id)
-    .single();
+    .maybeSingle();
 
   if (orgError || !org) {
     notFound();

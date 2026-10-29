@@ -136,7 +136,7 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ loca
     .from("projects")
     .select("*, users_org(org_name, verification_status, avatar_url, oid_number)")
     .eq("id", params.id)
-    .single();
+    .maybeSingle();
 
   if (error || !project) {
     notFound();
@@ -376,15 +376,19 @@ export default async function ProjectDetailsPage(props: { params: Promise<{ loca
               <div className="prose prose-invert max-w-none">
                 <h3 className="text-2xl font-bold text-white mb-4">{t("projectDescription")}</h3>
                 <p className="text-gray-300 leading-relaxed whitespace-pre-wrap text-lg">
-                  {cleanProjectDescription(project.description, {
-                    title: project.title,
-                    startDate: project.start_date,
-                    endDate: project.end_date,
-                    location: project.exact_location,
-                    country: project.dest_country,
-                    eligibleCountries: project.eligible_countries,
-                    accommodationCovered: project.accommodation_covered,
-                  })}
+                  {cleanProjectDescription(
+                    project.description,
+                    {
+                      title: project.title,
+                      startDate: project.start_date,
+                      endDate: project.end_date,
+                      location: project.exact_location,
+                      country: project.dest_country,
+                      eligibleCountries: project.eligible_countries,
+                      accommodationCovered: project.accommodation_covered,
+                    },
+                    t("exploreVerifiedOpportunity")
+                  )}
                 </p>
               </div>
 

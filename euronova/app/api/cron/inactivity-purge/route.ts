@@ -4,7 +4,6 @@ import { maskEmail } from "@/lib/externalAlerts";
 
 export const dynamic = "force-dynamic";
 
-const GHOST_USER_ID = "554ec183-ced5-4e1c-9aee-a94ca1d51ec4";
 const ROOT_ADMIN_EMAIL = "euronovaofficial@gmail.com";
 const GHOST_USER_EMAIL = "archive-anonymized@euronova.internal";
 
@@ -63,10 +62,35 @@ async function handleInactivityPurge(request: Request) {
 
     const allUsers = usersData?.users || [];
 
+    // Dynamically query Ghost User for GDPR Art. 17 forum preservation (Zero Hallucinations)
+    let resolvedGhostUserId: string | null = null;
+    try {
+      const { data: ghostProfile } = await adminDb
+        .from("users_youth")
+        .select("id")
+        .eq("notification_email", GHOST_USER_EMAIL)
+        .maybeSingle();
+
+      if (ghostProfile?.id) {
+        resolvedGhostUserId = ghostProfile.id;
+      } else {
+        const ghostInAuth = allUsers.find((u) => u.email === GHOST_USER_EMAIL);
+        if (ghostInAuth?.id) {
+          resolvedGhostUserId = ghostInAuth.id;
+        }
+      }
+    } catch {
+      // Non-blocking: will fall back to in-place pseudonymization if ghost user is absent
+    }
+
     // 4. Identify inactive candidates (no login or account creation > 2 years ago)
     const candidates = allUsers.filter((u) => {
       // Security: never touch root administrator or ghost user
-      if (u.email === ROOT_ADMIN_EMAIL || u.email === GHOST_USER_EMAIL || u.id === GHOST_USER_ID) {
+      if (
+        u.email === ROOT_ADMIN_EMAIL ||
+        u.email === GHOST_USER_EMAIL ||
+        (resolvedGhostUserId && u.id === resolvedGhostUserId)
+      ) {
         return false;
       }
 
@@ -92,35 +116,64 @@ async function handleInactivityPurge(request: Request) {
       try {
         const userId = user.id;
 
-        // A. Anonymize authored forum discussions to Ghost User (Art. 17 preservation)
-        await Promise.all([
-          adminDb
-            .from("global_forum_threads")
-            .update({
-              user_id: GHOST_USER_ID,
-              author_name: "Deleted User",
-              author_avatar: null,
-            })
-            .eq("user_id", userId),
+        // A. Anonymize authored forum discussions (Art. 17 preservation)
+        if (resolvedGhostUserId) {
+          await Promise.all([
+            adminDb
+              .from("global_forum_threads")
+              .update({
+                user_id: resolvedGhostUserId,
+                author_name: "Deleted User",
+                author_avatar: null,
+              })
+              .eq("user_id", userId),
 
-          adminDb
-            .from("global_forum_posts")
-            .update({
-              user_id: GHOST_USER_ID,
-              author_name: "Deleted User",
-              author_avatar: null,
-            })
-            .eq("user_id", userId),
+            adminDb
+              .from("global_forum_posts")
+              .update({
+                user_id: resolvedGhostUserId,
+                author_name: "Deleted User",
+                author_avatar: null,
+              })
+              .eq("user_id", userId),
 
-          adminDb
-            .from("project_forum_messages")
-            .update({
-              user_id: GHOST_USER_ID,
-              author_name: "Deleted User",
-              avatar_url: null,
-            })
-            .eq("user_id", userId),
-        ]);
+            adminDb
+              .from("project_forum_messages")
+              .update({
+                user_id: resolvedGhostUserId,
+                author_name: "Deleted User",
+                avatar_url: null,
+              })
+              .eq("user_id", userId),
+          ]);
+        } else {
+          // If ghost user record is not yet seeded, redact author identity in place without violating FK constraints
+          await Promise.all([
+            adminDb
+              .from("global_forum_threads")
+              .update({
+                author_name: "Deleted User",
+                author_avatar: null,
+              })
+              .eq("user_id", userId),
+
+            adminDb
+              .from("global_forum_posts")
+              .update({
+                author_name: "Deleted User",
+                author_avatar: null,
+              })
+              .eq("user_id", userId),
+
+            adminDb
+              .from("project_forum_messages")
+              .update({
+                author_name: "Deleted User",
+                avatar_url: null,
+              })
+              .eq("user_id", userId),
+          ]);
+        }
 
         // B. Purge personal activities and direct interactions
         await Promise.all([

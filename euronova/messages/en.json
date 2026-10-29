@@ -606,7 +606,8 @@
     "submissionSuccessToast": "Application submitted! You earned +75 XP.",
     "applicationReviewNotice": "Your application is currently under review by the host organization.",
     "externalPortalInfopack": "External Portal / Infopack",
-    "datesTba": "Dates TBA (To Be Announced)"
+    "datesTba": "Dates TBA (To Be Announced)",
+    "exploreVerifiedOpportunity": "Explore this verified European youth opportunity."
   },
   "Footer": {
     "rights": "EuroNova. All rights reserved.",

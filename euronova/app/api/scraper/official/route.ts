@@ -1246,9 +1246,7 @@ export async function GET(request: NextRequest) {
   const querySecret = request.nextUrl.searchParams.get("secret");
 
   let isAuthorized = Boolean(
-    (cronSecret && authHeader === `Bearer ${cronSecret}`) ||
-    (cronSecret && querySecret === cronSecret) ||
-    querySecret === "Euronova.2007"
+    cronSecret && (authHeader === `Bearer ${cronSecret}` || querySecret === cronSecret)
   );
 
   if (!isAuthorized) {

@@ -87,7 +87,7 @@ export function useAdminDashboard(props: AdminDashboardClientProps) {
     setIsScraping(true);
     setFeedback(null);
     try {
-      const res = await fetch("/api/scraper/official?secret=Euronova.2007", { method: "GET" });
+      const res = await fetch("/api/scraper/official", { method: "GET" });
       if (!res.ok) throw new Error("Scraper failed to run");
       setFeedback({ type: "success", message: "Auto-Scraper executed successfully! Refreshing data..." });
       router.refresh();

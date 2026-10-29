@@ -38,7 +38,7 @@ import {
   type MuteDuration,
   type ForumPaginationMetadata,
 } from "@/actions/forum";
-import { MUTE_DURATION_OPTIONS } from "@/lib/moderationConstants";
+import { MUTE_DURATION_OPTIONS } from "@/lib/moderationShield";
 
 interface ProjectForumProps {
   projectId: string;

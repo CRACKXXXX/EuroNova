@@ -21,9 +21,7 @@ export async function GET(request: NextRequest) {
     const querySecret = request.nextUrl.searchParams.get("secret");
 
     const isAuthorized = Boolean(
-      (cronSecret && authHeader === `Bearer ${cronSecret}`) ||
-      (cronSecret && querySecret === cronSecret) ||
-      querySecret === "Euronova.2007"
+      cronSecret && (authHeader === `Bearer ${cronSecret}` || querySecret === cronSecret)
     );
 
     if (!isAuthorized) {
@@ -39,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     const internalRequest = new NextRequest(scraperUrl, {
       headers: new Headers({
-        authorization: `Bearer ${cronSecret || "Euronova.2007"}`,
+        authorization: `Bearer ${cronSecret}`,
       }),
     });
 

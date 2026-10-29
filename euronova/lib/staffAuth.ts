@@ -91,3 +91,4 @@ export async function verifyStaff() {
     role === "root" || role === "admin" || role === "moderator" || role === "support";
   return { supabase, isAuthorized, user, role };
 }
+

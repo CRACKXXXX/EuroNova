@@ -42,6 +42,10 @@ pnpm-debug.log*
 *.log
 vercel.json
 Llaves_Euronova.txt
+*Llaves*.txt
+*llaves*.txt
+*.pem
+*.key
 Euronova.md
 
 # ==========================================
@@ -125,6 +129,7 @@ id_rsa
 id_ed25519
 .DS_Store
 Thumbs.db
+*.tsbuildinfo
 [Dd]esktop.ini
 
 # ==========================================

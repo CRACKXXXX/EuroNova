@@ -1,6 +1,6 @@
 "use client";
 
-import { type UserRole, ROLE_BADGE_CONFIG } from "@/lib/rolesConstants";
+import { type UserRole, ROLE_BADGE_CONFIG } from "@/lib/roles";
 import { type StaffSearchUser } from "../actions";
 import { type YouthUserItem, type AdminTranslator, formatId, maskEmail } from "./AdminTypes";
 import { AvatarFallback } from "@/components/AvatarFallback";

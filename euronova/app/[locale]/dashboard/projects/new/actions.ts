@@ -46,7 +46,7 @@ export async function createProject(formData: FormData): Promise<CreateProjectRe
       .from("users_org")
       .select("id")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     if (orgError || !orgData) {
       return { error: "Only organizations can publish projects." };

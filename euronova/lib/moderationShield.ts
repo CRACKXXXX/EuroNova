@@ -19,8 +19,14 @@ export interface MuteCheckResult {
   error?: string;
 }
 
-import { type MuteDuration, MUTE_DURATION_OPTIONS } from "./moderationConstants";
-export { type MuteDuration, MUTE_DURATION_OPTIONS };
+export type MuteDuration = 5 | 10 | 15 | 60;
+
+export const MUTE_DURATION_OPTIONS: { minutes: MuteDuration; label: string }[] = [
+  { minutes: 5, label: "5 Minutes" },
+  { minutes: 10, label: "10 Minutes" },
+  { minutes: 15, label: "15 Minutes" },
+  { minutes: 60, label: "1 Hour" },
+];
 
 /**
  * Checks whether a user is currently muted from posting or replying.
