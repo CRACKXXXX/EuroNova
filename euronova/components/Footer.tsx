@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
@@ -12,12 +11,10 @@ import {
   Heart,
   Cookie
 } from "lucide-react";
-import { CookieConsentGatekeeper } from "./CookieConsentGatekeeper";
 
 export function Footer() {
   const t = useTranslations("Footer");
   const tCommon = useTranslations("Common");
-  const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
 
   return (
     <footer className="mt-20 w-full bg-void-deep/95 border-t border-void-border">
@@ -89,7 +86,6 @@ export function Footer() {
                 <button
                   type="button"
                   onClick={() => {
-                    setIsCookieModalOpen(true);
                     if (typeof window !== "undefined") {
                       window.dispatchEvent(new CustomEvent("euronova:open-cookie-preferences"));
                     }
@@ -139,12 +135,6 @@ export function Footer() {
           </p>
         </div>
       </div>
-
-      {/* Active Cookie & Privacy Consent Gatekeeper Pop-up Modal */}
-      <CookieConsentGatekeeper
-        isOpenOverride={isCookieModalOpen ? true : undefined}
-        onCloseOverride={() => setIsCookieModalOpen(false)}
-      />
     </footer>
   );
 }

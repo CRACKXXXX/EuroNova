@@ -105,18 +105,7 @@ export default async function RootLayout({
         <meta name="theme-color" content="#0A0D18" />
       </head>
       <body className="min-h-full flex flex-col bg-void-deep text-white">
-        <NextIntlClientProvider
-          messages={messages}
-          onError={(error) => {
-            if (process.env.NODE_ENV !== "production" && process.env.DEBUG_I18N === "true") {
-              console.warn(`[next-intl client] ${error.code}: ${error.message}`);
-            }
-          }}
-          getMessageFallback={({ key }) => {
-            const segments = key.split(".");
-            return segments[segments.length - 1] || key;
-          }}
-        >
+        <NextIntlClientProvider messages={messages} locale={locale}>
           <Suspense fallback={null}>
             <ScrollRestoration />
           </Suspense>

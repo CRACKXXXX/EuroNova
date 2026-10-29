@@ -26,6 +26,38 @@ const DEFAULT_EXPLANATIONS: Record<string, string> = {
   CBY: "Capacity Building in Youth: International projects boosting youth work infrastructure.",
 };
 
+/**
+ * Safely renders inline markdown (**bold**, *italic*, `code`) into styled HTML elements.
+ */
+function renderFormattedContent(raw: string): React.ReactNode {
+  if (!raw) return null;
+  const tokens = raw.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
+  return tokens.map((token, idx) => {
+    if (token.startsWith("**") && token.endsWith("**")) {
+      return (
+        <strong key={idx} className="font-bold text-white">
+          {token.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (token.startsWith("*") && token.endsWith("*")) {
+      return (
+        <em key={idx} className="italic text-plasma-cyan font-medium">
+          {token.slice(1, -1)}
+        </em>
+      );
+    }
+    if (token.startsWith("`") && token.endsWith("`")) {
+      return (
+        <code key={idx} className="px-1 py-0.5 rounded bg-void-deep text-plasma-cyan font-mono text-[10px]">
+          {token.slice(1, -1)}
+        </code>
+      );
+    }
+    return token;
+  });
+}
+
 export function TermTooltip({
   term,
   explanation,
@@ -36,7 +68,7 @@ export function TermTooltip({
   const [isOpen, setIsOpen] = useState(false);
 
   const normalizedKey = term.toUpperCase().trim();
-  const text = explanation || DEFAULT_EXPLANATIONS[normalizedKey] || term;
+  const rawText = explanation || DEFAULT_EXPLANATIONS[normalizedKey] || term;
 
   return (
     <span
@@ -65,7 +97,7 @@ export function TermTooltip({
       {/* Floating Tooltip Bubble */}
       <span
         role="tooltip"
-        className={`absolute z-[99] bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2.5 rounded-xl bg-void-surface/95 border border-plasma-cyan/30 backdrop-blur-md text-[11px] text-gray-300 shadow-[0_4px_25px_rgba(0,0,0,0.85)] transition-all duration-200 pointer-events-none whitespace-normal select-none leading-relaxed text-center ${
+        className={`absolute z-[99] bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2.5 rounded-xl bg-void-surface/98 border border-plasma-cyan/40 backdrop-blur-md text-[11px] text-gray-300 shadow-[0_4px_25px_rgba(0,0,0,0.85)] transition-all duration-200 pointer-events-none whitespace-normal select-none leading-relaxed text-center ${
           isOpen
             ? "opacity-100 visible scale-100"
             : "opacity-0 invisible scale-95 group-hover/tooltip:opacity-100 group-hover/tooltip:visible group-hover/tooltip:scale-100"
@@ -74,7 +106,9 @@ export function TermTooltip({
         <span className="font-bold text-plasma-cyan block text-[10px] uppercase tracking-wider mb-1">
           {term.toUpperCase()}
         </span>
-        <span className="block text-gray-300">{text}</span>
+        <span className="block text-gray-300">
+          {renderFormattedContent(rawText)}
+        </span>
 
         {/* Tiny clean arrow pointing down to badge */}
         <span className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-void-surface" />

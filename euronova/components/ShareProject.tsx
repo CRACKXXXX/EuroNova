@@ -154,7 +154,7 @@ export function ShareProject({ project, className = "" }: ShareProjectProps) {
               <button
                 type="button"
                 onClick={() => setIsShareModalOpen(false)}
-                aria-label={getT("closeModal", "Close dialog")}
+                aria-label={t("closeModal")}
                 className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-white p-2 rounded-lg hover:bg-void-deep focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-colors cursor-pointer"
               >
                 <CloseIcon className="w-5 h-5" />
@@ -308,7 +308,7 @@ export function ShareProject({ project, className = "" }: ShareProjectProps) {
               <button
                 type="button"
                 onClick={() => setIsPostCardModalOpen(false)}
-                aria-label={getT("closeModal", "Close dialog")}
+                aria-label={t("closeModal")}
                 className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-white p-2 rounded-lg hover:bg-void-deep focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-colors cursor-pointer"
               >
                 <CloseIcon className="w-5 h-5" />

@@ -91,7 +91,7 @@ export function ReportMissionButton({ projectId, projectTitle }: ReportMissionBu
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              aria-label={safeT("closeModal", "Close dialog")}
+              aria-label={t("closeModal")}
               className="absolute top-4 right-4 min-w-[44px] min-h-[44px] flex items-center justify-center p-2 rounded-lg text-gray-400 hover:text-white hover:bg-void-deep focus-visible:ring-2 focus-visible:ring-nova-flare focus-visible:outline-none transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />

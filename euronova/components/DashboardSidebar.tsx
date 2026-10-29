@@ -5,18 +5,18 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/routing";
 import { 
   Search, MapPin, Filter, Tag, Calendar, User, ArrowUpDown, 
-  ChevronDown, History, X, Sparkles, Loader2, Leaf, Laptop, 
+  ChevronDown, History, X, Leaf, Laptop, 
   Users, HeartPulse, Palette, Trophy, Shield, Briefcase, 
-  Vote, Newspaper, Wheat, Landmark, Check
+  Vote, Newspaper, Wheat, Landmark
 } from "lucide-react";
 import { MultiSelectCountry } from "@/components/MultiSelectCountry";
+import { MultiSelectTheme } from "@/components/MultiSelectTheme";
 import { CustomSelect } from "@/components/CustomSelect";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/utils/supabase/client";
 
-import { PROJECT_THEMES, ERASMUS_THEMES, type ProjectThemeId } from "@/lib/constants/themes";
+import { PROJECT_THEMES, type ProjectThemeId } from "@/lib/constants/themes";
 import { PROJECT_TYPES } from "@/lib/constants/projectTypes";
-import { parseAiSearchAction } from "@/actions/aiSearch";
 
 // Map of canonical theme IDs to their Lucide icons
 const THEME_ICON_MAP: Record<ProjectThemeId, React.ComponentType<{ className?: string }>> = {
@@ -39,7 +39,6 @@ export function DashboardSidebar() {
   const searchParams = useSearchParams();
   const t = useTranslations("Sidebar");
   const tTypes = useTranslations("ProjectTypes");
-  const tAi = useTranslations("SemanticSearch");
   const tThemes = useTranslations("ProjectThemes");
 
   // Non-blocking navigation transition
@@ -47,11 +46,6 @@ export function DashboardSidebar() {
 
   // Mobile drawer collapse/expand state
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-
-  // AI Semantic Search Mode & status
-  const [isAiSearch, setIsAiSearch] = useState(false);
-  const [isAiLoading, setIsAiLoading] = useState(false);
-  const [aiAppliedFeedback, setAiAppliedFeedback] = useState<string | null>(null);
 
   // Filter local states
   const [sort, setSort] = useState(searchParams.get("sort") || "");
@@ -188,50 +182,6 @@ export function DashboardSidebar() {
     setLastMinute(searchParams.get("last_minute") === "true");
   }, [searchParams]);
 
-  // Execute AI Natural Language Extraction
-  const handleRunAiSearch = async (queryOverride?: string) => {
-    const targetQuery = queryOverride ?? search;
-    const cleanQuery = targetQuery.trim();
-    if (!cleanQuery) return;
-
-    setIsAiLoading(true);
-    setAiAppliedFeedback(null);
-
-    try {
-      const result = await parseAiSearchAction(cleanQuery);
-      if (result.success && result.filters) {
-        const f = result.filters;
-
-        // Apply structured filters to local state
-        if (f.dest) setCountries(f.dest);
-        if (f.types) setTypes(f.types);
-        if (f.themes) setThemes(f.themes);
-        if (f.rup !== undefined) setRup(f.rup);
-        if (f.lastMinute !== undefined) setLastMinute(f.lastMinute);
-        if (f.q !== undefined) setSearch(f.q);
-
-        // Build human-readable visual summary for feedback badge
-        const summaryChips: string[] = [];
-        if (f.dest?.length) summaryChips.push(f.dest.join(", "));
-        if (f.types?.length) summaryChips.push(f.types.join(", "));
-        if (f.themes?.length) {
-          summaryChips.push(
-            f.themes.map((th) => (tThemes.has(th) ? tThemes(th) : th)).join(", ")
-          );
-        }
-        if (f.rup) summaryChips.push("RUP Flights");
-        if (f.lastMinute) summaryChips.push("Last Minute");
-        if (f.q) summaryChips.push(`"${f.q}"`);
-
-        setAiAppliedFeedback(summaryChips.join(" • ") || "AI filters applied");
-      }
-    } catch {
-      // Fallback already handled inside parseAiSearchAction
-    } finally {
-      setIsAiLoading(false);
-    }
-  };
-
   // Clear specific date filters immediately with non-blocking transition
   const handleClearDates = () => {
     setStartDate("");
@@ -260,7 +210,6 @@ export function DashboardSidebar() {
     setAccommodation(false);
     setRup(false);
     setLastMinute(false);
-    setAiAppliedFeedback(null);
     startTransition(() => {
       router.replace("/dashboard/projects", { scroll: false });
     });
@@ -315,7 +264,7 @@ export function DashboardSidebar() {
   const hasActiveFilters = Boolean(
     search || types.length > 0 || minAge || maxAge || countries.length > 0 ||
     themes.length > 0 || eligible.length > 0 || startDate || endDate ||
-    accommodation || rup || lastMinute || aiAppliedFeedback
+    accommodation || rup || lastMinute
   );
 
   return (
@@ -375,110 +324,42 @@ export function DashboardSidebar() {
           />
         </div>
 
-        {/* Search & AI Magic Search */}
+        {/* Clean Standard Search */}
         <div className="space-y-3 relative">
           <div className="flex items-center justify-between gap-2">
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-              <Search className="w-3 h-3" /> {t("search")}
+              <Search className="w-3 h-3 text-plasma-cyan" /> {t("search")}
             </h3>
-
-            {/* AI Magic Search Toggle Button */}
-            <button
-              type="button"
-              onClick={() => {
-                setIsAiSearch((prev) => !prev);
-                setAiAppliedFeedback(null);
-              }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
-                isAiSearch
-                  ? "bg-gradient-to-r from-plasma-cyan/30 via-hyper-violet/30 to-nova-flare/30 border border-plasma-cyan text-white shadow-[0_0_15px_rgba(0,229,255,0.4)] ring-1 ring-plasma-cyan/50"
-                  : "bg-void-surface/80 border border-plasma-cyan/40 hover:border-plasma-cyan text-plasma-cyan hover:bg-plasma-cyan/10"
-              }`}
-              title={t("toggleAiTitle")}
-            >
-              <Sparkles className={`w-3 h-3 ${isAiSearch ? "text-plasma-cyan animate-pulse" : "text-plasma-cyan"}`} />
-              <span>{tAi("aiMagic") || "AI Magic Search"}</span>
-            </button>
           </div>
 
           <div className="relative">
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  placeholder={
-                    isAiSearch
-                      ? tAi("aiPlaceholder") || "Describe your ideal mission naturally (e.g., 'intercambio en Italia en verano')..."
-                      : t("searchPlaceholder")
+            <div className="relative">
+              <input
+                type="text"
+                placeholder={t("searchPlaceholder")}
+                value={search}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    saveRecentSearch(search);
+                    setIsSearchFocused(false);
                   }
-                  value={search}
-                  onFocus={() => setIsSearchFocused(true)}
-                  onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      if (isAiSearch) {
-                        handleRunAiSearch();
-                      }
-                      saveRecentSearch(search);
-                      setIsSearchFocused(false);
-                    }
-                  }}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className={`w-full bg-void-surface border rounded-xl px-4 text-sm focus:outline-none transition-all ${
-                    isAiSearch
-                      ? "py-3 border-plasma-cyan ring-2 ring-plasma-cyan/40 shadow-[0_0_20px_rgba(0,229,255,0.25)] text-white placeholder:text-gray-400 placeholder:text-xs"
-                      : "py-2.5 border-void-border focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan text-white"
-                  }`}
-                />
-                {search && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearch("");
-                      setAiAppliedFeedback(null);
-                    }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white cursor-pointer"
-                    title={t("clearInputTitle")}
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-
-              {/* Explicit AI Search Action Button */}
-              {isAiSearch && (
+                }}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full bg-void-surface border border-void-border focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none transition-all placeholder:text-gray-500"
+              />
+              {search && (
                 <button
                   type="button"
-                  onClick={() => handleRunAiSearch()}
-                  disabled={isAiLoading || !search.trim()}
-                  className="px-3.5 py-3 rounded-xl bg-gradient-to-r from-plasma-cyan to-hyper-violet text-void-deep font-bold text-xs flex items-center gap-1.5 shadow-[0_0_15px_rgba(0,229,255,0.3)] hover:opacity-90 disabled:opacity-40 transition-all cursor-pointer shrink-0"
-                >
-                  {isAiLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin text-void-deep" />
-                  ) : (
-                    <Sparkles className="w-4 h-4 text-void-deep" />
-                  )}
-                  <span className="hidden sm:inline">{tAi("aiApply") || "Search"}</span>
-                </button>
-              )}
-            </div>
-
-            {/* AI Feedback Banner showing extracted parameters */}
-            {aiAppliedFeedback && (
-              <div className="mt-2 p-2 rounded-lg bg-plasma-cyan/10 border border-plasma-cyan/30 flex items-center justify-between text-xs text-plasma-cyan animate-in fade-in slide-in-from-top-1">
-                <span className="flex items-center gap-1.5 truncate">
-                  <Sparkles className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate">{aiAppliedFeedback}</span>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setAiAppliedFeedback(null)}
-                  className="text-plasma-cyan/70 hover:text-white ml-2 shrink-0 cursor-pointer"
+                  onClick={() => setSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white cursor-pointer"
+                  title={t("clearInputTitle")}
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Dropdown de búsquedas recientes */}
             {isSearchFocused && recentSearches.length > 0 && (
@@ -507,9 +388,6 @@ export function DashboardSidebar() {
                       onMouseDown={(e) => {
                         e.preventDefault();
                         setSearch(term);
-                        if (isAiSearch) {
-                          handleRunAiSearch(term);
-                        }
                         saveRecentSearch(term);
                         setIsSearchFocused(false);
                       }}
@@ -523,48 +401,12 @@ export function DashboardSidebar() {
               </div>
             )}
           </div>
-
-          {/* AI Prompts Suggestions when AI Magic Search is Active */}
-          {isAiSearch && (
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-void-surface to-plasma-cyan/5 border border-plasma-cyan/30 space-y-2 animate-in fade-in duration-300">
-              <div className="flex items-center justify-between text-[10px] font-bold text-plasma-cyan">
-                <span className="flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-plasma-cyan" />
-                  {tAi("promptSuggestions") || "Try AI Prompts"}
-                </span>
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-plasma-cyan/15 text-plasma-cyan border border-plasma-cyan/30">
-                  {isAiLoading ? tAi("aiAnalyzing") || "Analyzing..." : tAi("aiSemanticActive") || "Semantic AI Active"}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  tAi("prompt1") || "🐾 Animal sanctuary in cold Nordic climate",
-                  tAi("prompt2") || "🌊 Marine conservation in the Azores",
-                  tAi("prompt3") || "🎨 Digital arts & media workshop in Berlin",
-                  tAi("prompt4") || "🌱 Organic farming in rural Italy",
-                ].map((promptText, pIdx) => (
-                  <button
-                    key={pIdx}
-                    type="button"
-                    onClick={() => {
-                      setSearch(promptText);
-                      saveRecentSearch(promptText);
-                      handleRunAiSearch(promptText);
-                    }}
-                    className="text-[11px] text-left px-2.5 py-1 rounded-lg bg-void-deep/80 hover:bg-plasma-cyan/15 border border-void-border hover:border-plasma-cyan/50 text-gray-300 hover:text-white transition-all cursor-pointer"
-                  >
-                    {promptText}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Destination */}
         <div className="space-y-4">
           <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-            <MapPin className="w-3 h-3" /> {t("destination")}
+            <MapPin className="w-3 h-3 text-plasma-cyan" /> {t("destination")}
           </h3>
           <MultiSelectCountry selected={countries} onChange={setCountries} placeholder={t("anyCountry")} />
         </div>
@@ -572,7 +414,7 @@ export function DashboardSidebar() {
         {/* Eligible Countries */}
         <div className="space-y-4">
           <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-            <MapPin className="w-3 h-3" /> {t("eligibleCountries")}
+            <MapPin className="w-3 h-3 text-plasma-cyan" /> {t("eligibleCountries")}
           </h3>
           <MultiSelectCountry selected={eligible} onChange={setEligible} placeholder={t("anyCountry")} />
         </div>
@@ -581,63 +423,82 @@ export function DashboardSidebar() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-              <Calendar className="w-3 h-3" /> {t("dates")}
+              <Calendar className="w-3 h-3 text-plasma-cyan" /> {t("dates")}
             </h3>
             {(startDate || endDate) && (
               <button
                 type="button"
                 onClick={handleClearDates}
-                className="text-[11px] text-plasma-cyan hover:underline font-bold transition-colors cursor-pointer"
+                className="text-[11px] text-plasma-cyan hover:underline font-semibold cursor-pointer"
               >
                 {t("clearDates")}
               </button>
             )}
           </div>
-          <div className="flex gap-2">
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full bg-void-surface border border-void-border rounded-lg px-2 py-2 text-xs focus:border-plasma-cyan text-white"
-            />
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full bg-void-surface border border-void-border rounded-lg px-2 py-2 text-xs focus:border-plasma-cyan text-white"
-            />
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full bg-void-surface border border-void-border rounded-lg px-2.5 py-2 text-xs text-white focus:outline-none focus:border-plasma-cyan [color-scheme:dark]"
+              />
+            </div>
+            <div>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full bg-void-surface border border-void-border rounded-lg px-2.5 py-2 text-xs text-white focus:outline-none focus:border-plasma-cyan [color-scheme:dark]"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Age Range */}
+        {/* Age Restriction */}
         <div className="space-y-4">
           <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-            <User className="w-3 h-3" /> {t("ageRange")}
+            <User className="w-3 h-3 text-plasma-cyan" /> {t("ageRange")}
           </h3>
-          <div className="flex gap-2 items-center">
+          <div className="flex items-center gap-2">
             <input
               type="number"
               placeholder={t("min")}
+              min="13"
+              max="99"
               value={minAge}
               onChange={(e) => setMinAge(e.target.value)}
-              className="w-full bg-void-surface border border-void-border rounded-lg px-3 py-2 text-sm focus:border-plasma-cyan text-white"
+              className="w-full bg-void-surface border border-void-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-plasma-cyan"
             />
             <span className="text-gray-500">-</span>
             <input
               type="number"
               placeholder={t("max")}
+              min="13"
+              max="99"
               value={maxAge}
               onChange={(e) => setMaxAge(e.target.value)}
-              className="w-full bg-void-surface border border-void-border rounded-lg px-3 py-2 text-sm focus:border-plasma-cyan text-white"
+              className="w-full bg-void-surface border border-void-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-plasma-cyan"
             />
           </div>
         </div>
 
-        {/* Mission Type */}
+        {/* Project Types */}
         <div className="space-y-4">
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-            <Filter className="w-3 h-3" /> {t("missionType")}
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+              <Filter className="w-3 h-3 text-plasma-cyan" /> {t("missionType")}
+            </h3>
+            {types.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setTypes([])}
+                className="text-[11px] text-plasma-cyan hover:underline font-semibold cursor-pointer"
+              >
+                {t("clearAll")}
+              </button>
+            )}
+          </div>
           <div className="grid grid-cols-2 gap-2">
             {PROJECT_TYPES.map((pt) => {
               const isSelected = types.includes(pt.code);
@@ -661,7 +522,10 @@ export function DashboardSidebar() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <span className="text-xs font-bold block">{pt.code}</span>
-                    <span className="text-[10px] text-gray-400 block whitespace-normal leading-tight line-clamp-2" title={tTypes(pt.labelKey)}>
+                    <span
+                      className="text-[10px] text-gray-400 block whitespace-normal leading-tight line-clamp-2"
+                      title={tTypes(pt.labelKey)}
+                    >
                       {tTypes(pt.labelKey)}
                     </span>
                   </div>
@@ -671,8 +535,8 @@ export function DashboardSidebar() {
           </div>
         </div>
 
-        {/* Topics / Themes: 12 Canonical Categories */}
-        <div className="space-y-4">
+        {/* Topics / Themes - Accessible Dropdown Menu with Active Chips */}
+        <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
               <Tag className="w-3 h-3 text-plasma-cyan" /> {t("themes")}
@@ -688,73 +552,39 @@ export function DashboardSidebar() {
             )}
           </div>
 
-          {/* Canonical 12 Categories Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-            {PROJECT_THEMES.map((theme) => {
-              const isSelected = themes.includes(theme.id);
-              const IconComp = THEME_ICON_MAP[theme.id] || Tag;
-              const label = tThemes.has(theme.labelKey) ? tThemes(theme.labelKey) : theme.id;
+          {/* Clean Dropdown containing all themes (Canonical + Erasmus) */}
+          <MultiSelectTheme
+            selected={themes}
+            onChange={setThemes}
+            placeholder={t("addCustomTheme") || "Select themes..."}
+          />
 
-              return (
-                <button
-                  key={theme.id}
-                  type="button"
-                  onClick={() => toggleTheme(theme.id)}
-                  className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border text-left cursor-pointer transition-all ${
-                    isSelected
-                      ? "border-hyper-violet bg-hyper-violet/25 text-white shadow-[0_0_12px_rgba(99,102,241,0.25)]"
-                      : "border-void-border bg-void-surface/50 text-gray-400 hover:text-white hover:border-gray-700"
-                  }`}
-                  title={label}
-                >
-                  <IconComp className={`w-3.5 h-3.5 shrink-0 ${isSelected ? "text-hyper-violet" : "text-gray-500"}`} />
-                  <span className="text-[11px] font-medium leading-tight truncate flex-1">
-                    {label}
-                  </span>
-                  {isSelected && (
-                    <Check className="w-3 h-3 text-hyper-violet shrink-0" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Selected Non-Canonical or Custom Themes Badges */}
-          {themes.filter((th) => !PROJECT_THEMES.some((pt) => pt.id === th)).length > 0 && (
+          {/* Active Selected Theme Badges (Only rendered when selected) */}
+          {themes.length > 0 && (
             <div className="flex flex-wrap gap-1.5 pt-1">
-              {themes
-                .filter((th) => !PROJECT_THEMES.some((pt) => pt.id === th))
-                .map((theme) => (
+              {themes.map((themeId) => {
+                const canonical = PROJECT_THEMES.find((pt) => pt.id === themeId);
+                const label = canonical
+                  ? (tThemes.has(canonical.labelKey) ? tThemes(canonical.labelKey) : canonical.id)
+                  : (tThemes.has(themeId) ? tThemes(themeId) : themeId);
+                const IconComp = canonical ? THEME_ICON_MAP[canonical.id] : Tag;
+
+                return (
                   <button
-                    key={theme}
+                    key={themeId}
                     type="button"
-                    onClick={() => toggleTheme(theme)}
-                    className="px-2.5 py-1 text-xs font-medium rounded-lg border bg-hyper-violet/20 border-hyper-violet text-hyper-violet flex items-center gap-1 hover:bg-hyper-violet/30 transition-colors cursor-pointer"
+                    onClick={() => toggleTheme(themeId)}
+                    className="px-2.5 py-1 text-xs font-medium rounded-lg border bg-hyper-violet/20 border-hyper-violet text-hyper-violet flex items-center gap-1.5 hover:bg-hyper-violet/30 transition-colors cursor-pointer group"
+                    title={`Remove ${label}`}
                   >
-                    <span>{theme}</span>
-                    <span className="text-[10px] opacity-70 hover:opacity-100">×</span>
+                    <IconComp className="w-3 h-3 text-hyper-violet shrink-0" />
+                    <span className="truncate max-w-[150px]">{label}</span>
+                    <span className="text-[12px] font-bold leading-none opacity-70 group-hover:opacity-100">×</span>
                   </button>
-                ))}
+                );
+              })}
             </div>
           )}
-
-          {/* Custom Legacy Topic Selector */}
-          <CustomSelect
-            value=""
-            onChange={(val) => {
-              if (val && !themes.includes(val)) toggleTheme(val);
-            }}
-            placeholder={t("addCustomTheme")}
-            className="mt-2"
-            options={[
-              { value: "", label: t("addCustomTheme") },
-              ...ERASMUS_THEMES.map((th) => ({
-                value: th,
-                label: tThemes.has(th) ? tThemes(th) : th,
-                disabled: themes.includes(th),
-              })),
-            ]}
-          />
         </div>
 
         {/* Toggle Switches */}

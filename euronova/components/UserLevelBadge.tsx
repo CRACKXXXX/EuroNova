@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { 
   Circle, 
   Shield, 
@@ -22,6 +22,7 @@ import {
   Box, 
   Crown, 
   Award,
+  HelpCircle,
   type LucideIcon
 } from "lucide-react";
 
@@ -83,6 +84,7 @@ export function getLevelTierDetails(level: number): LevelTierConfig {
 interface UserLevelBadgeProps {
   level: number;
   showTitle?: boolean;
+  showHelpIcon?: boolean;
   className?: string;
   size?: "sm" | "md" | "lg";
 }
@@ -90,9 +92,11 @@ interface UserLevelBadgeProps {
 export function UserLevelBadge({
   level,
   showTitle = false,
+  showHelpIcon = false,
   className = "",
   size = "sm",
 }: UserLevelBadgeProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const safeLevel = Math.max(1, isNaN(level) ? 1 : Math.floor(level));
   const tier = getLevelTierDetails(safeLevel);
   const Icon = tier.IconComponent;
@@ -111,16 +115,69 @@ export function UserLevelBadge({
 
   return (
     <span
-      title={`Level ${safeLevel} • ${tier.title}`}
-      className={`inline-flex items-center rounded-full font-mono font-black border border-void-border/70 bg-void-deep/90 backdrop-blur-md cursor-help shrink-0 shadow-sm transition-all duration-300 ${tier.shadow} ${sizeClasses[size]} ${className}`}
+      className={`relative inline-flex items-center group/badge overflow-visible select-none ${className}`}
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+      onFocus={() => setIsOpen(true)}
+      onBlur={() => setIsOpen(false)}
+      onClick={(e) => {
+        e.stopPropagation();
+        setIsOpen((prev) => !prev);
+      }}
     >
-      <Icon className={`${iconSizes[size]} ${tier.color} shrink-0`} />
-      <span className={tier.color}>Lv.{safeLevel}</span>
-      {showTitle && (
-        <span className="text-gray-300 font-sans font-bold text-[11px] truncate hidden sm:inline ml-0.5">
-          • {tier.title}
-        </span>
-      )}
+      <span
+        tabIndex={0}
+        role="button"
+        aria-label={`User Level ${safeLevel}, Rank: ${tier.title}`}
+        className={`inline-flex items-center rounded-full font-mono font-black border border-void-border/70 bg-void-deep/90 backdrop-blur-md cursor-pointer shrink-0 shadow-sm transition-all duration-300 hover:border-plasma-cyan/60 ${tier.shadow} ${sizeClasses[size]}`}
+      >
+        <Icon className={`${iconSizes[size]} ${tier.color} shrink-0`} />
+        <span className={tier.color}>Lv.{safeLevel}</span>
+        {showTitle && (
+          <span className="text-gray-300 font-sans font-bold text-[11px] truncate hidden sm:inline ml-0.5">
+            • {tier.title}
+          </span>
+        )}
+        {showHelpIcon && (
+          <HelpCircle className="w-2.5 h-2.5 text-gray-500 hover:text-plasma-cyan ml-0.5 shrink-0 transition-colors" />
+        )}
+      </span>
+
+      {/* Styled Cosmic Tooltip Bubble (No raw broken markdown or string artifacts) */}
+      <span
+        role="tooltip"
+        className={`absolute z-[999] bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 rounded-2xl bg-void-surface/98 border border-plasma-cyan/40 backdrop-blur-xl text-left shadow-[0_12px_45px_rgba(0,0,0,0.85),0_0_20px_rgba(0,229,255,0.15)] transition-all duration-200 pointer-events-none select-none ${
+          isOpen
+            ? "opacity-100 visible scale-100"
+            : "opacity-0 invisible scale-95 group-hover/badge:opacity-100 group-hover/badge:visible group-hover/badge:scale-100"
+        }`}
+      >
+        <div className="flex items-center gap-2.5 mb-2 pb-2 border-b border-void-border/80">
+          <div className="w-7 h-7 rounded-lg bg-void-deep border border-void-border flex items-center justify-center shrink-0">
+            <Icon className={`w-4 h-4 ${tier.color}`} />
+          </div>
+          <div className="min-w-0">
+            <span className={`text-xs font-black block truncate ${tier.color}`}>
+              {tier.title}
+            </span>
+            <span className="text-[10px] font-mono text-gray-400 block">
+              Level {safeLevel} • Tier {tier.tierIndex + 1} / 20
+            </span>
+          </div>
+        </div>
+
+        <p className="text-[11px] text-gray-300 leading-snug font-sans font-normal mb-2">
+          Earn XP by applying to missions, verifying dossiers, and participating in European mobility exchanges.
+        </p>
+
+        <div className="flex items-center justify-between text-[10px] font-mono text-plasma-cyan pt-1.5 border-t border-void-border/60">
+          <span>True Trust Protocol</span>
+          <span className="text-gray-400 font-bold">EuroNova Genesis</span>
+        </div>
+
+        {/* Downward pointer caret */}
+        <span className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-void-surface" />
+      </span>
     </span>
   );
 }

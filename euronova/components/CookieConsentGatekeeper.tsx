@@ -61,10 +61,9 @@ export function CookieConsentGatekeeper({
 
   // Derive isOpen:
   // 1. If isOpenOverride is explicitly passed as boolean, respect it
-  // 2. If manually opened via custom event, open it
-  // 3. Otherwise, if mounted, not yet consented and not dismissed, open on first visit
-  const isFirstVisit = mounted && consentStatus === null && !hasDismissed;
-  const isOpen = typeof isOpenOverride === "boolean" ? isOpenOverride : (manuallyOpened || isFirstVisit);
+  // 2. If manually opened via custom event, open it unless dismissed
+  // 3. Native first visit is handled cleanly by CookieBanner; gatekeeper never auto-duplicates
+  const isOpen = typeof isOpenOverride === "boolean" ? isOpenOverride : (manuallyOpened && !hasDismissed);
 
   useEffect(() => {
     const handleOpenPreferences = () => {

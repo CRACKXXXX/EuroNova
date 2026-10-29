@@ -391,7 +391,8 @@
     "cancel": "Отмена",
     "calibrating": "Калибровка...",
     "antiScamVerified": "Проверено ИИ против мошенничества",
-    "antiScamVerifiedTitle": "Проверено командой модерации и ИИ EuroNova"
+    "antiScamVerifiedTitle": "Проверено командой модерации и ИИ EuroNova",
+    "closeModal": "Закрыть окно"
   },
   "ProjectCard": {
     "lastMinute": "СРОЧНО (LAST MINUTE)",
@@ -607,7 +608,8 @@
     "applicationReviewNotice": "Ваша заявка находится на рассмотрении принимающей организации.",
     "externalPortalInfopack": "Внешний портал / Инфопак",
     "datesTba": "Даты уточняются (TBA)",
-    "exploreVerifiedOpportunity": "Ознакомьтесь с этой проверенной европейской возможностью для молодежи."
+    "exploreVerifiedOpportunity": "Ознакомьтесь с этой проверенной европейской возможностью для молодежи.",
+    "closeModal": "Закрыть окно"
   },
   "Footer": {
     "rights": "Все права защищены.",

@@ -391,7 +391,8 @@
     "cancel": "Cancelar",
     "calibrating": "Calibrando...",
     "antiScamVerified": "Verificado contra Fraude por IA",
-    "antiScamVerifiedTitle": "Verificado por el equipo de moderación e IA de EuroNova"
+    "antiScamVerifiedTitle": "Verificado por el equipo de moderación e IA de EuroNova",
+    "closeModal": "Cerrar ventana modal"
   },
   "ProjectCard": {
     "lastMinute": "ÚLTIMA HORA",
@@ -607,7 +608,8 @@
     "applicationReviewNotice": "Tu postulación está actualmente en revisión por la organización anfitriona.",
     "externalPortalInfopack": "Portal Externo / Infopack",
     "datesTba": "Fechas por confirmar (TBA)",
-    "exploreVerifiedOpportunity": "Explora esta oportunidad europea verificada para jóvenes."
+    "exploreVerifiedOpportunity": "Explora esta oportunidad europea verificada para jóvenes.",
+    "closeModal": "Cerrar ventana modal"
   },
   "Footer": {
     "rights": "EuroNova. Todos los derechos reservados.",

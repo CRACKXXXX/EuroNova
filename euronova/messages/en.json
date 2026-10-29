@@ -391,7 +391,8 @@
     "cancel": "Cancel",
     "calibrating": "Calibrating...",
     "antiScamVerified": "AI Anti-Scam Verified",
-    "antiScamVerifiedTitle": "Verified by EuroNova AI & Moderation Team"
+    "antiScamVerifiedTitle": "Verified by EuroNova AI & Moderation Team",
+    "closeModal": "Close dialog"
   },
   "ProjectCard": {
     "lastMinute": "LAST MINUTE",
@@ -607,7 +608,8 @@
     "applicationReviewNotice": "Your application is currently under review by the host organization.",
     "externalPortalInfopack": "External Portal / Infopack",
     "datesTba": "Dates TBA (To Be Announced)",
-    "exploreVerifiedOpportunity": "Explore this verified European youth opportunity."
+    "exploreVerifiedOpportunity": "Explore this verified European youth opportunity.",
+    "closeModal": "Close dialog"
   },
   "Footer": {
     "rights": "EuroNova. All rights reserved.",
