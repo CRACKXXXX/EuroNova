@@ -47,6 +47,7 @@ interface ProjectForumProps {
 
 export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
   const t = useTranslations("ProjectForum");
+  const tErrors = useTranslations("Errors");
   const format = useFormatter();
 
   const formatRelativeTime = (dateString: string): string => {
@@ -207,11 +208,16 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
         const res = await postProjectMessage(projectId, trimmed);
 
         if (!res.success) {
-          const errorMsg =
-            res.error ||
-            "Transmission Blocked: Message violated auto-moderation rules.";
-          setModerationError(errorMsg);
-          toast.error(errorMsg);
+          if (res.error === "RATE_LIMIT_EXCEEDED" || res.errorCode === "RATE_LIMITED") {
+            toast.warning(tErrors("rateLimitExceeded"), { id: "rate-limit-toast", icon: "⏳" });
+            setModerationError(tErrors("rateLimitExceeded"));
+          } else {
+            const errorMsg =
+              res.error ||
+              "Transmission Blocked: Message violated auto-moderation rules.";
+            setModerationError(errorMsg);
+            toast.error(errorMsg);
+          }
           return;
         }
 

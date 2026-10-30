@@ -103,7 +103,8 @@
     "moderatorPanel": "Панель модератора",
     "supportPanel": "Панель поддержки",
     "supportEuroNova": "Поддержать EuroNova",
-    "language": "Язык"
+    "language": "Язык",
+    "supportHelpCenter": "Поддержка и помощь"
   },
   "Sidebar": {
     "search": "Поиск",
@@ -142,7 +143,11 @@
     "clearRecentSearches": "Очистить",
     "toggleFilters": "Переключить фильтры",
     "toggleAiTitle": "Переключить поиск на естественном языке с ИИ",
-    "clearInputTitle": "Очистить поле ввода"
+    "clearInputTitle": "Очистить поле ввода",
+    "staffTerminal": "Терминал персонала",
+    "moderatorHub": "Отчеты",
+    "supportDesk": "Тикеты",
+    "userSupportHub": "Центр помощи и тикеты"
   },
   "Dashboard": {
     "title": "Панель управления",
@@ -451,7 +456,9 @@
     "linkedin": "LinkedIn",
     "commandCenter": "Командный центр организации",
     "publishNewMission": "Опубликовать новую миссию",
-    "editProfile": "Редактировать профиль"
+    "editProfile": "Редактировать профиль",
+    "shareView": "Поделиться профилем",
+    "copiedLink": "Скопировано!"
   },
   "NewProject": {
     "backHome": "Вернуться на главную",
@@ -730,7 +737,9 @@
     "filterActive": "Активная Проверка ({count})",
     "filterResolved": "Архив Решенных ({count})",
     "view": "Просмотр",
-    "org": "Орг"
+    "org": "Орг",
+    "tabSupportTickets": "Тикеты поддержки",
+    "reporterLabel": "Заявитель:"
   },
   "AdminPanel": {
     "title": "Режим бога: командный центр",
@@ -1020,7 +1029,14 @@
     "replyAndResolve": "Ответить и решить",
     "ticketsMatched": "{count} подходящих тикетов",
     "noTicketsMatchSearch": "По вашему запросу тикеты не найдены.",
-    "noSupportInquiriesPending": "В этой очереди нет ожидающих запросов техподдержки."
+    "noSupportInquiriesPending": "В этой очереди нет ожидающих запросов техподдержки.",
+    "supportPrivacyActive": "Конфиденциальность поддержки активна",
+    "supportPrivacyTooltip": "Специалисты службы поддержки могут видеть имена и адреса электронной почты, но номера телефонов и физические идентификаторы остаются строго защищенными.",
+    "moderatorAccess": "Доступ модератора",
+    "moderatorAccessTooltip": "Полный доступ для аудита предоставлен для модерации и проверок соответствия.",
+    "tabReportsQuick": "Отчеты",
+    "restrictedBadge": "Ограничено",
+    "restrictedToModerator": "Доступно только модераторам"
   },
   "ProjectTypes": {
     "YE": "Молодежный обмен",
@@ -1606,7 +1622,8 @@
     "description": "Произошел непредвиденный сбой при обработке орбитальных данных. Наша телеметрия зафиксировала событие.",
     "digestLabel": "Код ошибки",
     "tryAgain": "Восстановить соединение",
-    "returnHome": "Вернуться на главную"
+    "returnHome": "Вернуться на главную",
+    "rateLimitExceeded": "Вы действуете слишком быстро. Пожалуйста, подождите немного и повторите попытку."
   },
   "NotFound": {
     "badge": "КООРДИНАТЫ НЕДОСТУПНЫ",
@@ -2159,5 +2176,42 @@
     "policyLink": "Политика использования cookie",
     "statusAccepted": "Согласие предоставлено",
     "statusRejected": "Необязательные отклонены"
+  },
+  "SupportHub": {
+    "title": "Орбитальный центр поддержки",
+    "subtitle": "Отслеживайте технические запросы, просматривайте ответы команды и общайтесь напрямую со специалистами EuroNova.",
+    "tabMyTickets": "Мои обращения ({count})",
+    "tabNewTicket": "Новое обращение",
+    "noTicketsFound": "Тикеты поддержки не найдены",
+    "noTicketsFoundDesc": "Вы еще не создавали обращений в службу поддержки. Нужна помощь с проектом, верификацией или аккаунтом?",
+    "createFirstTicket": "Отправить первое обращение",
+    "statusOpen": "Открыт",
+    "statusPending": "На рассмотрении",
+    "statusInProgress": "В работе",
+    "statusResolved": "Решен",
+    "ticketDetails": "Ветка тикета",
+    "initialInquiry": "Исходное обращение",
+    "staffReply": "Специалист поддержки EuroNova",
+    "userReply": "Вы",
+    "replyPlaceholder": "Введите ваш ответ или уточняющий вопрос...",
+    "sendReply": "Отправить сообщение",
+    "sendingReply": "Отправка...",
+    "replySentSuccess": "Ответ успешно передан в службу поддержки.",
+    "ticketResolvedNotice": "Это обращение помечено как решенное. Новое сообщение автоматически откроет его заново для проверки.",
+    "filterAll": "Все ({count})",
+    "filterOpen": "Активные ({count})",
+    "filterResolved": "Решенные ({count})",
+    "searchPlaceholder": "Поиск обращений по теме или содержанию...",
+    "conversationHistory": "История сообщений",
+    "ticketId": "Номер обращения",
+    "lastUpdate": "Обновлено",
+    "contactEmail": "Контактный email",
+    "contactPhone": "Телефон",
+    "closeThread": "Закрыть ветку",
+    "backToTickets": "Назад к обращениям",
+    "repliesCount": "{count} ответов",
+    "noRepliesYet": "Ожидается первый ответ от специалиста службы поддержки.",
+    "hubTitle": "Центр поддержки",
+    "staffBadge": "Сотрудник"
   }
 }

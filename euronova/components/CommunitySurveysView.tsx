@@ -48,6 +48,7 @@ export function CommunitySurveysView({
 }: CommunitySurveysViewProps) {
   const format = useFormatter();
   const t = useTranslations("CommunitySurveys");
+  const tErrors = useTranslations("Errors");
   const [data, setData] = useState<SurveysPaginationResult>(initialData);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string[]>>({});
   const [votedSurveys, setVotedSurveys] = useState<Record<string, { percentages: Record<string, number>; userOptionIds: string[] }>>({});
@@ -118,7 +119,11 @@ export function CommunitySurveysView({
         });
 
         if (!result.success || !result.percentages) {
-          toast.error(result.error || t("surveyDeleteError"));
+          if (result.error === "RATE_LIMIT_EXCEEDED") {
+            toast.warning(tErrors("rateLimitExceeded"), { id: "rate-limit-toast", icon: "⏳" });
+          } else {
+            toast.error(result.error || t("surveyDeleteError"));
+          }
           return;
         }
 

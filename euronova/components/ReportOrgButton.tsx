@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Flag, X, ShieldAlert, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { submitGlobalReportAction } from "@/actions/reports";
+import { toast } from "sonner";
 
 interface ReportOrgButtonProps {
   orgId: string;
@@ -15,6 +16,7 @@ const subscribe = () => () => {};
 
 export function ReportOrgButton({ orgId, orgName }: ReportOrgButtonProps) {
   const t = useTranslations("Reports");
+  const tErrors = useTranslations("Errors");
   const tCommon = useTranslations("Common");
   const [isOpen, setIsOpen] = useState(false);
   const [reason, setReason] = useState("fake_accreditation");
@@ -42,7 +44,12 @@ export function ReportOrgButton({ orgId, orgName }: ReportOrgButtonProps) {
         });
 
         if (res.error) {
-          setErrorMessage(res.error);
+          if (res.error === "RATE_LIMIT_EXCEEDED") {
+            toast.warning(tErrors("rateLimitExceeded"), { id: "rate-limit-toast", icon: "⏳" });
+            setErrorMessage(tErrors("rateLimitExceeded"));
+          } else {
+            setErrorMessage(res.error);
+          }
           return;
         }
 

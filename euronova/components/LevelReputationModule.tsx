@@ -76,7 +76,7 @@ export function LevelReputationModule({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-void-border/80">
           <div className="flex items-center gap-3.5 min-w-0">
             <div className={`w-12 h-12 rounded-2xl bg-void-deep border border-void-border p-1 shadow-inner flex items-center justify-center shrink-0 ${tier.shadow}`}>
-              <TierIcon className={`w-7 h-7 ${tier.color}`} />
+              <TierIcon className={`w-7 h-7 ${tier.iconColor || tier.color}`} />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
@@ -84,7 +84,7 @@ export function LevelReputationModule({
                   {t("moduleTitle")}
                 </h3>
                 <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-plasma-cyan/15 text-plasma-cyan border border-plasma-cyan/30 shrink-0">
-                  {t("tierFraction", { current: tier.tierIndex + 1, total: 20 })}
+                  {t("tierFraction", { current: tier.tierIndex + 1, total: 50 })}
                 </span>
               </div>
               <p className="text-xs text-gray-400 mt-0.5 truncate">
@@ -129,12 +129,12 @@ export function LevelReputationModule({
                 <span className="text-[11px] font-extrabold uppercase tracking-widest text-plasma-cyan block">
                   {t("currentRank")}
                 </span>
-                <div className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-2 mt-0.5 min-w-0">
+                <div className="flex flex-col gap-0.5 mt-0.5 min-w-0 w-full">
                   <span className="flex flex-row items-center gap-2 whitespace-nowrap text-2xl sm:text-3xl font-black text-white tracking-tight">
                     {t("level", { level: currentLevel })}
                   </span>
-                  <span className={`text-xs sm:text-sm font-bold whitespace-normal leading-tight ${tier.color}`}>
-                    <span className="hidden sm:inline">• </span>{tier.title}
+                  <span className={`text-xs sm:text-sm font-bold block w-full leading-tight truncate ${tier.color}`}>
+                    {tier.title}
                   </span>
                 </div>
               </div>
@@ -163,7 +163,7 @@ export function LevelReputationModule({
 
               <div className="flex items-center justify-between text-[10px] text-gray-500 font-mono pt-0.5">
                 <span>Total Lifetime: {format.number(liveXp)} XP</span>
-                <span>Next Rank: Lv.{TIER_THRESHOLDS[Math.min(tier.tierIndex + 1, 19)].minLevel}</span>
+                <span>Next Rank: Lv.{TIER_THRESHOLDS[Math.min(tier.tierIndex + 1, 49)].minLevel}</span>
               </div>
             </div>
           </div>

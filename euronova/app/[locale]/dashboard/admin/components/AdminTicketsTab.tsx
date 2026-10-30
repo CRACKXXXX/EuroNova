@@ -3,11 +3,16 @@
 import React, { useState } from "react";
 import { type StaffTicketItem, updateSupportTicketStatus } from "../actions";
 import { type AdminTranslator, type AdminFormatter } from "./AdminTypes";
+import type { UserRole } from "@/lib/roles";
+import { resolveUserPrivacy } from "@/lib/privacyMasker";
 import {
   Headphones,
   CheckCircle2,
   Clock,
   Send,
+  Lock,
+  Mail,
+  Phone,
 } from "lucide-react";
 
 interface AdminTicketsTabProps {
@@ -15,6 +20,8 @@ interface AdminTicketsTabProps {
   totalPendingTickets: number;
   ticketStatusFilter: "all" | "open" | "in_progress" | "resolved";
   setTicketStatusFilter: (st: "all" | "open" | "in_progress" | "resolved") => void;
+  showSensitive?: boolean;
+  currentUserRole?: UserRole;
   isPending: boolean;
   handleAction: (actionFn: () => Promise<{ success?: boolean; error?: string }>) => void;
   setTicketReplyModal: (m: { ticket: StaffTicketItem } | null) => void;
@@ -29,6 +36,8 @@ export function AdminTicketsTab({
   totalPendingTickets,
   ticketStatusFilter,
   setTicketStatusFilter,
+  showSensitive = false,
+  currentUserRole = "admin",
   isPending,
   handleAction,
   setTicketReplyModal,
@@ -95,6 +104,13 @@ export function AdminTicketsTab({
           {filteredTickets.map((tk) => {
             const isApplySupport = tk.reason === "apply_support";
             const currentStatus = tk.status || "open";
+            const privacy = resolveUserPrivacy({
+              currentUserRole,
+              showSensitive,
+              email: tk.email,
+              phone: tk.phone,
+              id: tk.id,
+            });
 
             const statusBadgeClass =
               currentStatus === "resolved"
@@ -159,8 +175,40 @@ export function AdminTicketsTab({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                   <div>
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{t("userContact")}</p>
-                    <p className="text-white font-bold">{tk.email}</p>
-                    {tk.phone && <p className="text-gray-400 font-mono mt-0.5">Phone: {tk.phone}</p>}
+                    <div className="flex items-center gap-1.5 font-bold">
+                      {privacy.isEmailMasked ? (
+                        <div className="flex items-center gap-1.5 text-gray-400 font-mono">
+                          <Lock className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+                          <span>{privacy.email}</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 text-white">
+                          <Mail className="w-3.5 h-3.5 text-plasma-cyan shrink-0" />
+                          <span className="font-mono">{privacy.email}</span>
+                        </div>
+                      )}
+                    </div>
+                    {tk.phone && (
+                      <div className="flex items-center gap-2 mt-1">
+                        {privacy.isPhoneMasked ? (
+                          <div className="flex items-center gap-1.5 text-gray-400 font-mono text-xs">
+                            <Lock className="w-3 h-3 text-gray-500 shrink-0" />
+                            <span>Phone: {privacy.phone}</span>
+                            {privacy.isRestrictedForRole && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                                <Lock className="w-2 h-2" />
+                                <span>{t("restrictedBadge")}</span>
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 text-gray-200 font-mono text-xs">
+                            <Phone className="w-3 h-3 text-rup-emerald shrink-0" />
+                            <span>Phone: {privacy.phone}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{t("subject")}</p>

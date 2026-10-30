@@ -427,7 +427,7 @@ export async function postProjectMessage(
     if (!rateCheck.success) {
       return {
         success: false,
-        error: rateCheck.error || "Rate limit reached. Please wait before posting again.",
+        error: "RATE_LIMIT_EXCEEDED",
         errorCode: "RATE_LIMITED",
       };
     }

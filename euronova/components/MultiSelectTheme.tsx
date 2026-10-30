@@ -23,6 +23,8 @@ export function MultiSelectTheme({
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const tThemes = useTranslations("ProjectThemes");
+  const tSidebar = useTranslations("Sidebar");
+  const tCommon = useTranslations("Common");
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -157,7 +159,7 @@ export function MultiSelectTheme({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Filter themes..."
+                placeholder={tSidebar("searchPlaceholder")}
                 className="w-full bg-void-surface border border-void-border rounded-lg pl-8 pr-7 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan"
               />
               {searchQuery && (
@@ -178,7 +180,7 @@ export function MultiSelectTheme({
             {filteredCanonical.length > 0 && (
               <div>
                 <div className="px-2.5 py-1 text-[10px] font-bold text-plasma-cyan uppercase tracking-wider">
-                  Core Categories ({filteredCanonical.length})
+                  {tSidebar("themes")} ({filteredCanonical.length})
                 </div>
                 <div className="space-y-0.5">
                   {filteredCanonical.map((theme) => {
@@ -223,7 +225,7 @@ export function MultiSelectTheme({
             {filteredAdditional.length > 0 && (
               <div className="pt-1 border-t border-void-border/60">
                 <div className="px-2.5 py-1 text-[10px] font-bold text-hyper-violet uppercase tracking-wider">
-                  Erasmus+ Topics ({filteredAdditional.length})
+                  {tSidebar("addCustomTheme")} ({filteredAdditional.length})
                 </div>
                 <div className="space-y-0.5">
                   {filteredAdditional.map((theme) => {
@@ -266,7 +268,7 @@ export function MultiSelectTheme({
 
             {filteredCanonical.length === 0 && filteredAdditional.length === 0 && (
               <div className="p-4 text-center text-xs text-gray-500">
-                No matching themes found
+                {tCommon("noOptions")}
               </div>
             )}
           </div>

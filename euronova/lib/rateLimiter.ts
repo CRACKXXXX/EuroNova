@@ -12,15 +12,18 @@ export interface RateLimitConfig {
   windowSeconds: number;
 }
 
+export const RATE_LIMIT_EXCEEDED = "RATE_LIMIT_EXCEEDED";
+
 export const RATE_LIMITS = {
-  AUTH: { maxRequests: 10, windowSeconds: 60 },
-  MUTATION: { maxRequests: 5, windowSeconds: 60 },
-  PROJECT_CREATION: { maxRequests: 3, windowSeconds: 60 },
-  REPORT: { maxRequests: 5, windowSeconds: 60 },
-  TICKET: { maxRequests: 3, windowSeconds: 60 },
-  PUBLIC_API: { maxRequests: 30, windowSeconds: 60 },
-  TELEMETRY: { maxRequests: 30, windowSeconds: 60 },
-  DOSSIER_SUBMISSION: { maxRequests: 5, windowSeconds: 60 },
+  AUTH: { maxRequests: 25, windowSeconds: 60 },
+  MUTATION: { maxRequests: 50, windowSeconds: 60 },
+  PROJECT_CREATION: { maxRequests: 15, windowSeconds: 60 },
+  REPORT: { maxRequests: 20, windowSeconds: 60 },
+  TICKET: { maxRequests: 15, windowSeconds: 60 },
+  TICKET_REPLY: { maxRequests: 25, windowSeconds: 60 },
+  PUBLIC_API: { maxRequests: 60, windowSeconds: 60 },
+  TELEMETRY: { maxRequests: 60, windowSeconds: 60 },
+  DOSSIER_SUBMISSION: { maxRequests: 25, windowSeconds: 60 },
 } as const;
 
 export const MAX_TRACKED_KEYS = 10000;
@@ -222,7 +225,7 @@ export function checkRateLimitSync(
 
     return {
       success: false,
-      error: `Too many requests. Rate limit exceeded. Please wait ${retryAfterSeconds}s before trying again.`,
+      error: RATE_LIMIT_EXCEEDED,
       remaining: 0,
       retryAfter: retryAfterSeconds,
     };

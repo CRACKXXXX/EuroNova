@@ -12,6 +12,7 @@ interface ReviewFormProps {
 
 export function ReviewForm({ orgId }: ReviewFormProps) {
   const t = useTranslations("OrgReviews");
+  const tErrors = useTranslations("Errors");
   const [rating, setRating] = useState<number>(5);
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [reviewText, setReviewText] = useState("");
@@ -41,7 +42,12 @@ export function ReviewForm({ orgId }: ReviewFormProps) {
       try {
         const res = await submitOrgReview(orgId, rating, reviewText);
         if (res.error) {
-          setErrorMsg(res.error);
+          if (res.error === "RATE_LIMIT_EXCEEDED") {
+            toast.warning(tErrors("rateLimitExceeded"), { id: "rate-limit-toast", icon: "⏳" });
+            setErrorMsg(tErrors("rateLimitExceeded"));
+          } else {
+            setErrorMsg(res.error);
+          }
         } else {
           setSuccessMsg(t("successMessage"));
           setReviewText("");

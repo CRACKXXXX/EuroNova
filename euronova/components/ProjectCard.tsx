@@ -23,6 +23,7 @@ import { toggleProjectFavorite, toggleProjectApplied } from "@/actions/interacti
 import { TermTooltip } from "@/components/TermTooltip";
 import { AvatarFallback } from "@/components/AvatarFallback";
 import { toast } from "sonner";
+import { showRateLimitToast } from "@/lib/rateLimitToast";
 
 export interface ProjectData {
   id: string;
@@ -59,6 +60,7 @@ export function ProjectCard({
   onToggleApplied,
 }: ProjectCardProps) {
   const t = useTranslations("ProjectCard");
+  const tErrors = useTranslations("Errors");
   const tTypes = useTranslations("ProjectTypes");
   const tThemes = useTranslations("ProjectThemes");
   const format = useFormatter();
@@ -109,8 +111,12 @@ export function ProjectCard({
         if (res?.error) {
           setIsFavorite(previousState);
           onToggleFavorite?.(project.id, previousState);
-          setErrorMessage(res.error);
-          setTimeout(() => setErrorMessage(null), 3500);
+          if (res.error === "RATE_LIMIT_EXCEEDED") {
+            showRateLimitToast(tErrors("rateLimitExceeded"));
+          } else {
+            setErrorMessage(res.error);
+            setTimeout(() => setErrorMessage(null), 3500);
+          }
         } else if (res?.is_favorite !== undefined) {
           setIsFavorite(res.is_favorite);
           onToggleFavorite?.(project.id, res.is_favorite);
@@ -145,8 +151,12 @@ export function ProjectCard({
         if (res?.error) {
           setIsApplied(previousState);
           onToggleApplied?.(project.id, previousState);
-          setErrorMessage(res.error);
-          setTimeout(() => setErrorMessage(null), 3500);
+          if (res.error === "RATE_LIMIT_EXCEEDED") {
+            showRateLimitToast(tErrors("rateLimitExceeded"));
+          } else {
+            setErrorMessage(res.error);
+            setTimeout(() => setErrorMessage(null), 3500);
+          }
         } else if (res?.is_applied !== undefined) {
           setIsApplied(res.is_applied);
           onToggleApplied?.(project.id, res.is_applied);

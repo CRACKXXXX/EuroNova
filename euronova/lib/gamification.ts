@@ -87,40 +87,26 @@ export function calculateLevelProgress(xp: number): LevelProgress {
 }
 
 /**
- * Scaled 20-Tier Thresholds mapping levels 1-80+ to galactic visual tiers.
+ * Scaled 50-Tier Thresholds mapping levels 1-250+ to cosmic visual tiers.
+ * Exactly 1 tier every 5 levels, culminating in Astral Legend at Level 246+.
  */
-export const TIER_THRESHOLDS: TierThreshold[] = [
-  { minLevel: 1, maxLevel: 2, tierIndex: 0 },    // Terrestrial Rookie
-  { minLevel: 3, maxLevel: 4, tierIndex: 1 },    // Orbital Cadet
-  { minLevel: 5, maxLevel: 6, tierIndex: 2 },    // Lunar Pioneer
-  { minLevel: 7, maxLevel: 8, tierIndex: 3 },    // Solar Voyager
-  { minLevel: 9, maxLevel: 11, tierIndex: 4 },   // Asteroid Miner
-  { minLevel: 12, maxLevel: 14, tierIndex: 5 },  // Martian Sentinel
-  { minLevel: 15, maxLevel: 17, tierIndex: 6 },  // Jovian Explorer
-  { minLevel: 18, maxLevel: 20, tierIndex: 7 },  // Deep Space Navigator
-  { minLevel: 21, maxLevel: 24, tierIndex: 8 },  // Plasma Commander
-  { minLevel: 25, maxLevel: 28, tierIndex: 9 },  // Nebula Weaver
-  { minLevel: 29, maxLevel: 32, tierIndex: 10 }, // Hyper-Violet Titan
-  { minLevel: 33, maxLevel: 36, tierIndex: 11 }, // Starlight Vanguard
-  { minLevel: 37, maxLevel: 40, tierIndex: 12 }, // Supernova Herald
-  { minLevel: 41, maxLevel: 45, tierIndex: 13 }, // Pulsar Rider
-  { minLevel: 46, maxLevel: 50, tierIndex: 14 }, // Quasar Champion
-  { minLevel: 51, maxLevel: 56, tierIndex: 15 }, // Void Walker
-  { minLevel: 57, maxLevel: 63, tierIndex: 16 }, // Event Horizon Elite
-  { minLevel: 64, maxLevel: 70, tierIndex: 17 }, // Dark Matter Architect
-  { minLevel: 71, maxLevel: 79, tierIndex: 18 }, // Cosmic Overlord
-  { minLevel: 80, maxLevel: Infinity, tierIndex: 19 }, // Astral Legend
-];
+export const TIER_THRESHOLDS: TierThreshold[] = Array.from({ length: 50 }, (_, i) => ({
+  minLevel: i === 0 ? 1 : i * 5 + 1,
+  maxLevel: i === 49 ? Infinity : (i + 1) * 5,
+  tierIndex: i,
+}));
 
 /**
- * Get tier index (0-19) for a given level.
+ * Get tier index (0-49) for a given level.
+ * Level 240 maps to tierIndex 47 (Apex Astral Sovereign).
+ * Level 246+ maps to tierIndex 49 (Astral Legend).
  */
 export function getTierIndexForLevel(level: number): number {
-  const safeLevel = Math.max(1, Math.floor(level));
+  const safeLevel = Math.max(1, isNaN(level) ? 1 : Math.floor(level));
   const found = TIER_THRESHOLDS.find(
     (t) => safeLevel >= t.minLevel && safeLevel <= t.maxLevel
   );
-  return found ? found.tierIndex : 19;
+  return found ? found.tierIndex : 49;
 }
 
 /**

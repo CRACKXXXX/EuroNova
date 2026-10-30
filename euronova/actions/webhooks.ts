@@ -102,7 +102,7 @@ export async function triggerWebhook(
     if (!rateCheck.success) {
       return {
         success: false,
-        error: rateCheck.error || "Webhook rate limit exceeded. Please wait.",
+        error: "RATE_LIMIT_EXCEEDED",
       };
     }
 

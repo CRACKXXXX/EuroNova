@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { signup } from "@/app/[locale]/login/actions";
 import { useTranslations } from "next-intl";
 import { Sparkles, CheckCircle2, AlertCircle, User, Building, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
 
 interface RegisterFormProps {
   onToggleView?: () => void;
@@ -17,6 +18,7 @@ const subscribe = () => () => {};
 export function RegisterForm({ onToggleView }: RegisterFormProps) {
   const router = useRouter();
   const t = useTranslations("Login");
+  const tErrors = useTranslations("Errors");
   const [role, setRole] = useState<"youth" | "org">("youth");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +35,12 @@ export function RegisterForm({ onToggleView }: RegisterFormProps) {
       try {
         const result = await signup(null, formData);
         if (result?.error) {
-          setError(result.error);
+          if (result.error === "RATE_LIMIT_EXCEEDED") {
+            toast.warning(tErrors("rateLimitExceeded"), { id: "rate-limit-toast", icon: "⏳" });
+            setError(tErrors("rateLimitExceeded"));
+          } else {
+            setError(result.error);
+          }
         } else if (result?.success) {
           setShowToast(true);
           setTimeout(() => {

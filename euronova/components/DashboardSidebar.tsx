@@ -556,7 +556,7 @@ export function DashboardSidebar() {
           <MultiSelectTheme
             selected={themes}
             onChange={setThemes}
-            placeholder={t("addCustomTheme") || "Select themes..."}
+            placeholder={t("addCustomTheme")}
           />
 
           {/* Active Selected Theme Badges (Only rendered when selected) */}

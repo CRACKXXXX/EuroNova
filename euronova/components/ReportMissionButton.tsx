@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Flag, X, CheckCircle2, ShieldAlert, AlertCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { submitProjectReportAction } from "@/actions/reports";
+import { toast } from "sonner";
 
 interface ReportMissionButtonProps {
   projectId: string;
@@ -15,6 +16,7 @@ const subscribe = () => () => {};
 
 export function ReportMissionButton({ projectId, projectTitle }: ReportMissionButtonProps) {
   const t = useTranslations("ProjectDetails");
+  const tErrors = useTranslations("Errors");
   const [isOpen, setIsOpen] = useState(false);
   const [reason, setReason] = useState("scam");
   const [details, setDetails] = useState("");
@@ -50,7 +52,12 @@ export function ReportMissionButton({ projectId, projectTitle }: ReportMissionBu
         });
 
         if (res.error) {
-          setErrorMessage(res.error);
+          if (res.error === "RATE_LIMIT_EXCEEDED") {
+            toast.warning(tErrors("rateLimitExceeded"), { id: "rate-limit-toast", icon: "⏳" });
+            setErrorMessage(tErrors("rateLimitExceeded"));
+          } else {
+            setErrorMessage(res.error);
+          }
           return;
         }
 

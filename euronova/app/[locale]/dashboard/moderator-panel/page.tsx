@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { getUserRole, type UserRole } from "@/lib/roles";
 import { ModeratorPanelClient } from "./ModeratorPanelClient";
 import type { ReportItem } from "../admin/AdminDashboardClient";
-import type { AdminEscalationItem } from "../admin/actions";
+import type { AdminEscalationItem, StaffTicketItem } from "../admin/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +39,12 @@ export default async function ModeratorPanelPage(props: {
 
   // Role Guard: Strictly requires moderator, admin, or root
   const currentUserRole: UserRole = await getUserRole(user.id, user.email);
+
+  // If Support user attempts to access Moderator panel, redirect to their dedicated desk
+  if (currentUserRole === "support") {
+    redirect(`/${locale}/dashboard/support-panel`);
+  }
+
   if (
     currentUserRole !== "moderator" &&
     currentUserRole !== "admin" &&
@@ -49,8 +55,8 @@ export default async function ModeratorPanelPage(props: {
 
   const adminDb = getAdminDb();
 
-  // Query Reports & Escalations
-  const [reportsRes, escalationsRes] = await Promise.all([
+  // Query Reports, Escalations & Support Tickets in parallel
+  const [reportsRes, escalationsRes, ticketsRes] = await Promise.all([
     adminDb
       .from("project_reports")
       .select("*, projects(id, title, status, dest_country, project_type), users_org(id, org_name, verification_status, contact_email)")
@@ -61,10 +67,16 @@ export default async function ModeratorPanelPage(props: {
       .select("*")
       .order("created_at", { ascending: false })
       .limit(100),
+    adminDb
+      .from("support_tickets")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(100),
   ]);
 
   const reports = (reportsRes.data as ReportItem[]) || [];
   const escalations = (escalationsRes.data as AdminEscalationItem[]) || [];
+  const tickets = (ticketsRes.data as StaffTicketItem[]) || [];
 
   return (
     <div className="w-full">
@@ -72,6 +84,7 @@ export default async function ModeratorPanelPage(props: {
         currentUserRole={currentUserRole}
         reports={reports}
         escalations={escalations}
+        tickets={tickets}
         locale={locale}
       />
     </div>

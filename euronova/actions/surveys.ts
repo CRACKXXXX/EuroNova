@@ -97,7 +97,7 @@ export async function createNgoSurveyAction(
     if (!rateCheck.success) {
       return {
         success: false,
-        error: rateCheck.error || "Rate limit reached. Please wait before creating another survey.",
+        error: "RATE_LIMIT_EXCEEDED",
       };
     }
 
@@ -575,7 +575,7 @@ export async function voteNgoSurveyAction(payload: {
     if (!rateCheck.success) {
       return {
         success: false,
-        error: rateCheck.error || "Rate limit reached. Please wait before voting again.",
+        error: "RATE_LIMIT_EXCEEDED",
       };
     }
 

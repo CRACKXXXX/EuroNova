@@ -475,7 +475,7 @@ export async function createGlobalThreadAction(
     if (!rateCheck.success) {
       return {
         success: false,
-        error: rateCheck.error || "Rate limit exceeded. Please wait before creating another thread.",
+        error: "RATE_LIMIT_EXCEEDED",
         errorCode: "RATE_LIMITED",
       };
     }
@@ -718,7 +718,7 @@ export async function replyGlobalThreadAction(
     if (!rateCheck.success) {
       return {
         success: false,
-        error: rateCheck.error || "Rate limit exceeded. Please wait before posting another reply.",
+        error: "RATE_LIMIT_EXCEEDED",
         errorCode: "RATE_LIMITED",
       };
     }

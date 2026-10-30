@@ -1,7 +1,8 @@
 "use client";
 
-import { Building, MapPin, Globe, Camera, Music, PlaySquare, Briefcase, Mail } from "lucide-react";
-import Link from "next/link";
+import { useState } from "react";
+import { Building, MapPin, Globe, Camera, Music, PlaySquare, Briefcase, Mail, Share2, Check } from "lucide-react";
+import { Link } from "@/i18n/routing";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { COUNTRIES } from "@/lib/constants/countries";
@@ -28,6 +29,7 @@ export interface OrganizationData {
 
 export function OrganizationCard({ org }: { org: OrganizationData }) {
   const t = useTranslations("Organizations");
+  const [copied, setCopied] = useState(false);
 
   const logoUrl = org.logo_url || org.avatar_url;
   const picValue = org.pic_number;
@@ -41,6 +43,22 @@ export function OrganizationCard({ org }: { org: OrganizationData }) {
   const email = typeof org.contact_email === "string" && org.contact_email.trim().length > 0 ? org.contact_email.trim() : null;
 
   const hasAnyContact = website || instagram || tiktok || youtube || linkedin || email;
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!org.id) return;
+    if (typeof window !== "undefined") {
+      const url = `${window.location.origin}/dashboard/organizations/${org.id}`;
+      navigator.clipboard.writeText(url).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }).catch(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      });
+    }
+  };
 
   return (
     <div className="bg-void-surface border border-void-border rounded-2xl p-6 hover:border-hyper-violet/50 transition-all duration-300 hover:shadow-[0_0_20px_rgba(99,102,241,0.1)] group/org flex flex-col h-full relative overflow-visible">
@@ -179,14 +197,37 @@ export function OrganizationCard({ org }: { org: OrganizationData }) {
         </div>
       )}
 
-      <div className="pt-4 mt-4 border-t border-void-border">
+      <div className="pt-4 mt-4 border-t border-void-border flex items-center gap-2">
         <Link
-          href={`/dashboard/organizations/${org.id}`}
-          className="w-full py-2.5 rounded-lg bg-hyper-violet/10 hover:bg-hyper-violet/20 text-hyper-violet border border-hyper-violet/30 font-medium text-sm transition-all flex justify-center items-center gap-2 group-hover/org:shadow-[0_0_15px_rgba(99,102,241,0.2)]"
+          href={org.id ? `/dashboard/organizations/${org.id}` : "#"}
+          className={`flex-1 py-2.5 rounded-lg bg-hyper-violet/10 hover:bg-hyper-violet/20 text-hyper-violet border border-hyper-violet/30 font-medium text-sm transition-all flex justify-center items-center gap-2 group-hover/org:shadow-[0_0_15px_rgba(99,102,241,0.2)] ${
+            !org.id ? "pointer-events-none opacity-50" : ""
+          }`}
         >
-          <Building className="w-4 h-4" />
-          <span>{t("viewProfile")}</span>
+          <Building className="w-4 h-4 shrink-0" />
+          <span className="truncate">{t("viewProfile")}</span>
         </Link>
+
+        {org.id && (
+          <button
+            type="button"
+            onClick={handleShare}
+            className="py-2.5 px-3 rounded-lg bg-void-deep hover:bg-plasma-cyan/10 text-gray-300 hover:text-plasma-cyan border border-void-border hover:border-plasma-cyan/40 text-sm font-medium transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+            title={copied ? t("copiedLink") : t("shareView")}
+          >
+            {copied ? (
+              <>
+                <Check className="w-4 h-4 text-rup-emerald" />
+                <span className="text-xs text-rup-emerald font-semibold">{t("copiedLink")}</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="w-4 h-4" />
+                <span className="text-xs hidden sm:inline">{t("shareView")}</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );

@@ -14,8 +14,13 @@ export type AdminActionResult = {
  * for administrative write and delete mutations.
  */
 export function getServiceRoleClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl =
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.SUPABASE_URL;
+  const serviceRoleKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_KEY ||
+    process.env.SUPABASE_SECRET_KEY;
 
   if (!supabaseUrl || !serviceRoleKey) {
     throw new Error(
@@ -36,59 +41,76 @@ export function getServiceRoleClient() {
  * Full God Mode, destructive deletions, and role assignments.
  */
 export async function verifyAdmin() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    return { supabase, isAuthorized: false, user: null, role: "user" as UserRole };
+    if (userError || !user) {
+      return { supabase, isAuthorized: false, user: null, role: "user" as UserRole };
+    }
+
+    const role = await getUserRole(user.id, user.email);
+    const isAuthorized = role === "admin" || role === "root";
+    return { supabase, isAuthorized, user, role };
+  } catch (err) {
+    console.error("verifyAdmin unhandled error:", err);
+    return { supabase: null as unknown as Awaited<ReturnType<typeof createClient>>, isAuthorized: false, user: null, role: "user" as UserRole };
   }
-
-  const role = await getUserRole(user.id, user.email);
-  const isAuthorized = role === "admin" || role === "root";
-  return { supabase, isAuthorized, user, role };
 }
 
 /**
- * Verifies that the current session belongs to a Moderator, Administrator, or Root.
- * Can resolve reports, delete comments, warn/mute users.
- * Destructive actions (deleting accounts, orgs, surveys) strictly blocked for moderators.
+ * Verifies that the current session belongs to a Moderator, Support Specialist, Administrator, or Root.
+ * Can review/resolve reports, delete comments, warn/mute users.
+ * Cross-Role: Both moderator and support roles have clearance to triage reports.
+ * Destructive actions (deleting accounts, orgs, surveys) strictly blocked for moderators/support.
  */
 export async function verifyModeratorOrAdmin() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    return { supabase, isAuthorized: false, user: null, role: "user" as UserRole };
+    if (userError || !user) {
+      return { supabase, isAuthorized: false, user: null, role: "user" as UserRole };
+    }
+
+    const role = await getUserRole(user.id, user.email);
+    const isAuthorized =
+      role === "root" || role === "admin" || role === "moderator" || role === "support";
+    return { supabase, isAuthorized, user, role };
+  } catch (err) {
+    console.error("verifyModeratorOrAdmin unhandled error:", err);
+    return { supabase: null as unknown as Awaited<ReturnType<typeof createClient>>, isAuthorized: false, user: null, role: "user" as UserRole };
   }
-
-  const role = await getUserRole(user.id, user.email);
-  const isAuthorized = role === "root" || role === "admin" || role === "moderator";
-  return { supabase, isAuthorized, user, role };
 }
 
 /**
  * Verifies that the current session belongs to any valid staff role (root, admin, moderator, support).
+ * Cross-Role: Both moderator and support roles have clearance to view and reply to support tickets.
  */
 export async function verifyStaff() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    return { supabase, isAuthorized: false, user: null, role: "user" as UserRole };
+    if (userError || !user) {
+      return { supabase, isAuthorized: false, user: null, role: "user" as UserRole };
+    }
+
+    const role = await getUserRole(user.id, user.email);
+    const isAuthorized =
+      role === "root" || role === "admin" || role === "moderator" || role === "support";
+    return { supabase, isAuthorized, user, role };
+  } catch (err) {
+    console.error("verifyStaff unhandled error:", err);
+    return { supabase: null as unknown as Awaited<ReturnType<typeof createClient>>, isAuthorized: false, user: null, role: "user" as UserRole };
   }
-
-  const role = await getUserRole(user.id, user.email);
-  const isAuthorized =
-    role === "root" || role === "admin" || role === "moderator" || role === "support";
-  return { supabase, isAuthorized, user, role };
 }
-

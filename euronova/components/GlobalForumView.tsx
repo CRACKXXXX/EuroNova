@@ -43,6 +43,7 @@ export function GlobalForumView({
   userEligibility,
 }: GlobalForumViewProps) {
   const t = useTranslations("GlobalForum");
+  const tErrors = useTranslations("Errors");
   const locale = useLocale();
   const format = useFormatter();
 
@@ -175,7 +176,9 @@ export function GlobalForumView({
         );
 
         if (!res.success) {
-          if (res.errorCode === "MODERATION_BLOCKED") {
+          if (res.errorCode === "RATE_LIMITED" || res.error === "RATE_LIMIT_EXCEEDED") {
+            toast.warning(tErrors("rateLimitExceeded"), { id: "rate-limit-toast", icon: "⏳" });
+          } else if (res.errorCode === "MODERATION_BLOCKED") {
             toast.error(t("automodShieldPrefix") + (res.error || t("threadBlockedAutomod")));
           } else if (res.errorCode === "LEVEL_TOO_LOW") {
             toast.error(res.error || t("level2RequiredCreate"));
@@ -390,7 +393,9 @@ export function GlobalForumView({
         const res = await replyGlobalThreadAction(activeThread.id, replyContent.trim());
 
         if (!res.success) {
-          if (res.errorCode === "MODERATION_BLOCKED") {
+          if (res.errorCode === "RATE_LIMITED" || res.error === "RATE_LIMIT_EXCEEDED") {
+            toast.warning(tErrors("rateLimitExceeded"), { id: "rate-limit-toast", icon: "⏳" });
+          } else if (res.errorCode === "MODERATION_BLOCKED") {
             toast.error(t("automodShieldPrefix") + (res.error || t("replyBlockedAutomod")));
           } else if (res.errorCode === "LEVEL_TOO_LOW") {
             toast.error(res.error || t("level2RequiredReply"));

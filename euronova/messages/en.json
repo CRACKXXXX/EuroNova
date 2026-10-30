@@ -103,7 +103,8 @@
     "moderatorPanel": "Moderator Panel",
     "supportPanel": "Support Panel",
     "supportEuroNova": "Support EuroNova",
-    "language": "Language"
+    "language": "Language",
+    "supportHelpCenter": "Support & Help"
   },
   "Sidebar": {
     "search": "Search",
@@ -142,7 +143,11 @@
     "clearRecentSearches": "Clear",
     "toggleFilters": "Toggle Filters",
     "toggleAiTitle": "Toggle AI Natural Language Search",
-    "clearInputTitle": "Clear input"
+    "clearInputTitle": "Clear input",
+    "staffTerminal": "Staff Terminal",
+    "moderatorHub": "Reports",
+    "supportDesk": "Tickets",
+    "userSupportHub": "Help Center & Tickets"
   },
   "Dashboard": {
     "title": "Transmissions Received",
@@ -451,7 +456,9 @@
     "linkedin": "LinkedIn",
     "commandCenter": "Organization Command Center",
     "publishNewMission": "Publish New Mission",
-    "editProfile": "Edit Profile"
+    "editProfile": "Edit Profile",
+    "shareView": "Share Profile",
+    "copiedLink": "Copied!"
   },
   "NewProject": {
     "backHome": "Back to Home",
@@ -730,7 +737,9 @@
     "filterActive": "Active Triage ({count})",
     "filterResolved": "Resolved Log ({count})",
     "view": "View",
-    "org": "Org"
+    "org": "Org",
+    "tabSupportTickets": "Support Tickets",
+    "reporterLabel": "Reporter:"
   },
   "AdminPanel": {
     "title": "God Mode: Command Center",
@@ -1020,7 +1029,14 @@
     "replyAndResolve": "Reply & Resolve",
     "ticketsMatched": "{count} tickets matched",
     "noTicketsMatchSearch": "No tickets matched your search query.",
-    "noSupportInquiriesPending": "No support inquiries pending in this queue."
+    "noSupportInquiriesPending": "No support inquiries pending in this queue.",
+    "supportPrivacyActive": "Support Privacy Active",
+    "supportPrivacyTooltip": "Support specialists can view user names and emails, but phone numbers and physical IDs remain strictly protected.",
+    "moderatorAccess": "Moderator Access",
+    "moderatorAccessTooltip": "Full audit access granted for moderation and compliance investigations.",
+    "tabReportsQuick": "Reports",
+    "restrictedBadge": "Restricted",
+    "restrictedToModerator": "Restricted to Moderator"
   },
   "ProjectTypes": {
     "YE": "Youth Exchange",
@@ -1606,7 +1622,8 @@
     "description": "An unexpected anomaly occurred while processing orbital transmissions. Our telemetry system has logged the event.",
     "digestLabel": "Error Digest",
     "tryAgain": "Re-establish Connection",
-    "returnHome": "Return to Gateway"
+    "returnHome": "Return to Gateway",
+    "rateLimitExceeded": "You are going too fast. Please wait a moment and try again."
   },
   "NotFound": {
     "badge": "COORDINATES UNREACHABLE",
@@ -2159,5 +2176,42 @@
     "policyLink": "Read Cookie Policy",
     "statusAccepted": "Consent Granted",
     "statusRejected": "Non-Essential Rejected"
+  },
+  "SupportHub": {
+    "title": "Orbital Support Hub",
+    "subtitle": "Track your technical inquiries, view staff resolutions, and communicate directly with EuroNova Command specialists.",
+    "tabMyTickets": "My Inquiries ({count})",
+    "tabNewTicket": "New Inquiry",
+    "noTicketsFound": "No Support Tickets Found",
+    "noTicketsFoundDesc": "You haven't submitted any support inquiries yet. Need help with a project, mission verification, or your account?",
+    "createFirstTicket": "Submit Your First Inquiry",
+    "statusOpen": "Open",
+    "statusPending": "Under Review",
+    "statusInProgress": "In Progress",
+    "statusResolved": "Resolved",
+    "ticketDetails": "Ticket Thread",
+    "initialInquiry": "Initial Inquiry",
+    "staffReply": "EuroNova Support Specialist",
+    "userReply": "You",
+    "replyPlaceholder": "Type your reply or follow-up question...",
+    "sendReply": "Send Message",
+    "sendingReply": "Sending...",
+    "replySentSuccess": "Reply transmitted successfully to Support Command.",
+    "ticketResolvedNotice": "This inquiry is marked as resolved. Sending a new message will automatically reopen it for review.",
+    "filterAll": "All ({count})",
+    "filterOpen": "Active ({count})",
+    "filterResolved": "Resolved ({count})",
+    "searchPlaceholder": "Search inquiries by subject or content...",
+    "conversationHistory": "Thread Messages",
+    "ticketId": "Case ID",
+    "lastUpdate": "Updated",
+    "contactEmail": "Contact Email",
+    "contactPhone": "Phone",
+    "closeThread": "Close Thread",
+    "backToTickets": "Back to Inquiries",
+    "repliesCount": "{count} replies",
+    "noRepliesYet": "Awaiting inaugural response from EuroNova Support Specialist.",
+    "hubTitle": "Support Hub",
+    "staffBadge": "Staff"
   }
 }

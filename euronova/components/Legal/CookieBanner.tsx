@@ -5,6 +5,8 @@ import { createPortal } from "react-dom";
 import { Cookie, ShieldCheck, Settings, Check, X, ExternalLink, Lock } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
+import { toast, Toaster } from "sonner";
+import { RATE_LIMIT_TOAST_ID } from "@/lib/rateLimitToast";
 
 const emptySubscribe = () => () => {};
 
@@ -49,6 +51,7 @@ function subscribeConsent(callback: () => void) {
 
 export function CookieBanner() {
   const t = useTranslations("CookieBanner");
+  const tErrors = useTranslations("Errors");
 
   const mounted = useSyncExternalStore(
     emptySubscribe,
@@ -80,6 +83,24 @@ export function CookieBanner() {
       window.removeEventListener("euronova:open-cookie-preferences", handleOpen);
     };
   }, []);
+
+  // Global listener for rate limit events across the entire application
+  useEffect(() => {
+    const handleRateLimit = (event: Event) => {
+      const customEvent = event as CustomEvent<{ message?: string }>;
+      const msg = customEvent.detail?.message || tErrors("rateLimitExceeded");
+      toast.warning(msg, {
+        id: RATE_LIMIT_TOAST_ID,
+        icon: "⏳",
+        duration: 5000,
+      });
+    };
+
+    window.addEventListener("euronova:rate-limited", handleRateLimit);
+    return () => {
+      window.removeEventListener("euronova:rate-limited", handleRateLimit);
+    };
+  }, [tErrors]);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -301,6 +322,7 @@ export function CookieBanner() {
         </div>,
         document.body
       )}
+      <Toaster richColors position="top-right" theme="dark" closeButton />
     </>
   );
 }

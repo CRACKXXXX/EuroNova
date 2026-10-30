@@ -45,6 +45,7 @@ export function ProjectDossierApplyModal({
 }: ProjectDossierApplyModalProps) {
   const t = useTranslations("ProjectDetails");
   const tBuilder = useTranslations("SurveyBuilder");
+  const tErrors = useTranslations("Errors");
 
   const [isOpen, setIsOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
@@ -176,7 +177,11 @@ export function ProjectDossierApplyModal({
       });
 
       if (!res.success) {
-        toast.error(res.error || "Submission failed.");
+        if (res.error === "RATE_LIMIT_EXCEEDED") {
+          toast.warning(tErrors("rateLimitExceeded"), { id: "rate-limit-toast", icon: "⏳" });
+        } else {
+          toast.error(res.error || "Submission failed.");
+        }
         return;
       }
 

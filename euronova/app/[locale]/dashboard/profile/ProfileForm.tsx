@@ -58,6 +58,7 @@ interface ProfileFormProps {
 
 export function ProfileForm({ initialData, role }: ProfileFormProps) {
   const t = useTranslations("Profile");
+  const tErrors = useTranslations("Errors");
   const router = useRouter();
 
   const [state, action, isPending] = useActionState<ProfileActionState, FormData>(
@@ -108,9 +109,13 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
       }
       router.refresh();
     } else if (state?.error) {
-      toast.error(state.error);
+      if (state.error === "RATE_LIMIT_EXCEEDED") {
+        toast.warning(tErrors("rateLimitExceeded"), { id: "rate-limit-toast", icon: "⏳" });
+      } else {
+        toast.error(state.error);
+      }
     }
-  }, [state, role, router, t]);
+  }, [state, role, router, t, tErrors]);
 
   const [avatarLocalPreview, setAvatarLocalPreview] = useState<string | null>(null);
 

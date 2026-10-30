@@ -30,9 +30,7 @@ export async function createProject(formData: FormData): Promise<CreateProjectRe
     // Rate Limiting Gate (Sliding Window per Organization)
     const rateCheck = await checkRateLimit(`project_${user.id}`, RATE_LIMITS.PROJECT_CREATION);
     if (!rateCheck.success) {
-      return {
-        error: rateCheck.error || "Project creation rate limit reached. Please wait before publishing another mission.",
-      };
+      return { error: "RATE_LIMIT_EXCEEDED" };
     }
 
     // VERIFY MID-SESSION ACTIVE STATUS & ACCREDITED NGO STATUS

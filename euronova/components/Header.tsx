@@ -68,11 +68,14 @@ export function Header({
 
   // Lock body scroll while mobile drawer is open, and release safely on close or unmount
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      document.body.style.overflow = "";
+      return;
+    }
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = originalOverflow || "";
+      document.body.style.overflow = originalOverflow;
     };
   }, [isOpen]);
 
@@ -149,7 +152,7 @@ export function Header({
   }, [isOpen]);
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-void-deep/90 backdrop-blur-md border-b border-void-border z-40">
+    <header className={`fixed top-0 left-0 right-0 h-16 bg-void-deep/90 backdrop-blur-md border-b border-void-border transition-colors ${isOpen ? "z-[9999]" : "z-40"}`}>
       <PassiveXpTracker userId={currentUserId} role={role} />
       <div className="max-w-7xl mx-auto h-full flex justify-between items-center w-full px-4 md:px-8">
         {/* Left: Logo & Desktop Navigation Spaced Out */}
@@ -248,13 +251,13 @@ export function Header({
             </Link>
             <Link
               href={`/${locale}/map`}
-              className={`flex items-center gap-1.5 text-sm py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
+              className={`flex items-center gap-1.5 text-sm py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent group ${
                 isMapActive
                   ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
                   : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
               }`}
             >
-              <MapIcon className={`w-4 h-4 transition-colors ${isMapActive ? "text-plasma-cyan" : ""}`} />
+              <MapIcon className={`w-4 h-4 transition-colors ${isMapActive ? "text-plasma-cyan" : "text-gray-400 group-hover:text-plasma-cyan"}`} />
               <span>{t("map")}</span>
             </Link>
           </nav>
@@ -282,7 +285,7 @@ export function Header({
             </Link>
           )}
 
-          {/* Moderator Panel Link */}
+          {/* Moderator Panel Link (Strictly for moderator role only) */}
           {staffRole === "moderator" && (
             <Link
               href={`/${locale}/dashboard/moderator-panel`}
@@ -294,7 +297,7 @@ export function Header({
             </Link>
           )}
 
-          {/* Support Panel Link */}
+          {/* Support Panel Link (Strictly for support role only) */}
           {staffRole === "support" && (
             <Link
               href={`/${locale}/dashboard/support-panel`}
@@ -343,11 +346,13 @@ export function Header({
           <NotificationBell />
           <button
             type="button"
-            onClick={() => setIsOpen(true)}
+            onClick={() => setIsOpen((prev) => !prev)}
+            aria-expanded={isOpen}
+            aria-controls="mobile-menu-drawer"
             className="min-w-[44px] min-h-[44px] p-2 rounded-lg border border-void-border bg-void-surface text-gray-300 hover:text-white hover:border-plasma-cyan focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-colors cursor-pointer flex items-center justify-center"
-            aria-label={t("toggleMenu")}
+            aria-label={isOpen ? t("closeMenu") : t("toggleMenu")}
           >
-            <Menu className="w-6 h-6" />
+            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </div>
@@ -355,8 +360,9 @@ export function Header({
       {/* True Full-Screen Mobile Overlay */}
       {isOpen && (
         <div
+          id="mobile-menu-drawer"
           style={{ backgroundColor: "#050508" }}
-          className="fixed inset-0 z-[9999] flex flex-col min-h-screen w-screen backdrop-blur-3xl overflow-y-auto p-6 sm:p-8 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[9999] flex flex-col h-[100dvh] w-full backdrop-blur-3xl overflow-y-auto overscroll-contain p-6 sm:p-8 animate-in fade-in duration-200"
         >
           {/* Top Bar: Brand & Close Button */}
           <div className="flex items-center justify-between w-full max-w-4xl mx-auto shrink-0 pb-4">
@@ -451,7 +457,7 @@ export function Header({
                 isMapActive ? "font-black text-plasma-cyan" : "font-extrabold text-gray-300 hover:text-plasma-cyan"
               }`}
             >
-              <MapIcon className="w-6 h-6 text-plasma-cyan transition-colors" />
+              <MapIcon className={`w-6 h-6 transition-colors ${isMapActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
               <span>{t("map")}</span>
             </Link>
 

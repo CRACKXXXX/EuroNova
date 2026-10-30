@@ -330,7 +330,7 @@ export function useAdminDashboard(props: AdminDashboardClientProps) {
   };
 
   const handleTabChange = (tab: AdminTabType) => {
-    router.push(`?tab=${tab}&page=1`);
+    router.push(`?tab=${tab}&page=1`, { scroll: false });
     if (typeof window !== "undefined") {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -338,7 +338,7 @@ export function useAdminDashboard(props: AdminDashboardClientProps) {
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return;
-    router.push(`?tab=${activeTab}&page=${newPage}`);
+    router.push(`?tab=${activeTab}&page=${newPage}`, { scroll: false });
     if (typeof window !== "undefined") {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }

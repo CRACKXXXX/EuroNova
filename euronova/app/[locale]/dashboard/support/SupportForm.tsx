@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useState, useRef } from "react";
+import { useActionState, useState, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { createTicket } from "./actions";
 import { Mail, Phone, MessageSquare, Send, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 const ALLOWED_REASONS = [
   "apply_support",
@@ -20,6 +21,7 @@ const ALLOWED_REASONS = [
 
 export function SupportForm() {
   const t = useTranslations("SupportForm");
+  const tErrors = useTranslations("Errors");
   const searchParams = useSearchParams();
   const rawReason = searchParams.get("reason") || "";
   const defaultReason = (ALLOWED_REASONS as readonly string[]).includes(rawReason) ? rawReason : "";
@@ -33,6 +35,12 @@ export function SupportForm() {
 
   const [state, action, isPending] = useActionState(createTicket, null);
   const inFlightRef = useRef(false);
+
+  useEffect(() => {
+    if (state?.error === "RATE_LIMIT_EXCEEDED") {
+      toast.warning(tErrors("rateLimitExceeded"), { id: "rate-limit-toast", icon: "⏳" });
+    }
+  }, [state?.error, tErrors]);
 
   const handleAction = async (formData: FormData) => {
     if (inFlightRef.current) return;
@@ -145,7 +153,7 @@ export function SupportForm() {
 
       {state?.error && (
         <div className="p-4 rounded-lg bg-nova-flare/20 border border-nova-flare text-nova-flare text-sm font-medium text-center">
-          {state.error}
+          {state.error === "RATE_LIMIT_EXCEEDED" ? tErrors("rateLimitExceeded") : state.error}
         </div>
       )}
 

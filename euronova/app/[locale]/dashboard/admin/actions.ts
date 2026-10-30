@@ -15,6 +15,18 @@ import {
 
 export type { AdminActionResult };
 
+function safeRevalidate(path: string, type?: "page" | "layout") {
+  try {
+    if (type) {
+      revalidatePath(path, type);
+    } else {
+      revalidatePath(path);
+    }
+  } catch (err) {
+    console.warn(`safeRevalidate non-blocking fallback for ${path}:`, err);
+  }
+}
+
 // ==========================================
 // 1. PROJECT & ORGANIZATION ADMIN ACTIONS
 // ==========================================
@@ -37,10 +49,18 @@ export async function approveOrganization(orgId: string): Promise<AdminActionRes
       return { error: "Unauthorized: Admin access required." };
     }
 
+    if (!orgId) {
+      return { error: "Organization ID is required." };
+    }
+
     const adminDb = getServiceRoleClient();
     const { error } = await adminDb
       .from("users_org")
-      .update({ verification_status: "verified" })
+      .update({
+        verification_status: "verified",
+        is_verified: true,
+        verified: true,
+      })
       .eq("id", orgId);
 
     if (error) throw error;
@@ -55,12 +75,13 @@ export async function approveOrganization(orgId: string): Promise<AdminActionRes
         actionUrl: `/dashboard/organizations/${orgId}`,
       });
     } catch {
-      // Ignore notification error
+      // Non-blocking notification dispatch
     }
 
-    revalidatePath("/dashboard/admin");
-    revalidatePath("/dashboard/organizations");
-    revalidatePath("/", "layout");
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/dashboard/organizations");
+    safeRevalidate(`/dashboard/organizations/${orgId}`);
+    safeRevalidate("/", "layout");
     return { success: true };
   } catch (error: unknown) {
     console.error("approveOrganization failed:", error);
@@ -78,10 +99,18 @@ export async function revokeOrganization(orgId: string): Promise<AdminActionResu
       return { error: "Unauthorized: Admin access required." };
     }
 
+    if (!orgId) {
+      return { error: "Organization ID is required." };
+    }
+
     const adminDb = getServiceRoleClient();
     const { error } = await adminDb
       .from("users_org")
-      .update({ verification_status: "pending" })
+      .update({
+        verification_status: "pending",
+        is_verified: false,
+        verified: false,
+      })
       .eq("id", orgId);
 
     if (error) throw error;
@@ -96,232 +125,19 @@ export async function revokeOrganization(orgId: string): Promise<AdminActionResu
         actionUrl: `/dashboard/organizations/${orgId}`,
       });
     } catch {
-      // Ignore notification error
+      // Non-blocking notification dispatch
     }
 
-    revalidatePath("/dashboard/admin");
-    revalidatePath("/dashboard/organizations");
-    revalidatePath("/", "layout");
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/dashboard/organizations");
+    safeRevalidate(`/dashboard/organizations/${orgId}`);
+    safeRevalidate("/", "layout");
     return { success: true };
   } catch (error: unknown) {
     console.error("revokeOrganization failed:", error);
     return {
       error:
         error instanceof Error ? error.message : "Failed to revoke organization.",
-    };
-  }
-}
-
-export async function deleteOrganization(orgId: string): Promise<AdminActionResult> {
-  try {
-    const { isAuthorized } = await verifyAdmin();
-    if (!isAuthorized) {
-      return { error: "Unauthorized: Admin access required." };
-    }
-
-    const adminDb = getServiceRoleClient();
-
-    // 1. Explicit cascade cleanup for associated projects and reviews
-    const { error: projError } = await adminDb.from("projects").delete().eq("org_id", orgId);
-    if (projError) throw projError;
-
-    const { error: revError } = await adminDb.from("reviews").delete().eq("org_id", orgId);
-    if (revError) throw revError;
-
-    // 2. Delete public table entity record
-    const { error: orgError } = await adminDb.from("users_org").delete().eq("id", orgId);
-    if (orgError) throw orgError;
-
-    // 3. Delete underlying auth user to prevent ghost accounts in Supabase Auth
-    const { error: authError } = await adminDb.auth.admin.deleteUser(orgId);
-    if (authError) throw authError;
-
-    revalidatePath("/dashboard/admin");
-    revalidatePath("/dashboard/organizations");
-    revalidatePath("/dashboard/projects");
-    revalidatePath("/", "layout");
-    return { success: true };
-  } catch (error: unknown) {
-    console.error("deleteOrganization failed:", error);
-    return {
-      error:
-        error instanceof Error ? error.message : "Failed to delete organization.",
-    };
-  }
-}
-
-export async function publishProject(projectId: string): Promise<AdminActionResult> {
-  try {
-    const { isAuthorized } = await verifyAdmin();
-    if (!isAuthorized) {
-      return { error: "Unauthorized: Admin access required." };
-    }
-
-    const adminDb = getServiceRoleClient();
-    const { error } = await adminDb
-      .from("projects")
-      .update({ status: "published" })
-      .eq("id", projectId);
-
-    if (error) throw error;
-
-    revalidatePath("/dashboard/admin");
-    revalidatePath("/dashboard/projects");
-    revalidatePath("/", "layout");
-    return { success: true };
-  } catch (error: unknown) {
-    console.error("publishProject failed:", error);
-    return {
-      error:
-        error instanceof Error ? error.message : "Failed to publish project.",
-    };
-  }
-}
-
-export async function deleteProject(projectId: string): Promise<AdminActionResult> {
-  try {
-    const { isAuthorized } = await verifyAdmin();
-    if (!isAuthorized) {
-      return { error: "Unauthorized: Admin access required." };
-    }
-
-    const adminDb = getServiceRoleClient();
-
-    // 1. Explicit cleanup for applications and reports associated with this project
-    await adminDb.from("project_reports").delete().eq("project_id", projectId);
-    const { error: appError } = await adminDb.from("applications").delete().eq("project_id", projectId);
-    if (appError) throw appError;
-
-    // 2. Delete project from database
-    const { error } = await adminDb.from("projects").delete().eq("id", projectId);
-
-    if (error) throw error;
-
-    revalidatePath("/dashboard/admin");
-    revalidatePath("/dashboard/projects");
-    revalidatePath("/", "layout");
-    return { success: true };
-  } catch (error: unknown) {
-    console.error("deleteProject failed:", error);
-    return {
-      error:
-        error instanceof Error ? error.message : "Failed to delete project.",
-    };
-  }
-}
-
-export async function hideProject(projectId: string, reportId?: string): Promise<AdminActionResult> {
-  try {
-    const { isAuthorized } = await verifyAdmin();
-    if (!isAuthorized) {
-      return { error: "Unauthorized: Admin access required." };
-    }
-
-    const adminDb = getServiceRoleClient();
-
-    // 1. Update project status to rejected
-    const { error: projError } = await adminDb
-      .from("projects")
-      .update({ status: "rejected" })
-      .eq("id", projectId);
-
-    if (projError) throw projError;
-
-    // 2. If associated report provided, mark resolved and track resolved_at
-    if (reportId) {
-      await adminDb
-        .from("project_reports")
-        .update({
-          status: "resolved",
-          resolved_at: new Date().toISOString(),
-          resolution_action: "Withdrew / Hidden Project from Public View",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", reportId);
-
-      try {
-        const { data: rep } = await adminDb
-          .from("project_reports")
-          .select("reporter_id")
-          .eq("id", reportId)
-          .maybeSingle();
-
-        if (rep?.reporter_id) {
-          const { dispatchNotification } = await import("@/actions/notifications");
-          await dispatchNotification({
-            userId: rep.reporter_id,
-            type: "moderation",
-            title: "Report Resolved",
-            message: "Your report regarding an Erasmus+ mission has been resolved. The reported mission has been withdrawn from public view.",
-            actionUrl: "/dashboard/projects",
-          });
-        }
-      } catch {
-        // Ignore notification error
-      }
-    }
-
-    // 3. Dispatch security notification email
-    await sendEmailAction({
-      to: ADMIN_EMAIL,
-      subject: `🛡️ [Project Hidden] Project ${projectId} has been hidden/rejected`,
-      body: `Project ${projectId} has been withdrawn from public view by orbital administration in response to a safety report.`,
-    });
-
-    revalidatePath("/dashboard/admin");
-    revalidatePath("/dashboard/projects");
-    revalidatePath("/", "layout");
-    return { success: true };
-  } catch (error: unknown) {
-    console.error("hideProject failed:", error);
-    return {
-      error:
-        error instanceof Error ? error.message : "Failed to hide project.",
-    };
-  }
-}
-
-export async function requestChanges(projectId: string, reportId?: string, notes?: string): Promise<AdminActionResult> {
-  try {
-    const { isAuthorized } = await verifyAdmin();
-    if (!isAuthorized) {
-      return { error: "Unauthorized: Admin access required." };
-    }
-
-    const adminDb = getServiceRoleClient();
-
-    // 1. Switch project status to pending_review
-    const { error: projError } = await adminDb
-      .from("projects")
-      .update({ status: "pending_review" })
-      .eq("id", projectId);
-
-    if (projError) throw projError;
-
-    // 2. Mark report status as reviewed
-    if (reportId) {
-      await adminDb
-        .from("project_reports")
-        .update({ status: "reviewed" })
-        .eq("id", reportId);
-    }
-
-    // 3. Dispatch notification email scaffold
-    await sendEmailAction({
-      to: ADMIN_EMAIL,
-      subject: `📋 [Changes Requested] Project ${projectId}`,
-      body: `Modifications have been requested for project ${projectId}.\nNotes: ${notes || "Report investigation requires publisher revisions."}`,
-    });
-
-    revalidatePath("/dashboard/admin");
-    revalidatePath("/dashboard/projects");
-    revalidatePath("/", "layout");
-    return { success: true };
-  } catch (error: unknown) {
-    console.error("requestChanges failed:", error);
-    return {
-      error:
-        error instanceof Error ? error.message : "Failed to request changes.",
     };
   }
 }
@@ -333,19 +149,27 @@ export async function suspendOrganization(orgId: string, reportId?: string): Pro
       return { error: "Unauthorized: Admin access required." };
     }
 
+    if (!orgId) {
+      return { error: "Organization ID is required." };
+    }
+
     const adminDb = getServiceRoleClient();
 
-    // 1. Set organization verification status to rejected/suspended
+    // 1. Set organization verification status to rejected/suspended with full flag sync
     const { error: orgError } = await adminDb
       .from("users_org")
-      .update({ verification_status: "rejected" })
+      .update({
+        verification_status: "rejected",
+        is_verified: false,
+        verified: false,
+      })
       .eq("id", orgId);
 
     if (orgError) throw orgError;
 
     // 2. Mark report as resolved if reportId provided
     if (reportId) {
-      await adminDb
+      const { error: repErr } = await adminDb
         .from("project_reports")
         .update({
           status: "resolved",
@@ -354,6 +178,10 @@ export async function suspendOrganization(orgId: string, reportId?: string): Pro
           updated_at: new Date().toISOString(),
         })
         .eq("id", reportId);
+
+      if (repErr) {
+        console.warn("Failed updating report on suspendOrganization:", repErr);
+      }
 
       try {
         const { data: rep } = await adminDb
@@ -373,7 +201,7 @@ export async function suspendOrganization(orgId: string, reportId?: string): Pro
           });
         }
       } catch {
-        // Ignore notification error
+        // Non-blocking notification dispatch
       }
     }
 
@@ -388,17 +216,317 @@ export async function suspendOrganization(orgId: string, reportId?: string): Pro
         actionUrl: `/dashboard/organizations/${orgId}`,
       });
     } catch {
-      // Ignore notification error
+      // Non-blocking notification dispatch
     }
 
-    revalidatePath("/dashboard/admin");
-    revalidatePath("/dashboard/organizations");
-    revalidatePath("/", "layout");
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/dashboard/organizations");
+    safeRevalidate(`/dashboard/organizations/${orgId}`);
+    safeRevalidate("/", "layout");
     return { success: true };
   } catch (error: unknown) {
     console.error("suspendOrganization failed:", error);
     return {
       error: error instanceof Error ? error.message : "Failed to suspend organization.",
+    };
+  }
+}
+
+export async function deleteOrganization(orgId: string): Promise<AdminActionResult> {
+  try {
+    const { isAuthorized } = await verifyAdmin();
+    if (!isAuthorized) {
+      return { error: "Unauthorized: Admin access required." };
+    }
+
+    if (!orgId) {
+      return { error: "Organization ID is required." };
+    }
+
+    const adminDb = getServiceRoleClient();
+
+    // 1. Explicit cascade cleanup for NGO dynamic surveys & votes
+    try {
+      const { data: orgSurveys } = await adminDb.from("ngo_surveys").select("id").eq("org_id", orgId);
+      if (orgSurveys && orgSurveys.length > 0) {
+        const surveyIds = orgSurveys.map((s) => s.id);
+        await adminDb.from("ngo_survey_votes").delete().in("survey_id", surveyIds);
+        await adminDb.from("ngo_survey_options").delete().in("survey_id", surveyIds);
+        await adminDb.from("ngo_surveys").delete().eq("org_id", orgId);
+      }
+    } catch (e) {
+      console.warn("deleteOrganization: non-blocking survey cleanup warning:", e);
+    }
+
+    // 2. Cascade cleanup for organization metadata tables
+    try {
+      await adminDb.from("org_team_members").delete().eq("org_id", orgId);
+      await adminDb.from("org_webhooks").delete().eq("org_id", orgId);
+      await adminDb.from("org_surveys").delete().eq("org_id", orgId);
+    } catch (e) {
+      console.warn("deleteOrganization: non-blocking org tools cleanup warning:", e);
+    }
+
+    // 3. Cascade cleanup for associated projects and child dependencies
+    try {
+      const { data: orgProjects } = await adminDb.from("projects").select("id").eq("org_id", orgId);
+      if (orgProjects && orgProjects.length > 0) {
+        const projectIds = orgProjects.map((p) => p.id);
+        await adminDb.from("project_reports").delete().in("project_id", projectIds);
+        await adminDb.from("applications").delete().in("project_id", projectIds);
+        await adminDb.from("user_project_interactions").delete().in("project_id", projectIds);
+        await adminDb.from("project_forum_messages").delete().in("project_id", projectIds);
+        await adminDb.from("projects").delete().eq("org_id", orgId);
+      }
+    } catch (e) {
+      console.warn("deleteOrganization: non-blocking projects cleanup warning:", e);
+    }
+
+    // 4. Cascade cleanup for reviews
+    try {
+      await adminDb.from("reviews").delete().eq("org_id", orgId);
+      await adminDb.from("org_reviews").delete().eq("org_id", orgId);
+    } catch (e) {
+      console.warn("deleteOrganization: non-blocking reviews cleanup warning:", e);
+    }
+
+    // 5. Delete public table entity record
+    const { error: orgError } = await adminDb.from("users_org").delete().eq("id", orgId);
+    if (orgError) throw orgError;
+
+    // 6. Delete underlying auth user to prevent ghost accounts in Supabase Auth (fault-tolerant)
+    try {
+      const { error: authError } = await adminDb.auth.admin.deleteUser(orgId);
+      if (authError && !authError.message.toLowerCase().includes("not found")) {
+        console.warn("deleteOrganization auth deletion warning:", authError.message);
+      }
+    } catch (e) {
+      console.warn("deleteOrganization auth user delete exception:", e);
+    }
+
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/dashboard/organizations");
+    safeRevalidate("/dashboard/projects");
+    safeRevalidate("/", "layout");
+    return { success: true };
+  } catch (error: unknown) {
+    console.error("deleteOrganization failed:", error);
+    return {
+      error:
+        error instanceof Error ? error.message : "Failed to delete organization.",
+    };
+  }
+}
+
+export async function publishProject(projectId: string): Promise<AdminActionResult> {
+  try {
+    const { isAuthorized } = await verifyAdmin();
+    if (!isAuthorized) {
+      return { error: "Unauthorized: Admin access required." };
+    }
+
+    if (!projectId) {
+      return { error: "Project ID is required." };
+    }
+
+    const adminDb = getServiceRoleClient();
+    const { error } = await adminDb
+      .from("projects")
+      .update({ status: "published" })
+      .eq("id", projectId);
+
+    if (error) throw error;
+
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/dashboard/projects");
+    safeRevalidate(`/dashboard/projects/${projectId}`);
+    safeRevalidate("/", "layout");
+    return { success: true };
+  } catch (error: unknown) {
+    console.error("publishProject failed:", error);
+    return {
+      error:
+        error instanceof Error ? error.message : "Failed to publish project.",
+    };
+  }
+}
+
+export async function deleteProject(projectId: string): Promise<AdminActionResult> {
+  try {
+    const { isAuthorized } = await verifyAdmin();
+    if (!isAuthorized) {
+      return { error: "Unauthorized: Admin access required." };
+    }
+
+    if (!projectId) {
+      return { error: "Project ID is required." };
+    }
+
+    const adminDb = getServiceRoleClient();
+
+    // 1. Explicit cascade cleanup for applications, reports, interactions and messages
+    try {
+      await adminDb.from("project_reports").delete().eq("project_id", projectId);
+      await adminDb.from("applications").delete().eq("project_id", projectId);
+      await adminDb.from("user_project_interactions").delete().eq("project_id", projectId);
+      await adminDb.from("project_forum_messages").delete().eq("project_id", projectId);
+    } catch (cleanErr) {
+      console.warn("deleteProject non-blocking dependency cleanup:", cleanErr);
+    }
+
+    // 2. Delete project from database
+    const { error } = await adminDb.from("projects").delete().eq("id", projectId);
+
+    if (error) throw error;
+
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/dashboard/projects");
+    safeRevalidate(`/dashboard/projects/${projectId}`);
+    safeRevalidate("/", "layout");
+    return { success: true };
+  } catch (error: unknown) {
+    console.error("deleteProject failed:", error);
+    return {
+      error:
+        error instanceof Error ? error.message : "Failed to delete project.",
+    };
+  }
+}
+
+export async function hideProject(projectId: string, reportId?: string): Promise<AdminActionResult> {
+  try {
+    const { isAuthorized } = await verifyAdmin();
+    if (!isAuthorized) {
+      return { error: "Unauthorized: Admin access required." };
+    }
+
+    if (!projectId) {
+      return { error: "Project ID is required." };
+    }
+
+    const adminDb = getServiceRoleClient();
+
+    // 1. Update project status to rejected
+    const { error: projError } = await adminDb
+      .from("projects")
+      .update({ status: "rejected" })
+      .eq("id", projectId);
+
+    if (projError) throw projError;
+
+    // 2. If associated report provided, mark resolved and track resolved_at
+    if (reportId) {
+      const { error: repErr } = await adminDb
+        .from("project_reports")
+        .update({
+          status: "resolved",
+          resolved_at: new Date().toISOString(),
+          resolution_action: "Withdrew / Hidden Project from Public View",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", reportId);
+
+      if (repErr) {
+        console.warn("hideProject report update warning:", repErr);
+      }
+
+      try {
+        const { data: rep } = await adminDb
+          .from("project_reports")
+          .select("reporter_id")
+          .eq("id", reportId)
+          .maybeSingle();
+
+        if (rep?.reporter_id) {
+          const { dispatchNotification } = await import("@/actions/notifications");
+          await dispatchNotification({
+            userId: rep.reporter_id,
+            type: "moderation",
+            title: "Report Resolved",
+            message: "Your report regarding an Erasmus+ mission has been resolved. The reported mission has been withdrawn from public view.",
+            actionUrl: "/dashboard/projects",
+          });
+        }
+      } catch {
+        // Non-blocking notification dispatch
+      }
+    }
+
+    // 3. Dispatch security notification email
+    try {
+      await sendEmailAction({
+        to: ADMIN_EMAIL,
+        subject: `🛡️ [Project Hidden] Project ${projectId} has been hidden/rejected`,
+        body: `Project ${projectId} has been withdrawn from public view by orbital administration in response to a safety report.`,
+      });
+    } catch {
+      // Non-blocking email dispatch
+    }
+
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/dashboard/projects");
+    safeRevalidate(`/dashboard/projects/${projectId}`);
+    safeRevalidate("/", "layout");
+    return { success: true };
+  } catch (error: unknown) {
+    console.error("hideProject failed:", error);
+    return {
+      error:
+        error instanceof Error ? error.message : "Failed to hide project.",
+    };
+  }
+}
+
+export async function requestChanges(projectId: string, reportId?: string, notes?: string): Promise<AdminActionResult> {
+  try {
+    const { isAuthorized } = await verifyAdmin();
+    if (!isAuthorized) {
+      return { error: "Unauthorized: Admin access required." };
+    }
+
+    if (!projectId) {
+      return { error: "Project ID is required." };
+    }
+
+    const adminDb = getServiceRoleClient();
+
+    // 1. Switch project status to pending_review
+    const { error: projError } = await adminDb
+      .from("projects")
+      .update({ status: "pending_review" })
+      .eq("id", projectId);
+
+    if (projError) throw projError;
+
+    // 2. Mark report status as reviewed
+    if (reportId) {
+      await adminDb
+        .from("project_reports")
+        .update({ status: "reviewed", updated_at: new Date().toISOString() })
+        .eq("id", reportId);
+    }
+
+    // 3. Dispatch notification email scaffold
+    try {
+      await sendEmailAction({
+        to: ADMIN_EMAIL,
+        subject: `📋 [Changes Requested] Project ${projectId}`,
+        body: `Modifications have been requested for project ${projectId}.\nNotes: ${notes || "Report investigation requires publisher revisions."}`,
+      });
+    } catch {
+      // Non-blocking email dispatch
+    }
+
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/dashboard/projects");
+    safeRevalidate(`/dashboard/projects/${projectId}`);
+    safeRevalidate("/", "layout");
+    return { success: true };
+  } catch (error: unknown) {
+    console.error("requestChanges failed:", error);
+    return {
+      error:
+        error instanceof Error ? error.message : "Failed to request changes.",
     };
   }
 }
@@ -434,9 +562,9 @@ export async function updateProjectByAdmin(
 
     if (error) throw error;
 
-    revalidatePath("/dashboard/admin");
-    revalidatePath("/dashboard/projects");
-    revalidatePath(`/dashboard/projects/${projectId}`);
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/dashboard/projects");
+    safeRevalidate(`/dashboard/projects/${projectId}`);
     return { success: true };
   } catch (error: unknown) {
     console.error("updateProjectByAdmin failed:", error);
@@ -466,25 +594,45 @@ export async function deleteYouthUser(userId: string): Promise<AdminActionResult
       return { error: "Unauthorized: Admin access required." };
     }
 
+    if (!userId) {
+      return { error: "User ID is required." };
+    }
+
     const adminDb = getServiceRoleClient();
 
-    // 1. Explicit cleanup for applications, reviews, and youth profile
-    const { error: appError } = await adminDb.from("applications").delete().eq("youth_id", userId);
-    if (appError) throw appError;
-
-    const { error: revError } = await adminDb.from("reviews").delete().eq("youth_id", userId);
-    if (revError) throw revError;
+    // 1. Explicit cascade cleanup for user-linked dependencies
+    try {
+      await adminDb.from("applications").delete().eq("youth_id", userId);
+      await adminDb.from("reviews").delete().eq("youth_id", userId);
+      await adminDb.from("org_reviews").delete().eq("youth_id", userId);
+      await adminDb.from("user_project_interactions").delete().eq("user_id", userId);
+      await adminDb.from("user_xp_logs").delete().eq("user_id", userId);
+      await adminDb.from("notifications").delete().eq("user_id", userId);
+      await adminDb.from("notification_preferences").delete().eq("user_id", userId);
+      await adminDb.from("ngo_survey_votes").delete().eq("user_id", userId);
+      await adminDb.from("support_tickets").delete().eq("user_id", userId);
+      await adminDb.from("project_reports").delete().eq("reporter_id", userId);
+      await adminDb.from("project_reports").delete().eq("target_user_id", userId);
+    } catch (cleanErr) {
+      console.warn("deleteYouthUser non-blocking cascade cleanup:", cleanErr);
+    }
 
     // 2. Delete public youth profile record
     const { error: youthError } = await adminDb.from("users_youth").delete().eq("id", userId);
     if (youthError) throw youthError;
 
-    // 3. Delete underlying auth user to prevent ghost accounts in Supabase Auth
-    const { error: authError } = await adminDb.auth.admin.deleteUser(userId);
-    if (authError) throw authError;
+    // 3. Delete underlying auth user to prevent ghost accounts in Supabase Auth (fault-tolerant)
+    try {
+      const { error: authError } = await adminDb.auth.admin.deleteUser(userId);
+      if (authError && !authError.message.toLowerCase().includes("not found")) {
+        console.warn("deleteYouthUser auth deletion warning:", authError.message);
+      }
+    } catch (authException) {
+      console.warn("deleteYouthUser auth deletion exception:", authException);
+    }
 
-    revalidatePath("/dashboard/admin");
-    revalidatePath("/", "layout");
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/", "layout");
     return { success: true };
   } catch (error: unknown) {
     console.error("deleteYouthUser failed:", error);
@@ -520,24 +668,71 @@ export async function updateUserRole(
 
     const adminDb = getServiceRoleClient();
 
-    // Prevent modifying the root administrator
-    const { data: targetAuthUser } = await adminDb.auth.admin.getUserById(targetUserId);
-    if (targetAuthUser?.user?.email === ADMIN_EMAIL) {
-      return { error: "Cannot modify root administrator credentials." };
+    // Prevent modifying the root administrator (fault-tolerant auth lookup)
+    let targetEmail: string | null = null;
+    let targetAuthUser: { email?: string; user_metadata?: Record<string, unknown> } | null = null;
+    try {
+      const authRes = await adminDb.auth.admin.getUserById(targetUserId);
+      targetAuthUser = (authRes.data?.user as { email?: string; user_metadata?: Record<string, unknown> }) || null;
+      targetEmail = targetAuthUser?.email || null;
+      if (targetEmail === ADMIN_EMAIL) {
+        return { error: "Cannot modify root administrator credentials." };
+      }
+    } catch (authLookUpErr) {
+      console.warn("getUserById non-blocking lookup warning:", authLookUpErr);
     }
 
-    // Update public profile entity in users_youth
-    const { error: youthError } = await adminDb
+    // Update public profile entity in users_youth or insert shell if absent
+    const { data: existingYouth } = await adminDb
       .from("users_youth")
-      .update({ role: newRole })
-      .eq("id", targetUserId);
+      .select("id, email, full_name")
+      .eq("id", targetUserId)
+      .maybeSingle();
 
-    if (youthError) throw youthError;
+    if (existingYouth) {
+      const { error: youthError } = await adminDb
+        .from("users_youth")
+        .update({ role: newRole })
+        .eq("id", targetUserId);
 
-    // Synchronize auth user_metadata for reliable token/session lookup
-    await adminDb.auth.admin.updateUserById(targetUserId, {
-      user_metadata: { role: newRole },
-    });
+      if (youthError) throw youthError;
+    } else {
+      const userEmail = targetEmail || null;
+      const userName =
+        (targetAuthUser?.user_metadata?.full_name as string | undefined) ||
+        userEmail?.split("@")[0] ||
+        "Staff Member";
+
+      const { error: insertError } = await adminDb.from("users_youth").insert({
+        id: targetUserId,
+        email: userEmail,
+        full_name: userName,
+        role: newRole,
+        birth_date: "2000-01-01",
+        country_code: "EU",
+      });
+
+      if (insertError) {
+        console.warn("users_youth insert fallback to update:", insertError);
+        const { error: updateFallbackErr } = await adminDb
+          .from("users_youth")
+          .update({ role: newRole })
+          .eq("id", targetUserId);
+        if (updateFallbackErr) throw updateFallbackErr;
+      }
+    }
+
+    // Synchronize auth user_metadata for reliable token/session lookup (fault-tolerant)
+    try {
+      if (targetAuthUser) {
+        const currentMeta = (targetAuthUser.user_metadata || {}) as Record<string, unknown>;
+        await adminDb.auth.admin.updateUserById(targetUserId, {
+          user_metadata: { ...currentMeta, role: newRole },
+        });
+      }
+    } catch (metaErr) {
+      console.warn("updateUserRole auth user_metadata sync warning:", metaErr);
+    }
 
     try {
       const { dispatchNotification } = await import("@/actions/notifications");
@@ -552,9 +747,9 @@ export async function updateUserRole(
       // Non-blocking notification dispatch
     }
 
-    revalidatePath("/dashboard/admin");
-    revalidatePath("/community");
-    revalidatePath("/", "layout");
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/community");
+    safeRevalidate("/", "layout");
     return { success: true };
   } catch (error: unknown) {
     console.error("updateUserRole failed:", error);
@@ -602,18 +797,22 @@ export async function searchStaffUsers(query?: string): Promise<{
 
     const missingEmailIds = userList.filter((u) => !u.email).map((u) => u.id);
     if (missingEmailIds.length > 0) {
-      const { data: emailsData } = await adminDb.rpc("get_admin_user_emails", {
-        user_ids: missingEmailIds,
-      });
-      if (Array.isArray(emailsData)) {
-        const emailMap = new Map(
-          emailsData.map((e: { user_id: string; email: string }) => [e.user_id, e.email])
-        );
-        userList.forEach((u) => {
-          if (!u.email && emailMap.has(u.id)) {
-            u.email = emailMap.get(u.id) || null;
-          }
+      try {
+        const { data: emailsData } = await adminDb.rpc("get_admin_user_emails", {
+          user_ids: missingEmailIds,
         });
+        if (Array.isArray(emailsData)) {
+          const emailMap = new Map(
+            emailsData.map((e: { user_id: string; email: string }) => [e.user_id, e.email])
+          );
+          userList.forEach((u) => {
+            if (!u.email && emailMap.has(u.id)) {
+              u.email = emailMap.get(u.id) || null;
+            }
+          });
+        }
+      } catch (rpcErr) {
+        console.warn("get_admin_user_emails RPC fallback:", rpcErr);
       }
     }
 
@@ -673,6 +872,10 @@ export async function dismissReport(reportId: string): Promise<AdminActionResult
       return { error: "Unauthorized: Moderator or Admin access required." };
     }
 
+    if (!reportId) {
+      return { error: "Report ID is required." };
+    }
+
     const adminDb = getServiceRoleClient();
     const { error } = await adminDb
       .from("project_reports")
@@ -704,10 +907,10 @@ export async function dismissReport(reportId: string): Promise<AdminActionResult
         });
       }
     } catch {
-      // Ignore notification error
+      // Non-blocking notification dispatch
     }
 
-    revalidatePath("/dashboard/admin");
+    safeRevalidate("/dashboard/admin");
     return { success: true };
   } catch (error: unknown) {
     console.error("dismissReport failed:", error);
@@ -728,18 +931,24 @@ export async function reopenReport(reportId: string): Promise<AdminActionResult>
       return { error: "Unauthorized: Moderator or Admin access required." };
     }
 
+    if (!reportId) {
+      return { error: "Report ID is required." };
+    }
+
     const adminDb = getServiceRoleClient();
     const { error } = await adminDb
       .from("project_reports")
       .update({
         status: "pending",
         resolved_at: null,
+        resolution_action: null,
+        updated_at: new Date().toISOString(),
       })
       .eq("id", reportId);
 
     if (error) throw error;
 
-    revalidatePath("/dashboard/admin");
+    safeRevalidate("/dashboard/admin");
     return { success: true };
   } catch (error: unknown) {
     console.error("reopenReport failed:", error);
@@ -763,15 +972,40 @@ export async function deleteReportedComment(
       return { error: "Unauthorized: Moderator or Admin access required." };
     }
 
-    const adminDb = getServiceRoleClient();
-
-    // 1. Delete comment from forum tables if commentId provided
-    if (commentId) {
-      await adminDb.from("global_forum_posts").delete().eq("id", commentId);
-      await adminDb.from("project_forum_messages").delete().eq("id", commentId);
+    if (!reportId) {
+      return { error: "Report ID is required." };
     }
 
-    // 2. Mark report as resolved
+    const adminDb = getServiceRoleClient();
+
+    // 1. Resolve commentId and targetUserId from report if omitted by UI caller
+    let resolvedCommentId = commentId;
+    let resolvedTargetUserId = targetUserId;
+
+    if (!resolvedCommentId || !resolvedTargetUserId) {
+      const { data: rep } = await adminDb
+        .from("project_reports")
+        .select("target_id, target_type, target_user_id")
+        .eq("id", reportId)
+        .maybeSingle();
+
+      if (rep) {
+        if (!resolvedCommentId && (rep.target_type === "comment" || rep.target_type === "forum")) {
+          resolvedCommentId = rep.target_id;
+        }
+        if (!resolvedTargetUserId) {
+          resolvedTargetUserId = rep.target_user_id || undefined;
+        }
+      }
+    }
+
+    // 2. Delete comment from forum tables if identified
+    if (resolvedCommentId) {
+      await adminDb.from("global_forum_posts").delete().eq("id", resolvedCommentId);
+      await adminDb.from("project_forum_messages").delete().eq("id", resolvedCommentId);
+    }
+
+    // 3. Mark report as resolved
     const { error: repError } = await adminDb
       .from("project_reports")
       .update({
@@ -784,20 +1018,20 @@ export async function deleteReportedComment(
 
     if (repError) throw repError;
 
-    // 3. Deduct 5 trust points from target user if youth (Auto-Mod / Comment Deletion: -5)
-    if (targetUserId) {
+    // 4. Deduct 5 trust points from target user if youth (Auto-Mod / Comment Deletion: -5)
+    if (resolvedTargetUserId) {
       try {
         const { data: userYouth } = await adminDb
           .from("users_youth")
           .select("trust_score")
-          .eq("id", targetUserId)
+          .eq("id", resolvedTargetUserId)
           .maybeSingle();
 
         if (userYouth && typeof userYouth.trust_score === "number") {
           await adminDb
             .from("users_youth")
             .update({ trust_score: Math.max(0, Math.min(100, userYouth.trust_score - 5)) })
-            .eq("id", targetUserId);
+            .eq("id", resolvedTargetUserId);
         }
       } catch (err) {
         console.error("Could not deduct trust score on comment removal:", err);
@@ -806,7 +1040,7 @@ export async function deleteReportedComment(
       try {
         const { dispatchNotification } = await import("@/actions/notifications");
         await dispatchNotification({
-          userId: targetUserId,
+          userId: resolvedTargetUserId,
           type: "moderation",
           title: "Comment Removed",
           message: "A comment or message you posted was reported and removed by moderation for violating community rules.",
@@ -817,8 +1051,8 @@ export async function deleteReportedComment(
       }
     }
 
-    revalidatePath("/dashboard/admin");
-    revalidatePath("/community");
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/community");
     return { success: true };
   } catch (error: unknown) {
     console.error("deleteReportedComment failed:", error);
@@ -842,21 +1076,46 @@ export async function deleteCommentAndWarnUser(
       return { error: "Unauthorized: Moderator or Admin access required." };
     }
 
-    const adminDb = getServiceRoleClient();
-
-    // 1. Delete comment from forum tables if commentId provided
-    if (commentId) {
-      await adminDb.from("global_forum_posts").delete().eq("id", commentId);
-      await adminDb.from("project_forum_messages").delete().eq("id", commentId);
+    if (!reportId) {
+      return { error: "Report ID is required." };
     }
 
-    // 2. Adjust target user trust_score / send formal warning notification
-    if (targetUserId) {
+    const adminDb = getServiceRoleClient();
+
+    // 1. Resolve commentId and targetUserId from report if omitted by UI caller
+    let resolvedCommentId = commentId;
+    let resolvedTargetUserId = targetUserId;
+
+    if (!resolvedCommentId || !resolvedTargetUserId) {
+      const { data: rep } = await adminDb
+        .from("project_reports")
+        .select("target_id, target_type, target_user_id")
+        .eq("id", reportId)
+        .maybeSingle();
+
+      if (rep) {
+        if (!resolvedCommentId && (rep.target_type === "comment" || rep.target_type === "forum")) {
+          resolvedCommentId = rep.target_id;
+        }
+        if (!resolvedTargetUserId) {
+          resolvedTargetUserId = rep.target_user_id || undefined;
+        }
+      }
+    }
+
+    // 2. Delete comment from forum tables if identified
+    if (resolvedCommentId) {
+      await adminDb.from("global_forum_posts").delete().eq("id", resolvedCommentId);
+      await adminDb.from("project_forum_messages").delete().eq("id", resolvedCommentId);
+    }
+
+    // 3. Adjust target user trust_score / send formal warning notification
+    if (resolvedTargetUserId) {
       try {
         const { data: userYouth } = await adminDb
           .from("users_youth")
           .select("trust_score")
-          .eq("id", targetUserId)
+          .eq("id", resolvedTargetUserId)
           .maybeSingle();
 
         if (userYouth) {
@@ -864,12 +1123,12 @@ export async function deleteCommentAndWarnUser(
           await adminDb
             .from("users_youth")
             .update({ trust_score: Math.max(0, Math.min(100, currentTrust - 15)) })
-            .eq("id", targetUserId);
+            .eq("id", resolvedTargetUserId);
         }
 
         const { dispatchNotification } = await import("@/actions/notifications");
         await dispatchNotification({
-          userId: targetUserId,
+          userId: resolvedTargetUserId,
           type: "moderation",
           title: "Official Moderation Warning",
           message: "Your reported comment was deleted and a moderation strike was applied to your profile. Continued infractions will result in an account ban.",
@@ -880,7 +1139,7 @@ export async function deleteCommentAndWarnUser(
       }
     }
 
-    // 3. Mark report as resolved
+    // 4. Mark report as resolved
     const { error: repError } = await adminDb
       .from("project_reports")
       .update({
@@ -893,8 +1152,8 @@ export async function deleteCommentAndWarnUser(
 
     if (repError) throw repError;
 
-    revalidatePath("/dashboard/admin");
-    revalidatePath("/community");
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/community");
     return { success: true };
   } catch (error: unknown) {
     console.error("deleteCommentAndWarnUser failed:", error);
@@ -918,32 +1177,55 @@ export async function deleteCommentAndBanUser(
       return { error: "Unauthorized: Banning user accounts strictly requires Admin or Root clearance. Moderators must escalate to admin." };
     }
 
-    const adminDb = getServiceRoleClient();
-
-    // 1. Delete comment from forum tables if commentId provided
-    if (commentId) {
-      await adminDb.from("global_forum_posts").delete().eq("id", commentId);
-      await adminDb.from("project_forum_messages").delete().eq("id", commentId);
+    if (!reportId) {
+      return { error: "Report ID is required." };
     }
 
-    // 2. Permanently ban user account via Supabase Auth Admin API
-    if (targetUserId) {
+    const adminDb = getServiceRoleClient();
+
+    // 1. Resolve commentId and targetUserId from report if omitted by UI caller
+    let resolvedCommentId = commentId;
+    let resolvedTargetUserId = targetUserId;
+
+    if (!resolvedCommentId || !resolvedTargetUserId) {
+      const { data: rep } = await adminDb
+        .from("project_reports")
+        .select("target_id, target_type, target_user_id")
+        .eq("id", reportId)
+        .maybeSingle();
+
+      if (rep) {
+        if (!resolvedCommentId && (rep.target_type === "comment" || rep.target_type === "forum")) {
+          resolvedCommentId = rep.target_id;
+        }
+        if (!resolvedTargetUserId) {
+          resolvedTargetUserId = rep.target_user_id || undefined;
+        }
+      }
+    }
+
+    // 2. Delete comment from forum tables if identified
+    if (resolvedCommentId) {
+      await adminDb.from("global_forum_posts").delete().eq("id", resolvedCommentId);
+      await adminDb.from("project_forum_messages").delete().eq("id", resolvedCommentId);
+    }
+
+    // 3. Permanently ban user account via Supabase Auth Admin API
+    if (resolvedTargetUserId) {
       try {
-        // Suspend auth login access (100 years ban)
-        await adminDb.auth.admin.updateUserById(targetUserId, {
+        await adminDb.auth.admin.updateUserById(resolvedTargetUserId, {
           ban_duration: "876000h",
-          user_metadata: { banned: true, banned_at: new Date().toISOString() },
+          user_metadata: { banned: true, is_banned: true, banned_at: new Date().toISOString() },
         });
 
-        // Set trust_score to 0 in youth profile
         await adminDb
           .from("users_youth")
           .update({ trust_score: 0 })
-          .eq("id", targetUserId);
+          .eq("id", resolvedTargetUserId);
 
         const { dispatchNotification } = await import("@/actions/notifications");
         await dispatchNotification({
-          userId: targetUserId,
+          userId: resolvedTargetUserId,
           type: "moderation",
           title: "Account Suspended",
           message: "Your account has been permanently suspended by administration for severe violations of European youth safety protocols.",
@@ -954,7 +1236,7 @@ export async function deleteCommentAndBanUser(
       }
     }
 
-    // 3. Mark report as resolved
+    // 4. Mark report as resolved
     const { error: repError } = await adminDb
       .from("project_reports")
       .update({
@@ -967,8 +1249,8 @@ export async function deleteCommentAndBanUser(
 
     if (repError) throw repError;
 
-    revalidatePath("/dashboard/admin");
-    revalidatePath("/community");
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/community");
     return { success: true };
   } catch (error: unknown) {
     console.error("deleteCommentAndBanUser failed:", error);
@@ -990,6 +1272,10 @@ export async function deleteSurveyAndWarnCreator(
     const { isAuthorized } = await verifyAdmin();
     if (!isAuthorized) {
       return { error: "Unauthorized: Deleting community surveys strictly requires Admin or Root clearance. Moderators must escalate to admin." };
+    }
+
+    if (!reportId) {
+      return { error: "Report ID is required." };
     }
 
     const adminDb = getServiceRoleClient();
@@ -1078,7 +1364,7 @@ export async function deleteSurveyAndWarnCreator(
     }
 
     // Mark report as resolved
-    await adminDb
+    const { error: repUpdateErr } = await adminDb
       .from("project_reports")
       .update({
         status: "resolved",
@@ -1088,8 +1374,10 @@ export async function deleteSurveyAndWarnCreator(
       })
       .eq("id", reportId);
 
-    revalidatePath("/dashboard/admin");
-    revalidatePath("/community");
+    if (repUpdateErr) throw repUpdateErr;
+
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/community");
     return { success: true };
   } catch (error: unknown) {
     console.error("deleteSurveyAndWarnCreator failed:", error);
@@ -1110,6 +1398,10 @@ export async function warnSurveyCreator(
     const { isAuthorized } = await verifyModeratorOrAdmin();
     if (!isAuthorized) {
       return { error: "Unauthorized: Moderator or Admin access required." };
+    }
+
+    if (!reportId) {
+      return { error: "Report ID is required." };
     }
 
     const adminDb = getServiceRoleClient();
@@ -1167,7 +1459,7 @@ export async function warnSurveyCreator(
     }
 
     // Mark report as resolved
-    await adminDb
+    const { error: repUpdateErr } = await adminDb
       .from("project_reports")
       .update({
         status: "resolved",
@@ -1177,8 +1469,10 @@ export async function warnSurveyCreator(
       })
       .eq("id", reportId);
 
-    revalidatePath("/dashboard/admin");
-    revalidatePath("/community");
+    if (repUpdateErr) throw repUpdateErr;
+
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/community");
     return { success: true };
   } catch (error: unknown) {
     console.error("warnSurveyCreator failed:", error);
@@ -1229,12 +1523,14 @@ export async function sendCustomAdminNotification(
 
 /**
  * Moderation Escalation Protocol:
- * Moderators and Support staff submit destructive action requests to System Administrators.
+ * Moderators and Support staff submit destructive action requests or escalations
+ * to System Administrators or Moderators.
  */
 export async function escalateReportToAdmin(
   reportId: string,
   reason: string,
-  recommendedAction: "ban_user" | "delete_org" | "delete_survey" | "emergency_lock" | "investigate"
+  recommendedAction: "ban_user" | "delete_org" | "delete_survey" | "emergency_lock" | "investigate",
+  targetRole: "admin" | "moderator" = "admin"
 ): Promise<AdminActionResult> {
   try {
     const { isAuthorized, user, role } = await verifyModeratorOrAdmin();
@@ -1242,8 +1538,12 @@ export async function escalateReportToAdmin(
       return { error: "Unauthorized: Moderator, Support, or Admin access required." };
     }
 
-    if (!reason.trim() || !recommendedAction) {
-      return { error: "Escalation reason and recommended action are required." };
+    if (role === "moderator" && targetRole !== "admin") {
+      return { error: "Moderators can only escalate reports to Administrators." };
+    }
+
+    if (!reportId || !reason.trim() || !recommendedAction) {
+      return { error: "Report ID, escalation reason, and recommended action are required." };
     }
 
     const adminDb = getServiceRoleClient();
@@ -1261,6 +1561,7 @@ export async function escalateReportToAdmin(
 
     const targetId = rep.target_user_id || rep.org_id || rep.project_id || rep.id;
     const targetName = rep.target_name || `Report #${reportId.slice(0, 8)}`;
+    const actionDescription = `Escalated to ${targetRole === "moderator" ? "Moderator Queue" : "Admin Command"}: ${reason.trim()}`;
 
     // 2. Insert into admin_escalations
     const { error: escErr } = await adminDb.from("admin_escalations").insert({
@@ -1270,37 +1571,143 @@ export async function escalateReportToAdmin(
       target_id: targetId,
       target_name: targetName,
       reason: reason.trim(),
-      recommended_action: recommendedAction,
+      recommended_action: targetRole === "moderator" ? "escalate_to_moderator" : recommendedAction,
       status: "pending",
     });
 
     if (escErr) throw escErr;
 
     // 3. Mark report as 'escalated'
-    await adminDb
+    const { error: repEscErr } = await adminDb
       .from("project_reports")
       .update({ 
         status: "escalated",
+        resolution_action: actionDescription,
         updated_at: new Date().toISOString(),
       })
       .eq("id", reportId);
 
-    // 4. Send external alert to Discord & Email
-    await sendEscalationAlert({
-      escalationId: targetId,
-      reportId,
-      reason: reason.trim(),
-      recommendedAction,
-      targetType: rep.target_type || "report",
-      targetName,
-      requestedByName: `${user.email || user.id} (${role})`,
-    });
+    if (repEscErr) {
+      console.warn("escalateReportToAdmin report status update warning:", repEscErr);
+    }
 
-    revalidatePath("/dashboard/admin");
+    // 4. Send external alert to Discord & Email (non-blocking)
+    try {
+      await sendEscalationAlert({
+        escalationId: targetId,
+        reportId,
+        reason: reason.trim(),
+        recommendedAction: targetRole === "moderator" ? "escalate_to_moderator" : recommendedAction,
+        targetType: rep.target_type || "report",
+        targetName,
+        requestedByName: `${user.email || user.id} (${role})`,
+      });
+    } catch (alertErr) {
+      console.warn("sendEscalationAlert warning:", alertErr);
+    }
+
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/dashboard/moderator-panel");
+    safeRevalidate("/dashboard/support-panel");
     return { success: true };
   } catch (err: unknown) {
     console.error("escalateReportToAdmin error:", err);
     return { error: err instanceof Error ? err.message : "Failed to escalate report to admin." };
+  }
+}
+
+export { escalateReportToAdmin as escalateReportAction };
+
+/**
+ * Ticket Escalation Protocol:
+ * Support can escalate to Moderator or Admin; Moderator can escalate to Admin.
+ */
+export async function escalateSupportTicket(
+  ticketId: string,
+  targetRole: "moderator" | "admin",
+  reason: string,
+  recommendedAction: string = "investigate"
+): Promise<AdminActionResult> {
+  try {
+    const { isAuthorized, user, role } = await verifyStaff();
+    if (!isAuthorized || !user) {
+      return { error: "Unauthorized: Staff clearance required." };
+    }
+
+    if (role === "moderator" && targetRole !== "admin") {
+      return { error: "Moderators can only escalate tickets to Administrators." };
+    }
+
+    if (!ticketId || !reason.trim()) {
+      return { error: "Ticket ID and escalation reason are required." };
+    }
+
+    const adminDb = getServiceRoleClient();
+
+    // 1. Fetch ticket details
+    const { data: ticket, error: ticketErr } = await adminDb
+      .from("support_tickets")
+      .select("*")
+      .eq("id", ticketId)
+      .maybeSingle();
+
+    if (ticketErr || !ticket) {
+      return { error: "Support ticket not found." };
+    }
+
+    const actionDescription = `Escalated to ${targetRole === "moderator" ? "Moderator Queue" : "Admin Command"}: ${reason.trim()}`;
+
+    // 2. Update support ticket status to 'escalated'
+    const { error: updateTicketErr } = await adminDb
+      .from("support_tickets")
+      .update({
+        status: "escalated",
+        resolution_action: actionDescription,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", ticketId);
+
+    if (updateTicketErr) throw updateTicketErr;
+
+    // 3. Create entry in admin_escalations so it appears in the escalation queue
+    const { error: escErr } = await adminDb.from("admin_escalations").insert({
+      escalated_by: user.id,
+      escalated_by_role: role,
+      target_type: "ticket",
+      target_id: ticketId,
+      target_name: ticket.subject || `Support Ticket #${ticketId.slice(0, 8)}`,
+      reason: reason.trim(),
+      recommended_action: targetRole === "moderator" ? "escalate_to_moderator" : (recommendedAction || "investigate"),
+      status: "pending",
+    });
+
+    if (escErr) {
+      console.warn("escalateSupportTicket admin_escalations insert warning:", escErr);
+    }
+
+    // 4. Send external alert
+    try {
+      await sendEscalationAlert({
+        escalationId: ticketId,
+        reportId: ticketId,
+        reason: reason.trim(),
+        recommendedAction: targetRole === "moderator" ? "escalate_to_moderator" : (recommendedAction || "investigate"),
+        targetType: "ticket",
+        targetName: ticket.subject || `Support Ticket #${ticketId.slice(0, 8)}`,
+        requestedByName: `${user.email || user.id} (${role})`,
+      });
+    } catch (alertErr) {
+      console.warn("sendEscalationAlert warning:", alertErr);
+    }
+
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/dashboard/moderator-panel");
+    safeRevalidate("/dashboard/support-panel");
+
+    return { success: true };
+  } catch (err: unknown) {
+    console.error("escalateSupportTicket exception:", err);
+    return { error: err instanceof Error ? err.message : "Failed to escalate support ticket." };
   }
 }
 
@@ -1320,6 +1727,10 @@ export async function resolveAdminEscalation(
       return { error: "Unauthorized: Admin clearance required." };
     }
 
+    if (!escalationId) {
+      return { error: "Escalation ID is required." };
+    }
+
     const adminDb = getServiceRoleClient();
 
     const { data: esc, error: escErr } = await adminDb
@@ -1333,25 +1744,33 @@ export async function resolveAdminEscalation(
     }
 
     if (executeAction && decision === "approved") {
-      if (esc.recommended_action === "delete_survey") {
-        await adminDb.from("ngo_survey_votes").delete().or(`survey_id.eq.${esc.target_id}`);
-        await adminDb.from("ngo_survey_options").delete().or(`survey_id.eq.${esc.target_id}`);
-        await adminDb.from("ngo_surveys").delete().or(`id.eq.${esc.target_id},question.eq.${esc.target_name}`);
-      } else if (esc.recommended_action === "ban_user") {
-        await adminDb.from("users_youth").update({ trust_score: 0 }).eq("id", esc.target_id);
-        try {
-          await adminDb.auth.admin.updateUserById(esc.target_id, {
-            ban_duration: "876000h",
-            user_metadata: { is_banned: true, banned_reason: esc.reason },
-          });
-        } catch {}
-      } else if (esc.recommended_action === "delete_org") {
-        await adminDb.from("users_org").update({ verification_status: "rejected" }).eq("id", esc.target_id);
+      try {
+        if (esc.recommended_action === "delete_survey") {
+          await adminDb.from("ngo_survey_votes").delete().or(`survey_id.eq.${esc.target_id}`);
+          await adminDb.from("ngo_survey_options").delete().or(`survey_id.eq.${esc.target_id}`);
+          await adminDb.from("ngo_surveys").delete().or(`id.eq.${esc.target_id},question.eq.${esc.target_name}`);
+        } else if (esc.recommended_action === "ban_user") {
+          await adminDb.from("users_youth").update({ trust_score: 0 }).eq("id", esc.target_id);
+          try {
+            await adminDb.auth.admin.updateUserById(esc.target_id, {
+              ban_duration: "876000h",
+              user_metadata: { is_banned: true, banned_reason: esc.reason },
+            });
+          } catch {}
+        } else if (esc.recommended_action === "delete_org") {
+          await adminDb.from("users_org").update({
+            verification_status: "rejected",
+            is_verified: false,
+            verified: false,
+          }).eq("id", esc.target_id);
+        }
+      } catch (execErr) {
+        console.warn("resolveAdminEscalation executeAction warning:", execErr);
       }
     }
 
     // Update escalation record
-    await adminDb
+    const { error: updateEscErr } = await adminDb
       .from("admin_escalations")
       .update({
         status: decision === "approved" ? "approved" : "rejected",
@@ -1365,18 +1784,24 @@ export async function resolveAdminEscalation(
       })
       .eq("id", escalationId);
 
+    if (updateEscErr) throw updateEscErr;
+
     // Mark any corresponding report resolved
-    await adminDb
-      .from("project_reports")
-      .update({
-        status: "resolved",
-        resolved_at: new Date().toISOString(),
-        resolution_action: decision === "approved"
-          ? `Resolved via Admin Escalation (${esc.recommended_action})`
-          : "Escalation Dismissed by Admin",
-        updated_at: new Date().toISOString(),
-      })
-      .or(`target_user_id.eq.${esc.target_id},org_id.eq.${esc.target_id},id.eq.${esc.target_id}`);
+    try {
+      await adminDb
+        .from("project_reports")
+        .update({
+          status: "resolved",
+          resolved_at: new Date().toISOString(),
+          resolution_action: decision === "approved"
+            ? `Resolved via Admin Escalation (${esc.recommended_action})`
+            : "Escalation Dismissed by Admin",
+          updated_at: new Date().toISOString(),
+        })
+        .or(`target_user_id.eq.${esc.target_id},org_id.eq.${esc.target_id},id.eq.${esc.target_id}`);
+    } catch (repUpdateErr) {
+      console.warn("resolveAdminEscalation report update warning:", repUpdateErr);
+    }
 
     // Notify staff member who filed escalation
     if (esc.escalated_by) {
@@ -1392,7 +1817,7 @@ export async function resolveAdminEscalation(
       } catch {}
     }
 
-    revalidatePath("/dashboard/admin");
+    safeRevalidate("/dashboard/admin");
     return { success: true };
   } catch (err: unknown) {
     console.error("resolveAdminEscalation error:", err);
@@ -1414,6 +1839,10 @@ export async function updateSupportTicketStatus(
       return { error: "Unauthorized: Staff clearance required." };
     }
 
+    if (!ticketId || !newStatus) {
+      return { error: "Ticket ID and status are required." };
+    }
+
     const adminDb = getServiceRoleClient();
     const { data: ticket, error: ticketErr } = await adminDb
       .from("support_tickets")
@@ -1425,7 +1854,7 @@ export async function updateSupportTicketStatus(
       return { error: "Support ticket not found." };
     }
 
-    await adminDb
+    const { error: ticketUpdateErr } = await adminDb
       .from("support_tickets")
       .update({ 
         status: newStatus,
@@ -1433,9 +1862,25 @@ export async function updateSupportTicketStatus(
         resolved_at: newStatus === "resolved" ? new Date().toISOString() : null,
         resolution_action: newStatus === "resolved"
           ? (replyMessage ? `Resolved with reply: ${replyMessage.slice(0, 100)}` : "Resolved by Support Specialist")
-          : undefined,
+          : null,
       })
       .eq("id", ticketId);
+
+    if (ticketUpdateErr) throw ticketUpdateErr;
+
+    if (replyMessage && replyMessage.trim()) {
+      try {
+        await adminDb.from("support_ticket_replies").insert({
+          ticket_id: ticketId,
+          sender_id: user.id,
+          sender_role: "support",
+          sender_name: "EuroNova Support Specialist",
+          message: replyMessage.trim(),
+        });
+      } catch (replyInsertErr) {
+        console.error("Failed to insert staff reply into support_ticket_replies:", replyInsertErr);
+      }
+    }
 
     if (replyMessage && replyMessage.trim() && ticket.user_id) {
       try {
@@ -1462,7 +1907,7 @@ export async function updateSupportTicketStatus(
       }
     }
 
-    revalidatePath("/dashboard/admin");
+    safeRevalidate("/dashboard/admin");
     return { success: true };
   } catch (err: unknown) {
     console.error("updateSupportTicketStatus error:", err);

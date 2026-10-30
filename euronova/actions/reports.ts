@@ -76,7 +76,7 @@ export async function submitGlobalReportAction(
     const rateCheck = await checkRateLimit(rateIdentifier, RATE_LIMITS.REPORT);
     if (!rateCheck.success) {
       return {
-        error: rateCheck.error || "Too many reports submitted. Please wait before reporting again.",
+        error: "RATE_LIMIT_EXCEEDED",
       };
     }
 

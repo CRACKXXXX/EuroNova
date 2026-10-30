@@ -7,60 +7,29 @@ import {
 } from "@/lib/staffAuth";
 import { stripDangerousHtml } from "@/lib/securitySanitizer";
 import type { UserRole } from "@/lib/roles";
+import {
+  canReadChannel,
+  canWriteChannel,
+  type StaffChatChannel,
+  type StaffChatMessage,
+  type StaffChatActionResult,
+} from "@/lib/staffChatTypes";
 
-export type StaffChatChannel =
-  | "general-staff"
-  | "moderation-ops"
-  | "support-tickets"
-  | "admin-command";
+export type { StaffChatChannel, StaffChatMessage, StaffChatActionResult };
 
-export const STAFF_CHANNELS: { id: StaffChatChannel; name: string; description: string }[] = [
-  {
-    id: "general-staff",
-    name: "#general-staff",
-    description: "General staff sync, alerts, and team communications.",
-  },
-  {
-    id: "moderation-ops",
-    name: "#moderation-ops",
-    description: "Active report triage, warnings, mutes, and moderation incidents.",
-  },
-  {
-    id: "support-tickets",
-    name: "#support-tickets",
-    description: "Volunteer inquiries, support coordination, and ticket reviews.",
-  },
-  {
-    id: "admin-command",
-    name: "#admin-command",
-    description: "Root & Admin command directives, system updates, and emergency locks.",
-  },
-];
-
-export interface StaffChatMessage {
-  id: string;
-  channel: StaffChatChannel;
-  userId: string;
-  authorName: string;
-  authorRole: UserRole;
-  authorAvatar?: string | null;
-  content: string;
-  isPinned: boolean;
-  createdAt: string;
-  updatedAt?: string;
-}
-
-export interface StaffChatActionResult<T = unknown> {
-  success: boolean;
-  data?: T;
-  error?: string;
+function safeRevalidate(path: string) {
+  try {
+    revalidatePath(path);
+  } catch (err) {
+    console.warn(`revalidatePath non-blocking fallback for ${path}:`, err);
+  }
 }
 
 // In-memory resilient store for zero-downtime execution and rapid fallback
 const inMemoryStaffMessages: StaffChatMessage[] = [
   {
     id: "seed-msg-1",
-    channel: "general-staff",
+    channel: "general",
     userId: "system-root",
     authorName: "EuroNova Orbital Command",
     authorRole: "root",
@@ -71,7 +40,7 @@ const inMemoryStaffMessages: StaffChatMessage[] = [
   },
   {
     id: "seed-msg-2",
-    channel: "admin-command",
+    channel: "admin_command",
     userId: "system-root",
     authorName: "System Administration",
     authorRole: "admin",
@@ -84,15 +53,19 @@ const inMemoryStaffMessages: StaffChatMessage[] = [
 
 /**
  * Retrieves staff messages for a given channel.
- * Strictly gated to users with verified staff clearance (root, admin, moderator, support).
+ * Strictly gated to users with verified staff clearance and channel read permission.
  */
 export async function getStaffChatMessages(
-  channel: StaffChatChannel = "general-staff"
+  channel: StaffChatChannel = "general"
 ): Promise<StaffChatActionResult<StaffChatMessage[]>> {
   try {
-    const { isAuthorized, user } = await verifyStaff();
+    const { isAuthorized, user, role } = await verifyStaff();
     if (!isAuthorized || !user) {
       return { success: false, error: "403 Unauthorized: Staff clearance required." };
+    }
+
+    if (!canReadChannel(channel, role)) {
+      return { success: false, error: "403 Forbidden: You do not have clearance to read this channel." };
     }
 
     const adminDb = getServiceRoleClient();
@@ -116,7 +89,7 @@ export async function getStaffChatMessages(
 
     const messages: StaffChatMessage[] = data.map((row) => ({
       id: row.id,
-      channel: (row.channel || "general-staff") as StaffChatChannel,
+      channel: (row.channel || "general") as StaffChatChannel,
       userId: row.user_id,
       authorName: row.author_name || "Staff Member",
       authorRole: (row.author_role || "support") as UserRole,
@@ -138,7 +111,7 @@ export async function getStaffChatMessages(
 
 /**
  * Posts a new message to a specific staff channel.
- * Strictly gated by verifyStaff(); #admin-command requires root or admin authority.
+ * Strictly gated by verifyStaff() and canWriteChannel(channel, role).
  */
 export async function postStaffChatMessage(input: {
   channel: StaffChatChannel;
@@ -150,11 +123,11 @@ export async function postStaffChatMessage(input: {
       return { success: false, error: "403 Unauthorized: Staff clearance required." };
     }
 
-    // Role-based channel posting restriction
-    if (input.channel === "admin-command" && role !== "root" && role !== "admin") {
+    // Role-based channel posting restriction matrix
+    if (!canWriteChannel(input.channel, role)) {
       return {
         success: false,
-        error: "403 Forbidden: Only Root Administrators and Admins can broadcast in #admin-command.",
+        error: "403 Forbidden: You do not have broadcasting clearance in this channel.",
       };
     }
 
@@ -232,9 +205,9 @@ export async function postStaffChatMessage(input: {
       inMemoryStaffMessages.shift();
     }
 
-    revalidatePath("/dashboard/admin");
-    revalidatePath("/dashboard/moderator-panel");
-    revalidatePath("/dashboard/support-panel");
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/dashboard/moderator-panel");
+    safeRevalidate("/dashboard/support-panel");
 
     return { success: true, data: newMessage };
   } catch (err: unknown) {
@@ -290,9 +263,9 @@ export async function togglePinStaffChatMessage(
       updatedPinnedState = memMsg.isPinned;
     }
 
-    revalidatePath("/dashboard/admin");
-    revalidatePath("/dashboard/moderator-panel");
-    revalidatePath("/dashboard/support-panel");
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/dashboard/moderator-panel");
+    safeRevalidate("/dashboard/support-panel");
 
     return { success: true, data: { isPinned: updatedPinnedState } };
   } catch (err: unknown) {
@@ -351,9 +324,9 @@ export async function deleteStaffChatMessage(
       inMemoryStaffMessages.splice(memIndex, 1);
     }
 
-    revalidatePath("/dashboard/admin");
-    revalidatePath("/dashboard/moderator-panel");
-    revalidatePath("/dashboard/support-panel");
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/dashboard/moderator-panel");
+    safeRevalidate("/dashboard/support-panel");
 
     return { success: true };
   } catch (err: unknown) {
@@ -362,4 +335,3 @@ export async function deleteStaffChatMessage(
     return { success: false, error: errorMsg };
   }
 }
-

@@ -137,7 +137,7 @@ export function AdminDashboardClient(props: AdminDashboardClientProps) {
   } = useAdminDashboard(props);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 min-h-screen">
       {/* 1. Header Metrics, Counters & Control Triggers */}
       <AdminMetrics
         activeTab={activeTab}
@@ -145,12 +145,24 @@ export function AdminDashboardClient(props: AdminDashboardClientProps) {
         totalOrgs={totalOrgs}
         totalYouth={totalYouth}
         totalProjects={totalProjects}
-        totalReports={totalReports}
-        totalPendingReports={totalPendingReports}
-        totalEscalations={totalEscalations}
-        totalPendingEscalations={totalPendingEscalations}
-        totalTickets={totalTickets}
-        totalPendingTickets={totalPendingTickets}
+        totalReports={totalReports > 0 ? totalReports : reports.length}
+        totalPendingReports={
+          totalPendingReports > 0
+            ? totalPendingReports
+            : reports.filter((r) => r.status === "pending" || r.status === "active" || !r.status).length
+        }
+        totalEscalations={totalEscalations > 0 ? totalEscalations : escalations.length}
+        totalPendingEscalations={
+          totalPendingEscalations > 0
+            ? totalPendingEscalations
+            : escalations.filter((e) => e.status === "pending" || !e.status).length
+        }
+        totalTickets={totalTickets > 0 ? totalTickets : tickets.length}
+        totalPendingTickets={
+          totalPendingTickets > 0
+            ? totalPendingTickets
+            : tickets.filter((t) => t.status === "open" || t.status === "pending" || !t.status).length
+        }
         totalStaff={totalStaff}
         showSensitive={showSensitive}
         isScraping={isScraping}
@@ -231,7 +243,7 @@ export function AdminDashboardClient(props: AdminDashboardClientProps) {
       {activeTab === "reports" && (
         <AdminReportsTab
           reports={reports}
-          totalReports={totalReports}
+          totalReports={totalReports > 0 ? totalReports : reports.length}
           reportCategory={reportCategory}
           setReportCategory={setReportCategory}
           currentUserRole={currentUserRole}
@@ -277,7 +289,11 @@ export function AdminDashboardClient(props: AdminDashboardClientProps) {
       {activeTab === "escalations" && (currentUserRole === "admin" || currentUserRole === "root") && (
         <EscalationQueue
           escalations={escalations}
-          totalPendingEscalations={totalPendingEscalations}
+          totalPendingEscalations={
+            totalPendingEscalations > 0
+              ? totalPendingEscalations
+              : escalations.filter((e) => e.status === "pending" || !e.status).length
+          }
           escalationStatusFilter={escalationStatusFilter}
           onFilterChange={setEscalationStatusFilter}
           onOpenResolveModal={(esc, decision) => {
@@ -293,9 +309,15 @@ export function AdminDashboardClient(props: AdminDashboardClientProps) {
       {activeTab === "tickets" && (
         <AdminTicketsTab
           tickets={tickets}
-          totalPendingTickets={totalPendingTickets}
+          totalPendingTickets={
+            totalPendingTickets > 0
+              ? totalPendingTickets
+              : tickets.filter((t) => t.status === "open" || t.status === "pending" || !t.status).length
+          }
           ticketStatusFilter={ticketStatusFilter}
           setTicketStatusFilter={setTicketStatusFilter}
+          showSensitive={showSensitive}
+          currentUserRole={currentUserRole}
           isPending={isPending}
           handleAction={handleAction}
           setTicketReplyModal={setTicketReplyModal}
@@ -310,7 +332,7 @@ export function AdminDashboardClient(props: AdminDashboardClientProps) {
         <div className="space-y-4">
           <StaffLiveChatHub
             currentUserRole={currentUserRole}
-            initialChannel="admin-command"
+            initialChannel="admin_command"
             embedded
           />
         </div>

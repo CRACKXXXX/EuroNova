@@ -930,7 +930,7 @@ async function fetchSaltoProjects(): Promise<ScrapedCandidate[]> {
           themes: extractThemes(`${title} ${cleanDesc}`),
         });
       }
-      if (candidates.length >= 10) return false;
+      if (candidates.length >= 25) return false;
     });
   } catch (err) {
     console.error("SALTO fetch error:", err instanceof Error ? err.message : String(err));
@@ -945,7 +945,7 @@ async function fetchSaltoProjects(): Promise<ScrapedCandidate[]> {
 async function fetchEypEscProjects(): Promise<ScrapedCandidate[]> {
   const candidates: ScrapedCandidate[] = [];
   try {
-    const apiUrl = "https://youth.europa.eu/api/rest/eyp/v1/search?type=Opportunity&limit=30";
+    const apiUrl = "https://youth.europa.eu/api/rest/eyp/v1/search?type=Opportunity&limit=50";
     const res = await fetchWithRetry(apiUrl, {
       headers: { Accept: "application/json" },
       cache: "no-store",
@@ -1001,7 +1001,7 @@ async function fetchEypEscProjects(): Promise<ScrapedCandidate[]> {
         themes: extractThemes(`${title} ${description}`),
       });
 
-      if (candidates.length >= 10) break;
+      if (candidates.length >= 25) break;
     }
   } catch (err) {
     console.error("EYP ESC fetch error:", err instanceof Error ? err.message : String(err));
@@ -1026,7 +1026,7 @@ async function fetchProactiveProjects(): Promise<ScrapedCandidate[]> {
     const data = await res.json();
     const items = (data?.results || data?.features || (Array.isArray(data) ? data : []))
       .filter((item: { status?: string }) => !item.status || item.status === "open")
-      .slice(0, 15);
+      .slice(0, 30);
 
     for (const item of items) {
       const title = item.title?.trim();
@@ -1069,7 +1069,7 @@ async function fetchProactiveProjects(): Promise<ScrapedCandidate[]> {
         themes: extractThemes(`${title} ${item.topic || ""} ${description}`),
       });
 
-      if (candidates.length >= 10) break;
+      if (candidates.length >= 25) break;
     }
   } catch (err) {
     console.error("ProActive Future fetch error:", err instanceof Error ? err.message : String(err));
@@ -1117,7 +1117,7 @@ async function fetchYeAggregatorProjects(): Promise<ScrapedCandidate[]> {
           themes: extractThemes(`${title} ${rawDesc}`),
         });
       }
-      if (candidates.length >= 10) return false;
+      if (candidates.length >= 25) return false;
     });
   } catch (err) {
     console.error("YE Aggregator fetch error:", err instanceof Error ? err.message : String(err));
@@ -1319,7 +1319,8 @@ export async function GET(request: NextRequest) {
     const errors: Array<{ title: string; error: string }> = [];
 
     const startTime = Date.now();
-    const MAX_EXECUTION_TIME_MS = 45000;
+    const TARGET_INSERTIONS_PER_RUN = 10;
+    const MAX_EXECUTION_TIME_MS = 50000;
     let isTimeBudgetExceeded = false;
 
     // Layer 3a: In-memory batch deduplication sets
@@ -1329,6 +1330,9 @@ export async function GET(request: NextRequest) {
 
     // 4. Process each candidate through Clean Extraction Hierarchy
     for (const candidate of candidates) {
+      if (insertedCount >= TARGET_INSERTIONS_PER_RUN) {
+        break;
+      }
       if (Date.now() - startTime > MAX_EXECUTION_TIME_MS) {
         isTimeBudgetExceeded = true;
         break;

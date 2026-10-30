@@ -134,7 +134,7 @@ export async function createDossierTemplateAction(input: {
 
     const rateCheck = await checkRateLimit(user.id, RATE_LIMITS.MUTATION);
     if (!rateCheck.success) {
-      return { success: false, error: rateCheck.error || "Rate limit reached." };
+      return { success: false, error: "RATE_LIMIT_EXCEEDED" };
     }
 
     const cleanTitle = stripDangerousHtml(input.title.trim() || "Candidate Application Dossier", 150);
@@ -350,12 +350,12 @@ export async function submitProjectDossierAction(input: {
     const clientIp = await getClientIp();
     const ipRateCheck = await checkRateLimit(`dossier_ip_${clientIp}`, RATE_LIMITS.DOSSIER_SUBMISSION);
     if (!ipRateCheck.success) {
-      return { success: false, error: ipRateCheck.error || "Too many applications submitted from this IP. Please wait before trying again." };
+      return { success: false, error: "RATE_LIMIT_EXCEEDED" };
     }
 
     const userRateCheck = await checkRateLimit(`dossier_user_${user.id}`, RATE_LIMITS.DOSSIER_SUBMISSION);
     if (!userRateCheck.success) {
-      return { success: false, error: userRateCheck.error || "Please wait before submitting another application." };
+      return { success: false, error: "RATE_LIMIT_EXCEEDED" };
     }
 
     // Role-based guard: Organizations cannot apply to projects

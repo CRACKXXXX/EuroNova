@@ -103,7 +103,8 @@
     "moderatorPanel": "Panel de Moderación",
     "supportPanel": "Panel de Soporte",
     "supportEuroNova": "Apoyar EuroNova",
-    "language": "Idioma"
+    "language": "Idioma",
+    "supportHelpCenter": "Soporte y Ayuda"
   },
   "Sidebar": {
     "search": "Búsqueda",
@@ -142,7 +143,11 @@
     "clearRecentSearches": "Limpiar",
     "toggleFilters": "Alternar filtros",
     "toggleAiTitle": "Alternar búsqueda en lenguaje natural con IA",
-    "clearInputTitle": "Limpiar campo"
+    "clearInputTitle": "Limpiar campo",
+    "staffTerminal": "Terminal de Personal",
+    "moderatorHub": "Reportes",
+    "supportDesk": "Tickets",
+    "userSupportHub": "Centro de Ayuda y Tickets"
   },
   "Dashboard": {
     "title": "Transmisiones Recibidas",
@@ -451,7 +456,9 @@
     "linkedin": "LinkedIn",
     "commandCenter": "Centro de Mando de la Organización",
     "publishNewMission": "Publicar Nueva Misión",
-    "editProfile": "Editar Perfil"
+    "editProfile": "Editar Perfil",
+    "shareView": "Compartir Perfil",
+    "copiedLink": "¡Copiado!"
   },
   "NewProject": {
     "backHome": "Volver al Inicio",
@@ -730,7 +737,9 @@
     "filterActive": "Triaje Activo ({count})",
     "filterResolved": "Historial Resuelto ({count})",
     "view": "Ver",
-    "org": "Org"
+    "org": "Org",
+    "tabSupportTickets": "Tickets de Soporte",
+    "reporterLabel": "Denunciante:"
   },
   "AdminPanel": {
     "title": "Modo Dios: Centro de Mando",
@@ -1020,7 +1029,14 @@
     "replyAndResolve": "Responder y Resolver",
     "ticketsMatched": "{count} tickets coincidentes",
     "noTicketsMatchSearch": "Ningún ticket coincide con tu búsqueda.",
-    "noSupportInquiriesPending": "No hay consultas de soporte pendientes en esta cola."
+    "noSupportInquiriesPending": "No hay consultas de soporte pendientes en esta cola.",
+    "supportPrivacyActive": "Privacidad de Soporte Activa",
+    "supportPrivacyTooltip": "Los especialistas de soporte pueden ver nombres y correos, pero los teléfonos e identificadores físicos permanecen estrictamente protegidos.",
+    "moderatorAccess": "Acceso de Moderador",
+    "moderatorAccessTooltip": "Acceso completo de auditoría concedido para investigaciones de moderación y cumplimiento.",
+    "tabReportsQuick": "Reportes",
+    "restrictedBadge": "Restringido",
+    "restrictedToModerator": "Restringido a Moderadores"
   },
   "ProjectTypes": {
     "YE": "Intercambio Juvenil",
@@ -1606,7 +1622,8 @@
     "description": "Se produjo una anomalía inesperada al procesar las transmisiones orbitales. Nuestro sistema de telemetría ha registrado el evento.",
     "digestLabel": "Código de Error",
     "tryAgain": "Restablecer Conexión",
-    "returnHome": "Volver al Portal"
+    "returnHome": "Volver al Portal",
+    "rateLimitExceeded": "Vas muy rápido. Por favor, espera un momento e inténtalo de nuevo."
   },
   "NotFound": {
     "badge": "COORDENADAS INALCANZABLES",
@@ -2159,5 +2176,42 @@
     "policyLink": "Ver Política de Cookies",
     "statusAccepted": "Consentimiento otorgado",
     "statusRejected": "No esenciales rechazadas"
+  },
+  "SupportHub": {
+    "title": "Centro de Soporte Orbital",
+    "subtitle": "Haz seguimiento a tus consultas técnicas, consulta respuestas del staff y comunícate directamente con especialistas de EuroNova.",
+    "tabMyTickets": "Mis Consultas ({count})",
+    "tabNewTicket": "Nueva Consulta",
+    "noTicketsFound": "No se encontraron tickets de soporte",
+    "noTicketsFoundDesc": "Aún no has enviado consultas de soporte. ¿Necesitas ayuda con un proyecto, verificación de misión o tu cuenta?",
+    "createFirstTicket": "Enviar mi primera consulta",
+    "statusOpen": "Abierto",
+    "statusPending": "En Revisión",
+    "statusInProgress": "En Progreso",
+    "statusResolved": "Resuelto",
+    "ticketDetails": "Hilo de Soporte",
+    "initialInquiry": "Consulta Inicial",
+    "staffReply": "Especialista de Soporte EuroNova",
+    "userReply": "Tú",
+    "replyPlaceholder": "Escribe tu respuesta o duda de seguimiento...",
+    "sendReply": "Enviar Mensaje",
+    "sendingReply": "Enviando...",
+    "replySentSuccess": "¡Respuesta transmitida exitosamente al Comando de Soporte!",
+    "ticketResolvedNotice": "Esta consulta está marcada como resuelta. Si envías un nuevo mensaje, se reabrirá automáticamente para revisión.",
+    "filterAll": "Todos ({count})",
+    "filterOpen": "Activos ({count})",
+    "filterResolved": "Resueltos ({count})",
+    "searchPlaceholder": "Buscar consultas por asunto o contenido...",
+    "conversationHistory": "Mensajes del Hilo",
+    "ticketId": "ID de Caso",
+    "lastUpdate": "Actualizado",
+    "contactEmail": "Email de Contacto",
+    "contactPhone": "Teléfono",
+    "closeThread": "Cerrar Hilo",
+    "backToTickets": "Volver a Consultas",
+    "repliesCount": "{count} respuestas",
+    "noRepliesYet": "Esperando respuesta inaugural de un especialista de soporte.",
+    "hubTitle": "Centro de Soporte",
+    "staffBadge": "Equipo"
   }
 }

@@ -36,7 +36,7 @@ export async function toggleProjectFavorite(projectId: string): Promise<Interact
 
     const rateCheck = await checkRateLimit(user.id, RATE_LIMITS.MUTATION);
     if (!rateCheck.success) {
-      return { error: rateCheck.error || "Rate limit reached. Please wait." };
+      return { error: "RATE_LIMIT_EXCEEDED" };
     }
 
     // VERIFY MID-SESSION ACTIVE STATUS (Bans, Mutes, Suspensions)
@@ -141,7 +141,7 @@ export async function toggleProjectApplied(projectId: string): Promise<Interacti
 
     const rateCheck = await checkRateLimit(user.id, RATE_LIMITS.MUTATION);
     if (!rateCheck.success) {
-      return { error: rateCheck.error || "Rate limit reached. Please wait." };
+      return { error: "RATE_LIMIT_EXCEEDED" };
     }
 
     // VERIFY MID-SESSION ACTIVE STATUS (Bans, Mutes, Suspensions)

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useTransition, useCallback, useOptimistic } from "react";
+import React, { useState, useEffect, useRef, useTransition, useCallback, useOptimistic, useMemo } from "react";
 import {
   Send,
   Hash,
@@ -10,21 +10,25 @@ import {
   Shield,
   Headphones,
   Sparkles,
-  AlertCircle,
   Loader2,
   Radio,
+  Megaphone,
 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/utils/supabase/client";
-import { ROLE_BADGE_CONFIG, type UserRole } from "@/lib/roles";
+import { ROLE_BADGE_CONFIG, type UserRole } from "@/lib/rolesTypes";
 import {
   STAFF_CHANNELS,
+  canReadChannel,
+  canWriteChannel,
+  type StaffChatChannel,
+  type StaffChatMessage,
+} from "@/lib/staffChatTypes";
+import {
   getStaffChatMessages,
   postStaffChatMessage,
   togglePinStaffChatMessage,
   deleteStaffChatMessage,
-  type StaffChatChannel,
-  type StaffChatMessage,
 } from "@/actions/staffChat";
 
 interface StaffLiveChatHubProps {
@@ -38,11 +42,24 @@ interface StaffLiveChatHubProps {
 export function StaffLiveChatHub({
   currentUserRole,
   currentUserId,
-  initialChannel = "general-staff",
+  initialChannel = "general",
   embedded = false,
   onClose,
 }: StaffLiveChatHubProps) {
-  const [selectedChannel, setSelectedChannel] = useState<StaffChatChannel>(initialChannel);
+  // Compute visible channels strictly based on read access clearance
+  const visibleChannels = useMemo(() => {
+    return STAFF_CHANNELS.filter((ch) => canReadChannel(ch.id, currentUserRole));
+  }, [currentUserRole]);
+
+  // Ensure initial channel is authorized; fallback to first accessible channel
+  const verifiedInitialChannel = useMemo<StaffChatChannel>(() => {
+    if (canReadChannel(initialChannel, currentUserRole)) {
+      return initialChannel;
+    }
+    return visibleChannels[0]?.id || "general";
+  }, [initialChannel, currentUserRole, visibleChannels]);
+
+  const [selectedChannel, setSelectedChannel] = useState<StaffChatChannel>(verifiedInitialChannel);
   const [messages, setMessages] = useState<StaffChatMessage[]>([]);
   const [optimisticMessages, addOptimisticMessage] = useOptimistic<
     StaffChatMessage[],
@@ -59,6 +76,14 @@ export function StaffLiveChatHub({
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
+
+  // Safeguard: If role changes or current channel becomes unreadable, auto-switch
+  useEffect(() => {
+    if (!canReadChannel(selectedChannel, currentUserRole)) {
+      const fallback = visibleChannels[0]?.id || "general";
+      setSelectedChannel(fallback);
+    }
+  }, [selectedChannel, currentUserRole, visibleChannels]);
 
   // Channel switch and initial fetch
   useEffect(() => {
@@ -141,14 +166,16 @@ export function StaffLiveChatHub({
     setSelectedChannel(channel);
   };
 
+  const canBroadcastInChannel = canWriteChannel(selectedChannel, currentUserRole);
+
   // Transmit Message with React 19 Optimistic UI
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const trimmed = inputContent.trim();
     if (!trimmed || isSubmitting) return;
 
-    if (selectedChannel === "admin-command" && currentUserRole !== "root" && currentUserRole !== "admin") {
-      toast.error("Only Root and Admins can broadcast in #admin-command.");
+    if (!canBroadcastInChannel) {
+      toast.error("You do not have broadcasting clearance in this channel.");
       return;
     }
 
@@ -238,14 +265,28 @@ export function StaffLiveChatHub({
 
   const pinnedMessages = messages.filter((m) => m.isPinned);
   const activeChannelMeta = STAFF_CHANNELS.find((c) => c.id === selectedChannel);
-  const canBroadcastInChannel =
-    selectedChannel !== "admin-command" || currentUserRole === "root" || currentUserRole === "admin";
+
+  // Helper for rendering channel icon
+  const getChannelIcon = (chId: StaffChatChannel, isSelected: boolean) => {
+    if (chId === "admin_command" || chId === "admin-command") {
+      return <Lock className={`w-3.5 h-3.5 shrink-0 ${isSelected ? "text-nova-flare" : "text-gray-500"}`} />;
+    }
+    if (chId.startsWith("announcements_")) {
+      return <Megaphone className={`w-3.5 h-3.5 shrink-0 ${isSelected ? "text-amber-400" : "text-amber-500/70"}`} />;
+    }
+    if (chId.startsWith("moderator_") || chId === "moderation-ops") {
+      return <Shield className={`w-3.5 h-3.5 shrink-0 ${isSelected ? "text-amber-400" : "text-amber-500/70"}`} />;
+    }
+    if (chId.startsWith("support_") || chId === "support-tickets") {
+      return <Headphones className={`w-3.5 h-3.5 shrink-0 ${isSelected ? "text-rup-emerald" : "text-rup-emerald/70"}`} />;
+    }
+    return <Sparkles className={`w-3.5 h-3.5 shrink-0 ${isSelected ? "text-plasma-cyan" : "text-gray-400"}`} />;
+  };
 
   return (
     <div
-      className={`flex flex-col bg-void-surface border border-void-border rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md ${
-        embedded ? "h-[700px] w-full" : "h-[750px] max-w-6xl mx-auto"
-      }`}
+      className={`flex flex-col bg-void-surface border border-void-border rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md ${embedded ? "h-[700px] w-full" : "h-[750px] max-w-6xl mx-auto"
+        }`}
     >
       {/* Top Bar Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-void-deep/90 border-b border-void-border">
@@ -282,39 +323,36 @@ export function StaffLiveChatHub({
       {/* Main Workspace Layout */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar: Channels */}
-        <div className="w-56 sm:w-64 bg-void-deep/70 border-r border-void-border flex flex-col p-3 space-y-1 shrink-0">
+        <div className="w-60 sm:w-68 bg-void-deep/70 border-r border-void-border flex flex-col p-3 space-y-1 shrink-0 overflow-y-auto">
           <div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
             <Hash className="w-3.5 h-3.5 text-plasma-cyan" />
-            <span>Dedicated Channels</span>
+            <span>Staff Channels</span>
           </div>
 
-          {STAFF_CHANNELS.map((ch) => {
+          {visibleChannels.map((ch) => {
             const isSelected = selectedChannel === ch.id;
-            const isLockChannel = ch.id === "admin-command";
+            const isWritable = canWriteChannel(ch.id, currentUserRole);
 
             return (
               <button
                 key={ch.id}
                 type="button"
                 onClick={() => handleSelectChannel(ch.id)}
-                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between group cursor-pointer ${
-                  isSelected
+                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between group cursor-pointer ${isSelected
                     ? "bg-plasma-cyan/15 text-plasma-cyan border border-plasma-cyan/40 shadow-[0_0_15px_rgba(0,229,255,0.15)]"
                     : "text-gray-400 hover:text-white hover:bg-void-surface border border-transparent"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-2 truncate">
-                  {isLockChannel ? (
-                    <Lock className={`w-3.5 h-3.5 shrink-0 ${isSelected ? "text-nova-flare" : "text-gray-500"}`} />
-                  ) : ch.id === "moderation-ops" ? (
-                    <Shield className="w-3.5 h-3.5 shrink-0 text-amber-400" />
-                  ) : ch.id === "support-tickets" ? (
-                    <Headphones className="w-3.5 h-3.5 shrink-0 text-rup-emerald" />
-                  ) : (
-                    <Sparkles className="w-3.5 h-3.5 shrink-0 text-plasma-cyan" />
-                  )}
+                  {getChannelIcon(ch.id, isSelected)}
                   <span className="truncate">{ch.name}</span>
                 </div>
+
+                {!isWritable && (
+                  <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-void-deep border border-void-border text-gray-500 group-hover:text-gray-400 shrink-0">
+                    RO
+                  </span>
+                )}
               </button>
             );
           })}
@@ -344,9 +382,16 @@ export function StaffLiveChatHub({
                 — {activeChannelMeta?.description}
               </span>
             </div>
-            <span className="text-[10px] font-mono text-gray-500">
-              {messages.length} transmissions
-            </span>
+            <div className="flex items-center gap-2">
+              {!canBroadcastInChannel && (
+                <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                  Read Only
+                </span>
+              )}
+              <span className="text-[10px] font-mono text-gray-500">
+                {messages.length} transmissions
+              </span>
+            </div>
           </div>
 
           {/* Pinned Announcements Bar */}
@@ -403,13 +448,12 @@ export function StaffLiveChatHub({
                 return (
                   <div
                     key={msg.id}
-                    className={`group rounded-2xl p-4 transition-all border ${
-                      isOptimistic
+                    className={`group rounded-2xl p-4 transition-all border ${isOptimistic
                         ? "bg-plasma-cyan/5 border-plasma-cyan/40 opacity-80 animate-pulse"
                         : msg.isPinned
-                        ? "bg-amber-500/5 border-amber-500/30"
-                        : "bg-void-surface/70 border-void-border hover:border-void-border/90"
-                    }`}
+                          ? "bg-amber-500/5 border-amber-500/30"
+                          : "bg-void-surface/70 border-void-border hover:border-void-border/90"
+                      }`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-2.5 flex-wrap">
@@ -459,11 +503,10 @@ export function StaffLiveChatHub({
                               onClick={() => handleTogglePin(msg.id)}
                               disabled={isPending}
                               title={msg.isPinned ? "Unpin message" : "Pin message"}
-                              className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
-                                msg.isPinned
+                              className={`p-1.5 rounded-lg border transition-all cursor-pointer ${msg.isPinned
                                   ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
                                   : "bg-void-deep border-void-border text-gray-400 hover:text-white"
-                              }`}
+                                }`}
                             >
                               <Pin className="w-3 h-3" />
                             </button>
@@ -496,10 +539,15 @@ export function StaffLiveChatHub({
           {/* Bottom Bar: Input or Restriction Banner */}
           <div className="p-4 bg-void-surface/90 border-t border-void-border">
             {!canBroadcastInChannel ? (
-              <div className="p-3 rounded-xl bg-nova-flare/10 border border-nova-flare/30 flex items-center gap-2.5 text-xs text-nova-flare">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>
-                  <strong>Broadcasting Restricted:</strong> Only Root Administrators and Admins can publish in #admin-command.
+              <div className="p-3.5 rounded-xl bg-void-surface/90 border border-void-border flex items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2.5 text-gray-400">
+                  <Lock className="w-4 h-4 text-plasma-cyan shrink-0" />
+                  <span>
+                    <strong className="text-white">Read-Only Channel:</strong> You have viewing clearance. Broadcasting is restricted by operational role hierarchy.
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-plasma-cyan/10 text-plasma-cyan border border-plasma-cyan/30 shrink-0">
+                  MONITORED
                 </span>
               </div>
             ) : (

@@ -48,7 +48,7 @@ export async function submitOrgReview(
     const rateCheck = await checkRateLimit(user.id, RATE_LIMITS.MUTATION);
     if (!rateCheck.success) {
       return {
-        error: rateCheck.error || "Rate limit exceeded. Please wait before submitting another review.",
+        error: "RATE_LIMIT_EXCEEDED",
       };
     }
 

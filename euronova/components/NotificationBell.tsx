@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useTransition, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
+import { Link } from "@/i18n/routing";
 import { 
   Bell, 
   CheckCheck, 
@@ -13,7 +14,8 @@ import {
   Radio, 
   Compass, 
   ExternalLink,
-  Loader2 
+  Loader2,
+  Headphones
 } from "lucide-react";
 import { useTranslations, useFormatter } from "next-intl";
 import { createClient } from "@/utils/supabase/client";
@@ -32,6 +34,7 @@ const subscribe = () => () => {};
 export function NotificationBell() {
   const router = useRouter();
   const t = useTranslations("Notifications");
+  const tSupport = useTranslations("SupportHub");
   const format = useFormatter();
   const isMounted = useSyncExternalStore(subscribe, () => true, () => false);
 
@@ -259,6 +262,16 @@ export function NotificationBell() {
               >
                 <Settings className="w-4 h-4" />
               </button>
+
+              <Link
+                href="/dashboard/support"
+                onClick={() => setIsOpen(false)}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-plasma-cyan hover:bg-void-deep border border-transparent hover:border-void-border transition-colors cursor-pointer flex items-center justify-center"
+                title={tSupport("hubTitle")}
+                aria-label={tSupport("hubTitle")}
+              >
+                <Headphones className="w-4 h-4" />
+              </Link>
             </div>
           </div>
 

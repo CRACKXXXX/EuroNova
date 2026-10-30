@@ -22,9 +22,7 @@ export async function login(prevState: unknown, formData: FormData) {
   const clientIp = await getClientIp();
   const rateCheck = await checkRateLimit(`login_${clientIp}`, RATE_LIMITS.AUTH);
   if (!rateCheck.success) {
-    return {
-      error: rateCheck.error || "Too many login attempts. Please wait 60 seconds before trying again.",
-    };
+    return { error: "RATE_LIMIT_EXCEEDED" };
   }
 
   try {
@@ -70,9 +68,7 @@ export async function signup(prevState: unknown, formData: FormData) {
   const clientIp = await getClientIp();
   const rateCheck = await checkRateLimit(`signup_${clientIp}`, RATE_LIMITS.AUTH);
   if (!rateCheck.success) {
-    return {
-      error: rateCheck.error || "Too many registration attempts. Please wait before trying again.",
-    };
+    return { error: "RATE_LIMIT_EXCEEDED" };
   }
 
   // Auditable Consent Traceability (Art. 7 GDPR)

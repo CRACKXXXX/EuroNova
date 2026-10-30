@@ -21,6 +21,7 @@ interface SimpleTemplateOption {
 
 export default function NewProjectPage() {
   const t = useTranslations("NewProject");
+  const tErrors = useTranslations("Errors");
   const tTypes = useTranslations("ProjectTypes");
   const router = useRouter();
   
@@ -94,7 +95,12 @@ export default function NewProjectPage() {
     const result = await createProject(formData);
 
     if (result?.error) {
-      setErrorMessage(result.error);
+      if (result.error === "RATE_LIMIT_EXCEEDED") {
+        toast.warning(tErrors("rateLimitExceeded"), { id: "rate-limit-toast", icon: "⏳" });
+        setErrorMessage(tErrors("rateLimitExceeded"));
+      } else {
+        setErrorMessage(result.error);
+      }
       setIsPending(false);
     } else {
       router.push("/dashboard/projects");

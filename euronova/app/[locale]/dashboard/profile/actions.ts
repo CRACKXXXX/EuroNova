@@ -402,7 +402,7 @@ export async function updateProfile(
     // Rate Limiting Gate (Sliding Window per User)
     const rateCheck = await checkRateLimit(user.id, RATE_LIMITS.MUTATION);
     if (!rateCheck.success) {
-      return { error: rateCheck.error || "Demasiadas peticiones de actualización. Por favor, espera." };
+      return { error: "RATE_LIMIT_EXCEEDED" };
     }
 
     const role = formData.get("role")?.toString();

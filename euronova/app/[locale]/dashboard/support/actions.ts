@@ -1,10 +1,37 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { revalidatePath } from "next/cache";
 import nodemailer from "nodemailer";
 import { TicketSubmissionSchema } from "@/lib/schemas";
 import { stripDangerousHtml } from "@/lib/securitySanitizer";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimiter";
+
+export interface TicketReplyItem {
+  id: string;
+  ticket_id: string;
+  sender_id: string | null;
+  sender_role: "user" | "support" | "moderator" | "admin" | "root";
+  sender_name?: string | null;
+  message: string;
+  created_at: string;
+}
+
+export interface UserTicketItem {
+  id: string;
+  user_id: string | null;
+  email: string;
+  phone: string | null;
+  subject: string;
+  reason: string;
+  content: string;
+  status: "open" | "pending" | "in_progress" | "resolved";
+  created_at: string;
+  updated_at?: string | null;
+  resolved_at?: string | null;
+  resolution_action?: string | null;
+  replies?: TicketReplyItem[];
+}
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -25,10 +52,8 @@ export async function createTicket(prevState: unknown, formData: FormData) {
   // 1. Rate limiting check per user
   const rateCheck = await checkRateLimit(`ticket_${user.id}`, RATE_LIMITS.TICKET);
   if (!rateCheck.success) {
-    return {
-      error: rateCheck.error || "Demasiados tickets enviados. Por favor, espera antes de enviar otro.",
-    };
-  }
+      return { error: "RATE_LIMIT_EXCEEDED" };
+    }
 
   const rawPayload = {
     email: formData.get("email") as string,
@@ -143,4 +168,162 @@ export async function createTicket(prevState: unknown, formData: FormData) {
   }
 
   return { success: "¡Ticket enviado con éxito! Nuestro equipo te contactará pronto." };
+}
+
+/**
+ * Fetches the ticket history and message threads for the currently authenticated user.
+ */
+export async function getUserTickets(): Promise<{ tickets: UserTicketItem[]; error?: string }> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { tickets: [], error: "Debes estar autenticado para ver tus tickets." };
+    }
+
+    const { data: ticketsData, error: ticketsErr } = await supabase
+      .from("support_tickets")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (ticketsErr) {
+      console.error("getUserTickets error:", ticketsErr);
+      return { tickets: [], error: "Error al recuperar tus tickets de soporte." };
+    }
+
+    const tickets = (ticketsData as UserTicketItem[]) || [];
+    if (tickets.length === 0) {
+      return { tickets: [] };
+    }
+
+    const ticketIds = tickets.map((t) => t.id);
+
+    // Fetch replies for user's tickets
+    const { data: repliesData, error: repliesErr } = await supabase
+      .from("support_ticket_replies")
+      .select("*")
+      .in("ticket_id", ticketIds)
+      .order("created_at", { ascending: true });
+
+    if (repliesErr) {
+      console.warn("Could not fetch support_ticket_replies:", repliesErr.message);
+    }
+
+    const repliesByTicketId = new Map<string, TicketReplyItem[]>();
+    if (repliesData) {
+      for (const reply of repliesData as TicketReplyItem[]) {
+        const list = repliesByTicketId.get(reply.ticket_id) || [];
+        list.push(reply);
+        repliesByTicketId.set(reply.ticket_id, list);
+      }
+    }
+
+    const ticketsWithReplies = tickets.map((t) => ({
+      ...t,
+      replies: repliesByTicketId.get(t.id) || [],
+    }));
+
+    return { tickets: ticketsWithReplies };
+  } catch (err: unknown) {
+    console.error("getUserTickets unhandled error:", err);
+    return { tickets: [], error: err instanceof Error ? err.message : "Error inesperado al cargar tickets." };
+  }
+}
+
+/**
+ * Submits a new reply to an existing support ticket from the user.
+ */
+export async function submitTicketReply(
+  ticketId: string,
+  message: string
+): Promise<{ success?: boolean; reply?: TicketReplyItem; error?: string }> {
+  try {
+    if (!ticketId || !message || !message.trim()) {
+      return { error: "El mensaje no puede estar vacío." };
+    }
+
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { error: "Debes iniciar sesión para responder." };
+    }
+
+    // Rate limit check
+    const rateCheck = await checkRateLimit(`ticket_reply_${user.id}`, RATE_LIMITS.TICKET_REPLY);
+    if (!rateCheck.success) {
+      return { error: "RATE_LIMIT_EXCEEDED" };
+    }
+
+    // Sanitize message
+    const cleanMessage = stripDangerousHtml(message.trim(), 4000);
+    if (cleanMessage.length < 2) {
+      return { error: "El mensaje debe contener al menos 2 caracteres." };
+    }
+
+    // Verify ticket ownership
+    const { data: ticket, error: ticketErr } = await supabase
+      .from("support_tickets")
+      .select("id, user_id, status, subject, email")
+      .eq("id", ticketId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (ticketErr || !ticket) {
+      return { error: "Ticket no encontrado o no tienes permiso para acceder a él." };
+    }
+
+    // Insert reply
+    const { data: insertedReply, error: insertErr } = await supabase
+      .from("support_ticket_replies")
+      .insert({
+        ticket_id: ticketId,
+        sender_id: user.id,
+        sender_role: "user",
+        sender_name: user.email?.split("@")[0] || "User",
+        message: cleanMessage,
+      })
+      .select("*")
+      .single();
+
+    if (insertErr) {
+      console.error("Error inserting ticket reply:", insertErr);
+      return { error: "No se pudo registrar tu respuesta. Inténtalo de nuevo." };
+    }
+
+    // Update ticket updated_at and reopen if resolved
+    const updates: { updated_at: string; status?: "open" } = {
+      updated_at: new Date().toISOString(),
+    };
+    if (ticket.status === "resolved") {
+      updates.status = "open";
+    }
+
+    await supabase
+      .from("support_tickets")
+      .update(updates)
+      .eq("id", ticketId);
+
+    // Alert staff via critical support alert
+    try {
+      const { sendCriticalSupportAlert } = await import("@/lib/externalAlerts");
+      void sendCriticalSupportAlert({
+        ticketId: ticket.id,
+        userEmail: ticket.email,
+        subject: `[User Reply] ${ticket.subject}`,
+        reason: "user_ticket_followup",
+        content: cleanMessage,
+      });
+    } catch (err) {
+      console.warn("Could not dispatch staff alert for ticket reply:", err);
+    }
+
+    revalidatePath("/dashboard/support");
+    return { success: true, reply: insertedReply as TicketReplyItem };
+  } catch (err: unknown) {
+    console.error("submitTicketReply error:", err);
+    return { error: err instanceof Error ? err.message : "Error inesperado al enviar la respuesta." };
+  }
 }
