@@ -247,7 +247,7 @@ export function DistanceCalculator({
           <span className="text-[10px] text-gray-400 uppercase font-semibold tracking-wider">
             Origin
           </span>
-          <span className="text-xs font-bold text-white leading-snug break-words max-w-full block text-center" title={originCountryObj?.name || normalizedOrigin}>
+          <span className="text-xs font-bold text-white leading-snug break-words max-w-full block text-center">
             {originCountryObj?.name || normalizedOrigin}
           </span>
         </div>
@@ -273,7 +273,7 @@ export function DistanceCalculator({
           <span className="text-[10px] text-gray-400 uppercase font-semibold tracking-wider">
             {t("destinationLabel")}
           </span>
-          <span className="text-xs font-bold text-white leading-snug break-words max-w-full block text-center" title={destCountryObj?.name || normalizedDest}>
+          <span className="text-xs font-bold text-white leading-snug break-words max-w-full block text-center">
             {destCountryObj?.name || normalizedDest}
           </span>
         </div>

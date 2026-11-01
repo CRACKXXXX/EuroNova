@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Check, ChevronDown, Search, X, Tag } from "lucide-react";
-import { PROJECT_THEMES, ERASMUS_THEMES, type ProjectThemeId } from "@/lib/constants/themes";
+import { PROJECT_THEMES, ERASMUS_THEMES } from "@/lib/constants/themes";
 import { useTranslations } from "next-intl";
 
 interface MultiSelectThemeProps {
@@ -27,14 +27,18 @@ export function MultiSelectTheme({
   const tCommon = useTranslations("Common");
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
         setSearchQuery("");
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, []);
 
   useEffect(() => {
@@ -54,47 +58,49 @@ export function MultiSelectTheme({
     }
   };
 
-  // Canonical themes list
-  const canonicalThemes = useMemo(() => {
-    return PROJECT_THEMES.map((t) => ({
-      id: t.id,
-      label: tThemes.has(t.labelKey) ? tThemes(t.labelKey) : t.id,
-      isCanonical: true,
-    }));
-  }, [tThemes]);
+  // Cohesive unified themes list (deduplicated canonical + additional themes, sorted alphabetically)
+  const unifiedThemes = useMemo(() => {
+    const seen = new Set<string>();
+    const list: { id: string; label: string }[] = [];
 
-  // Additional Erasmus themes list (excluding canonical duplicates)
-  const additionalThemes = useMemo(() => {
-    const canonicalSet = new Set(PROJECT_THEMES.map((t) => t.id));
-    return ERASMUS_THEMES
-      .filter((th) => !canonicalSet.has(th as ProjectThemeId))
-      .map((th) => ({
-        id: th,
-        label: tThemes.has(th) ? tThemes(th) : th,
-        isCanonical: false,
-      }));
+    // 1. Add canonical project themes
+    for (const t of PROJECT_THEMES) {
+      if (!seen.has(t.id)) {
+        seen.add(t.id);
+        list.push({
+          id: t.id,
+          label: tThemes.has(t.labelKey) ? tThemes(t.labelKey) : t.id,
+        });
+      }
+    }
+
+    // 2. Add additional Erasmus+ themes
+    for (const th of ERASMUS_THEMES) {
+      if (!seen.has(th)) {
+        seen.add(th);
+        list.push({
+          id: th,
+          label: tThemes.has(th) ? tThemes(th) : th,
+        });
+      }
+    }
+
+    // Alphabetical sort by localized label for seamless browsing
+    return list.sort((a, b) => a.label.localeCompare(b.label));
   }, [tThemes]);
 
   // Filtered by internal search query
-  const filteredCanonical = useMemo(() => {
-    if (!searchQuery.trim()) return canonicalThemes;
+  const filteredThemes = useMemo(() => {
+    if (!searchQuery.trim()) return unifiedThemes;
     const q = searchQuery.toLowerCase();
-    return canonicalThemes.filter(
+    return unifiedThemes.filter(
       (item) => item.label.toLowerCase().includes(q) || item.id.toLowerCase().includes(q)
     );
-  }, [canonicalThemes, searchQuery]);
-
-  const filteredAdditional = useMemo(() => {
-    if (!searchQuery.trim()) return additionalThemes;
-    const q = searchQuery.toLowerCase();
-    return additionalThemes.filter(
-      (item) => item.label.toLowerCase().includes(q) || item.id.toLowerCase().includes(q)
-    );
-  }, [additionalThemes, searchQuery]);
+  }, [unifiedThemes, searchQuery]);
 
   const getThemeLabel = (themeId: string) => {
-    const canonical = canonicalThemes.find((ct) => ct.id === themeId);
-    if (canonical) return canonical.label;
+    const found = unifiedThemes.find((ut) => ut.id === themeId);
+    if (found) return found.label;
     if (tThemes.has(themeId)) return tThemes(themeId);
     return themeId;
   };
@@ -125,7 +131,7 @@ export function MultiSelectTheme({
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-label={placeholder}
-        className="w-full min-h-[44px] bg-void-surface border border-void-border rounded-xl px-4 py-2.5 text-sm text-white focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none focus:border-plasma-cyan transition-all cursor-pointer flex justify-between items-center text-left"
+        className="w-full min-h-[44px] bg-void-surface border border-void-border rounded-xl px-4 py-2.5 text-sm text-white focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none focus:border-plasma-cyan transition-all cursor-pointer flex justify-between items-center text-left touch-manipulation"
       >
         <span className="truncate pr-3 text-gray-300 flex items-center gap-2">
           <Tag className="w-4 h-4 text-plasma-cyan shrink-0" />
@@ -166,7 +172,7 @@ export function MultiSelectTheme({
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white cursor-pointer"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white cursor-pointer touch-manipulation"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -174,99 +180,44 @@ export function MultiSelectTheme({
             </div>
           </div>
 
-          {/* Scrollable list of categories */}
-          <div className="overflow-y-auto custom-scrollbar p-1.5 space-y-2 max-h-60">
-            {/* Core Canonical Categories */}
-            {filteredCanonical.length > 0 && (
-              <div>
-                <div className="px-2.5 py-1 text-[10px] font-bold text-plasma-cyan uppercase tracking-wider">
-                  {tSidebar("themes")} ({filteredCanonical.length})
-                </div>
-                <div className="space-y-0.5">
-                  {filteredCanonical.map((theme) => {
-                    const isSelected = selected.includes(theme.id);
-                    return (
-                      <div
-                        key={theme.id}
-                        role="option"
-                        aria-selected={isSelected}
-                        tabIndex={0}
-                        onClick={() => toggleTheme(theme.id)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            toggleTheme(theme.id);
-                          }
-                        }}
-                        className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-colors text-xs ${
-                          isSelected
-                            ? "bg-plasma-cyan/15 text-white font-semibold"
-                            : "text-gray-300 hover:bg-void-deep hover:text-white"
-                        }`}
-                      >
-                        <div
-                          className={`w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0 ${
-                            isSelected
-                              ? "bg-plasma-cyan border-plasma-cyan text-void-deep font-bold"
-                              : "border-gray-500"
-                          }`}
-                        >
-                          {isSelected && <Check className="w-3 h-3" />}
-                        </div>
-                        <span className="truncate">{theme.label}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Additional Erasmus+ Themes */}
-            {filteredAdditional.length > 0 && (
-              <div className="pt-1 border-t border-void-border/60">
-                <div className="px-2.5 py-1 text-[10px] font-bold text-hyper-violet uppercase tracking-wider">
-                  {tSidebar("addCustomTheme")} ({filteredAdditional.length})
-                </div>
-                <div className="space-y-0.5">
-                  {filteredAdditional.map((theme) => {
-                    const isSelected = selected.includes(theme.id);
-                    return (
-                      <div
-                        key={theme.id}
-                        role="option"
-                        aria-selected={isSelected}
-                        tabIndex={0}
-                        onClick={() => toggleTheme(theme.id)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            toggleTheme(theme.id);
-                          }
-                        }}
-                        className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-colors text-xs ${
-                          isSelected
-                            ? "bg-hyper-violet/20 text-white font-semibold"
-                            : "text-gray-300 hover:bg-void-deep hover:text-white"
-                        }`}
-                      >
-                        <div
-                          className={`w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0 ${
-                            isSelected
-                              ? "bg-hyper-violet border-hyper-violet text-white font-bold"
-                              : "border-gray-500"
-                          }`}
-                        >
-                          {isSelected && <Check className="w-3 h-3" />}
-                        </div>
-                        <span className="truncate">{theme.label}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {filteredCanonical.length === 0 && filteredAdditional.length === 0 && (
+          {/* Unified Scrollable Cohesive Theme List */}
+          <div className="overflow-y-auto custom-scrollbar p-1.5 space-y-0.5 max-h-60">
+            {filteredThemes.length > 0 ? (
+              filteredThemes.map((theme) => {
+                const isSelected = selected.includes(theme.id);
+                return (
+                  <div
+                    key={theme.id}
+                    role="option"
+                    aria-selected={isSelected}
+                    tabIndex={0}
+                    onClick={() => toggleTheme(theme.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggleTheme(theme.id);
+                      }
+                    }}
+                    className={`flex items-center gap-2.5 px-3 py-2 min-h-[38px] rounded-lg cursor-pointer transition-colors text-xs select-none touch-manipulation ${
+                      isSelected
+                        ? "bg-plasma-cyan/15 text-white font-semibold"
+                        : "text-gray-300 hover:bg-void-deep hover:text-white active:bg-void-deep"
+                    }`}
+                  >
+                    <div
+                      className={`w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0 ${
+                        isSelected
+                          ? "bg-plasma-cyan border-plasma-cyan text-void-deep font-bold"
+                          : "border-gray-500"
+                      }`}
+                    >
+                      {isSelected && <Check className="w-3 h-3" />}
+                    </div>
+                    <span className="truncate">{theme.label}</span>
+                  </div>
+                );
+              })
+            ) : (
               <div className="p-4 text-center text-xs text-gray-500">
                 {tCommon("noOptions")}
               </div>
@@ -277,3 +228,5 @@ export function MultiSelectTheme({
     </div>
   );
 }
+
+export default MultiSelectTheme;

@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { AvatarFallback } from "@/components/AvatarFallback";
 import {
   Lock,
   PlusCircle,
@@ -144,7 +145,16 @@ export function ForumThreadList({
                 </p>
 
                 <div className="flex items-center gap-3 text-[11px] text-gray-500 pt-1">
-                  <span className="text-gray-300 font-medium">{thread.author_name}</span>
+                  <div className="flex items-center gap-1.5">
+                    <AvatarFallback
+                      src={thread.author_avatar}
+                      userId={thread.user_id}
+                      name={thread.author_name}
+                      sizeClassName="w-5 h-5"
+                      className="rounded-md shrink-0"
+                    />
+                    <span className="text-gray-300 font-medium">{thread.author_name}</span>
+                  </div>
                   <span>&bull;</span>
                   <span>Last active {formatRelativeTime(thread.last_activity_at)}</span>
                 </div>

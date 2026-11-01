@@ -1,10 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useState, useRef } from "react";
 import Link from "next/link";
 import { ReportUserButton } from "@/components/ReportUserButton";
+import { AvatarFallback } from "@/components/AvatarFallback";
 import { MUTE_DURATION_OPTIONS } from "@/lib/moderationShield";
 import { type MuteDuration } from "@/actions/globalForum";
+import { toast } from "sonner";
 import {
   ArrowLeft,
   Pin,
@@ -25,6 +27,7 @@ import {
   UserCheck,
   Send,
   Zap,
+  Paperclip,
 } from "lucide-react";
 import { calculateTrustMultiplierXp } from "@/lib/gamification";
 import {
@@ -131,6 +134,60 @@ export function ForumThreadDetail({
     currentUserId && activeThread && (currentUserId === activeThread.user_id || isAdmin)
   );
 
+  const isStaff =
+    userEligibility?.userRole === "root" ||
+    userEligibility?.userRole === "admin" ||
+    userEligibility?.userRole === "moderator" ||
+    userEligibility?.userRole === "support" ||
+    userEligibility?.role === "admin";
+  const userLevel = Number(userEligibility?.level || 0);
+  const canUpload = isStaff || userLevel >= 10;
+
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleReplySubmit = (e: React.FormEvent) => {
+    setAttachedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    onSubmitReply(e);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error(t("fileSizeExceeded"));
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    const allowed = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
+    if (!allowed.includes(file.type)) {
+      toast.error(t("attachFile"));
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    setAttachedFile(file);
+    const tag = `[Attachment: ${file.name}]`;
+    if (!replyContent.includes(tag)) {
+      setReplyContent(replyContent ? `${replyContent}\n\n📎 ${tag}` : `📎 ${tag}`);
+    }
+  };
+
+  const handleRemoveAttachment = () => {
+    if (attachedFile) {
+      const tag = `[Attachment: ${attachedFile.name}]`;
+      setReplyContent(
+        replyContent
+          .replace(`\n\n📎 ${tag}`, "")
+          .replace(`📎 ${tag}`, "")
+          .replace(tag, "")
+          .trim()
+      );
+    }
+    setAttachedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       <div className="flex items-center justify-between gap-4">
@@ -155,9 +212,13 @@ export function ForumThreadDetail({
       <div className="bg-void-surface/90 border border-void-border rounded-3xl p-6 sm:p-8 backdrop-blur-xl space-y-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-plasma-cyan/15 border border-plasma-cyan/30 flex items-center justify-center text-plasma-cyan font-bold text-base shrink-0 shadow-[0_0_15px_rgba(0,229,255,0.2)]">
-              {activeThread.author_name.charAt(0).toUpperCase()}
-            </div>
+            <AvatarFallback
+              src={activeThread.author_avatar}
+              userId={activeThread.user_id}
+              name={activeThread.author_name}
+              sizeClassName="w-11 h-11"
+              className="rounded-2xl border-plasma-cyan/30 shadow-[0_0_15px_rgba(0,229,255,0.2)] shrink-0"
+            />
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-white">
@@ -351,9 +412,13 @@ export function ForumThreadDetail({
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-void-deep border border-void-border flex items-center justify-center text-xs font-bold text-gray-300">
-                        {post.author_name.charAt(0).toUpperCase()}
-                      </div>
+                      <AvatarFallback
+                        src={post.author_avatar}
+                        userId={post.user_id}
+                        name={post.author_name}
+                        sizeClassName="w-8 h-8"
+                        className="rounded-xl border-void-border shrink-0"
+                      />
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-bold text-white">
@@ -648,7 +713,7 @@ export function ForumThreadDetail({
           )
         ) : (
           /* ACTIVE REPLY FORM */
-          <form onSubmit={onSubmitReply} className="space-y-3">
+          <form onSubmit={handleReplySubmit} className="space-y-3">
             <div className="relative">
               <textarea
                 value={replyContent}
@@ -660,8 +725,59 @@ export function ForumThreadDetail({
                 className="w-full bg-void-surface border border-void-border rounded-2xl p-4 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-plasma-cyan transition-colors resize-none leading-relaxed"
               />
             </div>
+
+            {/* Attachment Preview Chip */}
+            {attachedFile && (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-void-surface border border-plasma-cyan/40 text-xs text-plasma-cyan w-fit animate-in fade-in duration-150">
+                <Paperclip className="w-3.5 h-3.5 text-plasma-cyan shrink-0" />
+                <span className="font-medium text-white truncate max-w-xs">{attachedFile.name}</span>
+                <span className="text-[10px] text-gray-400 font-mono">
+                  ({(attachedFile.size / 1024).toFixed(0)} KB)
+                </span>
+                <button
+                  type="button"
+                  onClick={handleRemoveAttachment}
+                  className="p-0.5 rounded text-gray-400 hover:text-nova-flare transition-colors cursor-pointer"
+                  title={t("removeAttachment")}
+                  aria-label={t("removeAttachment")}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3 text-[11px] text-gray-500 flex-wrap">
+                {/* Level-Gated Upload Button */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileSelect}
+                  accept="image/png,image/jpeg,image/webp,application/pdf"
+                  className="hidden"
+                />
+                {canUpload ? (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    title={t("attachFile")}
+                    aria-label={t("attachFile")}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-void-surface border border-void-border text-gray-300 hover:text-white hover:border-plasma-cyan/50 text-xs font-medium transition-all cursor-pointer"
+                  >
+                    <Paperclip className="w-3.5 h-3.5 text-plasma-cyan" />
+                    <span>{t("attachFile")}</span>
+                  </button>
+                ) : (
+                  <div
+                    title={t("uploadsUnlockLevel10")}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-void-surface/50 border border-void-border/50 text-gray-500 text-xs font-medium cursor-not-allowed opacity-60"
+                  >
+                    <Lock className="w-3.5 h-3.5 text-nova-flare" />
+                    <span>{t("uploadsUnlockLevel10")}</span>
+                  </div>
+                )}
+
+                <span className="hidden sm:inline text-void-border">•</span>
                 <span className="flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5 text-plasma-cyan" />
                   <span>{t("protectedByAutomod")}</span>
@@ -669,7 +785,9 @@ export function ForumThreadDetail({
                 <span className="hidden sm:inline text-void-border">•</span>
                 <span className="text-plasma-cyan font-bold flex items-center gap-1">
                   <Zap className="w-3 h-3 text-plasma-cyan" />
-                  <span>{t("replyBonusPrefix")} +{calculateTrustMultiplierXp(30, userEligibility.trustScore ?? 30)} XP</span>
+                  <span>
+                    {t("replyBonusPrefix")} +{calculateTrustMultiplierXp(30, userEligibility.trustScore ?? 30)} XP
+                  </span>
                 </span>
               </div>
               <button

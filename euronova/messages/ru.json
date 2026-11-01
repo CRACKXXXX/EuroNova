@@ -674,7 +674,15 @@
     "reasonApplySupport": "Подать заявку на роль поддержки (Авангард Уровня 10+)",
     "reasonSurveyModeration": "Модерация опросов и голосований сообщества",
     "reasonTrustScoreDispute": "Споры по рейтингу доверия / телеметрии XP",
-    "reasonScraperIssue": "Проблемы с индексацией авто-парсера проектов"
+    "reasonScraperIssue": "Проблемы с индексацией авто-парсера проектов",
+    "preferredContactMethod": "Preferred Contact Method *",
+    "contactMethodWebsite": "Website (Orbital Hub)",
+    "contactMethodEmail": "Email Address",
+    "contactMethodWhatsapp": "WhatsApp Direct",
+    "fasterResolutionTip": "For faster resolution, we recommend using the Website.",
+    "phoneWhatsappRequired": "Phone Number with Country Code *",
+    "phoneWhatsappPlaceholder": "+34 600 000 000 (Required for WhatsApp)",
+    "applySupportPlaceholder": "Describe your European mobility background, countries visited, spoken languages, and why you wish to assist fellow volunteers on EuroNova..."
   },
   "OrgFilters": {
     "searchPlaceholder": "Поиск организаций по названию...",
@@ -1312,13 +1320,13 @@
     "antiScamScore": "Оценка безопасности 99.4%",
     "peerReviews": "Оценки сообщества",
     "levelSubtitle": "Повышайте уровень, участвуя в обсуждениях, подавая заявки и делясь опытом.",
-    "dailyBonusToast": "Ежедневный бонус орбитальных исследований! Получено +{gained} XP ({total}/10 дневной лимит).",
+    "dailyBonusToast": "Ежедневный бонус орбитальных исследований! Получено +{gained} XP ({total}/{max} дневной лимит).",
     "levelUpToast": "ПОВЫШЕНИЕ УРОВНЯ! Вы достигли Уровня {level}!",
     "tierFraction": "Ранг {current}/{total}",
     "tierN": "Ранг {number}",
     "currentRank": "Текущий ранг",
-    "viewProgression": "Показать галактическую систему прогрессии из 20 рангов",
-    "hideProgression": "Скрыть галактическую систему прогрессии из 20 рангов",
+    "viewProgression": "Показать галактическую систему прогрессии из 50 рангов",
+    "hideProgression": "Скрыть галактическую систему прогрессии из 50 рангов",
     "xpMultiplier": "Множитель XP за доверие",
     "xpBoostHighTrust": "⚡ Буст x1.5 XP (Высокое доверие)",
     "xpBoostGoodTrust": "⚡ Буст x1.25 XP",
@@ -1466,7 +1474,11 @@
     "warningSendError": "Не удалось отправить предупреждение.",
     "muteUserError": "Не удалось заглушить пользователя.",
     "warningIssuedSuccess": "Официальное предупреждение вынесено пользователю {name}.",
-    "userMutedSuccess": "{name} заглушен на {mins} минут."
+    "userMutedSuccess": "{name} заглушен на {mins} минут.",
+    "uploadsUnlockLevel10": "Загрузка файлов открывается на 10 уровне",
+    "attachFile": "Прикрепить изображение или документ (PNG, JPG, WEBP, PDF)",
+    "removeAttachment": "Удалить вложение",
+    "fileSizeExceeded": "Размер файла не должен превышать 10 МБ."
   },
   "ProjectTldr": {
     "badge": "Краткая суть ИИ",
@@ -1623,7 +1635,8 @@
     "digestLabel": "Код ошибки",
     "tryAgain": "Восстановить соединение",
     "returnHome": "Вернуться на главную",
-    "rateLimitExceeded": "Вы действуете слишком быстро. Пожалуйста, подождите немного и повторите попытку."
+    "rateLimitExceeded": "Вы действуете слишком быстро. Пожалуйста, подождите немного и повторите попытку.",
+    "authRequired": "Authentication required. Please sign in to continue."
   },
   "NotFound": {
     "badge": "КООРДИНАТЫ НЕДОСТУПНЫ",
@@ -1969,7 +1982,11 @@
     "replyBonusPrefix": "Награда за ответ:",
     "lockedLevel2Required": "Заблокировано (Требуется Уровень 2 / 100 XP)",
     "level2RequiredCreate": "Требуется Уровень 2: Необходимо набрать 100 XP для создания обсуждений.",
-    "level2RequiredReply": "Требуется Уровень 2: Необходимо набрать 100 XP для ответа на обсуждения."
+    "level2RequiredReply": "Требуется Уровень 2: Необходимо набрать 100 XP для ответа на обсуждения.",
+    "uploadsUnlockLevel10": "Загрузка файлов открывается на 10 уровне",
+    "attachFile": "Прикрепить изображение или документ (PNG, JPG, WEBP, PDF)",
+    "removeAttachment": "Удалить вложение",
+    "fileSizeExceeded": "Размер файла не должен превышать 10 МБ."
   },
   "Community": {
     "tabForum": "Глобальные форумы",
@@ -2157,7 +2174,22 @@
     "pressEnter": "Нажмите Enter для отправки",
     "pinMessage": "Закрепить сообщение",
     "unpinMessage": "Открепить сообщение",
-    "deleteMessage": "Удалить сообщение"
+    "deleteMessage": "Удалить сообщение",
+    "editMessage": "Edit message",
+    "replyMessage": "Reply",
+    "cancelReply": "Cancel reply",
+    "replyingTo": "Replying to",
+    "editingMessage": "Editing message",
+    "cancelEdit": "Cancel edit",
+    "editedTag": "(edited)",
+    "deletedMessage": "[This message was deleted]",
+    "saveChanges": "Save changes",
+    "cancel": "Cancel",
+    "escapeToCancel": "Esc to cancel",
+    "clickToJump": "Click to jump to message",
+    "attachFile": "Прикрепить изображение или документ (PNG, JPG, WEBP, PDF)",
+    "removeAttachment": "Удалить вложение",
+    "fileSizeExceeded": "Размер файла не должен превышать 10 МБ."
   },
   "CookieBanner": {
     "title": "Настройки конфиденциальности и файлов cookie",
@@ -2212,6 +2244,13 @@
     "repliesCount": "{count} ответов",
     "noRepliesYet": "Ожидается первый ответ от специалиста службы поддержки.",
     "hubTitle": "Центр поддержки",
-    "staffBadge": "Сотрудник"
+    "staffBadge": "Сотрудник",
+    "preferredContact": "Preferred Contact",
+    "methodWebsite": "Website",
+    "methodEmail": "Email",
+    "methodWhatsapp": "WhatsApp",
+    "replyFailed": "Could not submit your reply. Please try again.",
+    "ticketNotFound": "Ticket not found or you do not have permission to access it.",
+    "authRequired": "You must be signed in to perform this action."
   }
 }

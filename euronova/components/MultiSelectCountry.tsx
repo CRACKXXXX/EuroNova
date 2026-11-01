@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { Check, ChevronDown } from 'lucide-react';
+import { CosmicTooltip } from '@/components/CosmicTooltip';
 
 import { COUNTRIES } from '@/lib/constants/countries';
 
@@ -63,17 +64,17 @@ export function MultiSelectCountry({ selected, onChange, placeholder = "Select c
                     const c = COUNTRIES.find(x => x.code === code);
                     if (!c) return null;
                     return (
-                      <Image 
-                        key={code} 
-                        src={c.flagUrl} 
-                        alt={c.name} 
-                        width={20} 
-                        height={15} 
-                        unoptimized 
-                        style={{ width: "auto", height: "auto" }}
-                        className="w-5 h-auto rounded-[2px]" 
-                        title={c.name} 
-                      />
+                      <CosmicTooltip key={code} content={c.name} side="top">
+                        <Image 
+                          src={c.flagUrl} 
+                          alt={c.name} 
+                          width={20} 
+                          height={15} 
+                          unoptimized 
+                          style={{ width: "auto", height: "auto" }}
+                          className="w-5 h-auto rounded-[2px]" 
+                        />
+                      </CosmicTooltip>
                     );
                   })}
                 </span>

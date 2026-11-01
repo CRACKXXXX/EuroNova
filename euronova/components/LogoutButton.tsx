@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { logout } from "@/app/[locale]/login/actions";
 import { LogOut, Loader2, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { CosmicTooltip } from "@/components/CosmicTooltip";
 
 interface LogoutButtonProps {
   variant?: "icon" | "full";
@@ -46,34 +47,47 @@ export function LogoutButton({
     });
   };
 
+  const buttonElement = (
+    <button
+      type="button"
+      onClick={handleLogout}
+      disabled={isPending || showToast}
+      aria-label={t("logout")}
+      className={
+        className ||
+        (variant === "icon"
+          ? "p-2 min-w-[44px] min-h-[44px] rounded-lg bg-transparent border border-gray-600 text-gray-400 hover:border-nova-flare hover:text-nova-flare focus-visible:ring-2 focus-visible:ring-nova-flare focus-visible:outline-none transition-all duration-300 group cursor-pointer disabled:opacity-50 flex items-center justify-center"
+          : "flex items-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl bg-transparent border border-gray-600 text-gray-400 hover:border-nova-flare hover:text-nova-flare focus-visible:ring-2 focus-visible:ring-nova-flare focus-visible:outline-none text-sm font-semibold transition-all cursor-pointer group disabled:opacity-50")
+      }
+    >
+      {isPending || showToast ? (
+        <Loader2 className="w-4 h-4 animate-spin text-nova-flare" />
+      ) : (
+        <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform" />
+      )}
+      {variant === "full" && (
+        <span>
+          {isPending || showToast
+            ? tLogin("loggingOut")
+            : t("logout")}
+        </span>
+      )}
+    </button>
+  );
+
   return (
     <>
-      <button
-        type="button"
-        onClick={handleLogout}
-        disabled={isPending || showToast}
-        title={t("logout")}
-        aria-label={t("logout")}
-        className={
-          className ||
-          (variant === "icon"
-            ? "p-2 min-w-[44px] min-h-[44px] rounded-lg bg-transparent border border-gray-600 text-gray-400 hover:border-nova-flare hover:text-nova-flare focus-visible:ring-2 focus-visible:ring-nova-flare focus-visible:outline-none transition-all duration-300 group cursor-pointer disabled:opacity-50 flex items-center justify-center"
-            : "flex items-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl bg-transparent border border-gray-600 text-gray-400 hover:border-nova-flare hover:text-nova-flare focus-visible:ring-2 focus-visible:ring-nova-flare focus-visible:outline-none text-sm font-semibold transition-all cursor-pointer group disabled:opacity-50")
-        }
-      >
-        {isPending || showToast ? (
-          <Loader2 className="w-4 h-4 animate-spin text-nova-flare" />
-        ) : (
-          <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform" />
-        )}
-        {variant === "full" && (
-          <span>
-            {isPending || showToast
-              ? tLogin("loggingOut")
-              : t("logout")}
-          </span>
-        )}
-      </button>
+      {variant === "icon" ? (
+        <CosmicTooltip
+          content={t("logout")}
+          side="bottom"
+          disabled={isPending || showToast}
+        >
+          {buttonElement}
+        </CosmicTooltip>
+      ) : (
+        buttonElement
+      )}
 
       {/* Cosmic Glassmorphism Logout Toast */}
       {showToast && mounted && createPortal(

@@ -158,6 +158,14 @@ export interface StaffChatMessage {
   authorAvatar?: string | null;
   content: string;
   isPinned: boolean;
+  isEdited?: boolean;
+  replyToId?: string | null;
+  replyTo?: {
+    id: string;
+    authorName: string;
+    content: string;
+  } | null;
+  deletedAt?: string | null;
   createdAt: string;
   updatedAt?: string;
 }

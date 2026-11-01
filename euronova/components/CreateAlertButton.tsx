@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Bell, X, CheckCircle2, Sparkles, Filter } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
+import { CosmicTooltip } from "@/components/CosmicTooltip";
 
 const emptySubscribe = () => () => {};
 
@@ -63,17 +64,21 @@ export function CreateAlertButton({ className = "" }: { className?: string }) {
     });
   };
 
+  const alertTitle = safeT("createAlertTitle", "Create Mission Radar Alert");
+
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setIsOpen(true)}
-        className={`inline-flex items-center gap-2 px-3.5 py-2 min-h-[44px] rounded-xl border border-void-border bg-void-surface hover:border-plasma-cyan/50 text-gray-300 hover:text-white focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-all text-xs font-semibold shadow-sm cursor-pointer group ${className}`}
-        title={safeT("createAlertTitle", "Create Mission Radar Alert")}
-      >
-        <Bell className="w-4 h-4 text-plasma-cyan group-hover:scale-110 transition-transform" />
-        <span>{safeT("createAlert", "Create Alert")}</span>
-      </button>
+      <CosmicTooltip content={alertTitle} side="bottom" disabled={isOpen}>
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          aria-label={alertTitle}
+          className={`inline-flex items-center gap-2 px-3.5 py-2 min-h-[44px] rounded-xl border border-void-border bg-void-surface hover:border-plasma-cyan/50 text-gray-300 hover:text-white focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-all text-xs font-semibold shadow-sm cursor-pointer group ${className}`}
+        >
+          <Bell className="w-4 h-4 text-plasma-cyan group-hover:scale-110 transition-transform" />
+          <span>{safeT("createAlert", "Create Alert")}</span>
+        </button>
+      </CosmicTooltip>
 
       {/* Alert Calibration Modal */}
       {isOpen && mounted && createPortal(

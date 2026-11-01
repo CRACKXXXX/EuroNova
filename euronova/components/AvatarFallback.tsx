@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { User, Building } from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
 
 export interface AvatarFallbackProps {
   src?: string | null;
+  userId?: string | null;
   alt?: string;
   fallbackType?: "user" | "org";
   name?: string | null;
@@ -18,6 +20,7 @@ export interface AvatarFallbackProps {
 
 export function AvatarFallback({
   src,
+  userId,
   alt = "Avatar",
   fallbackType = "user",
   name,
@@ -34,13 +37,45 @@ export function AvatarFallback({
 
   const [hasError, setHasError] = useState(false);
   const [prevSrc, setPrevSrc] = useState(normalizedSrc);
+  const [fetchedSrc, setFetchedSrc] = useState<string | null>(null);
 
   if (prevSrc !== normalizedSrc) {
     setPrevSrc(normalizedSrc);
     setHasError(false);
   }
 
-  // Calculate clean initials if name is provided
+  // Fetch avatar URL from Supabase if not provided directly via props but userId is present
+  useEffect(() => {
+    if (normalizedSrc || !userId) return;
+    let isMounted = true;
+
+    async function fetchUserAvatar() {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase
+          .from("users_youth")
+          .select("avatar_url")
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (isMounted && data?.avatar_url && typeof data.avatar_url === "string") {
+          setFetchedSrc(data.avatar_url.trim());
+        }
+      } catch {
+        // Supabase unavailable or offline
+      }
+    }
+
+    void fetchUserAvatar();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [normalizedSrc, userId]);
+
+  const activeSrc = normalizedSrc || fetchedSrc;
+
+  // Calculate clean 2-letter uppercase initials if name is provided
   let initials = "";
   if (name && typeof name === "string") {
     const words = name.trim().split(/\s+/).filter(Boolean);
@@ -51,11 +86,10 @@ export function AvatarFallback({
     }
   }
 
-  if (!normalizedSrc || hasError) {
+  if (!activeSrc || hasError) {
     return (
       <div
         className={`rounded-full flex items-center justify-center shrink-0 overflow-hidden bg-gradient-to-br from-void-surface to-plasma-cyan/20 border border-plasma-cyan/30 text-plasma-cyan shadow-sm select-none ${sizeClassName} ${className}`}
-        title={name || alt}
         aria-label={alt}
       >
         {initials ? (
@@ -76,7 +110,7 @@ export function AvatarFallback({
       className={`relative rounded-full overflow-hidden shrink-0 border border-void-border/70 bg-void-deep shadow-sm ${sizeClassName} ${className}`}
     >
       <Image
-        src={normalizedSrc}
+        src={activeSrc}
         alt={alt}
         fill
         sizes="96px"
@@ -88,3 +122,6 @@ export function AvatarFallback({
     </div>
   );
 }
+
+export const Avatar = AvatarFallback;
+export default AvatarFallback;

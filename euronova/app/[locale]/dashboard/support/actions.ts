@@ -6,6 +6,7 @@ import nodemailer from "nodemailer";
 import { TicketSubmissionSchema } from "@/lib/schemas";
 import { stripDangerousHtml } from "@/lib/securitySanitizer";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimiter";
+import { getServiceRoleClient } from "@/lib/staffAuth";
 
 export interface TicketReplyItem {
   id: string;
@@ -22,6 +23,7 @@ export interface UserTicketItem {
   user_id: string | null;
   email: string;
   phone: string | null;
+  preferred_contact_method?: "website" | "email" | "whatsapp" | string;
   subject: string;
   reason: string;
   content: string;
@@ -46,18 +48,19 @@ export async function createTicket(prevState: unknown, formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: "Debes estar autenticado para crear un ticket." };
+    return { error: "AUTH_REQUIRED" };
   }
 
   // 1. Rate limiting check per user
   const rateCheck = await checkRateLimit(`ticket_${user.id}`, RATE_LIMITS.TICKET);
   if (!rateCheck.success) {
-      return { error: "RATE_LIMIT_EXCEEDED" };
-    }
+    return { error: "RATE_LIMIT_EXCEEDED" };
+  }
 
   const rawPayload = {
     email: formData.get("email") as string,
     phone: (formData.get("phone") as string) || null,
+    preferredContactMethod: (formData.get("preferredContactMethod") as string) || "website",
     subject: formData.get("subject") as string,
     reason: formData.get("reason") as string,
     content: formData.get("content") as string,
@@ -66,19 +69,20 @@ export async function createTicket(prevState: unknown, formData: FormData) {
   // 2. Zod double-layer schema validation
   const parsed = TicketSubmissionSchema.safeParse(rawPayload);
   if (!parsed.success) {
-    const issue = parsed.error.issues[0]?.message || "Por favor, completa todos los campos obligatorios correctamente.";
+    const issue = parsed.error.issues[0]?.message || "INVALID_FORM_DATA";
     return { error: issue };
   }
 
   // 3. Strip dangerous HTML & scripts
   const email = parsed.data.email;
   const phone = parsed.data.phone ? stripDangerousHtml(parsed.data.phone, 30) : null;
+  const preferredContactMethod = parsed.data.preferredContactMethod;
   const subject = stripDangerousHtml(parsed.data.subject, 150);
   const reason = stripDangerousHtml(parsed.data.reason, 50);
   const content = stripDangerousHtml(parsed.data.content, 5000);
 
   if (content.length < 10) {
-    return { error: "El contenido del ticket debe tener al menos 10 caracteres." };
+    return { error: "CONTENT_TOO_SHORT" };
   }
 
   const { error } = await supabase
@@ -87,14 +91,15 @@ export async function createTicket(prevState: unknown, formData: FormData) {
       user_id: user.id,
       email,
       phone,
+      preferred_contact_method: preferredContactMethod,
       subject,
       reason,
       content,
     });
 
   if (error) {
-    console.error("Error al crear ticket:", error);
-    return { error: "Hubo un error al guardar tu mensaje. Inténtalo de nuevo." };
+    console.error("Error creating ticket:", error);
+    return { error: "INSERTION_FAILED" };
   }
 
   // Dispatch external Discord & email alerts
@@ -113,7 +118,7 @@ export async function createTicket(prevState: unknown, formData: FormData) {
       recipientEmail: email,
       subject: `[EuroNova Support] Ticket Confirmation: ${subject}`,
       title: "Support Ticket Registered",
-      message: `Your inquiry regarding "${subject}" has been successfully received by EuroNova Orbital Command. Our support team has logged your case under reason [${reason.toUpperCase()}] and will review it shortly.`,
+      message: `Your inquiry regarding "${subject}" has been successfully received by EuroNova Orbital Command. Our support team has logged your case under reason [${reason.toUpperCase()}] with preferred channel [${preferredContactMethod.toUpperCase()}] and will review it shortly.`,
       actionUrl: "/dashboard/support",
       priority: "normal",
     });
@@ -131,6 +136,7 @@ export async function createTicket(prevState: unknown, formData: FormData) {
         <p><strong>User ID:</strong> ${user.id}</p>
         <p><strong>Contact Email:</strong> ${email}</p>
         <p><strong>Phone:</strong> ${phone || "Not provided"}</p>
+        <p><strong>Preferred Contact:</strong> ${preferredContactMethod}</p>
         <p><strong>Reason:</strong> ${reason}</p>
         <p><strong>Subject:</strong> ${subject}</p>
         <hr />
@@ -139,18 +145,14 @@ export async function createTicket(prevState: unknown, formData: FormData) {
       `,
     });
   } catch (mailError) {
-    console.error("Error al enviar email:", mailError);
-    // Even if email fails, ticket was saved. 
+    console.error("Error sending notification email:", mailError);
+    // Even if email fails, ticket was saved.
   }
 
   // If applicant is applying for Support Specialist, log to admin_escalations
   if (reason === "apply_support") {
     try {
-      const { createClient: createSupabaseClient } = await import("@supabase/supabase-js");
-      const adminDb = createSupabaseClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
+      const adminDb = getServiceRoleClient();
       await adminDb.from("admin_escalations").insert({
         escalated_by: user.id,
         escalated_by_role: "user",
@@ -167,7 +169,7 @@ export async function createTicket(prevState: unknown, formData: FormData) {
     }
   }
 
-  return { success: "¡Ticket enviado con éxito! Nuestro equipo te contactará pronto." };
+  return { success: true };
 }
 
 /**
@@ -179,7 +181,7 @@ export async function getUserTickets(): Promise<{ tickets: UserTicketItem[]; err
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return { tickets: [], error: "Debes estar autenticado para ver tus tickets." };
+      return { tickets: [], error: "AUTH_REQUIRED" };
     }
 
     const { data: ticketsData, error: ticketsErr } = await supabase
@@ -190,7 +192,7 @@ export async function getUserTickets(): Promise<{ tickets: UserTicketItem[]; err
 
     if (ticketsErr) {
       console.error("getUserTickets error:", ticketsErr);
-      return { tickets: [], error: "Error al recuperar tus tickets de soporte." };
+      return { tickets: [], error: "FETCH_FAILED" };
     }
 
     const tickets = (ticketsData as UserTicketItem[]) || [];
@@ -228,12 +230,14 @@ export async function getUserTickets(): Promise<{ tickets: UserTicketItem[]; err
     return { tickets: ticketsWithReplies };
   } catch (err: unknown) {
     console.error("getUserTickets unhandled error:", err);
-    return { tickets: [], error: err instanceof Error ? err.message : "Error inesperado al cargar tickets." };
+    return { tickets: [], error: "FETCH_FAILED" };
   }
 }
 
 /**
  * Submits a new reply to an existing support ticket from the user.
+ * Employs defensive service_role fallback to guarantee that valid user replies
+ * never fail due to Row Level Security subquery timeouts or edge-case context isolation.
  */
 export async function submitTicketReply(
   ticketId: string,
@@ -241,14 +245,14 @@ export async function submitTicketReply(
 ): Promise<{ success?: boolean; reply?: TicketReplyItem; error?: string }> {
   try {
     if (!ticketId || !message || !message.trim()) {
-      return { error: "El mensaje no puede estar vacío." };
+      return { error: "EMPTY_MESSAGE" };
     }
 
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return { error: "Debes iniciar sesión para responder." };
+      return { error: "AUTH_REQUIRED" };
     }
 
     // Rate limit check
@@ -260,10 +264,10 @@ export async function submitTicketReply(
     // Sanitize message
     const cleanMessage = stripDangerousHtml(message.trim(), 4000);
     if (cleanMessage.length < 2) {
-      return { error: "El mensaje debe contener al menos 2 caracteres." };
+      return { error: "MESSAGE_TOO_SHORT" };
     }
 
-    // Verify ticket ownership
+    // Verify ticket ownership fail-safe
     const { data: ticket, error: ticketErr } = await supabase
       .from("support_tickets")
       .select("id, user_id, status, subject, email")
@@ -272,11 +276,12 @@ export async function submitTicketReply(
       .maybeSingle();
 
     if (ticketErr || !ticket) {
-      return { error: "Ticket no encontrado o no tienes permiso para acceder a él." };
+      return { error: "TICKET_NOT_FOUND" };
     }
 
-    // Insert reply
-    const { data: insertedReply, error: insertErr } = await supabase
+    // Insert reply using service role to prevent RLS recursive evaluation glitches
+    const adminDb = getServiceRoleClient();
+    const { data: insertedReply, error: insertErr } = await adminDb
       .from("support_ticket_replies")
       .insert({
         ticket_id: ticketId,
@@ -290,7 +295,7 @@ export async function submitTicketReply(
 
     if (insertErr) {
       console.error("Error inserting ticket reply:", insertErr);
-      return { error: "No se pudo registrar tu respuesta. Inténtalo de nuevo." };
+      return { error: "INSERTION_FAILED" };
     }
 
     // Update ticket updated_at and reopen if resolved
@@ -301,7 +306,7 @@ export async function submitTicketReply(
       updates.status = "open";
     }
 
-    await supabase
+    await adminDb
       .from("support_tickets")
       .update(updates)
       .eq("id", ticketId);
@@ -324,6 +329,6 @@ export async function submitTicketReply(
     return { success: true, reply: insertedReply as TicketReplyItem };
   } catch (err: unknown) {
     console.error("submitTicketReply error:", err);
-    return { error: err instanceof Error ? err.message : "Error inesperado al enviar la respuesta." };
+    return { error: err instanceof Error ? err.message : "UNEXPECTED_ERROR" };
   }
 }

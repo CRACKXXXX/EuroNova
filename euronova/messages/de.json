@@ -674,7 +674,15 @@
     "reasonApplySupport": "Für Support-Rolle bewerben (Level 10+ Vanguard)",
     "reasonSurveyModeration": "Umfragemoderation & Community-Abstimmungen",
     "reasonTrustScoreDispute": "Streitigkeiten über Trust Score / XP-Telemetrie",
-    "reasonScraperIssue": "Probleme bei der automatischen Projekt-Indexierung"
+    "reasonScraperIssue": "Probleme bei der automatischen Projekt-Indexierung",
+    "preferredContactMethod": "Preferred Contact Method *",
+    "contactMethodWebsite": "Website (Orbital Hub)",
+    "contactMethodEmail": "Email Address",
+    "contactMethodWhatsapp": "WhatsApp Direct",
+    "fasterResolutionTip": "For faster resolution, we recommend using the Website.",
+    "phoneWhatsappRequired": "Phone Number with Country Code *",
+    "phoneWhatsappPlaceholder": "+34 600 000 000 (Required for WhatsApp)",
+    "applySupportPlaceholder": "Describe your European mobility background, countries visited, spoken languages, and why you wish to assist fellow volunteers on EuroNova..."
   },
   "OrgFilters": {
     "searchPlaceholder": "Suche nach Organisationsnamen...",
@@ -1312,13 +1320,13 @@
     "antiScamScore": "Anti-Scam-Wert 99.4%",
     "peerReviews": "Verifizierte Erfahrungsberichte",
     "levelSubtitle": "Gesammelt durch verifizierte Bewerbungen, absolvierte Mobilitäten und Community-Bewertungen.",
-    "dailyBonusToast": "Täglicher Orbital-Erkundungsbonus! +{gained} XP vergeben ({total}/10 tägliches Limit).",
+    "dailyBonusToast": "Täglicher Orbital-Erkundungsbonus! +{gained} XP vergeben ({total}/{max} tägliches Limit).",
     "levelUpToast": "LEVEL UP! Du hast Level {level} erreicht!",
     "tierFraction": "Stufe {current}/{total}",
     "tierN": "Stufe {number}",
     "currentRank": "Aktueller Rang",
-    "viewProgression": "Galaktisches 20-Stufen-Progressionssystem anzeigen",
-    "hideProgression": "Galaktisches 20-Stufen-Progressionssystem ausblenden",
+    "viewProgression": "Galaktisches 50-Stufen-Progressionssystem anzeigen",
+    "hideProgression": "Galaktisches 50-Stufen-Progressionssystem ausblenden",
     "xpMultiplier": "Vertrauens-XP-Multiplikator",
     "xpBoostHighTrust": "⚡ x1,5 XP-Boost (Hohes Vertrauen)",
     "xpBoostGoodTrust": "⚡ x1,25 XP-Boost",
@@ -1466,7 +1474,11 @@
     "warningSendError": "Fehler beim Senden der Verwarnung.",
     "muteUserError": "Fehler beim Stummschalten des Benutzers.",
     "warningIssuedSuccess": "Offizielle Verwarnung an {name} erteilt.",
-    "userMutedSuccess": "{name} wurde für {mins} Minuten stummgeschaltet."
+    "userMutedSuccess": "{name} wurde für {mins} Minuten stummgeschaltet.",
+    "uploadsUnlockLevel10": "Uploads werden ab Level 10 freigeschaltet",
+    "attachFile": "Bild oder Dokument anhängen (PNG, JPG, WEBP, PDF)",
+    "removeAttachment": "Anhang entfernen",
+    "fileSizeExceeded": "Die Dateigröße darf 10 MB nicht überschreiten."
   },
   "ProjectTldr": {
     "badge": "KI-Zusammenfassung (TL;DR)",
@@ -1623,7 +1635,8 @@
     "digestLabel": "Fehler-Code",
     "tryAgain": "Verbindung wiederherstellen",
     "returnHome": "Zurück zur Startseite",
-    "rateLimitExceeded": "Sie sind zu schnell. Bitte warten Sie einen Moment und versuchen Sie es erneut."
+    "rateLimitExceeded": "Sie sind zu schnell. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
+    "authRequired": "Authentication required. Please sign in to continue."
   },
   "NotFound": {
     "badge": "KOORDINATEN NICHT ERREICHBAR",
@@ -1969,7 +1982,11 @@
     "replyBonusPrefix": "Antwort-Belohnung:",
     "lockedLevel2Required": "Gesperrt (Level 2 / 100 XP erforderlich)",
     "level2RequiredCreate": "Level 2 erforderlich: Du musst 100 XP erreichen, um Diskussionen zu erstellen.",
-    "level2RequiredReply": "Level 2 erforderlich: Du musst 100 XP erreichen, um auf Diskussionen zu antworten."
+    "level2RequiredReply": "Level 2 erforderlich: Du musst 100 XP erreichen, um auf Diskussionen zu antworten.",
+    "uploadsUnlockLevel10": "Uploads werden ab Level 10 freigeschaltet",
+    "attachFile": "Bild oder Dokument anhängen (PNG, JPG, WEBP, PDF)",
+    "removeAttachment": "Anhang entfernen",
+    "fileSizeExceeded": "Die Dateigröße darf 10 MB nicht überschreiten."
   },
   "Community": {
     "tabForum": "Globale Foren",
@@ -2157,7 +2174,22 @@
     "pressEnter": "Drücken Sie Enter zum Senden",
     "pinMessage": "Nachricht anheften",
     "unpinMessage": "Nachricht lösen",
-    "deleteMessage": "Nachricht löschen"
+    "deleteMessage": "Nachricht löschen",
+    "editMessage": "Edit message",
+    "replyMessage": "Reply",
+    "cancelReply": "Cancel reply",
+    "replyingTo": "Replying to",
+    "editingMessage": "Editing message",
+    "cancelEdit": "Cancel edit",
+    "editedTag": "(edited)",
+    "deletedMessage": "[This message was deleted]",
+    "saveChanges": "Save changes",
+    "cancel": "Cancel",
+    "escapeToCancel": "Esc to cancel",
+    "clickToJump": "Click to jump to message",
+    "attachFile": "Bild oder Dokument anhängen (PNG, JPG, WEBP, PDF)",
+    "removeAttachment": "Anhang entfernen",
+    "fileSizeExceeded": "Die Dateigröße darf 10 MB nicht überschreiten."
   },
   "CookieBanner": {
     "title": "Datenschutz- & Cookie-Einstellungen",
@@ -2212,6 +2244,13 @@
     "repliesCount": "{count} Antworten",
     "noRepliesYet": "Warte auf die erste Antwort eines Support-Spezialisten.",
     "hubTitle": "Support Hub",
-    "staffBadge": "Team"
+    "staffBadge": "Team",
+    "preferredContact": "Preferred Contact",
+    "methodWebsite": "Website",
+    "methodEmail": "Email",
+    "methodWhatsapp": "WhatsApp",
+    "replyFailed": "Could not submit your reply. Please try again.",
+    "ticketNotFound": "Ticket not found or you do not have permission to access it.",
+    "authRequired": "You must be signed in to perform this action."
   }
 }

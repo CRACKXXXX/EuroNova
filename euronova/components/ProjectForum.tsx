@@ -21,10 +21,12 @@ import {
   VolumeX,
   AlertCircle,
   ChevronDown,
+  Paperclip,
 } from "lucide-react";
 import { useTranslations, useFormatter } from "next-intl";
 import { toast } from "sonner";
 import { AvatarFallback } from "@/components/AvatarFallback";
+import { CosmicTooltip } from "@/components/CosmicTooltip";
 import {
   getProjectMessages,
   postProjectMessage,
@@ -72,6 +74,14 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
   const inFlightMessageRef = useRef(false);
   const inFlightReplyRef = useRef(false);
 
+  // File Upload state for Main Form
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const mainFileInputRef = useRef<HTMLInputElement>(null);
+
+  // File Upload state for Nested Reply Form
+  const [nestedAttachedFile, setNestedAttachedFile] = useState<File | null>(null);
+  const nestedFileInputRef = useRef<HTMLInputElement>(null);
+
   // Edit & Delete state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
@@ -98,15 +108,12 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
           setPagination(msgRes.pagination);
           setCurrentPage(msgRes.pagination.page);
         }
-        if (typeof window !== "undefined") {
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }
       } else {
-        toast.error(msgRes.error || "Could not load forum messages.");
+        toast.error(msgRes.error || "Failed to load messages page.");
       }
     } catch (err: unknown) {
-      console.error("Error loading forum page:", err);
-      toast.error(err instanceof Error ? err.message : "Could not load forum page.");
+      console.error("Error loading messages page:", err);
+      toast.error(err instanceof Error ? err.message : "Error loading messages.");
     } finally {
       setIsLoading(false);
     }
@@ -163,6 +170,17 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
       eligibility?.userRole === "moderator"
   );
 
+  const isStaff = Boolean(
+    eligibility?.userRole === "root" ||
+      eligibility?.userRole === "admin" ||
+      eligibility?.userRole === "moderator" ||
+      eligibility?.userRole === "support" ||
+      eligibility?.role === "admin" ||
+      eligibility?.isProjectCoordinator
+  );
+  const userLevel = Number(eligibility?.level || 0);
+  const canUpload = isStaff || userLevel >= 10;
+
   // Separate root messages from 1-level deep nested replies
   const { rootMessages, repliesByParent } = useMemo(() => {
     const roots: ForumMessageItem[] = [];
@@ -181,6 +199,50 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
     return { rootMessages: roots, repliesByParent: repliesMap };
   }, [messages]);
 
+  const handleMainFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error(t("fileSizeExceeded"));
+      if (mainFileInputRef.current) mainFileInputRef.current.value = "";
+      return;
+    }
+    const allowed = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
+    if (!allowed.includes(file.type)) {
+      toast.error(t("attachFile"));
+      if (mainFileInputRef.current) mainFileInputRef.current.value = "";
+      return;
+    }
+    setAttachedFile(file);
+  };
+
+  const handleRemoveMainAttachment = () => {
+    setAttachedFile(null);
+    if (mainFileInputRef.current) mainFileInputRef.current.value = "";
+  };
+
+  const handleNestedFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error(t("fileSizeExceeded"));
+      if (nestedFileInputRef.current) nestedFileInputRef.current.value = "";
+      return;
+    }
+    const allowed = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
+    if (!allowed.includes(file.type)) {
+      toast.error(t("attachFile"));
+      if (nestedFileInputRef.current) nestedFileInputRef.current.value = "";
+      return;
+    }
+    setNestedAttachedFile(file);
+  };
+
+  const handleRemoveNestedAttachment = () => {
+    setNestedAttachedFile(null);
+    if (nestedFileInputRef.current) nestedFileInputRef.current.value = "";
+  };
+
   const handlePostMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (inFlightMessageRef.current) return;
@@ -194,7 +256,11 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
       return;
     }
 
-    const trimmed = newContent.trim();
+    let trimmed = newContent.trim();
+    if (attachedFile) {
+      trimmed = trimmed ? `${trimmed}\n\n📎 [Attachment: ${attachedFile.name}]` : `📎 [Attachment: ${attachedFile.name}]`;
+    }
+
     if (!trimmed) {
       const emptyErr = t("emptyMessage");
       setModerationError(emptyErr);
@@ -224,6 +290,8 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
         if (res.message) {
           setMessages((prev) => [...prev, res.message!]);
           setNewContent("");
+          setAttachedFile(null);
+          if (mainFileInputRef.current) mainFileInputRef.current.value = "";
           const successMsg = t("postSuccess");
           toast.success(successMsg);
         }
@@ -256,7 +324,11 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
       return;
     }
 
-    const trimmed = replyContent.trim();
+    let trimmed = replyContent.trim();
+    if (nestedAttachedFile) {
+      trimmed = trimmed ? `${trimmed}\n\n📎 [Attachment: ${nestedAttachedFile.name}]` : `📎 [Attachment: ${nestedAttachedFile.name}]`;
+    }
+
     if (!trimmed) {
       toast.error(t("emptyReplyError"));
       return;
@@ -276,6 +348,8 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
         setMessages((prev) => [...prev, res.message!]);
         setReplyingToId(null);
         setReplyContent("");
+        setNestedAttachedFile(null);
+        if (nestedFileInputRef.current) nestedFileInputRef.current.value = "";
         toast.success(t("replySuccess"));
       }
     } catch (err) {
@@ -412,6 +486,7 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
           <div className="flex items-center gap-3 min-w-0">
             <AvatarFallback
               src={msg.avatar_url}
+              userId={msg.user_id}
               alt={msg.author_name}
               fallbackType="user"
               name={msg.author_name}
@@ -488,59 +563,63 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
           {/* Action Buttons: Edit, Warn, Mute Dropdown, Delete */}
           <div className="flex items-center gap-1 shrink-0 relative">
             {canEdit && editingId !== msg.id && (
-              <button
-                type="button"
-                onClick={() => handleStartEdit(msg)}
-                disabled={isEditing}
-                title={t("editBtn")}
-                aria-label={t("editBtn")}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-plasma-cyan hover:bg-plasma-cyan/10 transition-colors cursor-pointer"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-              </button>
-            )}
-
-            {/* NGO & Admin Powers: Warn Button */}
-            {canModerateUser && (
-              <button
-                type="button"
-                onClick={() => handleWarn(msg)}
-                disabled={warningId === msg.id}
-                title={t("warnUserTitle")}
-                aria-label={t("warnUser")}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors cursor-pointer disabled:opacity-50"
-              >
-                {warningId === msg.id ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
-                ) : (
-                  <AlertCircle className="w-3.5 h-3.5" />
-                )}
-              </button>
-            )}
-
-            {/* NGO & Admin Powers: Mute User Dropdown */}
-            {canModerateUser && (
-              <div className="relative">
+              <CosmicTooltip content={t("editBtn")} side="top">
                 <button
                   type="button"
-                  onClick={() =>
-                    setActiveMuteMenuId(activeMuteMenuId === msg.id ? null : msg.id)
-                  }
-                  disabled={mutingId === msg.id}
-                  title={t("muteUserTitle")}
-                  aria-label={t("muteUser")}
-                  className="p-1.5 rounded-lg text-gray-400 hover:text-nova-flare hover:bg-nova-flare/10 transition-colors cursor-pointer flex items-center gap-0.5 disabled:opacity-50"
+                  onClick={() => handleStartEdit(msg)}
+                  disabled={isEditing}
+                  aria-label={t("editBtn")}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-plasma-cyan hover:bg-plasma-cyan/10 transition-colors cursor-pointer"
                 >
-                  {mutingId === msg.id ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-nova-flare" />
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+              </CosmicTooltip>
+            )}
+
+            {/* Warn User Action (Coordinators & Admins) */}
+            {canModerateUser && (
+              <CosmicTooltip content={t("warnUser")} side="top">
+                <button
+                  type="button"
+                  onClick={() => handleWarn(msg)}
+                  disabled={warningId === msg.id}
+                  aria-label={t("warnUser")}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-amber-400 hover:bg-amber-400/10 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {warningId === msg.id ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
                   ) : (
-                    <>
-                      <VolumeX className="w-3.5 h-3.5" />
-                      <ChevronDown className="w-2.5 h-2.5" />
-                    </>
+                    <AlertCircle className="w-3.5 h-3.5" />
                   )}
                 </button>
+              </CosmicTooltip>
+            )}
 
+            {/* Mute User Dropdown (Coordinators & Admins) */}
+            {canModerateUser && (
+              <div className="relative">
+                <CosmicTooltip content={t("muteUser")} side="top">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setActiveMuteMenuId(activeMuteMenuId === msg.id ? null : msg.id)
+                    }
+                    disabled={mutingId === msg.id}
+                    aria-label={t("muteUser")}
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-nova-flare hover:bg-nova-flare/10 transition-colors cursor-pointer flex items-center gap-0.5 disabled:opacity-50"
+                  >
+                    {mutingId === msg.id ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-nova-flare" />
+                    ) : (
+                      <>
+                        <VolumeX className="w-3.5 h-3.5" />
+                        <ChevronDown className="w-2.5 h-2.5" />
+                      </>
+                    )}
+                  </button>
+                </CosmicTooltip>
+
+                {/* Dropdown Menu for Mute Durations */}
                 {activeMuteMenuId === msg.id && (
                   <div className="absolute right-0 top-full mt-1 w-44 bg-void-surface border border-nova-flare/40 rounded-xl shadow-2xl p-1.5 z-50 space-y-1 animate-in fade-in zoom-in-95">
                     <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-400 border-b border-void-border/60">
@@ -566,20 +645,21 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
 
             {/* Delete Button */}
             {canDelete && (
-              <button
-                type="button"
-                onClick={() => handleDelete(msg.id, !isAuthor)}
-                disabled={deletingId === msg.id}
-                title={t("deleteBtn") || "Delete"}
-                aria-label={t("deleteBtn") || "Delete"}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-nova-flare hover:bg-nova-flare/10 transition-colors cursor-pointer"
-              >
-                {deletingId === msg.id ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-nova-flare" />
-                ) : (
-                  <Trash2 className="w-3.5 h-3.5" />
-                )}
-              </button>
+              <CosmicTooltip content={t("deleteBtn") || "Delete"} side="top">
+                <button
+                  type="button"
+                  onClick={() => handleDelete(msg.id, !isAuthor)}
+                  disabled={deletingId === msg.id}
+                  aria-label={t("deleteBtn") || "Delete"}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-nova-flare hover:bg-nova-flare/10 transition-colors cursor-pointer"
+                >
+                  {deletingId === msg.id ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-nova-flare" />
+                  ) : (
+                    <Trash2 className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              </CosmicTooltip>
             )}
           </div>
         </div>
@@ -636,6 +716,7 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
                   if (replyingToId === msg.id) {
                     setReplyingToId(null);
                     setReplyContent("");
+                    setNestedAttachedFile(null);
                   } else {
                     setReplyingToId(msg.id);
                     setReplyContent(`@${msg.author_name} `);
@@ -647,16 +728,17 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
                 <span>{replyingToId === msg.id ? t("cancelReply") : t("reply")}</span>
               </button>
             ) : (
-              <div
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 cursor-not-allowed opacity-75 group/replygate"
-                title={t("restrictedActionTitle")}
-              >
-                <Reply className="w-3.5 h-3.5 text-gray-600" />
-                <span className="text-gray-500">{t("reply")}</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-void-deep border border-void-border text-gray-400 group-hover/replygate:border-plasma-cyan/40 group-hover/replygate:text-plasma-cyan transition-colors">
-                  {t("restrictedReplyHint")}
-                </span>
-              </div>
+              <CosmicTooltip content={t("restrictedActionTitle")} side="top">
+                <div
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 cursor-not-allowed opacity-75 group/replygate"
+                >
+                  <Reply className="w-3.5 h-3.5 text-gray-600" />
+                  <span className="text-gray-500">{t("reply")}</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-void-deep border border-void-border text-gray-400 group-hover/replygate:border-plasma-cyan/40 group-hover/replygate:text-plasma-cyan transition-colors">
+                    {t("restrictedReplyHint")}
+                  </span>
+                </div>
+              </CosmicTooltip>
             )
           ) : (
             <span className="text-[10px] text-gray-500 font-mono">{t("nestedAnswer")}</span>
@@ -711,32 +793,9 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
 
       {/* Moderation Error Banner */}
       {moderationError && (
-        <div className="p-4 rounded-2xl bg-nova-flare/15 border border-nova-flare/40 flex items-start gap-3 text-xs text-nova-flare animate-in fade-in duration-300">
-          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-          <div className="font-bold leading-relaxed">{moderationError}</div>
-        </div>
-      )}
-
-      {/* Anti-Spam Level 2 Gating Banner */}
-      {isGated && (
-        <div className="p-4 sm:p-5 rounded-2xl bg-void-deep/95 border border-nova-flare/40 flex items-start gap-3.5 text-xs text-nova-flare shadow-inner animate-in fade-in duration-300">
-          <div className="w-9 h-9 rounded-xl bg-nova-flare/15 border border-nova-flare/30 flex items-center justify-center shrink-0 text-nova-flare shadow-[0_0_12px_rgba(255,46,99,0.2)]">
-            <Lock className="w-4 h-4" />
-          </div>
-          <div className="space-y-1">
-            <div className="font-black text-sm text-white flex items-center gap-2 flex-wrap">
-              <span>
-                {eligibility?.reason ||
-                  "Reach Level 2 (100 XP) to participate in project Q&A to prevent spam."}
-              </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-void-surface text-nova-flare border border-nova-flare/40 font-bold">
-                {t("currentLevelStatus", { level: eligibility?.level ?? 1, xp: eligibility?.xp ?? 0 })}
-              </span>
-            </div>
-            <p className="text-xs text-gray-400 leading-relaxed">
-              {t("levelGatedHint")}
-            </p>
-          </div>
+        <div className="p-3.5 rounded-2xl bg-nova-flare/10 border border-nova-flare/40 flex items-center gap-3 text-xs text-nova-flare">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span className="font-semibold">{moderationError}</span>
         </div>
       )}
 
@@ -766,10 +825,59 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
           />
         </div>
 
+        {/* Attachment Preview Chip */}
+        {attachedFile && (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-void-surface border border-plasma-cyan/40 text-xs text-plasma-cyan w-fit animate-in fade-in duration-150">
+            <Paperclip className="w-3.5 h-3.5 text-plasma-cyan shrink-0" />
+            <span className="font-medium text-white truncate max-w-xs">{attachedFile.name}</span>
+            <span className="text-[10px] text-gray-400 font-mono">
+              ({(attachedFile.size / 1024).toFixed(0)} KB)
+            </span>
+            <button
+              type="button"
+              onClick={handleRemoveMainAttachment}
+              className="p-0.5 rounded text-gray-400 hover:text-nova-flare transition-colors cursor-pointer"
+              aria-label={t("removeAttachment")}
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
-          <span className="text-[10px] text-gray-500 font-mono">
-            {t("shieldActiveNotice")}
-          </span>
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Level-Gated Upload Button */}
+            <input
+              type="file"
+              ref={mainFileInputRef}
+              onChange={handleMainFileSelect}
+              accept="image/png,image/jpeg,image/webp,application/pdf"
+              className="hidden"
+            />
+            {canUpload ? (
+              <button
+                type="button"
+                disabled={isPending || isGated}
+                onClick={() => mainFileInputRef.current?.click()}
+                aria-label={t("attachFile")}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-void-surface border border-void-border text-gray-300 hover:text-white hover:border-plasma-cyan/50 text-xs font-medium transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Paperclip className="w-3.5 h-3.5 text-plasma-cyan" />
+                <span>{t("attachFile")}</span>
+              </button>
+            ) : (
+              <div
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-void-surface/50 border border-void-border/50 text-gray-500 text-xs font-medium cursor-not-allowed opacity-60"
+              >
+                <Lock className="w-3.5 h-3.5 text-nova-flare" />
+                <span>{t("uploadsUnlockLevel10")}</span>
+              </div>
+            )}
+
+            <span className="text-[10px] text-gray-500 font-mono">
+              {t("shieldActiveNotice")}
+            </span>
+          </div>
 
           <button
             type="submit"
@@ -843,6 +951,7 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
                           onClick={() => {
                             setReplyingToId(null);
                             setReplyContent("");
+                            setNestedAttachedFile(null);
                           }}
                           className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                         >
@@ -860,36 +969,87 @@ export function ProjectForum({ projectId, projectTitle }: ProjectForumProps) {
                         className="w-full bg-void-surface border border-void-border focus:border-plasma-cyan rounded-xl p-3 text-xs sm:text-sm text-white focus:outline-none focus:ring-1 focus:ring-plasma-cyan resize-none transition-all placeholder:text-gray-500"
                       />
 
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setReplyingToId(null);
-                            setReplyContent("");
-                          }}
-                          disabled={isReplying}
-                          className="px-3 py-1.5 rounded-lg border border-void-border text-gray-400 hover:text-white text-xs font-semibold transition-colors cursor-pointer"
-                        >
-                          {t("cancelBtn")}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleSendReply(msg.id)}
-                          disabled={isReplying}
-                          className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-plasma-cyan text-void-deep font-bold text-xs hover:brightness-110 shadow-[0_0_12px_rgba(0,229,255,0.25)] transition-all cursor-pointer disabled:opacity-50"
-                        >
-                          {isReplying ? (
-                            <>
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                              <span>{t("sendingAnswer")}</span>
-                            </>
+                      {/* Nested Attachment Preview Chip */}
+                      {nestedAttachedFile && (
+                        <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-void-surface border border-plasma-cyan/40 text-xs text-plasma-cyan w-fit animate-in fade-in duration-150">
+                          <Paperclip className="w-3 h-3 text-plasma-cyan shrink-0" />
+                          <span className="font-medium text-white truncate max-w-xs">{nestedAttachedFile.name}</span>
+                          <span className="text-[10px] text-gray-400 font-mono">
+                            ({(nestedAttachedFile.size / 1024).toFixed(0)} KB)
+                          </span>
+                          <button
+                            type="button"
+                            onClick={handleRemoveNestedAttachment}
+                            className="p-0.5 rounded text-gray-400 hover:text-nova-flare transition-colors cursor-pointer"
+                            aria-label={t("removeAttachment")}
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="file"
+                            ref={nestedFileInputRef}
+                            onChange={handleNestedFileSelect}
+                            accept="image/png,image/jpeg,image/webp,application/pdf"
+                            className="hidden"
+                          />
+                          {canUpload ? (
+                            <button
+                              type="button"
+                              disabled={isReplying}
+                              onClick={() => nestedFileInputRef.current?.click()}
+                              aria-label={t("attachFile")}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-void-surface border border-void-border text-gray-300 hover:text-white hover:border-plasma-cyan/50 text-[11px] font-medium transition-all cursor-pointer disabled:opacity-40"
+                            >
+                              <Paperclip className="w-3 h-3 text-plasma-cyan" />
+                              <span>{t("attachFile")}</span>
+                            </button>
                           ) : (
-                            <>
-                              <Send className="w-3 h-3" />
-                              <span>{t("sendAnswer")}</span>
-                            </>
+                            <div
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-void-surface/50 border border-void-border/50 text-gray-500 text-[10px] font-medium cursor-not-allowed opacity-60"
+                            >
+                              <Lock className="w-3 h-3 text-nova-flare" />
+                              <span>{t("uploadsUnlockLevel10")}</span>
+                            </div>
                           )}
-                        </button>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReplyingToId(null);
+                              setReplyContent("");
+                              setNestedAttachedFile(null);
+                            }}
+                            disabled={isReplying}
+                            className="px-3 py-1.5 rounded-lg border border-void-border text-gray-400 hover:text-white text-xs font-semibold transition-colors cursor-pointer"
+                          >
+                            {t("cancelBtn")}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSendReply(msg.id)}
+                            disabled={isReplying}
+                            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-plasma-cyan text-void-deep font-bold text-xs hover:brightness-110 shadow-[0_0_12px_rgba(0,229,255,0.25)] transition-all cursor-pointer disabled:opacity-50"
+                          >
+                            {isReplying ? (
+                              <>
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                                <span>{t("sendingAnswer")}</span>
+                              </>
+                            ) : (
+                              <>
+                                <Send className="w-3 h-3" />
+                                <span>{t("sendAnswer")}</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

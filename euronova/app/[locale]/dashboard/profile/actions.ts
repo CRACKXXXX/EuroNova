@@ -396,7 +396,7 @@ export async function updateProfile(
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return { error: "No estás autenticado." };
+      return { error: "AUTH_REQUIRED" };
     }
 
     // Rate Limiting Gate (Sliding Window per User)
@@ -407,7 +407,7 @@ export async function updateProfile(
 
     const role = formData.get("role")?.toString();
     if (role !== "youth" && role !== "org") {
-      return { error: "Rol no válido." };
+      return { error: "INVALID_ROLE" };
     }
 
     let avatar_url: string | undefined = undefined;

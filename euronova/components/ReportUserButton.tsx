@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Flag, X, ShieldAlert, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { submitGlobalReportAction } from "@/actions/reports";
+import { CosmicTooltip } from "@/components/CosmicTooltip";
 import { toast } from "sonner";
 
 interface ReportUserButtonProps {
@@ -29,16 +30,16 @@ export function ReportUserButton({
   const [reason, setReason] = useState("harassment");
   const [details, setDetails] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const inFlightRef = useRef(false);
+  const [isPending, startTransition] = useTransition();
   const mounted = useSyncExternalStore(subscribe, () => true, () => false);
+  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (inFlightRef.current) return;
-    inFlightRef.current = true;
-    setErrorMessage(null);
+    if (!details.trim()) {
+      return;
+    }
 
     startTransition(async () => {
       try {
@@ -47,7 +48,7 @@ export function ReportUserButton({
           targetId: targetUserId,
           targetTitle: targetUserName,
           reason,
-          description: details,
+          description: details.trim(),
         });
 
         if (res.error) {
@@ -62,29 +63,43 @@ export function ReportUserButton({
 
         setIsOpen(false);
         setDetails("");
+        setErrorMessage(null);
         setToastMessage(t("reportUserSuccess"));
-        setTimeout(() => setToastMessage(null), 5000);
-      } finally {
-        inFlightRef.current = false;
+        toast.success(t("reportUserSuccess"));
+
+        if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+        toastTimeoutRef.current = setTimeout(() => {
+          setToastMessage(null);
+        }, 4000);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Failed to transmit report.";
+        setErrorMessage(msg);
       }
     });
   };
 
+  const reportTooltipText = `Report ${targetUserName} to moderators`;
+
   return (
     <>
-      <button
-        type="button"
-        onClick={() => {
-          setErrorMessage(null);
-          setIsOpen(true);
-        }}
-        className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] gap-1.5 transition-colors cursor-pointer text-gray-500 hover:text-nova-flare focus-visible:ring-2 focus-visible:ring-nova-flare focus-visible:outline-none rounded-lg group ${className}`}
-        title={`Report ${targetUserName} to moderators`}
-        aria-label={`Report ${targetUserName}`}
+      <CosmicTooltip
+        content={reportTooltipText}
+        side="top"
+        disabled={isOpen}
       >
-        <Flag className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
-        {variant === "full" && <span className="text-xs font-medium">{t("reportUser")}</span>}
-      </button>
+        <button
+          type="button"
+          onClick={() => {
+            setErrorMessage(null);
+            setIsOpen(true);
+          }}
+          className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] gap-1.5 transition-colors cursor-pointer text-gray-500 hover:text-nova-flare focus-visible:ring-2 focus-visible:ring-nova-flare focus-visible:outline-none rounded-lg group ${className}`}
+          aria-label={`Report ${targetUserName}`}
+        >
+          <Flag className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
+          {variant === "full" && <span className="text-xs font-medium">{t("reportUser")}</span>}
+        </button>
+      </CosmicTooltip>
 
       {/* Global Toast */}
       {toastMessage && mounted && createPortal(

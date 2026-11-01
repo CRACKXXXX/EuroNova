@@ -197,7 +197,7 @@ export function Breadcrumbs({ items, className = "" }: BreadcrumbsProps) {
         <Link
           href="/dashboard"
           className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-gray-400 hover:text-plasma-cyan hover:bg-void-surface/60 transition-all group"
-          title={t("commandCenter")}
+          aria-label={t("commandCenter")}
         >
           <Home className="w-3.5 h-3.5 shrink-0 text-plasma-cyan group-hover:scale-110 transition-transform" />
           <span className="sr-only sm:not-sr-only sm:inline-block font-medium">{t("commandCenter")}</span>

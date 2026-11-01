@@ -3,7 +3,7 @@
 import { useActionState, useState, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { createTicket } from "./actions";
-import { Mail, Phone, MessageSquare, Send, Sparkles } from "lucide-react";
+import { Mail, Phone, MessageSquare, Send, Sparkles, Globe, MessageCircle, Info } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -26,6 +26,7 @@ export function SupportForm() {
   const rawReason = searchParams.get("reason") || "";
   const defaultReason = (ALLOWED_REASONS as readonly string[]).includes(rawReason) ? rawReason : "";
 
+  const [contactMethod, setContactMethod] = useState<"website" | "email" | "whatsapp">("website");
   const [selectedReason, setSelectedReason] = useState(defaultReason);
   const [subjectValue, setSubjectValue] = useState(
     defaultReason === "apply_support"
@@ -63,6 +64,61 @@ export function SupportForm() {
         </div>
       )}
 
+      {/* Preferred Contact Method Multi-Channel Selector */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-gray-300">
+          {t("preferredContactMethod")}
+        </label>
+        <input type="hidden" name="preferredContactMethod" value={contactMethod} />
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <button
+            type="button"
+            onClick={() => setContactMethod("website")}
+            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
+              contactMethod === "website"
+                ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.2)]"
+                : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-700"
+            }`}
+          >
+            <Globe className="w-4 h-4" />
+            <span>{t("contactMethodWebsite")}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setContactMethod("email")}
+            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
+              contactMethod === "email"
+                ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.2)]"
+                : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-700"
+            }`}
+          >
+            <Mail className="w-4 h-4" />
+            <span>{t("contactMethodEmail")}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setContactMethod("whatsapp")}
+            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
+              contactMethod === "whatsapp"
+                ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.2)]"
+                : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-700"
+            }`}
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span>{t("contactMethodWhatsapp")}</span>
+          </button>
+        </div>
+
+        {/* Visual Tip Recommending Website */}
+        <div className="p-3.5 rounded-xl bg-plasma-cyan/10 border border-plasma-cyan/20 text-plasma-cyan text-xs flex items-center gap-2.5 animate-in fade-in">
+          <Info className="w-4 h-4 shrink-0" />
+          <span>{t("fasterResolutionTip")}</span>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">{t("email")}</label>
@@ -80,15 +136,26 @@ export function SupportForm() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">{t("phone")}</label>
+          <label className="text-sm font-medium text-gray-300">
+            {contactMethod === "whatsapp" ? t("phoneWhatsappRequired") : t("phone")}
+          </label>
           <div className="relative">
             <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input
               type="text"
               name="phone"
+              required={contactMethod === "whatsapp"}
               maxLength={30}
-              className="w-full bg-void-deep border border-void-border rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all"
-              placeholder={t("phonePlaceholder")}
+              className={`w-full bg-void-deep border rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-1 transition-all ${
+                contactMethod === "whatsapp"
+                  ? "border-plasma-cyan/60 focus:border-plasma-cyan focus:ring-plasma-cyan"
+                  : "border-void-border focus:border-plasma-cyan focus:ring-plasma-cyan"
+              }`}
+              placeholder={
+                contactMethod === "whatsapp"
+                  ? t("phoneWhatsappPlaceholder")
+                  : t("phonePlaceholder")
+              }
             />
           </div>
         </div>
@@ -144,7 +211,7 @@ export function SupportForm() {
             className="w-full bg-void-deep border border-void-border rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all"
             placeholder={
               selectedReason === "apply_support"
-                ? "Describe your European mobility background, countries visited, spoken languages, and why you wish to assist fellow volunteers on EuroNova..."
+                ? t("applySupportPlaceholder")
                 : t("contentPlaceholder")
             }
           />
@@ -153,13 +220,17 @@ export function SupportForm() {
 
       {state?.error && (
         <div className="p-4 rounded-lg bg-nova-flare/20 border border-nova-flare text-nova-flare text-sm font-medium text-center">
-          {state.error === "RATE_LIMIT_EXCEEDED" ? tErrors("rateLimitExceeded") : state.error}
+          {state.error === "RATE_LIMIT_EXCEEDED"
+            ? tErrors("rateLimitExceeded")
+            : state.error === "AUTH_REQUIRED"
+            ? tErrors("authRequired")
+            : state.error}
         </div>
       )}
 
       {state?.success ? (
         <div className="p-6 rounded-lg bg-rup-emerald/20 border border-rup-emerald text-center space-y-2">
-          <p className="text-rup-emerald font-bold text-lg">{state.success}</p>
+          <p className="text-rup-emerald font-bold text-lg">{t("success")}</p>
           <p className="text-rup-emerald/80 text-sm">{t("successDesc")}</p>
         </div>
       ) : (

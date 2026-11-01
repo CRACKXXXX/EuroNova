@@ -109,7 +109,7 @@ export function RecentlyViewedMissions({ userId: initialUserId }: RecentlyViewed
             onClick={handleClear}
             type="button"
             className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-nova-flare transition-colors px-2.5 py-1 rounded-lg border border-void-border hover:border-nova-flare/40 cursor-pointer"
-            title={t("clearHistory")}
+            aria-label={t("clearHistory")}
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>{t("clearHistory")}</span>

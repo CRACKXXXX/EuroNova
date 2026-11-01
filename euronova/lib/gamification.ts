@@ -322,3 +322,8 @@ export const XP_CONFIG = {
     trustBoost: TRUST_CONFIG.FORUM_ANSWER,
   },
 } as const;
+
+/**
+ * Universal dynamic Daily Passive XP Cap constant.
+ */
+export const DAILY_XP_CAP = XP_CONFIG.DAILY_PASSIVE.dailyCap;

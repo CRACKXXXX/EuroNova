@@ -258,7 +258,6 @@ export function CommunitySurveysView({
                             type="button"
                             disabled={deletingSurveyId === survey.id}
                             className="p-1 rounded-md text-gray-500 hover:text-nova-flare hover:bg-nova-flare/10 transition-colors disabled:opacity-50 cursor-pointer"
-                            title={t("deleteStaffAction")}
                             aria-label={t("deleteSurvey")}
                           >
                             {deletingSurveyId === survey.id ? (

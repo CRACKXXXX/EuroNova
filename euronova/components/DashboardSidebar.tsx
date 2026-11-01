@@ -12,6 +12,7 @@ import {
 import { MultiSelectCountry } from "@/components/MultiSelectCountry";
 import { MultiSelectTheme } from "@/components/MultiSelectTheme";
 import { CustomSelect } from "@/components/CustomSelect";
+import { CosmicTooltip } from "@/components/CosmicTooltip";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/utils/supabase/client";
 
@@ -350,14 +351,16 @@ export function DashboardSidebar() {
                 className="w-full bg-void-surface border border-void-border focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none transition-all placeholder:text-gray-500"
               />
               {search && (
-                <button
-                  type="button"
-                  onClick={() => setSearch("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white cursor-pointer"
-                  title={t("clearInputTitle")}
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+                <CosmicTooltip content={t("clearInputTitle")} side="top">
+                  <button
+                    type="button"
+                    onClick={() => setSearch("")}
+                    aria-label={t("clearInputTitle")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </CosmicTooltip>
               )}
             </div>
 
@@ -524,7 +527,6 @@ export function DashboardSidebar() {
                     <span className="text-xs font-bold block">{pt.code}</span>
                     <span
                       className="text-[10px] text-gray-400 block whitespace-normal leading-tight line-clamp-2"
-                      title={tTypes(pt.labelKey)}
                     >
                       {tTypes(pt.labelKey)}
                     </span>
@@ -570,17 +572,18 @@ export function DashboardSidebar() {
                 const IconComp = canonical ? THEME_ICON_MAP[canonical.id] : Tag;
 
                 return (
-                  <button
-                    key={themeId}
-                    type="button"
-                    onClick={() => toggleTheme(themeId)}
-                    className="px-2.5 py-1 text-xs font-medium rounded-lg border bg-hyper-violet/20 border-hyper-violet text-hyper-violet flex items-center gap-1.5 hover:bg-hyper-violet/30 transition-colors cursor-pointer group"
-                    title={`Remove ${label}`}
-                  >
-                    <IconComp className="w-3 h-3 text-hyper-violet shrink-0" />
-                    <span className="truncate max-w-[150px]">{label}</span>
-                    <span className="text-[12px] font-bold leading-none opacity-70 group-hover:opacity-100">×</span>
-                  </button>
+                  <CosmicTooltip key={themeId} content={`Remove ${label}`} side="top">
+                    <button
+                      type="button"
+                      onClick={() => toggleTheme(themeId)}
+                      aria-label={`Remove ${label}`}
+                      className="px-2.5 py-1 text-xs font-medium rounded-lg border bg-hyper-violet/20 border-hyper-violet text-hyper-violet flex items-center gap-1.5 hover:bg-hyper-violet/30 transition-colors cursor-pointer group"
+                    >
+                      <IconComp className="w-3 h-3 text-hyper-violet shrink-0" />
+                      <span className="truncate max-w-[150px]">{label}</span>
+                      <span className="text-[12px] font-bold leading-none opacity-70 group-hover:opacity-100">×</span>
+                    </button>
+                  </CosmicTooltip>
                 );
               })}
             </div>

@@ -13,9 +13,17 @@ import {
   Loader2,
   Radio,
   Megaphone,
+  Pencil,
+  CornerDownRight,
+  X,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Paperclip,
 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/utils/supabase/client";
+import { AvatarFallback } from "@/components/AvatarFallback";
 import { ROLE_BADGE_CONFIG, type UserRole } from "@/lib/rolesTypes";
 import {
   STAFF_CHANNELS,
@@ -27,6 +35,7 @@ import {
 import {
   getStaffChatMessages,
   postStaffChatMessage,
+  editStaffChatMessage,
   togglePinStaffChatMessage,
   deleteStaffChatMessage,
 } from "@/actions/staffChat";
@@ -59,31 +68,118 @@ export function StaffLiveChatHub({
     return visibleChannels[0]?.id || "general";
   }, [initialChannel, currentUserRole, visibleChannels]);
 
-  const [selectedChannel, setSelectedChannel] = useState<StaffChatChannel>(verifiedInitialChannel);
+  const [userSelectedChannel, setUserSelectedChannel] = useState<StaffChatChannel>(verifiedInitialChannel);
+
+  // Derived selected channel: auto-falls back to first authorized channel if permission changes
+  const selectedChannel = useMemo<StaffChatChannel>(() => {
+    if (canReadChannel(userSelectedChannel, currentUserRole)) {
+      return userSelectedChannel;
+    }
+    return visibleChannels[0]?.id || "general";
+  }, [userSelectedChannel, currentUserRole, visibleChannels]);
+
   const [messages, setMessages] = useState<StaffChatMessage[]>([]);
   const [optimisticMessages, addOptimisticMessage] = useOptimistic<
     StaffChatMessage[],
     StaffChatMessage
   >(messages, (state, newMsg) => [...state, newMsg]);
+
+  // Dynamic user ID resolution for bulletproof ownership checks without synchronous effect setState
+  const [fetchedUserId, setFetchedUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!currentUserId) {
+      const supabase = createClient();
+      void supabase.auth.getUser().then(({ data }) => {
+        if (data?.user?.id) {
+          setFetchedUserId(data.user.id);
+        }
+      });
+    }
+  }, [currentUserId]);
+
+  const resolvedUserId = currentUserId || fetchedUserId || undefined;
+
   const [inputContent, setInputContent] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Attachment state for Staff Live Chat (always enabled for staff)
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File size cannot exceed 10MB.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    const allowed = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
+    if (!allowed.includes(file.type)) {
+      toast.error("Only PNG, JPG, WEBP, and PDF files are allowed.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    setAttachedFile(file);
+  };
+
+  // Discord-like Reply & Edit State
+  const [replyingTo, setReplyingTo] = useState<StaffChatMessage | null>(null);
+  const [editingMessage, setEditingMessage] = useState<StaffChatMessage | null>(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
+
+  // Historical Pin Navigation State
+  const [activePinIndex, setActivePinIndex] = useState(0);
+  const [isPinDropdownOpen, setIsPinDropdownOpen] = useState(false);
+
+  // Container ref for scoped scrolling without global page jumps
+  const chatFeedRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-scroll to latest message
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // Auto-scroll strictly scoped to the chat container without affecting window.scrollY
+  const scrollToBottom = useCallback((smooth = true) => {
+    const container = chatFeedRef.current;
+    if (!container) return;
+    if (smooth) {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: "smooth",
+      });
+    } else {
+      container.scrollTop = container.scrollHeight;
+    }
   }, []);
 
-  // Safeguard: If role changes or current channel becomes unreadable, auto-switch
-  useEffect(() => {
-    if (!canReadChannel(selectedChannel, currentUserRole)) {
-      const fallback = visibleChannels[0]?.id || "general";
-      setSelectedChannel(fallback);
+  // Smooth scroll to target message strictly inside chatFeedRef (zero window.scrollY alteration)
+  const handleScrollToMessage = useCallback((messageId: string) => {
+    const container = chatFeedRef.current;
+    const el =
+      document.getElementById(`msg-${messageId}`) ||
+      document.getElementById(`staff-message-${messageId}`);
+
+    if (container && el) {
+      // Calculate relative vertical offset inside the scrollable container
+      const containerRect = container.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const relativeTop = elRect.top - containerRect.top + container.scrollTop;
+      const targetScroll = relativeTop - (container.clientHeight / 2) + (el.clientHeight / 2);
+
+      container.scrollTo({
+        top: Math.max(0, targetScroll),
+        behavior: "smooth",
+      });
+
+      setHighlightedMessageId(messageId);
+      setTimeout(() => {
+        setHighlightedMessageId((curr) => (curr === messageId ? null : curr));
+      }, 2500);
+    } else {
+      toast.info("Target message is outside current feed view.");
     }
-  }, [selectedChannel, currentUserRole, visibleChannels]);
+  }, []);
 
   // Channel switch and initial fetch
   useEffect(() => {
@@ -154,24 +250,63 @@ export function StaffLiveChatHub({
     };
   }, [selectedChannel]);
 
+  // Scoped auto-scroll on message updates (avoids scrolling window)
   useEffect(() => {
-    if (!isLoading) {
-      scrollToBottom();
+    if (!isLoading && !editingMessage) {
+      scrollToBottom(false);
     }
-  }, [optimisticMessages.length, isLoading, scrollToBottom]);
+  }, [optimisticMessages.length, isLoading, scrollToBottom, editingMessage]);
 
   const handleSelectChannel = (channel: StaffChatChannel) => {
     if (channel === selectedChannel) return;
     setIsLoading(true);
-    setSelectedChannel(channel);
+    setReplyingTo(null);
+    setEditingMessage(null);
+    setInputContent("");
+    setAttachedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    setUserSelectedChannel(channel);
   };
 
   const canBroadcastInChannel = canWriteChannel(selectedChannel, currentUserRole);
 
-  // Transmit Message with React 19 Optimistic UI
+  // Start Editing a message (strictly own messages)
+  const handleStartEdit = (msg: StaffChatMessage) => {
+    if (msg.deletedAt) return;
+    setEditingMessage(msg);
+    setReplyingTo(null);
+    setInputContent(msg.content);
+    setTimeout(() => {
+      textareaRef.current?.focus();
+      textareaRef.current?.select();
+    }, 50);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMessage(null);
+    setInputContent("");
+  };
+
+  // Start Replying to a message
+  const handleStartReply = (msg: StaffChatMessage) => {
+    setReplyingTo(msg);
+    setEditingMessage(null);
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 50);
+  };
+
+  const handleCancelReply = () => {
+    setReplyingTo(null);
+  };
+
+  // Transmit Message or Save Edited Message
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const trimmed = inputContent.trim();
+    let trimmed = inputContent.trim();
+    if (attachedFile) {
+      trimmed = trimmed ? `${trimmed}\n\n📎 [Attachment: ${attachedFile.name}]` : `📎 [Attachment: ${attachedFile.name}]`;
+    }
     if (!trimmed || isSubmitting) return;
 
     if (!canBroadcastInChannel) {
@@ -179,21 +314,71 @@ export function StaffLiveChatHub({
       return;
     }
 
+    // Mode A: Editing Existing Message
+    if (editingMessage) {
+      setIsSubmitting(true);
+      const targetId = editingMessage.id;
+      handleCancelEdit();
+
+      startTransition(async () => {
+        try {
+          const res = await editStaffChatMessage({
+            messageId: targetId,
+            content: trimmed,
+          });
+
+          if (res.success && res.data) {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === targetId ? { ...m, content: trimmed, isEdited: true, updatedAt: new Date().toISOString() } : m
+              )
+            );
+            toast.success("Message updated successfully.");
+          } else {
+            toast.error(res.error || "Failed to update message.");
+            setInputContent(trimmed);
+          }
+        } catch (err) {
+          console.error("Edit message error:", err);
+          toast.error("Failed to update message.");
+          setInputContent(trimmed);
+        } finally {
+          setIsSubmitting(false);
+        }
+      });
+      return;
+    }
+
+    // Mode B: Posting New Message (with optional inline reply)
     const tempId = `optimistic-${Date.now()}`;
     const optimisticMsg: StaffChatMessage = {
       id: tempId,
       channel: selectedChannel,
-      userId: currentUserId || "staff-optimistic-id",
+      userId: resolvedUserId || "staff-optimistic-id",
       authorName: "You",
       authorRole: currentUserRole,
       content: trimmed,
       isPinned: false,
+      isEdited: false,
+      replyToId: replyingTo?.id || null,
+      replyTo: replyingTo
+        ? {
+            id: replyingTo.id,
+            authorName: replyingTo.authorName,
+            content: replyingTo.deletedAt ? "[This message was deleted]" : replyingTo.content,
+          }
+        : null,
+      deletedAt: null,
       createdAt: new Date().toISOString(),
     };
 
+    const currentReplyToId = replyingTo?.id || null;
     setInputContent("");
+    setAttachedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    setReplyingTo(null);
     setIsSubmitting(true);
-    scrollToBottom();
+    scrollToBottom(true);
 
     startTransition(async () => {
       addOptimisticMessage(optimisticMsg);
@@ -201,11 +386,12 @@ export function StaffLiveChatHub({
         const res = await postStaffChatMessage({
           channel: selectedChannel,
           content: trimmed,
+          replyToId: currentReplyToId,
         });
 
         if (res.success && res.data) {
           setMessages((prev) => [...prev, res.data as StaffChatMessage]);
-          scrollToBottom();
+          scrollToBottom(true);
         } else {
           toast.error(res.error || "Failed to send message.");
           setInputContent(trimmed);
@@ -220,9 +406,17 @@ export function StaffLiveChatHub({
     });
   };
 
-  // Keyboard shortcut: Enter to send, Shift+Enter for newline
+  // Keyboard shortcut: Enter to send, Shift+Enter for newline, Esc to cancel edit/reply
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Escape") {
+      if (editingMessage) {
+        e.preventDefault();
+        handleCancelEdit();
+      } else if (replyingTo) {
+        e.preventDefault();
+        handleCancelReply();
+      }
+    } else if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       void handleSendMessage();
     }
@@ -250,12 +444,16 @@ export function StaffLiveChatHub({
     });
   };
 
-  // Delete Message
+  // Soft Delete Message
   const handleDeleteMessage = (messageId: string) => {
     startTransition(async () => {
       const res = await deleteStaffChatMessage(messageId);
       if (res.success) {
-        setMessages((prev) => prev.filter((m) => m.id !== messageId));
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === messageId ? { ...m, deletedAt: new Date().toISOString() } : m
+          )
+        );
         toast.success("Message removed from staff logs.");
       } else {
         toast.error(res.error || "Failed to delete message.");
@@ -263,7 +461,12 @@ export function StaffLiveChatHub({
     });
   };
 
-  const pinnedMessages = messages.filter((m) => m.isPinned);
+  const pinnedMessages = useMemo(() => {
+    return messages.filter((m) => m.isPinned && !m.deletedAt);
+  }, [messages]);
+
+  const safePinIndex = pinnedMessages.length > 0 ? Math.min(activePinIndex, pinnedMessages.length - 1) : 0;
+  const currentPin = pinnedMessages[safePinIndex] || pinnedMessages[0];
   const activeChannelMeta = STAFF_CHANNELS.find((c) => c.id === selectedChannel);
 
   // Helper for rendering channel icon
@@ -285,8 +488,9 @@ export function StaffLiveChatHub({
 
   return (
     <div
-      className={`flex flex-col bg-void-surface border border-void-border rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md ${embedded ? "h-[700px] w-full" : "h-[750px] max-w-6xl mx-auto"
-        }`}
+      className={`flex flex-col bg-void-surface border border-void-border rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md ${
+        embedded ? "h-[700px] w-full" : "h-[750px] max-w-6xl mx-auto"
+      }`}
     >
       {/* Top Bar Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-void-deep/90 border-b border-void-border">
@@ -338,10 +542,11 @@ export function StaffLiveChatHub({
                 key={ch.id}
                 type="button"
                 onClick={() => handleSelectChannel(ch.id)}
-                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between group cursor-pointer ${isSelected
+                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between group cursor-pointer ${
+                  isSelected
                     ? "bg-plasma-cyan/15 text-plasma-cyan border border-plasma-cyan/40 shadow-[0_0_15px_rgba(0,229,255,0.15)]"
                     : "text-gray-400 hover:text-white hover:bg-void-surface border border-transparent"
-                  }`}
+                }`}
               >
                 <div className="flex items-center gap-2 truncate">
                   {getChannelIcon(ch.id, isSelected)}
@@ -394,23 +599,122 @@ export function StaffLiveChatHub({
             </div>
           </div>
 
-          {/* Pinned Announcements Bar */}
-          {pinnedMessages.length > 0 && (
-            <div className="bg-amber-500/10 border-b border-amber-500/30 px-6 py-2.5 flex items-start gap-3 text-xs">
-              <Pin className="w-4 h-4 text-amber-400 shrink-0 mt-0.5 fill-amber-400/20" />
-              <div className="flex-1 overflow-hidden">
-                <span className="font-bold text-amber-300 uppercase tracking-wider text-[10px] block">
-                  Pinned Announcement
-                </span>
-                <p className="text-gray-200 line-clamp-2 text-xs">
-                  {pinnedMessages[pinnedMessages.length - 1].content}
-                </p>
+          {/* Historically Accurate Pinned Announcements Navigator */}
+          {pinnedMessages.length > 0 && currentPin && (
+            <div className="bg-amber-500/10 border-b border-amber-500/30 px-6 py-2.5 flex flex-col gap-2 text-xs relative">
+              <div className="flex items-center justify-between gap-3">
+                <div
+                  onClick={() => handleScrollToMessage(currentPin.id)}
+                  className="flex items-start gap-3 flex-1 overflow-hidden cursor-pointer group/pin"
+                  title="Click to jump to this pinned message"
+                >
+                  <Pin className="w-4 h-4 text-amber-400 shrink-0 mt-0.5 fill-amber-400/20 group-hover/pin:scale-110 transition-transform" />
+                  <div className="flex-1 overflow-hidden">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-amber-300 uppercase tracking-wider text-[10px] block">
+                        Pinned Announcement
+                      </span>
+                      {pinnedMessages.length > 1 && (
+                        <span className="text-[10px] font-mono text-amber-400/80">
+                          ({safePinIndex + 1} of {pinnedMessages.length})
+                        </span>
+                      )}
+                      <span className="text-[10px] font-mono text-amber-400/80 group-hover/pin:text-amber-300 flex items-center gap-1 ml-auto sm:ml-2">
+                        <span>Jump to pin</span>
+                        <span>↓</span>
+                      </span>
+                    </div>
+                    <p className="text-gray-200 line-clamp-1 text-xs mt-0.5">
+                      {currentPin.content}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Pin Controls: Prev/Next and Toggle List if multiple pins exist */}
+                {pinnedMessages.length > 1 && (
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActivePinIndex((prev) => (prev > 0 ? prev - 1 : pinnedMessages.length - 1));
+                      }}
+                      title="Previous pin"
+                      className="p-1 rounded-md bg-void-deep/80 hover:bg-void-deep text-amber-400 hover:text-amber-300 border border-amber-500/30 transition-colors cursor-pointer"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActivePinIndex((prev) => (prev < pinnedMessages.length - 1 ? prev + 1 : 0));
+                      }}
+                      title="Next pin"
+                      className="p-1 rounded-md bg-void-deep/80 hover:bg-void-deep text-amber-400 hover:text-amber-300 border border-amber-500/30 transition-colors cursor-pointer"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsPinDropdownOpen((prev) => !prev);
+                      }}
+                      title="Show all pinned messages"
+                      className="px-2 py-1 rounded-md bg-void-deep/80 hover:bg-void-deep text-amber-400 hover:text-amber-300 border border-amber-500/30 text-[10px] font-mono font-bold transition-colors cursor-pointer"
+                    >
+                      All Pins ({pinnedMessages.length})
+                    </button>
+                  </div>
+                )}
               </div>
+
+              {/* Dropdown list of all historical pins */}
+              {isPinDropdownOpen && pinnedMessages.length > 1 && (
+                <div className="mt-1 p-2 rounded-xl bg-void-surface border border-amber-500/30 shadow-2xl space-y-1.5 max-h-48 overflow-y-auto animate-in fade-in duration-150">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2 block">
+                    All Pinned Messages ({pinnedMessages.length})
+                  </span>
+                  {pinnedMessages.map((pin, idx) => (
+                    <div
+                      key={pin.id}
+                      onClick={() => {
+                        setActivePinIndex(idx);
+                        setIsPinDropdownOpen(false);
+                        handleScrollToMessage(pin.id);
+                      }}
+                      className={`p-2 rounded-lg cursor-pointer transition-all flex items-start justify-between gap-3 text-xs border ${
+                        idx === safePinIndex
+                          ? "bg-amber-500/20 border-amber-500/40 text-white"
+                          : "bg-void-deep/70 border-void-border text-gray-300 hover:bg-void-deep hover:border-amber-500/30"
+                      }`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="font-bold text-white text-[11px] truncate">
+                            {pin.authorName}
+                          </span>
+                          <span className="text-[10px] text-gray-500 font-mono" suppressHydrationWarning>
+                            {new Date(pin.createdAt).toLocaleDateString([], { month: "short", day: "numeric" })}
+                          </span>
+                        </div>
+                        <p className="line-clamp-2 text-[11px] text-gray-300">
+                          {pin.content}
+                        </p>
+                      </div>
+                      <span className="text-[10px] font-mono text-amber-400 hover:underline shrink-0 mt-0.5">
+                        Jump →
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {/* Messages Feed */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          {/* Messages Feed strictly scoped to chatFeedRef */}
+          <div ref={chatFeedRef} className="flex-1 overflow-y-auto p-6 space-y-4">
             {isLoading ? (
               <div className="h-full flex items-center justify-center text-xs text-gray-400 gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-plasma-cyan" />
@@ -432,34 +736,69 @@ export function StaffLiveChatHub({
               optimisticMessages.map((msg) => {
                 const isOptimistic = msg.id.startsWith("optimistic-");
                 const badgeInfo = ROLE_BADGE_CONFIG[msg.authorRole];
-                const isAuthor = currentUserId ? msg.userId === currentUserId : false;
-                const canModerate =
+                const isAuthor = resolvedUserId ? msg.userId === resolvedUserId : false;
+                const isDeleted = Boolean(msg.deletedAt);
+
+                // Permissions: users can ONLY edit their own messages
+                const canEdit = !isOptimistic && !isDeleted && isAuthor;
+
+                // Permissions: users can soft-delete their own messages, or root/admin can moderate
+                const canDelete =
                   !isOptimistic &&
-                  (isAuthor ||
-                    currentUserRole === "root" ||
-                    currentUserRole === "admin" ||
-                    currentUserRole === "moderator");
+                  !isDeleted &&
+                  (isAuthor || currentUserRole === "root" || currentUserRole === "admin");
+
                 const canPin =
                   !isOptimistic &&
+                  !isDeleted &&
                   (currentUserRole === "root" ||
                     currentUserRole === "admin" ||
                     currentUserRole === "moderator");
 
+                const canReply = !isOptimistic && !isDeleted && canBroadcastInChannel;
+                const isHighlighted = highlightedMessageId === msg.id;
+
                 return (
                   <div
                     key={msg.id}
-                    className={`group rounded-2xl p-4 transition-all border ${isOptimistic
+                    id={`msg-${msg.id}`}
+                    data-message-id={msg.id}
+                    className={`group rounded-2xl p-4 transition-all duration-300 border ${
+                      isHighlighted
+                        ? "ring-2 ring-plasma-cyan shadow-[0_0_30px_rgba(0,229,255,0.45)] bg-plasma-cyan/15 scale-[1.01]"
+                        : isOptimistic
                         ? "bg-plasma-cyan/5 border-plasma-cyan/40 opacity-80 animate-pulse"
                         : msg.isPinned
-                          ? "bg-amber-500/5 border-amber-500/30"
-                          : "bg-void-surface/70 border-void-border hover:border-void-border/90"
-                      }`}
+                        ? "bg-amber-500/5 border-amber-500/30"
+                        : "bg-void-surface/70 border-void-border hover:border-void-border/90"
+                    }`}
                   >
+                    {/* Inline Discord-style Reply Preview Above Message */}
+                    {msg.replyTo && (
+                      <div
+                        onClick={() => handleScrollToMessage(msg.replyTo!.id)}
+                        className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2 hover:text-plasma-cyan cursor-pointer transition-colors group/reply select-none pl-2 border-l-2 border-void-border hover:border-plasma-cyan"
+                        title="Click to jump to message"
+                      >
+                        <CornerDownRight className="w-3 h-3 text-gray-500 group-hover/reply:text-plasma-cyan shrink-0" />
+                        <span className="font-semibold text-gray-300 group-hover/reply:text-white">
+                          @{msg.replyTo.authorName}:
+                        </span>
+                        <span className="truncate max-w-xs sm:max-w-md text-gray-400 group-hover/reply:text-gray-200">
+                          {msg.replyTo.content}
+                        </span>
+                      </div>
+                    )}
+
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-2.5 flex-wrap">
-                        <div className="w-7 h-7 rounded-lg bg-void-deep border border-void-border flex items-center justify-center text-xs font-black text-plasma-cyan font-mono">
-                          {msg.authorName.slice(0, 2).toUpperCase()}
-                        </div>
+                        <AvatarFallback
+                          src={msg.authorAvatar}
+                          userId={msg.userId}
+                          name={msg.authorName}
+                          sizeClassName="w-7 h-7"
+                          className="rounded-lg border-void-border shrink-0"
+                        />
                         <span className="font-bold text-white text-xs">
                           {msg.authorName}
                         </span>
@@ -478,7 +817,7 @@ export function StaffLiveChatHub({
                             TRANSMITTING...
                           </span>
                         ) : (
-                          <span className="text-[10px] text-gray-500 font-mono">
+                          <span className="text-[10px] text-gray-500 font-mono" suppressHydrationWarning>
                             {new Date(msg.createdAt).toLocaleTimeString([], {
                               hour: "2-digit",
                               minute: "2-digit",
@@ -486,7 +825,7 @@ export function StaffLiveChatHub({
                           </span>
                         )}
 
-                        {msg.isPinned && (
+                        {msg.isPinned && !isDeleted && (
                           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
                             <Pin className="w-2.5 h-2.5 fill-amber-300" />
                             PINNED
@@ -494,46 +833,85 @@ export function StaffLiveChatHub({
                         )}
                       </div>
 
-                      {/* Message Actions */}
-                      {!isOptimistic && (
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                      {/* Discord-like Message Action Bar on Hover */}
+                      {!isOptimistic && !isDeleted && (
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-void-deep/80 p-0.5 rounded-xl border border-void-border">
+                          {canReply && (
+                            <button
+                              type="button"
+                              onClick={() => handleStartReply(msg)}
+                              title="Reply"
+                              className="p-1.5 rounded-lg text-gray-400 hover:text-plasma-cyan hover:bg-void-surface transition-all cursor-pointer"
+                            >
+                              <CornerDownRight className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+
+                          {canEdit && (
+                            <button
+                              type="button"
+                              onClick={() => handleStartEdit(msg)}
+                              title="Edit message"
+                              className="p-1.5 rounded-lg text-gray-400 hover:text-amber-300 hover:bg-void-surface transition-all cursor-pointer"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+
                           {canPin && (
                             <button
                               type="button"
                               onClick={() => handleTogglePin(msg.id)}
                               disabled={isPending}
                               title={msg.isPinned ? "Unpin message" : "Pin message"}
-                              className={`p-1.5 rounded-lg border transition-all cursor-pointer ${msg.isPinned
-                                  ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
-                                  : "bg-void-deep border-void-border text-gray-400 hover:text-white"
-                                }`}
+                              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                                msg.isPinned
+                                  ? "text-amber-300 bg-amber-500/20 hover:bg-amber-500/30"
+                                  : "text-gray-400 hover:text-white hover:bg-void-surface"
+                              }`}
                             >
-                              <Pin className="w-3 h-3" />
+                              <Pin className="w-3.5 h-3.5" />
                             </button>
                           )}
-                          {canModerate && (
+
+                          {canDelete && (
                             <button
                               type="button"
                               onClick={() => handleDeleteMessage(msg.id)}
                               disabled={isPending}
                               title="Delete message"
-                              className="p-1.5 rounded-lg bg-void-deep border border-void-border text-gray-400 hover:text-nova-flare hover:border-nova-flare/40 transition-all cursor-pointer"
+                              className="p-1.5 rounded-lg text-gray-400 hover:text-nova-flare hover:bg-void-surface transition-all cursor-pointer"
                             >
-                              <Trash2 className="w-3 h-3" />
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           )}
                         </div>
                       )}
                     </div>
 
-                    <p className="text-xs text-gray-300 mt-2.5 leading-relaxed whitespace-pre-wrap break-words">
-                      {msg.content}
-                    </p>
+                    {/* Message Content: Active text or Soft-deleted placeholder */}
+                    <div className="mt-2 text-xs leading-relaxed">
+                      {isDeleted ? (
+                        <span className="italic text-gray-500 font-mono">
+                          [This message was deleted by author or staff moderation]
+                        </span>
+                      ) : (
+                        <div className="space-y-1">
+                          <p className="text-gray-200 whitespace-pre-wrap break-words">
+                            {msg.content}
+                          </p>
+                          {msg.isEdited && (
+                            <span className="text-[10px] text-gray-500 font-mono italic">
+                              (edited)
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })
             )}
-            <div ref={messagesEndRef} />
           </div>
 
           {/* Bottom Bar: Input or Restriction Banner */}
@@ -552,6 +930,75 @@ export function StaffLiveChatHub({
               </div>
             ) : (
               <form onSubmit={handleSendMessage} className="space-y-2">
+                {/* Replying-To Preview Banner */}
+                {replyingTo && (
+                  <div className="flex items-center justify-between px-3.5 py-1.5 bg-void-deep/90 border border-plasma-cyan/40 rounded-xl text-xs text-gray-300 shadow-sm animate-in fade-in duration-150">
+                    <div className="flex items-center gap-2 truncate">
+                      <CornerDownRight className="w-3.5 h-3.5 text-plasma-cyan shrink-0" />
+                      <span className="text-[11px] text-gray-400">Replying to</span>
+                      <span className="text-[11px] font-bold text-plasma-cyan">@{replyingTo.authorName}</span>
+                      <span className="text-[11px] text-gray-400 truncate max-w-xs sm:max-w-md">
+                        &quot;{replyingTo.deletedAt ? "[This message was deleted]" : replyingTo.content}&quot;
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleCancelReply}
+                      className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-void-surface transition-colors cursor-pointer"
+                      title="Cancel reply (Esc)"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Editing Message Banner */}
+                {editingMessage && (
+                  <div className="flex items-center justify-between px-3.5 py-1.5 bg-void-deep/90 border border-amber-500/40 rounded-xl text-xs text-gray-300 shadow-sm animate-in fade-in duration-150">
+                    <div className="flex items-center gap-2 truncate">
+                      <Pencil className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span className="text-[11px] text-amber-300 font-bold">Editing message</span>
+                      <span className="text-[11px] text-gray-400 truncate max-w-xs sm:max-w-md">
+                        &quot;{editingMessage.content}&quot;
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-gray-500 font-mono hidden sm:inline">Esc to cancel</span>
+                      <button
+                        type="button"
+                        onClick={handleCancelEdit}
+                        className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-void-surface transition-colors cursor-pointer"
+                        title="Cancel edit (Esc)"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* File Attachment Preview Chip */}
+                {attachedFile && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-void-deep/90 border border-plasma-cyan/40 rounded-xl text-xs text-plasma-cyan shadow-sm animate-in fade-in duration-150 w-fit">
+                    <Paperclip className="w-3.5 h-3.5 text-plasma-cyan shrink-0" />
+                    <span className="font-medium text-white truncate max-w-xs">{attachedFile.name}</span>
+                    <span className="text-[10px] text-gray-400 font-mono">
+                      ({(attachedFile.size / 1024).toFixed(0)} KB)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAttachedFile(null);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }}
+                      className="p-0.5 rounded text-gray-400 hover:text-nova-flare transition-colors cursor-pointer"
+                      title="Remove attachment"
+                      aria-label="Remove attachment"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
                 <div className="relative">
                   <textarea
                     ref={textareaRef}
@@ -560,25 +1007,58 @@ export function StaffLiveChatHub({
                     onKeyDown={handleKeyDown}
                     disabled={isSubmitting}
                     rows={2}
-                    placeholder={`Transmit message to #${selectedChannel} (Enter to send, Shift+Enter for new line)...`}
-                    className="w-full bg-void-deep/90 border border-void-border focus:border-plasma-cyan rounded-xl p-3 text-xs text-white placeholder-gray-500 resize-none outline-none transition-all pr-12 focus:shadow-[0_0_15px_rgba(0,229,255,0.15)]"
+                    placeholder={
+                      editingMessage
+                        ? "Edit transmission (Enter to save, Esc to cancel)..."
+                        : `Transmit message to #${selectedChannel} (Enter to send, Shift+Enter for new line)...`
+                    }
+                    className={`w-full bg-void-deep/90 border rounded-xl p-3 text-xs text-white placeholder-gray-500 resize-none outline-none transition-all pr-20 ${
+                      editingMessage
+                        ? "border-amber-500/50 focus:border-amber-400 focus:shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+                        : "border-void-border focus:border-plasma-cyan focus:shadow-[0_0_15px_rgba(0,229,255,0.15)]"
+                    }`}
                   />
-                  <button
-                    type="submit"
-                    disabled={isSubmitting || !inputContent.trim()}
-                    title="Send message"
-                    className="absolute right-2.5 bottom-3.5 p-2 rounded-lg bg-plasma-cyan text-void-deep font-bold hover:bg-plasma-cyan/90 transition-all disabled:opacity-30 disabled:pointer-events-none shadow-[0_0_10px_rgba(0,229,255,0.3)] cursor-pointer"
-                  >
-                    {isSubmitting ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Send className="w-4 h-4" />
-                    )}
-                  </button>
+                  <div className="absolute right-2.5 bottom-3.5 flex items-center gap-1">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileSelect}
+                      accept="image/png,image/jpeg,image/webp,application/pdf"
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isSubmitting}
+                      title="Attach Image or Document (PNG, JPG, WEBP, PDF)"
+                      aria-label="Attach file"
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-plasma-cyan hover:bg-plasma-cyan/10 transition-colors cursor-pointer"
+                    >
+                      <Paperclip className="w-4 h-4 text-plasma-cyan" />
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || (!inputContent.trim() && !attachedFile)}
+                      title={editingMessage ? "Save changes" : "Send message"}
+                      className={`p-2 rounded-lg font-bold transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer ${
+                        editingMessage
+                          ? "bg-amber-500 text-void-deep hover:bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.3)]"
+                          : "bg-plasma-cyan text-void-deep hover:bg-plasma-cyan/90 shadow-[0_0_10px_rgba(0,229,255,0.3)]"
+                      }`}
+                    >
+                      {isSubmitting ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : editingMessage ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <Send className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between text-[10px] text-gray-500 px-1">
                   <span>Markdown formatting supported</span>
-                  <span>Press Enter to send</span>
+                  <span>{editingMessage ? "Press Enter to save changes" : "Press Enter to send"}</span>
                 </div>
               </form>
             )}

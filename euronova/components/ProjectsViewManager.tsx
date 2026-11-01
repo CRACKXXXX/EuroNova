@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { LayoutGrid, List, Search } from "lucide-react";
 import { ProjectCard, ProjectData } from "@/components/ProjectCard";
 import { CreateAlertButton } from "@/components/CreateAlertButton";
+import { CosmicTooltip } from "@/components/CosmicTooltip";
 import { useTranslations } from "next-intl";
 
 interface ProjectsViewManagerProps {
@@ -56,32 +57,35 @@ export function ProjectsViewManager({ projects }: ProjectsViewManagerProps) {
 
         {/* View Mode Toggle Buttons */}
         <div className="flex items-center p-1 rounded-xl bg-void-surface border border-void-border shadow-inner">
-          <button
-            type="button"
-            onClick={() => handleToggle("grid")}
-            className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-              viewMode === "grid"
-                ? "bg-plasma-cyan text-void-deep shadow-[0_0_12px_rgba(0,229,255,0.4)]"
-                : "text-gray-400 hover:text-white"
-            }`}
-            title={t("gridView")}
-            aria-label={t("gridView")}
-          >
-            <LayoutGrid className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => handleToggle("list")}
-            className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-              viewMode === "list"
-                ? "bg-plasma-cyan text-void-deep shadow-[0_0_12px_rgba(0,229,255,0.4)]"
-                : "text-gray-400 hover:text-white"
-            }`}
-            title={t("listView")}
-            aria-label={t("listView")}
-          >
-            <List className="w-4 h-4" />
-          </button>
+          <CosmicTooltip content={t("gridView")} side="top">
+            <button
+              type="button"
+              onClick={() => handleToggle("grid")}
+              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                viewMode === "grid"
+                  ? "bg-plasma-cyan text-void-deep shadow-[0_0_12px_rgba(0,229,255,0.4)]"
+                  : "text-gray-400 hover:text-white"
+              }`}
+              aria-label={t("gridView")}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+          </CosmicTooltip>
+
+          <CosmicTooltip content={t("listView")} side="top">
+            <button
+              type="button"
+              onClick={() => handleToggle("list")}
+              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                viewMode === "list"
+                  ? "bg-plasma-cyan text-void-deep shadow-[0_0_12px_rgba(0,229,255,0.4)]"
+                  : "text-gray-400 hover:text-white"
+              }`}
+              aria-label={t("listView")}
+            >
+              <List className="w-4 h-4" />
+            </button>
+          </CosmicTooltip>
         </div>
       </div>
 
@@ -101,12 +105,16 @@ export function ProjectsViewManager({ projects }: ProjectsViewManagerProps) {
           ))}
         </div>
       ) : (
-        <div className="py-20 text-center border border-dashed border-void-border rounded-2xl bg-void-surface/50">
-          <Search className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-white mb-2">
+        <div className="py-20 text-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-void-surface border border-void-border flex items-center justify-center mx-auto text-gray-500 shadow-inner">
+            <Search className="w-8 h-8" />
+          </div>
+          <h3 className="text-lg font-bold text-white">
             {t("waitingTransmissions")}
           </h3>
-          <p className="text-gray-400">{t("adjustFilters")}</p>
+          <p className="text-sm text-gray-400 max-w-sm mx-auto">
+            {t("adjustFilters")}
+          </p>
         </div>
       )}
     </div>

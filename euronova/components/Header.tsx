@@ -23,6 +23,7 @@ import { LogoutButton } from "@/components/LogoutButton";
 import { UserLevelBadge } from "@/components/UserLevelBadge";
 import { PassiveXpTracker } from "@/components/PassiveXpTracker";
 import { NotificationBell } from "@/components/NotificationBell";
+import { CosmicTooltip } from "@/components/CosmicTooltip";
 import { calculateLevelFromXp } from "@/lib/gamification";
 import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/utils/supabase/client";
@@ -192,74 +193,97 @@ export function Header({
             </div>
           </Link>
 
-          {/* Desktop Navigation Links - Strict single line with active indicators */}
+          {/* Desktop Navigation Links - Viewport-aware Cosmic Tooltips */}
           <nav className="hidden xl:flex items-center gap-4 2xl:gap-6 flex-nowrap shrink-0 whitespace-nowrap">
-            <Link
-              href={`/${locale}/dashboard`}
-              className={`flex items-center gap-1.5 text-sm py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
-                isHomeActive
-                  ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
-                  : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
-              }`}
-            >
-              <Home className={`w-4 h-4 transition-colors ${isHomeActive ? "text-plasma-cyan" : ""}`} />
-              <span>{t("home")}</span>
-            </Link>
-            <Link
-              href={`/${locale}/dashboard/projects`}
-              className={`flex items-center gap-1.5 text-sm py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
-                isProjectsActive
-                  ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
-                  : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
-              }`}
-            >
-              <Compass className={`w-4 h-4 transition-colors ${isProjectsActive ? "text-plasma-cyan" : ""}`} />
-              <span>{t("searchProjects")}</span>
-            </Link>
-            <Link
-              href={`/${locale}/dashboard/organizations`}
-              className={`flex items-center gap-1.5 text-sm py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
-                isOrgsActive
-                  ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
-                  : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
-              }`}
-            >
-              <Building className={`w-4 h-4 transition-colors ${isOrgsActive ? "text-plasma-cyan" : ""}`} />
-              <span>{t("searchOrgs")}</span>
-            </Link>
-            <Link
-              href={`/${locale}/dashboard/my-missions`}
-              className={`flex items-center gap-1.5 text-sm py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
-                isMissionsActive
-                  ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
-                  : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
-              }`}
-            >
-              <Briefcase className={`w-4 h-4 transition-colors ${isMissionsActive ? "text-plasma-cyan" : ""}`} />
-              <span>{t("myMissions")}</span>
-            </Link>
-            <Link
-              href={`/${locale}/community`}
-              className={`flex items-center gap-1.5 text-sm py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
-                isCommunityActive
-                  ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
-                  : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
-              }`}
-            >
-              <Users className={`w-4 h-4 transition-colors ${isCommunityActive ? "text-plasma-cyan" : ""}`} />
-              <span>{t("community")}</span>
-            </Link>
-            <Link
-              href={`/${locale}/map`}
-              className={`flex items-center gap-1.5 text-sm py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent group ${
-                isMapActive
-                  ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
-                  : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
-              }`}
-            >
-              <MapIcon className={`w-4 h-4 transition-colors ${isMapActive ? "text-plasma-cyan" : "text-gray-400 group-hover:text-plasma-cyan"}`} />
-              <span>{t("map")}</span>
-            </Link>
+            <CosmicTooltip content={t("home")} side="bottom">
+              <Link
+                href={`/${locale}/dashboard`}
+                aria-label={t("home")}
+                className={`flex items-center gap-1.5 text-sm py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
+                  isHomeActive
+                    ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
+                    : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
+                }`}
+              >
+                <Home className={`w-4 h-4 transition-colors ${isHomeActive ? "text-plasma-cyan" : ""}`} />
+                <span>{t("home")}</span>
+              </Link>
+            </CosmicTooltip>
+
+            <CosmicTooltip content={t("searchProjects")} side="bottom">
+              <Link
+                href={`/${locale}/dashboard/projects`}
+                aria-label={t("searchProjects")}
+                className={`flex items-center gap-1.5 text-sm py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
+                  isProjectsActive
+                    ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
+                    : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
+                }`}
+              >
+                <Compass className={`w-4 h-4 transition-colors ${isProjectsActive ? "text-plasma-cyan" : ""}`} />
+                <span>{t("searchProjects")}</span>
+              </Link>
+            </CosmicTooltip>
+
+            <CosmicTooltip content={t("searchOrgs")} side="bottom">
+              <Link
+                href={`/${locale}/dashboard/organizations`}
+                aria-label={t("searchOrgs")}
+                className={`flex items-center gap-1.5 text-sm py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
+                  isOrgsActive
+                    ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
+                    : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
+                }`}
+              >
+                <Building className={`w-4 h-4 transition-colors ${isOrgsActive ? "text-plasma-cyan" : ""}`} />
+                <span>{t("searchOrgs")}</span>
+              </Link>
+            </CosmicTooltip>
+
+            <CosmicTooltip content={t("myMissions")} side="bottom">
+              <Link
+                href={`/${locale}/dashboard/my-missions`}
+                aria-label={t("myMissions")}
+                className={`flex items-center gap-1.5 text-sm py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
+                  isMissionsActive
+                    ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
+                    : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
+                }`}
+              >
+                <Briefcase className={`w-4 h-4 transition-colors ${isMissionsActive ? "text-plasma-cyan" : ""}`} />
+                <span>{t("myMissions")}</span>
+              </Link>
+            </CosmicTooltip>
+
+            <CosmicTooltip content={t("community")} side="bottom">
+              <Link
+                href={`/${locale}/community`}
+                aria-label={t("community")}
+                className={`flex items-center gap-1.5 text-sm py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
+                  isCommunityActive
+                    ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
+                    : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
+                }`}
+              >
+                <Users className={`w-4 h-4 transition-colors ${isCommunityActive ? "text-plasma-cyan" : ""}`} />
+                <span>{t("community")}</span>
+              </Link>
+            </CosmicTooltip>
+
+            <CosmicTooltip content={t("map")} side="bottom">
+              <Link
+                href={`/${locale}/map`}
+                aria-label={t("map")}
+                className={`flex items-center gap-1.5 text-sm py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent group ${
+                  isMapActive
+                    ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
+                    : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
+                }`}
+              >
+                <MapIcon className={`w-4 h-4 transition-colors ${isMapActive ? "text-plasma-cyan" : "text-gray-400 group-hover:text-plasma-cyan"}`} />
+                <span>{t("map")}</span>
+              </Link>
+            </CosmicTooltip>
           </nav>
         </div>
 
@@ -275,66 +299,73 @@ export function Header({
 
           {/* Clean Elegant Icon Button: Publish Mission (For NGOs/Organizations) */}
           {isOrg && (
-            <Link
-              href={`/${locale}/dashboard/projects/new`}
-              title={t("publish")}
-              aria-label={t("publish")}
-              className="p-2 rounded-lg bg-plasma-cyan/10 hover:bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/30 hover:border-plasma-cyan transition-all shrink-0 flex items-center justify-center shadow-[0_0_10px_rgba(0,229,255,0.15)]"
-            >
-              <PlusCircle className="w-4 h-4" />
-            </Link>
+            <CosmicTooltip content={t("publish")} side="bottom">
+              <Link
+                href={`/${locale}/dashboard/projects/new`}
+                aria-label={t("publish")}
+                className="p-2 rounded-lg bg-plasma-cyan/10 hover:bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/30 hover:border-plasma-cyan transition-all shrink-0 flex items-center justify-center shadow-[0_0_10px_rgba(0,229,255,0.15)]"
+              >
+                <PlusCircle className="w-4 h-4" />
+              </Link>
+            </CosmicTooltip>
           )}
 
           {/* Moderator Panel Link (Strictly for moderator role only) */}
           {staffRole === "moderator" && (
-            <Link
-              href={`/${locale}/dashboard/moderator-panel`}
-              title={t("moderatorPanel")}
-              aria-label={t("moderatorPanel")}
-              className="p-2 min-w-[44px] min-h-[44px] rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:border-amber-400 focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(245,158,11,0.15)]"
-            >
-              <ShieldCheck className="w-4 h-4" />
-            </Link>
+            <CosmicTooltip content={t("moderatorPanel")} side="bottom">
+              <Link
+                href={`/${locale}/dashboard/moderator-panel`}
+                aria-label={t("moderatorPanel")}
+                className="p-2 min-w-[44px] min-h-[44px] rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:border-amber-400 focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(245,158,11,0.15)]"
+              >
+                <ShieldCheck className="w-4 h-4" />
+              </Link>
+            </CosmicTooltip>
           )}
 
           {/* Support Panel Link (Strictly for support role only) */}
           {staffRole === "support" && (
-            <Link
-              href={`/${locale}/dashboard/support-panel`}
-              title={t("supportPanel")}
-              aria-label={t("supportPanel")}
-              className="p-2 min-w-[44px] min-h-[44px] rounded-lg bg-plasma-cyan/10 hover:bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/30 hover:border-plasma-cyan focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(0,229,255,0.15)]"
-            >
-              <Headphones className="w-4 h-4" />
-            </Link>
+            <CosmicTooltip content={t("supportPanel")} side="bottom">
+              <Link
+                href={`/${locale}/dashboard/support-panel`}
+                aria-label={t("supportPanel")}
+                className="p-2 min-w-[44px] min-h-[44px] rounded-lg bg-plasma-cyan/10 hover:bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/30 hover:border-plasma-cyan focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(0,229,255,0.15)]"
+              >
+                <Headphones className="w-4 h-4" />
+              </Link>
+            </CosmicTooltip>
           )}
 
           {/* Clean Elegant Icon Button: Admin Shield (For admin and root) */}
           {(isAdmin || staffRole === "admin" || staffRole === "root") && (
-            <Link
-              href={`/${locale}/dashboard/admin`}
-              title={t("adminPanel")}
-              aria-label={t("adminPanel")}
-              className="p-2 min-w-[44px] min-h-[44px] rounded-lg bg-nova-flare/10 hover:bg-nova-flare/20 text-nova-flare border border-nova-flare/30 hover:border-nova-flare focus-visible:ring-2 focus-visible:ring-nova-flare focus-visible:outline-none transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(255,46,99,0.15)]"
-            >
-              <ShieldAlert className="w-4 h-4" />
-            </Link>
+            <CosmicTooltip content={t("adminPanel")} side="bottom">
+              <Link
+                href={`/${locale}/dashboard/admin`}
+                aria-label={t("adminPanel")}
+                className="p-2 min-w-[44px] min-h-[44px] rounded-lg bg-nova-flare/10 hover:bg-nova-flare/20 text-nova-flare border border-nova-flare/30 hover:border-nova-flare focus-visible:ring-2 focus-visible:ring-nova-flare focus-visible:outline-none transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(255,46,99,0.15)]"
+              >
+                <ShieldAlert className="w-4 h-4" />
+              </Link>
+            </CosmicTooltip>
           )}
 
-          {/* Botón My Organization / My Profile con avatar dinámico y fallback a prueba de fallos */}
-          <Link
-            href={orgOrProfileHref}
-            className="flex items-center gap-2 px-3 py-1.5 min-h-[44px] rounded-lg bg-transparent hover:bg-hyper-violet/10 border border-void-border hover:border-hyper-violet/30 focus-visible:ring-2 focus-visible:ring-hyper-violet focus-visible:outline-none text-gray-300 hover:text-hyper-violet transition-all text-xs 2xl:text-sm font-semibold shrink-0 whitespace-nowrap"
-          >
-            <AvatarFallback
-              src={avatarUrl}
-              alt={isOrg ? "Organization Logo" : "Profile Picture"}
-              fallbackType={isOrg ? "org" : "user"}
-              sizeClassName="w-8 h-8"
-            />
-            <span>{isOrg ? t("myOrg") : t("myProfile")}</span>
-            {!isOrg && <UserLevelBadge level={youthLevel} size="sm" />}
-          </Link>
+          {/* Botón My Organization / My Profile con avatar dinámico y CosmicTooltip */}
+          <CosmicTooltip content={isOrg ? t("myOrg") : t("myProfile")} side="bottom">
+            <Link
+              href={orgOrProfileHref}
+              aria-label={isOrg ? t("myOrg") : t("myProfile")}
+              className="flex items-center gap-2 px-3 py-1.5 min-h-[44px] rounded-lg bg-transparent hover:bg-hyper-violet/10 border border-void-border hover:border-hyper-violet/30 focus-visible:ring-2 focus-visible:ring-hyper-violet focus-visible:outline-none text-gray-300 hover:text-hyper-violet transition-all text-xs 2xl:text-sm font-semibold shrink-0 whitespace-nowrap"
+            >
+              <AvatarFallback
+                src={avatarUrl}
+                alt={isOrg ? "Organization Logo" : "Profile Picture"}
+                fallbackType={isOrg ? "org" : "user"}
+                sizeClassName="w-8 h-8"
+              />
+              <span>{isOrg ? t("myOrg") : t("myProfile")}</span>
+              {!isOrg && <UserLevelBadge level={youthLevel} size="sm" />}
+            </Link>
+          </CosmicTooltip>
 
           <div className="shrink-0 flex items-center">
             <LogoutButton variant="icon" />

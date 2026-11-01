@@ -214,11 +214,16 @@ CREATE TABLE IF NOT EXISTS public.support_tickets (
   reason TEXT NOT NULL,
   content TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'open',
+  preferred_contact_method TEXT NOT NULL DEFAULT 'website',
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
   resolved_at TIMESTAMPTZ,
   resolution_action TEXT
 );
+
+-- Idempotent column check for existing databases
+ALTER TABLE public.support_tickets 
+  ADD COLUMN IF NOT EXISTS preferred_contact_method TEXT NOT NULL DEFAULT 'website';
 
 -- Support Tickets: Purge Cron index (48h retention threshold on resolved tickets)
 CALL public.euronova_safe_create_index(
@@ -733,13 +738,22 @@ BEGIN
       author_avatar TEXT,
       content TEXT NOT NULL,
       is_pinned BOOLEAN NOT NULL DEFAULT false,
+      is_edited BOOLEAN NOT NULL DEFAULT false,
+      reply_to_id UUID REFERENCES public.staff_chat_messages(id) ON DELETE SET NULL,
+      deleted_at TIMESTAMPTZ DEFAULT NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
   END IF;
 
+  ALTER TABLE public.staff_chat_messages ADD COLUMN IF NOT EXISTS is_edited BOOLEAN NOT NULL DEFAULT false;
+  ALTER TABLE public.staff_chat_messages ADD COLUMN IF NOT EXISTS reply_to_id UUID REFERENCES public.staff_chat_messages(id) ON DELETE SET NULL;
+  ALTER TABLE public.staff_chat_messages ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT NULL;
+
   CREATE INDEX IF NOT EXISTS idx_staff_chat_channel_created ON public.staff_chat_messages(channel, created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_staff_chat_is_pinned ON public.staff_chat_messages(is_pinned) WHERE is_pinned = true;
+  CREATE INDEX IF NOT EXISTS idx_staff_chat_reply_to_id ON public.staff_chat_messages(reply_to_id) WHERE reply_to_id IS NOT NULL;
+  CREATE INDEX IF NOT EXISTS idx_staff_chat_deleted_at ON public.staff_chat_messages(deleted_at) WHERE deleted_at IS NOT NULL;
 
   ALTER TABLE public.staff_chat_messages ENABLE ROW LEVEL SECURITY;
 
@@ -785,12 +799,14 @@ BEGIN
       )
     );
 
-  -- Allow admins/mods to pin/update staff chat messages
+  -- Allow staff members to update/edit own messages and admins/mods to manage
   DROP POLICY IF EXISTS "Staff admins and mods can update staff chat messages" ON public.staff_chat_messages;
-  CREATE POLICY "Staff admins and mods can update staff chat messages"
+  DROP POLICY IF EXISTS "Staff members can update staff chat messages" ON public.staff_chat_messages;
+  CREATE POLICY "Staff members can update staff chat messages"
     ON public.staff_chat_messages FOR UPDATE
     TO authenticated
     USING (
+      auth.uid() = user_id OR
       auth.email() = 'euronovaofficial@gmail.com' OR
       EXISTS (
         SELECT 1 FROM public.users_youth 

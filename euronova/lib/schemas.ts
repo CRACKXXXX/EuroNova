@@ -42,40 +42,57 @@ export const AuthCredentialsSchema = z.object({
 });
 
 // 3. Support Ticket Submission Schema
-export const TicketSubmissionSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .email("Invalid email address.")
-    .max(120, "Email cannot exceed 120 characters.")
-    .refine(noNullBytes, "Email cannot contain null bytes."),
-  phone: z
-    .string()
-    .trim()
-    .max(30, "Phone number cannot exceed 30 characters.")
-    .refine(noNullBytes, "Phone cannot contain null bytes.")
-    .optional()
-    .or(z.literal(""))
-    .nullable(),
-  subject: z
-    .string()
-    .trim()
-    .min(3, "Subject must be at least 3 characters.")
-    .max(150, "Subject cannot exceed 150 characters.")
-    .refine(noNullBytes, "Subject cannot contain null bytes."),
-  reason: z
-    .string()
-    .trim()
-    .min(2, "Reason must be at least 2 characters.")
-    .max(50, "Reason cannot exceed 50 characters.")
-    .refine(noNullBytes, "Reason cannot contain null bytes."),
-  content: z
-    .string()
-    .trim()
-    .min(10, "Message content must be at least 10 characters.")
-    .max(5000, "Message content cannot exceed 5000 characters.")
-    .refine(noNullBytes, "Message content cannot contain null bytes."),
-});
+export const TicketSubmissionSchema = z
+  .object({
+    email: z
+      .string()
+      .trim()
+      .email("Invalid email address.")
+      .max(120, "Email cannot exceed 120 characters.")
+      .refine(noNullBytes, "Email cannot contain null bytes."),
+    phone: z
+      .string()
+      .trim()
+      .max(30, "Phone number cannot exceed 30 characters.")
+      .refine(noNullBytes, "Phone cannot contain null bytes.")
+      .optional()
+      .or(z.literal(""))
+      .nullable(),
+    preferredContactMethod: z
+      .enum(["website", "email", "whatsapp"])
+      .default("website"),
+    subject: z
+      .string()
+      .trim()
+      .min(3, "Subject must be at least 3 characters.")
+      .max(150, "Subject cannot exceed 150 characters.")
+      .refine(noNullBytes, "Subject cannot contain null bytes."),
+    reason: z
+      .string()
+      .trim()
+      .min(2, "Reason must be at least 2 characters.")
+      .max(50, "Reason cannot exceed 50 characters.")
+      .refine(noNullBytes, "Reason cannot contain null bytes."),
+    content: z
+      .string()
+      .trim()
+      .min(10, "Message content must be at least 10 characters.")
+      .max(5000, "Message content cannot exceed 5000 characters.")
+      .refine(noNullBytes, "Message content cannot contain null bytes."),
+  })
+  .refine(
+    (data) => {
+      if (data.preferredContactMethod === "whatsapp") {
+        const digits = (data.phone || "").replace(/\D/g, "");
+        return Boolean(data.phone && data.phone.trim().length >= 6 && digits.length >= 6);
+      }
+      return true;
+    },
+    {
+      message: "A valid phone number with country code is required for WhatsApp contact.",
+      path: ["phone"],
+    }
+  );
 
 export type TicketSubmissionInput = z.infer<typeof TicketSubmissionSchema>;
 

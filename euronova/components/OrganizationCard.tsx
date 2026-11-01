@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { COUNTRIES } from "@/lib/constants/countries";
 import { TermTooltip } from "@/components/TermTooltip";
 import { AvatarFallback } from "@/components/AvatarFallback";
+import { CosmicTooltip } from "@/components/CosmicTooltip";
 
 export interface OrganizationData {
   id: string;
@@ -93,7 +94,7 @@ export function OrganizationCard({ org }: { org: OrganizationData }) {
               const c = COUNTRIES.find((x) => x.code === org.country_hq);
               return c ? (
                 <span className="text-sm text-gray-400 flex items-center gap-1.5 truncate">
-                  <Image src={c.flagUrl} alt={c.name} width={16} height={12} unoptimized className="w-4 h-auto rounded-[2px]" title={c.name} />
+                  <Image src={c.flagUrl} alt={c.name} width={16} height={12} unoptimized className="w-4 h-auto rounded-[2px]" />
                   <span className="truncate">{c.name}</span>
                 </span>
               ) : (
@@ -131,59 +132,69 @@ export function OrganizationCard({ org }: { org: OrganizationData }) {
       {hasAnyContact && (
         <div className="pt-4 border-t border-void-border flex flex-wrap items-center gap-3">
           {website && (
-            <a
-              href={website.startsWith("http") ? website : `https://${website}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all"
-              title={t("websiteTitle")}
-            >
-              <Globe className="w-4 h-4" />
-            </a>
+            <CosmicTooltip content={t("websiteTitle")} side="top">
+              <a
+                href={website.startsWith("http") ? website : `https://${website}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t("websiteTitle")}
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all"
+              >
+                <Globe className="w-4 h-4" />
+              </a>
+            </CosmicTooltip>
           )}
           {instagram && (
-            <a
-              href={instagram.startsWith("http") ? instagram : `https://${instagram}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all"
-              title={t("instagramTitle")}
-            >
-              <Camera className="w-4 h-4" />
-            </a>
+            <CosmicTooltip content={t("instagramTitle")} side="top">
+              <a
+                href={instagram.startsWith("http") ? instagram : `https://${instagram}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t("instagramTitle")}
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all"
+              >
+                <Camera className="w-4 h-4" />
+              </a>
+            </CosmicTooltip>
           )}
           {tiktok && (
-            <a
-              href={tiktok.startsWith("http") ? tiktok : `https://${tiktok}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all"
-              title={t("tiktokTitle")}
-            >
-              <Music className="w-4 h-4" />
-            </a>
+            <CosmicTooltip content={t("tiktokTitle")} side="top">
+              <a
+                href={tiktok.startsWith("http") ? tiktok : `https://${tiktok}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t("tiktokTitle")}
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all"
+              >
+                <Music className="w-4 h-4" />
+              </a>
+            </CosmicTooltip>
           )}
           {youtube && (
-            <a
-              href={youtube.startsWith("http") ? youtube : `https://${youtube}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all"
-              title={t("youtubeTitle")}
-            >
-              <PlaySquare className="w-4 h-4" />
-            </a>
+            <CosmicTooltip content={t("youtubeTitle")} side="top">
+              <a
+                href={youtube.startsWith("http") ? youtube : `https://${youtube}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t("youtubeTitle")}
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all"
+              >
+                <PlaySquare className="w-4 h-4" />
+              </a>
+            </CosmicTooltip>
           )}
           {linkedin && (
-            <a
-              href={linkedin.startsWith("http") ? linkedin : `https://${linkedin}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all"
-              title={t("linkedinTitle")}
-            >
-              <Briefcase className="w-4 h-4" />
-            </a>
+            <CosmicTooltip content={t("linkedinTitle")} side="top">
+              <a
+                href={linkedin.startsWith("http") ? linkedin : `https://${linkedin}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t("linkedinTitle")}
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all"
+              >
+                <Briefcase className="w-4 h-4" />
+              </a>
+            </CosmicTooltip>
           )}
           {email && (
             <a
@@ -209,24 +220,26 @@ export function OrganizationCard({ org }: { org: OrganizationData }) {
         </Link>
 
         {org.id && (
-          <button
-            type="button"
-            onClick={handleShare}
-            className="py-2.5 px-3 rounded-lg bg-void-deep hover:bg-plasma-cyan/10 text-gray-300 hover:text-plasma-cyan border border-void-border hover:border-plasma-cyan/40 text-sm font-medium transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
-            title={copied ? t("copiedLink") : t("shareView")}
-          >
-            {copied ? (
-              <>
-                <Check className="w-4 h-4 text-rup-emerald" />
-                <span className="text-xs text-rup-emerald font-semibold">{t("copiedLink")}</span>
-              </>
-            ) : (
-              <>
-                <Share2 className="w-4 h-4" />
-                <span className="text-xs hidden sm:inline">{t("shareView")}</span>
-              </>
-            )}
-          </button>
+          <CosmicTooltip content={copied ? t("copiedLink") : t("shareView")} side="top">
+            <button
+              type="button"
+              onClick={handleShare}
+              aria-label={copied ? t("copiedLink") : t("shareView")}
+              className="py-2.5 px-3 rounded-lg bg-void-deep hover:bg-plasma-cyan/10 text-gray-300 hover:text-plasma-cyan border border-void-border hover:border-plasma-cyan/40 text-sm font-medium transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4 text-rup-emerald" />
+                  <span className="text-xs text-rup-emerald font-semibold">{t("copiedLink")}</span>
+                </>
+              ) : (
+                <>
+                  <Share2 className="w-4 h-4" />
+                  <span className="text-xs hidden sm:inline">{t("shareView")}</span>
+                </>
+              )}
+            </button>
+          </CosmicTooltip>
         )}
       </div>
     </div>

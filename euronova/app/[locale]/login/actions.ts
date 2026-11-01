@@ -39,7 +39,7 @@ export async function login(prevState: unknown, formData: FormData) {
 
     return { success: true };
   } catch (err: unknown) {
-    return { error: err instanceof Error ? err.message : "Error inesperado en inicio de sesión." };
+    return { error: err instanceof Error ? err.message : "Unexpected error during login." };
   }
 }
 
@@ -164,7 +164,7 @@ export async function signup(prevState: unknown, formData: FormData) {
 
     return { success: true };
   } catch (err: unknown) {
-    return { error: err instanceof Error ? err.message : "Error inesperado en registro." };
+    return { error: err instanceof Error ? err.message : "Unexpected error during registration." };
   }
 }
 
@@ -174,7 +174,7 @@ export async function logout() {
     await supabase.auth.signOut();
     return { success: true };
   } catch (err: unknown) {
-    return { error: err instanceof Error ? err.message : "Error al cerrar sesión." };
+    return { error: err instanceof Error ? err.message : "Failed to sign out. Please try again." };
   }
 }
 

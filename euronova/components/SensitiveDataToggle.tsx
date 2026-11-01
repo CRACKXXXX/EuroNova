@@ -3,6 +3,7 @@
 import React from "react";
 import { Eye, EyeOff, Lock, Shield } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { CosmicTooltip } from "@/components/CosmicTooltip";
 import type { UserRole } from "@/lib/roles";
 
 interface SensitiveDataToggleProps {
@@ -51,23 +52,25 @@ export function SensitiveDataToggle({
 
       {/* Role Context Indicator */}
       {showSensitive && isSupport && (
-        <span
-          className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30"
-          title={t("supportPrivacyTooltip")}
-        >
-          <Lock className="w-2.5 h-2.5 text-amber-400" />
-          <span>{t("supportPrivacyActive")}</span>
-        </span>
+        <CosmicTooltip content={t("supportPrivacyTooltip")} side="top">
+          <span
+            className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30 cursor-default"
+          >
+            <Lock className="w-2.5 h-2.5 text-amber-400" />
+            <span>{t("supportPrivacyActive")}</span>
+          </span>
+        </CosmicTooltip>
       )}
 
       {showSensitive && !isSupport && (
-        <span
-          className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-rup-emerald/10 text-rup-emerald border border-rup-emerald/30"
-          title={t("moderatorAccessTooltip")}
-        >
-          <Shield className="w-2.5 h-2.5 text-rup-emerald" />
-          <span>{t("moderatorAccess")}</span>
-        </span>
+        <CosmicTooltip content={t("moderatorAccessTooltip")} side="top">
+          <span
+            className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-rup-emerald/10 text-rup-emerald border border-rup-emerald/30 cursor-default"
+          >
+            <Shield className="w-2.5 h-2.5 text-rup-emerald" />
+            <span>{t("moderatorAccess")}</span>
+          </span>
+        </CosmicTooltip>
       )}
     </div>
   );

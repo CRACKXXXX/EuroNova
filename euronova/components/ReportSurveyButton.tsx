@@ -71,7 +71,7 @@ export function ReportSurveyButton({ surveyId, surveyQuestion }: ReportSurveyBut
           setIsOpen(true);
         }}
         className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-lg border border-void-border/80 bg-void-deep/60 hover:border-nova-flare/40 text-gray-400 hover:text-nova-flare focus-visible:ring-2 focus-visible:ring-nova-flare focus-visible:outline-none text-xs font-semibold transition-all cursor-pointer shadow-xs group"
-        title={t("reportSurveyTitle")}
+        aria-label={t("reportSurveyTitle")}
       >
         <Flag className="w-3 h-3 text-gray-500 group-hover:text-nova-flare transition-colors" />
         <span className="text-[11px]">{t("reportSurvey")}</span>

@@ -22,6 +22,7 @@ import { PROJECT_TYPE_COLORS } from "@/lib/constants/projectTypes";
 import { toggleProjectFavorite, toggleProjectApplied } from "@/actions/interactions";
 import { TermTooltip } from "@/components/TermTooltip";
 import { AvatarFallback } from "@/components/AvatarFallback";
+import { CosmicTooltip } from "@/components/CosmicTooltip";
 import { toast } from "sonner";
 import { showRateLimitToast } from "@/lib/rateLimitToast";
 
@@ -61,7 +62,6 @@ export function ProjectCard({
 }: ProjectCardProps) {
   const t = useTranslations("ProjectCard");
   const tErrors = useTranslations("Errors");
-  const tTypes = useTranslations("ProjectTypes");
   const tThemes = useTranslations("ProjectThemes");
   const format = useFormatter();
 
@@ -220,14 +220,10 @@ export function ProjectCard({
               const colorClass =
                 PROJECT_TYPE_COLORS[project.project_type] ||
                 "bg-void-border/80 text-gray-300 border-void-border";
-              const fullTitle = tTypes.has(project.project_type)
-                ? tTypes(project.project_type)
-                : project.project_type;
 
               const badge = (
                 <span
                   className={`px-2.5 py-1 text-xs font-bold rounded-full border uppercase tracking-wider ${colorClass}`}
-                  title={fullTitle}
                 >
                   {project.project_type}
                 </span>
@@ -255,77 +251,89 @@ export function ProjectCard({
             )}
 
             {/* AI Anti-Scam Shield micro-badge */}
-            <div
-              title={t("antiScamVerifiedTitle")}
-              className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/40 shadow-[0_0_12px_rgba(0,230,118,0.25)] flex items-center gap-1 shrink-0 select-none"
-            >
-              <ShieldCheck className="w-3 h-3 text-rup-emerald shrink-0" />
-              <span>{t("antiScamVerified")}</span>
-            </div>
+            <CosmicTooltip content={t("antiScamVerifiedTitle")} side="top">
+              <div
+                className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/40 shadow-[0_0_12px_rgba(0,230,118,0.25)] flex items-center gap-1 shrink-0 select-none cursor-default"
+              >
+                <ShieldCheck className="w-3 h-3 text-rup-emerald shrink-0" />
+                <span>{t("antiScamVerified")}</span>
+              </div>
+            </CosmicTooltip>
           </div>
 
           {/* Botones de acción interactiva: Guardar (Favorite) y Aplicar (Applied) */}
           <div className={`flex items-center gap-1.5 shrink-0 z-10 transition-all ${isNew ? "mt-6" : ""}`}>
             {/* Botón Favorito */}
-            <button
-              type="button"
-              onClick={handleToggleFavorite}
-              disabled={isPendingFav}
-              title={isFavorite ? t("removeFromFavorites") : t("addToFavorites")}
-              className={`p-2 rounded-xl border transition-all duration-200 cursor-pointer ${
-                isFavorite
-                  ? "bg-nova-flare/20 border-nova-flare/60 text-nova-flare shadow-[0_0_12px_rgba(255,46,99,0.35)]"
-                  : "bg-void-deep/80 border-void-border text-gray-400 hover:text-white hover:border-gray-600"
-              }`}
-            >
-              <Heart
-                className={`w-4 h-4 transition-transform ${
-                  isFavorite ? "fill-nova-flare scale-110" : ""
+            <CosmicTooltip content={isFavorite ? t("removeFromFavorites") : t("addToFavorites")} side="top">
+              <button
+                type="button"
+                onClick={handleToggleFavorite}
+                disabled={isPendingFav}
+                aria-label={isFavorite ? t("removeFromFavorites") : t("addToFavorites")}
+                className={`p-2 rounded-xl border transition-all duration-200 cursor-pointer ${
+                  isFavorite
+                    ? "bg-nova-flare/20 border-nova-flare/60 text-nova-flare shadow-[0_0_12px_rgba(255,46,99,0.35)]"
+                    : "bg-void-deep/80 border-void-border text-gray-400 hover:text-white hover:border-gray-600"
                 }`}
-              />
-            </button>
+              >
+                <Heart
+                  className={`w-4 h-4 transition-transform ${
+                    isFavorite ? "fill-nova-flare scale-110" : ""
+                  }`}
+                />
+              </button>
+            </CosmicTooltip>
 
             {/* Botón Aplicado */}
-            <button
-              type="button"
-              onClick={handleToggleApplied}
-              disabled={isPendingApp}
-              title={isApplied ? t("applied") : t("markAsApplied")}
-              className={`p-2 rounded-xl border transition-all duration-200 cursor-pointer ${
-                isApplied
-                  ? "bg-hyper-violet/25 border-hyper-violet/60 text-hyper-violet shadow-[0_0_12px_rgba(99,102,241,0.35)]"
-                  : "bg-void-deep/80 border-void-border text-gray-400 hover:text-white hover:border-gray-600"
-              }`}
-            >
-              <Briefcase
-                className={`w-4 h-4 transition-transform ${
-                  isApplied ? "fill-hyper-violet/40 scale-110" : ""
+            <CosmicTooltip content={isApplied ? t("applied") : t("markAsApplied")} side="top">
+              <button
+                type="button"
+                onClick={handleToggleApplied}
+                disabled={isPendingApp}
+                aria-label={isApplied ? t("applied") : t("markAsApplied")}
+                className={`p-2 rounded-xl border transition-all duration-200 cursor-pointer ${
+                  isApplied
+                    ? "bg-hyper-violet/25 border-hyper-violet/60 text-hyper-violet shadow-[0_0_12px_rgba(99,102,241,0.35)]"
+                    : "bg-void-deep/80 border-void-border text-gray-400 hover:text-white hover:border-gray-600"
                 }`}
-              />
-            </button>
+              >
+                <Briefcase
+                  className={`w-4 h-4 transition-transform ${
+                    isApplied ? "fill-hyper-violet/40 scale-110" : ""
+                  }`}
+                />
+              </button>
+            </CosmicTooltip>
           </div>
         </div>
 
-        <h3 className="text-xl font-bold text-white mb-2 line-clamp-2 group-hover/card:text-plasma-cyan transition-colors min-w-0 break-words hyphens-auto">
-          {project.title}
-        </h3>
+        {/* Title */}
+        <Link href={`/dashboard/projects/${project.id}`}>
+          <h3 className="text-xl font-bold text-white mb-2 line-clamp-2 hover:text-plasma-cyan transition-colors">
+            {project.title}
+          </h3>
+        </Link>
 
-        {/* Fallback de logo o avatar de la organización */}
+        {/* Organization Information */}
         {project.org_name && (
-          <div className="flex items-center gap-2 text-sm text-gray-300 mb-4 min-w-0">
+          <div className="flex items-center gap-2 mb-4">
             <AvatarFallback
               src={project.org_logo_url}
               alt={project.org_name}
               fallbackType="org"
               name={project.org_name}
               sizeClassName="w-5 h-5"
+              className="border border-void-border bg-void-deep"
               iconClassName="w-3 h-3 text-plasma-cyan"
             />
-            <span className="line-clamp-1 font-medium min-w-0 break-words">{project.org_name}</span>
+            <span className="text-sm text-gray-400 font-medium truncate">
+              {project.org_name}
+            </span>
           </div>
         )}
 
-        <div className="space-y-2 text-sm text-gray-400">
+        {/* Key Project Meta (Grid / Icons) */}
+        <div className="space-y-2.5 text-xs text-gray-400 border-t border-void-border/60 pt-3">
           <div className="flex items-center gap-2">
             <MapPin className="w-4 h-4 text-plasma-cyan" />
             <span className="font-medium text-gray-300 flex items-center gap-1.5 flex-wrap">
@@ -334,7 +342,7 @@ export function ProjectCard({
                 const c = COUNTRIES.find((x) => x.code === project.dest_country);
                 return c ? (
                   <>
-                    <Image src={c.flagUrl} alt={c.name} width={16} height={12} unoptimized className="w-4 h-auto rounded-[2px]" title={c.name} />
+                    <Image src={c.flagUrl} alt={c.name} width={16} height={12} unoptimized className="w-4 h-auto rounded-[2px]" />
                     <span>{c.name}</span>
                   </>
                 ) : (
@@ -388,13 +396,13 @@ export function ProjectCard({
             {project.themes.slice(0, 3).map((theme, i) => {
               const label = tThemes.has(theme) ? tThemes(theme) : theme;
               return (
-                <span
-                  key={i}
-                  className="px-2 py-0.5 text-[10px] font-medium bg-void-deep text-gray-300 rounded-md border border-void-border truncate max-w-[150px]"
-                  title={label}
-                >
-                  {label}
-                </span>
+                <CosmicTooltip key={i} content={label} side="top">
+                  <span
+                    className="px-2 py-0.5 text-[10px] font-medium bg-void-deep text-gray-300 rounded-md border border-void-border truncate max-w-[150px] cursor-default"
+                  >
+                    {label}
+                  </span>
+                </CosmicTooltip>
               );
             })}
             {project.themes.length > 3 && (

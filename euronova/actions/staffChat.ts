@@ -36,6 +36,9 @@ const inMemoryStaffMessages: StaffChatMessage[] = [
     authorAvatar: null,
     content: "Welcome to the Staff Live Communication Hub. Coordinate with moderators and support specialists across dedicated channels.",
     isPinned: true,
+    isEdited: false,
+    replyToId: null,
+    deletedAt: null,
     createdAt: new Date(Date.now() - 3600000).toISOString(),
   },
   {
@@ -47,6 +50,9 @@ const inMemoryStaffMessages: StaffChatMessage[] = [
     authorAvatar: null,
     content: "Critical system escalations and root-level security directives are archived here.",
     isPinned: true,
+    isEdited: false,
+    replyToId: null,
+    deletedAt: null,
     createdAt: new Date(Date.now() - 1800000).toISOString(),
   },
 ];
@@ -76,7 +82,7 @@ export async function getStaffChatMessages(
       .select("*")
       .eq("channel", channel)
       .order("created_at", { ascending: true })
-      .limit(100);
+      .limit(150);
 
     if (error || !data || data.length === 0) {
       // Resilient fallback to memory store
@@ -84,7 +90,61 @@ export async function getStaffChatMessages(
         .filter((m) => m.channel === channel)
         .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
-      return { success: true, data: filteredMemory };
+      // Resolve in-memory replies
+      const memoryMap = new Map<string, { id: string; authorName: string; content: string }>();
+      inMemoryStaffMessages.forEach((m) => {
+        memoryMap.set(m.id, {
+          id: m.id,
+          authorName: m.authorName,
+          content: m.deletedAt ? "[This message was deleted]" : m.content,
+        });
+      });
+
+      const resolvedMemory = filteredMemory.map((m) => ({
+        ...m,
+        replyTo: m.replyToId ? memoryMap.get(m.replyToId) || null : null,
+      }));
+
+      return { success: true, data: resolvedMemory };
+    }
+
+    // Map parent reply snippets
+    const replyMap = new Map<string, { id: string; authorName: string; content: string }>();
+    data.forEach((row) => {
+      replyMap.set(row.id, {
+        id: row.id,
+        authorName: row.author_name || "Staff Member",
+        content: row.deleted_at ? "[This message was deleted]" : row.content || "",
+      });
+    });
+
+    const missingReplyIds = Array.from(
+      new Set(
+        data
+          .map((r) => r.reply_to_id)
+          .filter((id): id is string => Boolean(id) && !replyMap.has(id))
+      )
+    );
+
+    if (missingReplyIds.length > 0) {
+      try {
+        const { data: missingParents } = await adminDb
+          .from("staff_chat_messages")
+          .select("id, author_name, content, deleted_at")
+          .in("id", missingReplyIds);
+
+        if (missingParents) {
+          missingParents.forEach((p) => {
+            replyMap.set(p.id, {
+              id: p.id,
+              authorName: p.author_name || "Staff Member",
+              content: p.deleted_at ? "[This message was deleted]" : p.content || "",
+            });
+          });
+        }
+      } catch (err) {
+        console.warn("Non-blocking lookup of missing reply parents:", err);
+      }
     }
 
     const messages: StaffChatMessage[] = data.map((row) => ({
@@ -96,6 +156,10 @@ export async function getStaffChatMessages(
       authorAvatar: row.author_avatar || null,
       content: row.content || "",
       isPinned: Boolean(row.is_pinned),
+      isEdited: Boolean(row.is_edited),
+      replyToId: row.reply_to_id || null,
+      replyTo: row.reply_to_id ? replyMap.get(row.reply_to_id) || null : null,
+      deletedAt: row.deleted_at || null,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     }));
@@ -103,7 +167,6 @@ export async function getStaffChatMessages(
     return { success: true, data: messages };
   } catch (err: unknown) {
     console.error("getStaffChatMessages exception:", err);
-    // Graceful fallback to memory store
     const fallbackList = inMemoryStaffMessages.filter((m) => m.channel === channel);
     return { success: true, data: fallbackList };
   }
@@ -116,6 +179,7 @@ export async function getStaffChatMessages(
 export async function postStaffChatMessage(input: {
   channel: StaffChatChannel;
   content: string;
+  replyToId?: string | null;
 }): Promise<StaffChatActionResult<StaffChatMessage>> {
   try {
     const { isAuthorized, user, role } = await verifyStaff();
@@ -162,6 +226,37 @@ export async function postStaffChatMessage(input: {
       // Non-blocking metadata resolution
     }
 
+    // Resolve replyTo snippet if replying to another message
+    let replyToSnippet: { id: string; authorName: string; content: string } | null = null;
+    if (input.replyToId) {
+      const memParent = inMemoryStaffMessages.find((m) => m.id === input.replyToId);
+      if (memParent) {
+        replyToSnippet = {
+          id: memParent.id,
+          authorName: memParent.authorName,
+          content: memParent.deletedAt ? "[This message was deleted]" : memParent.content,
+        };
+      } else {
+        try {
+          const { data: dbParent } = await adminDb
+            .from("staff_chat_messages")
+            .select("id, author_name, content, deleted_at")
+            .eq("id", input.replyToId)
+            .maybeSingle();
+
+          if (dbParent) {
+            replyToSnippet = {
+              id: dbParent.id,
+              authorName: dbParent.author_name || "Staff Member",
+              content: dbParent.deleted_at ? "[This message was deleted]" : dbParent.content || "",
+            };
+          }
+        } catch {
+          // Non-blocking parent lookup
+        }
+      }
+    }
+
     const newMessage: StaffChatMessage = {
       id: `staff-msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       channel: input.channel,
@@ -171,6 +266,10 @@ export async function postStaffChatMessage(input: {
       authorAvatar,
       content: cleanContent,
       isPinned: false,
+      isEdited: false,
+      replyToId: input.replyToId || null,
+      replyTo: replyToSnippet,
+      deletedAt: null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -187,6 +286,8 @@ export async function postStaffChatMessage(input: {
           author_avatar: authorAvatar,
           content: cleanContent,
           is_pinned: false,
+          is_edited: false,
+          reply_to_id: input.replyToId || null,
         })
         .select("*")
         .single();
@@ -213,6 +314,112 @@ export async function postStaffChatMessage(input: {
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Failed to transmit message.";
     console.error("postStaffChatMessage exception:", errorMsg);
+    return { success: false, error: errorMsg };
+  }
+}
+
+/**
+ * Edits an existing staff chat message.
+ * Users can strictly ONLY edit their OWN messages.
+ */
+export async function editStaffChatMessage(input: {
+  messageId: string;
+  content: string;
+}): Promise<StaffChatActionResult<StaffChatMessage>> {
+  try {
+    const { isAuthorized, user } = await verifyStaff();
+    if (!isAuthorized || !user) {
+      return { success: false, error: "403 Unauthorized: Staff clearance required." };
+    }
+
+    const rawContent = (input.content || "").trim();
+    if (!rawContent) {
+      return { success: false, error: "Message content cannot be empty." };
+    }
+
+    const cleanContent = stripDangerousHtml(rawContent, 4000);
+    const adminDb = getServiceRoleClient();
+
+    // Verify ownership: users can strictly ONLY edit their own messages
+    let messageUserId: string | null = null;
+    let isDeleted = false;
+
+    const memMsg = inMemoryStaffMessages.find((m) => m.id === input.messageId);
+    if (memMsg) {
+      messageUserId = memMsg.userId;
+      isDeleted = Boolean(memMsg.deletedAt);
+    } else {
+      const { data: dbMsg } = await adminDb
+        .from("staff_chat_messages")
+        .select("user_id, deleted_at")
+        .eq("id", input.messageId)
+        .maybeSingle();
+
+      if (dbMsg) {
+        messageUserId = dbMsg.user_id;
+        isDeleted = Boolean(dbMsg.deleted_at);
+      }
+    }
+
+    if (!messageUserId) {
+      return { success: false, error: "Message not found." };
+    }
+
+    if (messageUserId !== user.id) {
+      return { success: false, error: "403 Forbidden: You can only edit your own messages." };
+    }
+
+    if (isDeleted) {
+      return { success: false, error: "Cannot edit a deleted message." };
+    }
+
+    const updatedAt = new Date().toISOString();
+
+    // 1. Update in Database
+    try {
+      await adminDb
+        .from("staff_chat_messages")
+        .update({
+          content: cleanContent,
+          is_edited: true,
+          updated_at: updatedAt,
+        })
+        .eq("id", input.messageId);
+    } catch (dbErr) {
+      console.warn("DB edit error, falling back to memory:", dbErr);
+    }
+
+    // 2. Update in-memory message
+    if (memMsg) {
+      memMsg.content = cleanContent;
+      memMsg.isEdited = true;
+      memMsg.updatedAt = updatedAt;
+    }
+
+    safeRevalidate("/dashboard/admin");
+    safeRevalidate("/dashboard/moderator-panel");
+    safeRevalidate("/dashboard/support-panel");
+
+    return {
+      success: true,
+      data: memMsg || {
+        id: input.messageId,
+        channel: "general",
+        userId: user.id,
+        authorName: "Staff Member",
+        authorRole: "support",
+        content: cleanContent,
+        isPinned: false,
+        isEdited: true,
+        replyToId: null,
+        deletedAt: null,
+        createdAt: updatedAt,
+        updatedAt,
+      },
+    };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "Failed to edit message.";
+    console.error("editStaffChatMessage exception:", errorMsg);
     return { success: false, error: errorMsg };
   }
 }
@@ -276,8 +483,8 @@ export async function togglePinStaffChatMessage(
 }
 
 /**
- * Deletes a staff chat message.
- * Gated to message author or root/admin/moderator.
+ * Soft-deletes a staff chat message.
+ * Users can strictly ONLY delete their OWN messages (or executive root/admin).
  */
 export async function deleteStaffChatMessage(
   messageId: string
@@ -290,8 +497,8 @@ export async function deleteStaffChatMessage(
 
     const adminDb = getServiceRoleClient();
 
-    // Verify ownership or management role
-    let canDelete = role === "root" || role === "admin" || role === "moderator";
+    // Verify ownership: authors can delete their own, or root/admin can delete
+    let canDelete = role === "root" || role === "admin";
     if (!canDelete) {
       const memMsg = inMemoryStaffMessages.find((m) => m.id === messageId);
       if (memMsg && memMsg.userId === user.id) {
@@ -313,15 +520,26 @@ export async function deleteStaffChatMessage(
       return { success: false, error: "403 Forbidden: You can only delete your own messages." };
     }
 
+    const deletedAt = new Date().toISOString();
+
+    // Soft delete in database to preserve reply links and audit history
     try {
-      await adminDb.from("staff_chat_messages").delete().eq("id", messageId);
+      await adminDb
+        .from("staff_chat_messages")
+        .update({
+          deleted_at: deletedAt,
+          updated_at: deletedAt,
+        })
+        .eq("id", messageId);
     } catch (dbErr) {
-      console.warn("Database delete error, falling back to memory:", dbErr);
+      console.warn("Database soft-delete error, falling back to memory:", dbErr);
     }
 
-    const memIndex = inMemoryStaffMessages.findIndex((m) => m.id === messageId);
-    if (memIndex !== -1) {
-      inMemoryStaffMessages.splice(memIndex, 1);
+    // Soft delete in memory store
+    const memMsg = inMemoryStaffMessages.find((m) => m.id === messageId);
+    if (memMsg) {
+      memMsg.deletedAt = deletedAt;
+      memMsg.updatedAt = deletedAt;
     }
 
     safeRevalidate("/dashboard/admin");

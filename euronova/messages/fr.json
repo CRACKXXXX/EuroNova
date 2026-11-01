@@ -674,7 +674,15 @@
     "reasonApplySupport": "Postuler pour le rôle de Support (Vanguard Niveau 10+)",
     "reasonSurveyModeration": "Modération des Sondages & Votes Communautaires",
     "reasonTrustScoreDispute": "Litiges sur le Trust Score / Télémétrie d'XP",
-    "reasonScraperIssue": "Problèmes d'indexation du scraper automatique"
+    "reasonScraperIssue": "Problèmes d'indexation du scraper automatique",
+    "preferredContactMethod": "Preferred Contact Method *",
+    "contactMethodWebsite": "Website (Orbital Hub)",
+    "contactMethodEmail": "Email Address",
+    "contactMethodWhatsapp": "WhatsApp Direct",
+    "fasterResolutionTip": "For faster resolution, we recommend using the Website.",
+    "phoneWhatsappRequired": "Phone Number with Country Code *",
+    "phoneWhatsappPlaceholder": "+34 600 000 000 (Required for WhatsApp)",
+    "applySupportPlaceholder": "Describe your European mobility background, countries visited, spoken languages, and why you wish to assist fellow volunteers on EuroNova..."
   },
   "OrgFilters": {
     "searchPlaceholder": "Rechercher par nom d'organisation...",
@@ -1312,13 +1320,13 @@
     "antiScamScore": "Score Anti-Fraude 99.4%",
     "peerReviews": "Avis Vérifiés entre Pairs",
     "levelSubtitle": "Accumulé grâce à des candidatures vérifiées, des mobilités accomplies et des évaluations mutuelles.",
-    "dailyBonusToast": "Bonus quotidien d'exploration orbitale ! +{gained} XP accordés ({total}/10 limite quotidienne).",
+    "dailyBonusToast": "Bonus quotidien d'exploration orbitale ! +{gained} XP accordés ({total}/{max} limite quotidienne).",
     "levelUpToast": "NIVEAU SUPÉRIEUR ! Vous avez atteint le Niveau {level} !",
     "tierFraction": "Palier {current}/{total}",
     "tierN": "Palier {number}",
     "currentRank": "Rang Actuel",
-    "viewProgression": "Voir le système de progression galactique à 20 paliers",
-    "hideProgression": "Masquer la progression galactique à 20 paliers",
+    "viewProgression": "Voir le système de progression galactique à 50 paliers",
+    "hideProgression": "Masquer la progression galactique à 50 paliers",
     "xpMultiplier": "Multiplicateur d'XP de Confiance",
     "xpBoostHighTrust": "⚡ Boost XP x1,5 (Haute Confiance)",
     "xpBoostGoodTrust": "⚡ Boost XP x1,25",
@@ -1466,7 +1474,11 @@
     "warningSendError": "Échec de l'envoi de l'avertissement.",
     "muteUserError": "Échec de la mise en sourdine de l'utilisateur.",
     "warningIssuedSuccess": "Avertissement officiel émis à {name}.",
-    "userMutedSuccess": "{name} a été mis en sourdine pour {mins} minutes."
+    "userMutedSuccess": "{name} a été mis en sourdine pour {mins} minutes.",
+    "uploadsUnlockLevel10": "Les téléversements se débloquent au niveau 10",
+    "attachFile": "Joindre une image ou un document (PNG, JPG, WEBP, PDF)",
+    "removeAttachment": "Supprimer la pièce jointe",
+    "fileSizeExceeded": "La taille du fichier ne peut dépasser 10 Mo."
   },
   "ProjectTldr": {
     "badge": "Synthèse Exécutive IA (TL;DR)",
@@ -1623,7 +1635,8 @@
     "digestLabel": "Code de l'erreur",
     "tryAgain": "Rétablir la connexion",
     "returnHome": "Retourner à l'accueil",
-    "rateLimitExceeded": "Vous allez trop vite. Veuillez patienter un moment et réessayer."
+    "rateLimitExceeded": "Vous allez trop vite. Veuillez patienter un moment et réessayer.",
+    "authRequired": "Authentication required. Please sign in to continue."
   },
   "NotFound": {
     "badge": "COORDONNÉES INACCESSIBLES",
@@ -1969,7 +1982,11 @@
     "replyBonusPrefix": "Récompense de Réponse :",
     "lockedLevel2Required": "Verrouillé (Niveau 2 / 100 XP requis)",
     "level2RequiredCreate": "Niveau 2 requis : vous devez atteindre 100 XP pour créer des discussions.",
-    "level2RequiredReply": "Niveau 2 requis : vous devez atteindre 100 XP pour répondre aux discussions."
+    "level2RequiredReply": "Niveau 2 requis : vous devez atteindre 100 XP pour répondre aux discussions.",
+    "uploadsUnlockLevel10": "Les téléversements se débloquent au niveau 10",
+    "attachFile": "Joindre une image ou un document (PNG, JPG, WEBP, PDF)",
+    "removeAttachment": "Supprimer la pièce jointe",
+    "fileSizeExceeded": "La taille du fichier ne peut dépasser 10 Mo."
   },
   "Community": {
     "tabForum": "Forums Globaux",
@@ -2157,7 +2174,22 @@
     "pressEnter": "Appuyez sur Entrée pour envoyer",
     "pinMessage": "Épingler le message",
     "unpinMessage": "Désépingler le message",
-    "deleteMessage": "Supprimer le message"
+    "deleteMessage": "Supprimer le message",
+    "editMessage": "Edit message",
+    "replyMessage": "Reply",
+    "cancelReply": "Cancel reply",
+    "replyingTo": "Replying to",
+    "editingMessage": "Editing message",
+    "cancelEdit": "Cancel edit",
+    "editedTag": "(edited)",
+    "deletedMessage": "[This message was deleted]",
+    "saveChanges": "Save changes",
+    "cancel": "Cancel",
+    "escapeToCancel": "Esc to cancel",
+    "clickToJump": "Click to jump to message",
+    "attachFile": "Joindre une image ou un document (PNG, JPG, WEBP, PDF)",
+    "removeAttachment": "Supprimer la pièce jointe",
+    "fileSizeExceeded": "La taille du fichier ne peut dépasser 10 Mo."
   },
   "CookieBanner": {
     "title": "Préférences de Confidentialité et Cookies",
@@ -2212,6 +2244,13 @@
     "repliesCount": "{count} réponses",
     "noRepliesYet": "En attente de la réponse inaugurale d'un spécialiste du support.",
     "hubTitle": "Centre de Support",
-    "staffBadge": "Équipe"
+    "staffBadge": "Équipe",
+    "preferredContact": "Preferred Contact",
+    "methodWebsite": "Website",
+    "methodEmail": "Email",
+    "methodWhatsapp": "WhatsApp",
+    "replyFailed": "Could not submit your reply. Please try again.",
+    "ticketNotFound": "Ticket not found or you do not have permission to access it.",
+    "authRequired": "You must be signed in to perform this action."
   }
 }

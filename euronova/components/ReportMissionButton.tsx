@@ -85,7 +85,7 @@ export function ReportMissionButton({ projectId, projectTitle }: ReportMissionBu
           setIsOpen(true);
         }}
         className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-lg border border-void-border bg-void-deep/60 hover:border-nova-flare/40 text-gray-400 hover:text-nova-flare focus-visible:ring-2 focus-visible:ring-nova-flare focus-visible:outline-none text-xs font-semibold transition-all cursor-pointer shadow-sm group"
-        title={safeT("reportMission", "Report Transmission")}
+        aria-label={safeT("reportMission", "Report Transmission")}
       >
         <Flag className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
         <span>{safeT("reportMission", "Report Transmission")}</span>

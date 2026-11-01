@@ -1,52 +1,55 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { useTranslations, useFormatter } from "next-intl";
 import { 
   ShieldCheck, 
-  ShieldAlert,
-  Zap, 
+  ShieldAlert, 
   CheckCircle2, 
-  Layers, 
-  ChevronDown 
+  Zap, 
+  ChevronDown, 
+  Layers 
 } from "lucide-react";
-import { useTranslations, useFormatter } from "next-intl";
-import { getLevelTierDetails, UserLevelBadge } from "@/components/UserLevelBadge";
 import { 
   calculateLevelProgress, 
-  TIER_THRESHOLDS, 
+  TIER_THRESHOLDS,
   getTrustScoreTier,
-  getTrustMultiplierDetails,
+  getTrustMultiplierDetails
 } from "@/lib/gamification";
+import { getTierForLevel } from "@/lib/levels";
+import { UserLevelBadge } from "@/components/UserLevelBadge";
 
 interface LevelReputationModuleProps {
+  level?: number;
   xp?: number;
+  totalXp?: number;
   trustScore?: number;
+  isKycVerified?: boolean;
   role?: "youth" | "org";
 }
 
 export function LevelReputationModule({
-  xp = 0,
+  xp,
+  totalXp = 0,
   trustScore = 30,
 }: LevelReputationModuleProps) {
   const t = useTranslations("Leveling");
   const format = useFormatter();
   const [showAllTiers, setShowAllTiers] = useState(false);
+  const initialXp = typeof xp === "number" ? xp : totalXp;
+  const [liveXp, setLiveXp] = useState(initialXp);
 
-  // Cálculos matemáticos reactivos de nivel y progreso derivado
-  const safeXp = Math.max(0, typeof xp === "number" && !isNaN(xp) ? xp : 0);
-  const [bonusXp, setBonusXp] = useState<number>(0);
-  const liveXp = safeXp + bonusXp;
-
-  // Escuchar eventos en vivo de XP para actualizar sin recargar página
+  // Escucha reactiva en cliente para eventos de actualización de XP en vivo
   useEffect(() => {
-    const handleLiveXp = (e: Event) => {
-      const customEvent = e as CustomEvent<{ xpGained?: number }>;
-      if (customEvent.detail?.xpGained) {
-        setBonusXp((prev) => prev + (customEvent.detail.xpGained || 0));
+    const handleXpUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent<{ xpGained: number; level?: number }>;
+      if (customEvent.detail && typeof customEvent.detail.xpGained === "number") {
+        setLiveXp((prev) => prev + customEvent.detail.xpGained);
       }
     };
-    window.addEventListener("euronova:xp-updated", handleLiveXp);
-    return () => window.removeEventListener("euronova:xp-updated", handleLiveXp);
+
+    window.addEventListener("euronova:xp-updated", handleXpUpdate);
+    return () => window.removeEventListener("euronova:xp-updated", handleXpUpdate);
   }, []);
 
   const safeTrustScore = Math.max(0, Math.min(100, typeof trustScore === "number" && !isNaN(trustScore) ? trustScore : 30));
@@ -62,7 +65,7 @@ export function LevelReputationModule({
   const maxXpForLevel = progress.nextLevelXp;
   const progressPercentage = progress.progressPercentage;
 
-  const tier = getLevelTierDetails(currentLevel);
+  const tier = getTierForLevel(currentLevel);
   const TierIcon = tier.IconComponent;
 
   return (
@@ -76,7 +79,7 @@ export function LevelReputationModule({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-void-border/80">
           <div className="flex items-center gap-3.5 min-w-0">
             <div className={`w-12 h-12 rounded-2xl bg-void-deep border border-void-border p-1 shadow-inner flex items-center justify-center shrink-0 ${tier.shadow}`}>
-              <TierIcon className={`w-7 h-7 ${tier.iconColor || tier.color}`} />
+              <TierIcon className={`w-7 h-7 ${tier.iconColor || tier.color || "text-plasma-cyan"}`} />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
@@ -168,38 +171,45 @@ export function LevelReputationModule({
             </div>
           </div>
 
-          {/* Columna Derecha: Trust & Reputation Score Real */}
+          {/* Columna Derecha: Trust & Reputation Score Real (Layout Rediseñado Anti-Colisión) */}
           <div className="space-y-4 bg-void-deep/70 border border-void-border rounded-xl p-5 shadow-inner flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col min-w-0">
                 <span className={`text-[11px] font-extrabold uppercase tracking-widest block transition-colors duration-300 ${trustTier.colorClass}`}>
                   {t("reputationScore")}
                 </span>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+                {/* Línea 1: Puntuación Numérica Limpia */}
+                <div className="flex items-baseline gap-1.5 mt-1">
+                  <span className="text-3xl sm:text-4xl font-black text-white tracking-tight font-mono">
                     {safeTrustScore}
                   </span>
-                  <span className="text-gray-400 font-semibold text-lg">/ 100</span>
-                  <span className={`text-xs font-black ml-1 px-2.5 py-0.5 rounded-full border transition-colors duration-300 ${trustTier.badgeClass}`}>
+                  <span className="text-gray-400 font-semibold text-sm sm:text-base">/ 100</span>
+                </div>
+                {/* Línea 2: Badge de Estado Debajo del Valor */}
+                <div className="mt-2">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black border transition-colors duration-300 ${trustTier.badgeClass}`}>
                     {trustTier.label}
                   </span>
                 </div>
               </div>
-              <div
-                data-testid="trust-score-gauge-icon"
-                className={`w-12 h-12 rounded-xl border flex items-center justify-center shadow-lg shrink-0 transition-colors duration-300 ${trustTier.badgeClass}`}
-              >
-                <TrustIcon className="w-7 h-7" />
+
+              <div className="flex flex-col items-center shrink-0">
+                <div
+                  data-testid="trust-score-gauge-icon"
+                  className={`w-12 h-12 rounded-2xl border flex items-center justify-center shadow-lg transition-colors duration-300 ${trustTier.badgeClass}`}
+                >
+                  <TrustIcon className="w-7 h-7" />
+                </div>
               </div>
             </div>
 
-            {/* Trust Multiplier Status Row */}
-            <div className="pt-2 border-t border-void-border/70 flex items-center justify-between text-xs">
-              <span className="text-gray-400 font-medium flex items-center gap-1.5">
-                <Zap className="w-3.5 h-3.5 text-plasma-cyan" />
+            {/* Fila de Estado del Multiplicador de XP con Margen y Relleno Limpio */}
+            <div className="pt-3 mt-1 border-t border-void-border/70 flex items-center justify-between text-xs">
+              <span className="text-gray-400 font-medium flex items-center gap-1.5 shrink-0">
+                <Zap className="w-3.5 h-3.5 text-plasma-cyan shrink-0" />
                 <span>{t("xpMultiplier")}:</span>
               </span>
-              <span className={`font-black ${multDetails.colorClass}`}>
+              <span className={`font-black ml-2 text-right ${multDetails.colorClass}`}>
                 {t(multDetails.translationKey)}
               </span>
             </div>
@@ -222,23 +232,23 @@ export function LevelReputationModule({
           </div>
         </div>
 
-        {/* 20-Tier Roadmap Toggle */}
+        {/* 50-Tier Roadmap Toggle (Touch WCAG Optimizado) */}
         <div className="pt-2">
           <button
             type="button"
             onClick={() => setShowAllTiers((prev) => !prev)}
-            className="flex items-center gap-2 text-xs font-bold text-plasma-cyan hover:underline cursor-pointer"
+            className="min-h-[44px] py-2 px-1 flex items-center gap-2 text-xs font-bold text-plasma-cyan hover:underline cursor-pointer touch-manipulation active:opacity-80 transition-opacity"
           >
-            <Layers className="w-3.5 h-3.5" />
+            <Layers className="w-3.5 h-3.5 shrink-0" />
             <span>{showAllTiers ? t("hideProgression") : t("viewProgression")}</span>
-            <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showAllTiers ? "rotate-180" : ""}`} />
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 shrink-0 ${showAllTiers ? "rotate-180" : ""}`} />
           </button>
 
           {showAllTiers && (
             <div className="mt-3 p-4 rounded-xl bg-void-deep/90 border border-void-border grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2.5 animate-in fade-in duration-300">
               {TIER_THRESHOLDS.map((threshold, i) => {
                 const sampleLevel = threshold.minLevel;
-                const tierInfo = getLevelTierDetails(sampleLevel);
+                const tierInfo = getTierForLevel(sampleLevel);
                 const IconComp = tierInfo.IconComponent;
                 const isCurrentTier = tier.tierIndex === i;
                 const levelRange = threshold.maxLevel === Infinity 
@@ -259,7 +269,7 @@ export function LevelReputationModule({
                         <span className="text-[9px] font-mono font-bold text-gray-400">
                           {t("tierN", { number: i + 1 })}
                         </span>
-                        <IconComp className={`w-3.5 h-3.5 ${tierInfo.color}`} />
+                        <IconComp className={`w-3.5 h-3.5 ${tierInfo.iconColor || "text-plasma-cyan"}`} />
                       </div>
                       <p className={`text-[10px] font-bold whitespace-normal break-words leading-tight ${tierInfo.color}`}>
                         {tierInfo.title}
@@ -278,3 +288,5 @@ export function LevelReputationModule({
     </div>
   );
 }
+
+export default LevelReputationModule;

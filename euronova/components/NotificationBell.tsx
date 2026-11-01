@@ -28,6 +28,7 @@ import {
   type NotificationType 
 } from "@/actions/notifications";
 import { NotificationPreferencesModal } from "@/components/NotificationPreferencesModal";
+import { CosmicTooltip } from "@/components/CosmicTooltip";
 
 const subscribe = () => () => {};
 
@@ -102,7 +103,7 @@ export function NotificationBell() {
     };
   }, []);
 
-  // Cerrar al hacer clic fuera
+  // Cerrar al pulsar fuera del contenedor
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -196,29 +197,30 @@ export function NotificationBell() {
 
   return (
     <div className="relative shrink-0 select-none" ref={containerRef}>
-      {/* Bell Trigger Button */}
-      <button
-        type="button"
-        onClick={handleToggleOpen}
-        className={`relative p-2 min-w-[44px] min-h-[44px] rounded-xl border transition-all duration-300 cursor-pointer flex items-center justify-center focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none ${
-          isOpen
-            ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.3)]"
-            : unreadCount > 0
-            ? "bg-void-surface hover:bg-void-surface/90 border-plasma-cyan/40 text-gray-200 hover:border-plasma-cyan hover:text-white shadow-[0_0_12px_rgba(0,229,255,0.15)]"
-            : "bg-void-surface hover:bg-void-surface/90 border-void-border text-gray-400 hover:text-gray-200 hover:border-gray-600"
-        }`}
-        aria-label={t("viewNotifications")}
-        title={t("title")}
-      >
-        <Bell className={`w-4 h-4 ${unreadCount > 0 ? "animate-[wiggle_1s_ease-in-out_infinite]" : ""}`} />
+      {/* Bell Trigger Button wrapped in CosmicTooltip */}
+      <CosmicTooltip content={isOpen ? undefined : t("title")} side="bottom">
+        <button
+          type="button"
+          onClick={handleToggleOpen}
+          className={`relative p-2 min-w-[44px] min-h-[44px] rounded-xl border transition-all duration-300 cursor-pointer flex items-center justify-center focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none ${
+            isOpen
+              ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.3)]"
+              : unreadCount > 0
+              ? "bg-void-surface hover:bg-void-surface/90 border-plasma-cyan/40 text-gray-200 hover:border-plasma-cyan hover:text-white shadow-[0_0_12px_rgba(0,229,255,0.15)]"
+              : "bg-void-surface hover:bg-void-surface/90 border-void-border text-gray-400 hover:text-gray-200 hover:border-gray-600"
+          }`}
+          aria-label={t("viewNotifications")}
+        >
+          <Bell className={`w-4 h-4 ${unreadCount > 0 ? "animate-[wiggle_1s_ease-in-out_infinite]" : ""}`} />
 
-        {/* Real-time Unread Badge */}
-        {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 px-1.5 py-0.2 min-w-4 h-4 rounded-full bg-nova-flare text-[9px] font-black text-white flex items-center justify-center shadow-[0_0_10px_rgba(255,46,99,0.7)] animate-in zoom-in-75">
-            {unreadCount > 99 ? "99+" : unreadCount}
-          </span>
-        )}
-      </button>
+          {/* Real-time Unread Badge */}
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 px-1.5 py-0.2 min-w-4 h-4 rounded-full bg-nova-flare text-[9px] font-black text-white flex items-center justify-center shadow-[0_0_10px_rgba(255,46,99,0.7)] animate-in zoom-in-75">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
+        </button>
+      </CosmicTooltip>
 
       {/* Notifications Popover Dropdown */}
       {isOpen && (
@@ -238,40 +240,43 @@ export function NotificationBell() {
 
             <div className="flex items-center gap-1 shrink-0">
               {unreadCount > 0 && (
-                <button
-                  type="button"
-                  onClick={handleMarkAllRead}
-                  disabled={isPending}
-                  className="p-1.5 rounded-lg text-gray-400 hover:text-plasma-cyan hover:bg-void-deep border border-transparent hover:border-void-border transition-colors cursor-pointer"
-                  title={t("markAllRead")}
-                  aria-label={t("markAllRead")}
-                >
-                  <CheckCheck className="w-4 h-4" />
-                </button>
+                <CosmicTooltip content={t("markAllRead")} side="bottom">
+                  <button
+                    type="button"
+                    onClick={handleMarkAllRead}
+                    disabled={isPending}
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-plasma-cyan hover:bg-void-deep border border-transparent hover:border-void-border transition-colors cursor-pointer"
+                    aria-label={t("markAllRead")}
+                  >
+                    <CheckCheck className="w-4 h-4" />
+                  </button>
+                </CosmicTooltip>
               )}
 
-              <button
-                type="button"
-                onClick={() => {
-                  setIsOpen(false);
-                  setIsPreferencesOpen(true);
-                }}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-void-deep border border-transparent hover:border-void-border transition-colors cursor-pointer"
-                title={t("preferences")}
-                aria-label={t("openSettings")}
-              >
-                <Settings className="w-4 h-4" />
-              </button>
+              <CosmicTooltip content={t("preferences")} side="bottom">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                    setIsPreferencesOpen(true);
+                  }}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-void-deep border border-transparent hover:border-void-border transition-colors cursor-pointer"
+                  aria-label={t("openSettings")}
+                >
+                  <Settings className="w-4 h-4" />
+                </button>
+              </CosmicTooltip>
 
-              <Link
-                href="/dashboard/support"
-                onClick={() => setIsOpen(false)}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-plasma-cyan hover:bg-void-deep border border-transparent hover:border-void-border transition-colors cursor-pointer flex items-center justify-center"
-                title={tSupport("hubTitle")}
-                aria-label={tSupport("hubTitle")}
-              >
-                <Headphones className="w-4 h-4" />
-              </Link>
+              <CosmicTooltip content={tSupport("hubTitle")} side="bottom">
+                <Link
+                  href="/dashboard/support"
+                  onClick={() => setIsOpen(false)}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-plasma-cyan hover:bg-void-deep border border-transparent hover:border-void-border transition-colors cursor-pointer flex items-center justify-center"
+                  aria-label={tSupport("hubTitle")}
+                >
+                  <Headphones className="w-4 h-4" />
+                </Link>
+              </CosmicTooltip>
             </div>
           </div>
 
@@ -341,15 +346,16 @@ export function NotificationBell() {
                     </div>
 
                     {/* Actions / Delete */}
-                    <button
-                      type="button"
-                      onClick={(e) => handleDeleteItem(e, item.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1 text-gray-500 hover:text-nova-flare transition-opacity cursor-pointer shrink-0 mt-0.5"
-                      title={t("dismiss")}
-                      aria-label={t("dismiss")}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <CosmicTooltip content={t("dismiss")} side="top">
+                      <button
+                        type="button"
+                        onClick={(e) => handleDeleteItem(e, item.id)}
+                        className="opacity-0 group-hover:opacity-100 p-1 text-gray-500 hover:text-nova-flare transition-opacity cursor-pointer shrink-0 mt-0.5"
+                        aria-label={t("dismiss")}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </CosmicTooltip>
                   </div>
                 );
               })

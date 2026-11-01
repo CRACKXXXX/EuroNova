@@ -60,14 +60,17 @@ export function UserSupportHubClient({
   const [replyInput, setReplyInput] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollContainerRef = useRef<HTMLDivElement>(null);
 
   const activeTicket = tickets.find((t) => t.id === selectedTicketId) || null;
 
-  // Auto-scroll chat to bottom when active ticket or its replies change
+  // Auto-scroll chat to bottom strictly scoped to the container (no global window jumps)
   useEffect(() => {
-    if (activeTicket) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (activeTicket && chatScrollContainerRef.current) {
+      chatScrollContainerRef.current.scrollTo({
+        top: chatScrollContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
     }
   }, [activeTicket]);
 
@@ -111,6 +114,14 @@ export function UserSupportHubClient({
       if (res.error) {
         if (res.error === "RATE_LIMIT_EXCEEDED") {
           toast.warning(tErrors("rateLimitExceeded"), { id: "rate-limit-toast", icon: "⏳" });
+        } else if (res.error === "AUTH_REQUIRED") {
+          toast.error(tErrors("authRequired"));
+        } else if (res.error === "EMPTY_MESSAGE" || res.error === "MESSAGE_TOO_SHORT") {
+          toast.error(tForm("contentPlaceholder"));
+        } else if (res.error === "TICKET_NOT_FOUND") {
+          toast.error(t("ticketNotFound"));
+        } else if (res.error === "INSERTION_FAILED") {
+          toast.error(t("replyFailed"));
         } else {
           toast.error(res.error);
         }
@@ -400,7 +411,7 @@ export function UserSupportHubClient({
                         {activeTicket.subject}
                       </h2>
 
-                      <div className="flex items-center gap-4 text-xs text-gray-400">
+                      <div className="flex items-center gap-4 text-xs text-gray-400 flex-wrap">
                         <div className="flex items-center gap-1.5">
                           <Mail className="w-3.5 h-3.5 text-gray-500" />
                           <span>{activeTicket.email}</span>
@@ -411,11 +422,23 @@ export function UserSupportHubClient({
                             <span>{activeTicket.phone}</span>
                           </div>
                         )}
+                        {activeTicket.preferred_contact_method && (
+                          <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-void-deep border border-void-border text-[11px] text-plasma-cyan font-mono">
+                            <span className="text-gray-500 font-sans">{t("preferredContact")}:</span>
+                            <span className="font-semibold capitalize">
+                              {activeTicket.preferred_contact_method === "whatsapp"
+                                ? t("methodWhatsapp")
+                                : activeTicket.preferred_contact_method === "email"
+                                ? t("methodEmail")
+                                : t("methodWebsite")}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     {/* Messages Scroll Area */}
-                    <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5">
+                    <div ref={chatScrollContainerRef} className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5">
                       {/* Message 1: Initial User Ticket Inquiry */}
                       <div className="flex gap-3">
                         <div className="w-8 h-8 rounded-full bg-void-deep border border-void-border flex items-center justify-center shrink-0 text-gray-400">
@@ -539,8 +562,6 @@ export function UserSupportHubClient({
                           {t("noRepliesYet")}
                         </div>
                       )}
-
-                      <div ref={messagesEndRef} />
                     </div>
 
                     {/* Bottom Status & Input Area */}

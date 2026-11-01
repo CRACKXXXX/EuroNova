@@ -72,7 +72,7 @@ export function ReportOrgButton({ orgId, orgName }: ReportOrgButtonProps) {
           setIsOpen(true);
         }}
         className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-xl border border-void-border bg-void-deep/80 hover:border-nova-flare/40 text-gray-400 hover:text-nova-flare focus-visible:ring-2 focus-visible:ring-nova-flare focus-visible:outline-none text-xs font-semibold transition-all cursor-pointer shadow-sm group"
-        title={t("reportOrgTitle")}
+        aria-label={t("reportOrgTitle")}
       >
         <Flag className="w-3.5 h-3.5 group-hover:scale-110 transition-transform text-gray-500 group-hover:text-nova-flare" />
         <span>{t("reportOrg")}</span>

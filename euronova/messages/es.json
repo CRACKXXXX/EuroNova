@@ -13,7 +13,7 @@
     "initiativeDesc2": "Operamos con cero muros de pago comerciales, cero niveles premium, cero rastreo publicitario y absoluta neutralidad editorial. No vendemos tus datos personales ni cobramos a las organizaciones anfitrionas por promocionar sus convocatorias. Cada oportunidad mostrada en nuestro radar es un proyecto oficial financiado por la Comisión Europea donde tu alojamiento, manutención y viajes internacionales están cubiertos por subvenciones de solidaridad de la UE.",
     "initiativeStaffBadge": "ROLES DE LA COMUNIDAD DE VOLUNTARIOS",
     "initiativeStaffTitle": "Moderación liderada por la comunidad: El poder de los antiguos participantes",
-    "initiativeStaffDesc": "Dado que EuroNova es una utilidad pública, la gobernanza pertenece a la comunidad. A través de nuestro Protocolo True Trust, los voluntarios activos que alcanzan el Nivel 10 XP pueden solicitar autorización para convertirse en Moderadores de la Comunidad o Especialistas de Soporte.",
+    "initiativeStaffDesc": "Dado que EuroNova es una utilidad pública, la gobernanza pertenece a la comunidad. A través de nuestro Protocolo True Trust, los voluntarios activos que alcanzan el Nivel 10 pueden solicitar autorización para convertirse en Moderadores de la Comunidad o Especialistas de Soporte.",
     "tagFree": "100% Gratuito y de Acceso Libre",
     "tagZeroPaywall": "Sin Muros de Pago ni Tarifas Ocultas",
     "tagNoIntermediaries": "Contacto Directo con ONG Anfitrionas",
@@ -674,7 +674,15 @@
     "reasonApplySupport": "Postular al Rol de Soporte (Vanguard Nivel 10+)",
     "reasonSurveyModeration": "Moderación de Encuestas y Votaciones Comunitarias",
     "reasonTrustScoreDispute": "Disputas de Telemetría de XP / Puntuación de Confianza",
-    "reasonScraperIssue": "Incidencias de Indexación del Rastreador Automático"
+    "reasonScraperIssue": "Incidencias de Indexación del Rastreador Automático",
+    "preferredContactMethod": "Método de contacto preferido *",
+    "contactMethodWebsite": "Sitio Web (Centro Orbital)",
+    "contactMethodEmail": "Correo electrónico",
+    "contactMethodWhatsapp": "WhatsApp directo",
+    "fasterResolutionTip": "Para una resolución más rápida, recomendamos usar el Sitio Web.",
+    "phoneWhatsappRequired": "Número de teléfono con código de país *",
+    "phoneWhatsappPlaceholder": "+34 600 000 000 (Requerido para WhatsApp)",
+    "applySupportPlaceholder": "Describe tu experiencia en movilidad europea, países visitados, idiomas hablados y por qué deseas ayudar a otros voluntarios..."
   },
   "OrgFilters": {
     "searchPlaceholder": "Buscar por nombre de organización...",
@@ -1312,13 +1320,13 @@
     "antiScamScore": "Puntuación Anti-Fraude 99.4%",
     "peerReviews": "Reseñas Verificadas de Compañeros",
     "levelSubtitle": "Acumulado a través de candidaturas verificadas, movilidades completadas y valoraciones de la comunidad.",
-    "dailyBonusToast": "¡Bonus Diario de Exploración Orbital! +{gained} XP otorgados (límite diario {total}/10).",
+    "dailyBonusToast": "¡Bonus Diario de Exploración Orbital! +{gained} XP otorgados (límite diario {total}/{max}).",
     "levelUpToast": "¡SUBIDA DE NIVEL! ¡Has alcanzado el Nivel {level}!",
     "tierFraction": "Rango {current}/{total}",
     "tierN": "Rango {number}",
     "currentRank": "Rango Actual",
-    "viewProgression": "Ver Sistema de Progresión Galáctica de 20 Rangos",
-    "hideProgression": "Ocultar Progresión Galáctica de 20 Rangos",
+    "viewProgression": "Ver Sistema de Progresión Galáctica de 50 Rangos",
+    "hideProgression": "Ocultar Progresión Galáctica de 50 Rangos",
     "xpMultiplier": "Multiplicador de XP por Confianza",
     "xpBoostHighTrust": "⚡ Impulso x1.5 XP (Alta Confianza)",
     "xpBoostGoodTrust": "⚡ Impulso x1.25 XP",
@@ -1466,7 +1474,11 @@
     "warningSendError": "Error al enviar la advertencia.",
     "muteUserError": "Error al silenciar al usuario.",
     "warningIssuedSuccess": "Advertencia oficial enviada a {name}.",
-    "userMutedSuccess": "{name} ha sido silenciado durante {mins} minutos."
+    "userMutedSuccess": "{name} ha sido silenciado durante {mins} minutos.",
+    "uploadsUnlockLevel10": "Los archivos adjuntos se desbloquean en el Nivel 10",
+    "attachFile": "Adjuntar Imagen o Documento (PNG, JPG, WEBP, PDF)",
+    "removeAttachment": "Eliminar archivo adjunto",
+    "fileSizeExceeded": "El archivo no puede exceder los 10MB."
   },
   "ProjectTldr": {
     "badge": "Resumen Ejecutivo IA (TL;DR)",
@@ -1623,7 +1635,8 @@
     "digestLabel": "Código de Error",
     "tryAgain": "Restablecer Conexión",
     "returnHome": "Volver al Portal",
-    "rateLimitExceeded": "Vas muy rápido. Por favor, espera un momento e inténtalo de nuevo."
+    "rateLimitExceeded": "Vas muy rápido. Por favor, espera un momento e inténtalo de nuevo.",
+    "authRequired": "Autenticación requerida. Por favor, inicia sesión para continuar."
   },
   "NotFound": {
     "badge": "COORDENADAS INALCANZABLES",
@@ -1969,7 +1982,11 @@
     "replyBonusPrefix": "Recompensa por Responder:",
     "lockedLevel2Required": "Bloqueado (Requiere Nivel 2 / 100 XP)",
     "level2RequiredCreate": "Nivel 2 Requerido: Debes alcanzar 100 XP para crear debates.",
-    "level2RequiredReply": "Nivel 2 Requerido: Debes alcanzar 100 XP para responder a debates."
+    "level2RequiredReply": "Nivel 2 Requerido: Debes alcanzar 100 XP para responder a debates.",
+    "uploadsUnlockLevel10": "Los archivos adjuntos se desbloquean en el Nivel 10",
+    "attachFile": "Adjuntar Imagen o Documento (PNG, JPG, WEBP, PDF)",
+    "removeAttachment": "Eliminar archivo adjunto",
+    "fileSizeExceeded": "El archivo no puede exceder los 10MB."
   },
   "Community": {
     "tabForum": "Foros Globales",
@@ -2157,7 +2174,22 @@
     "pressEnter": "Pulsa Enter para enviar",
     "pinMessage": "Fijar mensaje",
     "unpinMessage": "Desfijar mensaje",
-    "deleteMessage": "Eliminar mensaje"
+    "deleteMessage": "Eliminar mensaje",
+    "editMessage": "Editar mensaje",
+    "replyMessage": "Responder",
+    "cancelReply": "Cancelar respuesta",
+    "replyingTo": "Respondiendo a",
+    "editingMessage": "Editando mensaje",
+    "cancelEdit": "Cancelar edición",
+    "editedTag": "(editado)",
+    "deletedMessage": "[Este mensaje fue eliminado]",
+    "saveChanges": "Guardar cambios",
+    "cancel": "Cancelar",
+    "escapeToCancel": "Esc para cancelar",
+    "clickToJump": "Clic para ir al mensaje",
+    "attachFile": "Adjuntar Imagen o Documento (PNG, JPG, WEBP, PDF)",
+    "removeAttachment": "Eliminar archivo adjunto",
+    "fileSizeExceeded": "El archivo no puede exceder los 10MB."
   },
   "CookieBanner": {
     "title": "Preferencias de Privacidad y Cookies",
@@ -2212,6 +2244,13 @@
     "repliesCount": "{count} respuestas",
     "noRepliesYet": "Esperando respuesta inaugural de un especialista de soporte.",
     "hubTitle": "Centro de Soporte",
-    "staffBadge": "Equipo"
+    "staffBadge": "Equipo",
+    "preferredContact": "Contacto preferido",
+    "methodWebsite": "Sitio Web",
+    "methodEmail": "Correo electrónico",
+    "methodWhatsapp": "WhatsApp",
+    "replyFailed": "No se pudo registrar tu respuesta. Inténtalo de nuevo.",
+    "ticketNotFound": "Ticket no encontrado o no tienes permiso para acceder a él.",
+    "authRequired": "Debes iniciar sesión para realizar esta acción."
   }
 }

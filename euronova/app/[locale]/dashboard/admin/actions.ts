@@ -1616,7 +1616,14 @@ export async function escalateReportToAdmin(
   }
 }
 
-export { escalateReportToAdmin as escalateReportAction };
+export async function escalateReportAction(
+  reportId: string,
+  reason: string,
+  recommendedAction: "ban_user" | "delete_org" | "delete_survey" | "emergency_lock" | "investigate",
+  targetRole: "admin" | "moderator" = "admin"
+): Promise<AdminActionResult> {
+  return escalateReportToAdmin(reportId, reason, recommendedAction, targetRole);
+}
 
 /**
  * Ticket Escalation Protocol:

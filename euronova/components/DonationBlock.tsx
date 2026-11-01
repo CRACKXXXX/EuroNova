@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Heart, Server, Copy, Check, ExternalLink, ShieldCheck, Sparkles, Scale, ShieldAlert } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { CosmicTooltip } from "@/components/CosmicTooltip";
 
 export function DonationBlock() {
   const t = useTranslations("DonationBlock");
@@ -81,6 +82,7 @@ export function DonationBlock() {
             <button
               type="button"
               onClick={() => handleCopy(IBAN_NUMBER, "iban")}
+              aria-label={t("copyIban")}
               className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-void-surface hover:bg-plasma-cyan/15 border border-void-border hover:border-plasma-cyan/40 text-xs font-bold text-white hover:text-plasma-cyan transition-all cursor-pointer"
             >
               {copiedKey === "iban" ? (
@@ -125,18 +127,20 @@ export function DonationBlock() {
                 <span>{t("openRevolut")}</span>
                 <ExternalLink className="w-3.5 h-3.5 text-hyper-violet" />
               </a>
-              <button
-                type="button"
-                onClick={() => handleCopy("revolut.me/joelrodjur", "revolut")}
-                className="p-2.5 rounded-xl bg-void-surface hover:bg-hyper-violet/15 border border-void-border hover:border-hyper-violet/40 text-gray-300 hover:text-white transition-all"
-                title={t("copyRevolut")}
-              >
-                {copiedKey === "revolut" ? (
-                  <Check className="w-4 h-4 text-rup-emerald" />
-                ) : (
-                  <Copy className="w-4 h-4" />
-                )}
-              </button>
+              <CosmicTooltip content={t("copyRevolut")} side="top">
+                <button
+                  type="button"
+                  onClick={() => handleCopy("revolut.me/joelrodjur", "revolut")}
+                  aria-label={t("copyRevolut")}
+                  className="p-2.5 rounded-xl bg-void-surface hover:bg-hyper-violet/15 border border-void-border hover:border-hyper-violet/40 text-gray-300 hover:text-white transition-all cursor-pointer"
+                >
+                  {copiedKey === "revolut" ? (
+                    <Check className="w-4 h-4 text-rup-emerald" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
+                </button>
+              </CosmicTooltip>
             </div>
           </div>
 
@@ -168,18 +172,20 @@ export function DonationBlock() {
                 <span>{t("donatePaypal")}</span>
                 <ExternalLink className="w-3.5 h-3.5 text-nova-flare" />
               </a>
-              <button
-                type="button"
-                onClick={() => handleCopy(PAYPAL_URL, "paypal")}
-                className="p-2.5 rounded-xl bg-void-surface hover:bg-nova-flare/15 border border-void-border hover:border-nova-flare/40 text-gray-300 hover:text-white transition-all"
-                title={t("copyPaypal")}
-              >
-                {copiedKey === "paypal" ? (
-                  <Check className="w-4 h-4 text-rup-emerald" />
-                ) : (
-                  <Copy className="w-4 h-4" />
-                )}
-              </button>
+              <CosmicTooltip content={t("copyPaypal")} side="top">
+                <button
+                  type="button"
+                  onClick={() => handleCopy(PAYPAL_URL, "paypal")}
+                  aria-label={t("copyPaypal")}
+                  className="p-2.5 rounded-xl bg-void-surface hover:bg-nova-flare/15 border border-void-border hover:border-nova-flare/40 text-gray-300 hover:text-white transition-all cursor-pointer"
+                >
+                  {copiedKey === "paypal" ? (
+                    <Check className="w-4 h-4 text-rup-emerald" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
+                </button>
+              </CosmicTooltip>
             </div>
           </div>
         </div>

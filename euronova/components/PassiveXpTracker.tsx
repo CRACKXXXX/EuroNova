@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { awardDailyEngagementXp } from "@/actions/gamification";
+import { DAILY_XP_CAP } from "@/lib/gamification";
 
 interface PassiveXpTrackerProps {
   userId?: string | null;
@@ -11,8 +12,8 @@ interface PassiveXpTrackerProps {
 }
 
 /**
- * Sistema Pasivo de Recompensa de Engagement (+2 XP por sesión de navegación).
- * Límite estricto de +10 XP por día calendario tanto en cliente (localStorage)
+ * Sistema Pasivo de Recompensa de Engagement (+3 XP por sesión de navegación).
+ * Límite estricto de DAILY_XP_CAP (+15 XP) por día calendario tanto en cliente (localStorage)
  * como en base de datos (user_xp_logs) para evitar farming por refresco.
  */
 export function PassiveXpTracker({ userId, role = "youth" }: PassiveXpTrackerProps) {
@@ -38,26 +39,26 @@ export function PassiveXpTracker({ userId, role = "youth" }: PassiveXpTrackerPro
       if (lastDate === today) {
         const rawCount = localStorage.getItem(countKey);
         const parsed = parseInt(rawCount || "0", 10);
-        todayTotal = Number.isFinite(parsed) && parsed >= 0 ? Math.min(10, parsed) : 0;
+        todayTotal = Number.isFinite(parsed) && parsed >= 0 ? Math.min(DAILY_XP_CAP, parsed) : 0;
       } else {
         localStorage.setItem(dateKey, today);
         localStorage.setItem(countKey, "0");
         todayTotal = 0;
       }
 
-      // Si ya alcanzó el límite diario de 10 XP, no consultar al servidor
-      if (todayTotal >= 10) {
+      // Si ya alcanzó el límite diario de DAILY_XP_CAP, no consultar al servidor
+      if (todayTotal >= DAILY_XP_CAP) {
         return;
       }
 
       awardDailyEngagementXp().then((res) => {
         if (res.success && res.gained) {
-          const updatedTotal = todayTotal + res.gained;
+          const updatedTotal = Math.min(DAILY_XP_CAP, todayTotal + res.gained);
           localStorage.setItem(dateKey, today);
           localStorage.setItem(countKey, updatedTotal.toString());
 
           toast.success(
-            t("dailyBonusToast", { gained: res.gained, total: updatedTotal }),
+            t("dailyBonusToast", { gained: res.gained, total: updatedTotal, max: DAILY_XP_CAP }),
             { 
               icon: "✨",
               duration: 4500 
@@ -80,7 +81,7 @@ export function PassiveXpTracker({ userId, role = "youth" }: PassiveXpTrackerPro
           }
         } else if (res.dailyCapReached) {
           localStorage.setItem(dateKey, today);
-          localStorage.setItem(countKey, "10");
+          localStorage.setItem(countKey, DAILY_XP_CAP.toString());
         }
       }).catch(() => {});
     } catch {
