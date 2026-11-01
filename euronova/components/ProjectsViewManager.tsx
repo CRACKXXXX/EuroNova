@@ -61,11 +61,10 @@ export function ProjectsViewManager({ projects }: ProjectsViewManagerProps) {
             <button
               type="button"
               onClick={() => handleToggle("grid")}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                viewMode === "grid"
+              className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "grid"
                   ? "bg-plasma-cyan text-void-deep shadow-[0_0_12px_rgba(0,229,255,0.4)]"
                   : "text-gray-400 hover:text-white"
-              }`}
+                }`}
               aria-label={t("gridView")}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -76,11 +75,10 @@ export function ProjectsViewManager({ projects }: ProjectsViewManagerProps) {
             <button
               type="button"
               onClick={() => handleToggle("list")}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                viewMode === "list"
+              className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "list"
                   ? "bg-plasma-cyan text-void-deep shadow-[0_0_12px_rgba(0,229,255,0.4)]"
                   : "text-gray-400 hover:text-white"
-              }`}
+                }`}
               aria-label={t("listView")}
             >
               <List className="w-4 h-4" />
@@ -110,10 +108,10 @@ export function ProjectsViewManager({ projects }: ProjectsViewManagerProps) {
             <Search className="w-8 h-8" />
           </div>
           <h3 className="text-lg font-bold text-white">
-            {t("waitingTransmissions")}
+            {t("noMissionsFound")}
           </h3>
           <p className="text-sm text-gray-400 max-w-sm mx-auto">
-            {t("adjustFilters")}
+            {t("noMissionsFoundDesc")}
           </p>
         </div>
       )}

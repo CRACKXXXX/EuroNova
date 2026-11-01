@@ -15,7 +15,7 @@ interface ReportUserButtonProps {
   className?: string;
 }
 
-const subscribe = () => () => {};
+const subscribe = () => () => { };
 
 export function ReportUserButton({
   targetUserId,
@@ -38,6 +38,7 @@ export function ReportUserButton({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!details.trim()) {
+      setErrorMessage(t("detailsRequired"));
       return;
     }
 
@@ -46,34 +47,28 @@ export function ReportUserButton({
         const res = await submitGlobalReportAction({
           targetType: "user",
           targetId: targetUserId,
-          targetTitle: targetUserName,
           reason,
-          description: details.trim(),
+          details: `Target User: ${targetUserName} | ${details.trim()}`,
         });
 
         if (res.error) {
-          if (res.error === "RATE_LIMIT_EXCEEDED") {
-            toast.warning(tErrors("rateLimitExceeded"), { id: "rate-limit-toast", icon: "⏳" });
-            setErrorMessage(tErrors("rateLimitExceeded"));
-          } else {
-            setErrorMessage(res.error);
-          }
+          const localizedMsg = tErrors.has(res.error) ? tErrors(res.error) : res.error;
+          setErrorMessage(localizedMsg);
           return;
         }
 
         setIsOpen(false);
         setDetails("");
         setErrorMessage(null);
-        setToastMessage(t("reportUserSuccess"));
-        toast.success(t("reportUserSuccess"));
+        setToastMessage(t("reportSubmitted"));
+        toast.success(t("reportSubmitted"));
 
         if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
         toastTimeoutRef.current = setTimeout(() => {
           setToastMessage(null);
         }, 4000);
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : "Failed to transmit report.";
-        setErrorMessage(msg);
+      } catch {
+        setErrorMessage(t("submissionFailed"));
       }
     });
   };
