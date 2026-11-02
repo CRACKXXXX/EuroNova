@@ -23,13 +23,18 @@ export function RouteErrorBoundary({
   title,
   badge,
   description,
-  returnHref = "/dashboard",
+  returnHref = "/",
   returnLabel,
   icon: Icon = AlertTriangle,
 }: RouteErrorBoundaryProps) {
   const t = useTranslations("Errors");
 
   useEffect(() => {
+    // Unset any scroll locks if a modal or drawer crashed with overflow:hidden
+    if (typeof document !== "undefined" && document.body) {
+      document.body.style.overflow = "unset";
+    }
+
     void reportCrashTelemetry(error, {
       digest: error.digest,
       route: typeof window !== "undefined" ? window.location.pathname : undefined,
@@ -39,7 +44,7 @@ export function RouteErrorBoundary({
   const displayTitle = title || t("title");
   const displayBadge = badge || t("badge");
   const displayDesc = description || t("description");
-  const displayReturnLabel = returnLabel || t("returnHome");
+  const displayReturnLabel = returnLabel || (returnHref === "/" ? t("returnHome") : "Return to Section");
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-4 py-12 relative animate-in fade-in duration-300">
@@ -65,7 +70,7 @@ export function RouteErrorBoundary({
           </p>
         </div>
 
-        {/* Digest Telemetry if available */}
+        {/* Digest Telemetry if available (Scrubbed - Zero Stack Trace Leaks) */}
         {error.digest && (
           <div className="bg-void-deep border border-void-border/60 rounded-xl px-4 py-2 text-left font-mono text-[11px] text-gray-400 overflow-x-auto">
             <span className="text-gray-500 font-semibold">{t("digestLabel")}: </span>
@@ -73,7 +78,7 @@ export function RouteErrorBoundary({
           </div>
         )}
 
-        {/* Action Controls */}
+        {/* Action Controls: Try Again & Return to Home */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
           <button
             type="button"
@@ -84,12 +89,19 @@ export function RouteErrorBoundary({
             <span>{t("tryAgain")}</span>
           </button>
 
-          {returnHref && (
+          <Link
+            href="/"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-void-deep hover:bg-void-surface border border-void-border hover:border-gray-500 text-gray-300 hover:text-white font-semibold text-sm transition-all duration-200 cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-400" />
+            <span>{t("returnHome")}</span>
+          </Link>
+
+          {returnHref && returnHref !== "/" && (
             <Link
               href={returnHref}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-void-deep hover:bg-void-surface border border-void-border hover:border-gray-500 text-gray-300 hover:text-white font-semibold text-sm transition-all duration-200 cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-void-surface hover:bg-void-deep border border-void-border hover:border-gray-600 text-gray-400 hover:text-white font-medium text-xs transition-all duration-200 cursor-pointer"
             >
-              <ArrowLeft className="w-4 h-4 text-gray-400" />
               <span>{displayReturnLabel}</span>
             </Link>
           )}

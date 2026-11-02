@@ -6,6 +6,7 @@ import { z } from "zod";
 import { sanitizeErrorMessage } from "@/lib/errorSanitizer";
 import { validateSafeHttpsUrl, stripDangerousHtml } from "@/lib/securitySanitizer";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimiter";
+import { executeGdprAccountErasure } from "@/lib/gdprDeletion";
 
 export type ProfileActionState = {
   success?: string;
@@ -153,18 +154,6 @@ function sanitizeLanguages(value: string | null | undefined): string[] | null {
   return items.length > 0 ? items : null;
 }
 
-import { createClient as createAdminClient, SupabaseClient } from "@supabase/supabase-js";
-
-function getPrivilegedAdminClient(): SupabaseClient {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Privileged service configuration is missing.");
-  }
-  return createAdminClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
 
 export interface DataExportResult {
   success?: boolean;
@@ -288,90 +277,12 @@ export async function deleteMyAccount(): Promise<{ success?: boolean; error?: st
       return { error: "Security Exception: The Root Master Administrator account cannot be deleted." };
     }
 
-    const adminDb = getPrivilegedAdminClient();
-
-    // 1. Resolve or verify Ghost User for forum preservation
-    let ghostId = "554ec183-ced5-4e1c-9aee-a94ca1d51ec4";
-    const { data: ghostCheck } = await adminDb
-      .from("users_youth")
-      .select("id")
-      .eq("id", ghostId)
-      .maybeSingle();
-
-    if (!ghostCheck) {
-      const { data: ghostByEmail } = await adminDb
-        .from("users_youth")
-        .select("id")
-        .eq("email", "archive-anonymized@euronova.internal")
-        .maybeSingle();
-
-      if (ghostByEmail?.id) {
-        ghostId = ghostByEmail.id;
-      }
+    const result = await executeGdprAccountErasure(userId, { hardDeleteForums: false });
+    if (!result.success) {
+      return { error: result.error || "Failed to execute account erasure." };
     }
 
-    // 2. Anonymize all authored forum discussions (Art. 17 Forum Integrity Preservation)
-    await Promise.all([
-      adminDb
-        .from("global_forum_threads")
-        .update({
-          user_id: ghostId,
-          author_name: "Deleted User",
-          author_avatar: null,
-        })
-        .eq("user_id", userId),
-
-      adminDb
-        .from("global_forum_posts")
-        .update({
-          user_id: ghostId,
-          author_name: "Deleted User",
-          author_avatar: null,
-        })
-        .eq("user_id", userId),
-
-      adminDb
-        .from("project_forum_messages")
-        .update({
-          user_id: ghostId,
-          author_name: "Deleted User",
-          avatar_url: null,
-        })
-        .eq("user_id", userId),
-    ]);
-
-    // 3. Purge direct personal activities & interactions
-    await Promise.all([
-      adminDb.from("notifications").delete().eq("user_id", userId),
-      adminDb.from("user_project_interactions").delete().eq("user_id", userId),
-      adminDb.from("applications").delete().eq("youth_id", userId),
-      adminDb.from("reviews").delete().eq("youth_id", userId),
-    ]);
-
-    // 4. Scrub support tickets PII
-    await adminDb
-      .from("support_tickets")
-      .update({
-        email: "deleted-user@anonymized.internal",
-        phone: null,
-        content: "[Inquiry content purged pursuant to GDPR Art. 17 right to erasure]",
-      })
-      .eq("user_id", userId);
-
-    // 5. Delete public relational profiles
-    await Promise.all([
-      adminDb.from("users_youth").delete().eq("id", userId),
-      adminDb.from("users_org").delete().eq("id", userId),
-    ]);
-
-    // 6. Delete underlying auth user to permanently wipe credentials
-    const { error: authError } = await adminDb.auth.admin.deleteUser(userId);
-    if (authError) {
-      console.error("auth.admin.deleteUser failed:", authError);
-      return { error: sanitizeErrorMessage(authError) };
-    }
-
-    // 7. Clear local session cookies
+    // Clear local session cookies
     await supabase.auth.signOut();
 
     revalidatePath("/", "layout");

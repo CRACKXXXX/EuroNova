@@ -2,7 +2,19 @@ import { Link } from "@/i18n/routing";
 import { Search, Building, User, Briefcase, Globe, Users } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
-export default async function DashboardHome() {
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default async function DashboardHome({
+  searchParams,
+}: {
+  searchParams?: Promise<{ uat_error?: string }>;
+}) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  if (resolvedSearchParams?.uat_error === "500") {
+    throw new Error("[UAT Simulation] Deliberate test error triggered by architect parameter ?uat_error=500.");
+  }
+
   const t = await getTranslations("Dashboard");
 
   return (

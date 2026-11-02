@@ -38,7 +38,6 @@ export function ReportUserButton({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!details.trim()) {
-      setErrorMessage(t("detailsRequired"));
       return;
     }
 
@@ -47,28 +46,33 @@ export function ReportUserButton({
         const res = await submitGlobalReportAction({
           targetType: "user",
           targetId: targetUserId,
+          targetTitle: targetUserName,
           reason,
-          details: `Target User: ${targetUserName} | ${details.trim()}`,
+          description: details.trim(),
         });
 
         if (res.error) {
-          const localizedMsg = tErrors.has(res.error) ? tErrors(res.error) : res.error;
-          setErrorMessage(localizedMsg);
+          if (res.error === "RATE_LIMIT_EXCEEDED") {
+            toast.warning(tErrors("rateLimitExceeded"), { id: "rate-limit-toast", icon: "⏳" });
+            setErrorMessage(tErrors("rateLimitExceeded"));
+          } else {
+            setErrorMessage(res.error);
+          }
           return;
         }
 
         setIsOpen(false);
         setDetails("");
         setErrorMessage(null);
-        setToastMessage(t("reportSubmitted"));
-        toast.success(t("reportSubmitted"));
+        setToastMessage(t("reportUserSuccess"));
+        toast.success(t("reportUserSuccess"));
 
         if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
         toastTimeoutRef.current = setTimeout(() => {
           setToastMessage(null);
         }, 4000);
       } catch {
-        setErrorMessage(t("submissionFailed"));
+        setErrorMessage(tErrors("tryAgain"));
       }
     });
   };

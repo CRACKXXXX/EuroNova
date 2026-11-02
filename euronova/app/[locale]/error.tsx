@@ -15,6 +15,11 @@ export default function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
   const t = useTranslations("Errors");
 
   useEffect(() => {
+    // Unset any scroll locks if a modal or drawer crashed with overflow:hidden
+    if (typeof document !== "undefined" && document.body) {
+      document.body.style.overflow = "unset";
+    }
+
     void reportCrashTelemetry(error, {
       digest: error.digest,
       route: typeof window !== "undefined" ? window.location.pathname : undefined,
@@ -45,7 +50,7 @@ export default function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
           </p>
         </div>
 
-        {/* Digest Telemetry if available */}
+        {/* Digest Telemetry if available (Scrubbed - Zero Stack Trace Leaks) */}
         {error.digest && (
           <div className="bg-void-deep/80 border border-void-border/50 rounded-xl px-4 py-2.5 text-left font-mono text-[11px] text-gray-500 overflow-x-auto">
             <span className="text-gray-400 font-semibold">{t("digestLabel")}: </span>
@@ -53,7 +58,7 @@ export default function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
           </div>
         )}
 
-        {/* Action Controls */}
+        {/* Action Controls: Try Again & Return Home */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
           <button
             type="button"

@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { ArrowLeft, Scale, ShieldCheck, Globe, Building, CheckCircle2 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import { routing } from "@/i18n/routing";
 
-export const dynamic = "force-dynamic";
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
 
 export default async function TermsPage() {
   const t = await getTranslations("LegalTerms");

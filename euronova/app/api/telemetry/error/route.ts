@@ -5,8 +5,10 @@ import { sendCrashAlert } from "@/lib/externalAlerts";
 
 export const dynamic = "force-dynamic";
 
+const MAX_PAYLOAD_BYTES = 10 * 1024; // Strict 10KB cap
+
 /**
- * Lightweight, rate-limited telemetry ingestion endpoint.
+ * Lightweight, rate-limited and size-capped telemetry ingestion endpoint.
  * Ingests client crash reports, scrubs PII, records structured JSON logs
  * for Vercel / Sentry ingestion, and optionally dispatches Discord alerts.
  */
@@ -23,13 +25,40 @@ export async function POST(request: Request) {
       );
     }
 
-    // 2. Safe Payload Extraction
-    const body = (await request.json().catch(() => null)) as Partial<CrashTelemetryPayload> | null;
-    if (!body || typeof body !== "object") {
-      return NextResponse.json({ error: "Invalid telemetry payload" }, { status: 400 });
+    // 2. Strict Content-Length Pre-Check (Fast Rejection)
+    const contentLength = request.headers.get("content-length");
+    if (contentLength && parseInt(contentLength, 10) > MAX_PAYLOAD_BYTES) {
+      return NextResponse.json(
+        { error: "Payload Too Large: Telemetry payload exceeds 10KB limit." },
+        { status: 413 }
+      );
     }
 
-    // 3. Defense-in-Depth PII Scrubbing on Server
+    // 3. Safe Body Reading and Byte-Length Verification
+    const rawBody = await request.text().catch(() => null);
+    if (!rawBody || rawBody.trim().length === 0) {
+      return NextResponse.json({ error: "Invalid or empty telemetry payload." }, { status: 400 });
+    }
+
+    if (Buffer.byteLength(rawBody, "utf-8") > MAX_PAYLOAD_BYTES) {
+      return NextResponse.json(
+        { error: "Payload Too Large: Telemetry payload exceeds 10KB limit." },
+        { status: 413 }
+      );
+    }
+
+    let body: Partial<CrashTelemetryPayload> | null = null;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json({ error: "Malformed JSON payload." }, { status: 400 });
+    }
+
+    if (!body || typeof body !== "object") {
+      return NextResponse.json({ error: "Invalid telemetry payload format." }, { status: 400 });
+    }
+
+    // 4. Defense-in-Depth PII Scrubbing on Server
     const scrubbedName = scrubPII(body.name || "Error").slice(0, 100);
     const scrubbedMessage = scrubPII(body.message || "Unknown client exception").slice(0, 1000);
     const scrubbedStack = body.stack ? scrubPII(body.stack).slice(0, 4000) : undefined;
@@ -37,7 +66,7 @@ export async function POST(request: Request) {
     const scrubbedRoute = body.route ? scrubPII(body.route).slice(0, 255) : undefined;
     const scrubbedDigest = body.digest ? scrubPII(body.digest).slice(0, 100) : undefined;
 
-    // 4. Structured JSON Telemetry Output (Vercel Logs & Sentry Ingestion Ready)
+    // 5. Structured JSON Telemetry Output (Vercel Logs & Sentry Ingestion Ready)
     const structuredTelemetry = {
       event: "CRASH_TELEMETRY",
       severity: "ERROR",
@@ -54,7 +83,7 @@ export async function POST(request: Request) {
 
     console.error(JSON.stringify(structuredTelemetry));
 
-    // 5. Optional External Alert Notification (Discord / Admin Alert)
+    // 6. Optional External Alert Notification (Discord / Admin Alert)
     if (process.env.DISCORD_WEBHOOK_URL) {
       void sendCrashAlert({
         message: scrubbedMessage,

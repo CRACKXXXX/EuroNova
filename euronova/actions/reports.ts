@@ -6,7 +6,7 @@ import { sanitizeErrorMessage } from "@/lib/errorSanitizer";
 import { ReportSubmissionSchema, type ReportSubmissionInput } from "@/lib/schemas";
 import { stripDangerousHtml } from "@/lib/securitySanitizer";
 import { checkRateLimit, RATE_LIMITS, getClientIp } from "@/lib/rateLimiter";
-import { checkSevereReportStreak } from "@/lib/moderationShield";
+import { checkSevereReportStreak, verifyMidSessionActiveStatus } from "@/lib/moderationShield";
 
 export type ReportTargetType = ReportSubmissionInput["targetType"];
 
@@ -70,7 +70,17 @@ export async function submitGlobalReportAction(
     const reporterId = user?.id || null;
     const reporterEmail = user?.email || "Anonymous Visitor";
 
-    // 2. Sliding window Rate Limiter (User ID or Client IP)
+    // 2. Real-time Session Ban Enforcement
+    if (reporterId) {
+      const safety = await verifyMidSessionActiveStatus(reporterId);
+      if (safety.isBanned) {
+        return {
+          error: safety.error || "Your account has been banned due to violations of European youth safety protocols.",
+        };
+      }
+    }
+
+    // 3. Sliding window Rate Limiter (User ID or Client IP)
     const clientIp = await getClientIp();
     const rateIdentifier = reporterId ? `report_user_${reporterId}` : `report_ip_${clientIp}`;
     const rateCheck = await checkRateLimit(rateIdentifier, RATE_LIMITS.REPORT);
@@ -80,7 +90,7 @@ export async function submitGlobalReportAction(
       };
     }
 
-    // 3. Prepare insertion payload based on target_type
+    // 4. Prepare insertion payload based on target_type
     const insertData: Record<string, unknown> = {
       target_type: targetType,
       target_name: targetTitle,
@@ -131,15 +141,17 @@ export async function submitGlobalReportAction(
       targetType === "organization"
         ? "Organization"
         : targetType === "user"
-        ? "User"
-        : targetType === "survey"
-        ? "Survey"
-        : "Project";
+          ? "User"
+          : targetType === "survey"
+            ? "Survey"
+            : "Project";
 
-    await sendEmailAction({
-      to: "euronovaofficial@gmail.com",
-      subject: `🚨 [360º Moderation Alert] ${targetLabel} Reported: "${targetTitle}"`,
-      body: `A new 360º moderation report was transmitted on EuroNova.
+    // 5. Non-blocking administrative email notification
+    try {
+      void sendEmailAction({
+        to: "euronovaofficial@gmail.com",
+        subject: `🚨 [360º Moderation Alert] ${targetLabel} Reported: "${targetTitle}"`,
+        body: `A new 360º moderation report was transmitted on EuroNova.
 --------------------------------------------------
 Target Type:   ${targetLabel.toUpperCase()}
 Target Title:  ${targetTitle}
@@ -152,7 +164,12 @@ Status:        pending
 Timestamp:     ${new Date().toISOString()}
 --------------------------------------------------
 Review and moderate this transmission at https://euronova.space/dashboard/admin?tab=reports`,
-    });
+      }).catch((emailErr) => {
+        console.error("Non-blocking report email dispatch failure:", emailErr);
+      });
+    } catch (emailSyncErr) {
+      console.error("Non-blocking report email execution error:", emailSyncErr);
+    }
 
     // 4. Anti-Troll Hardening: Check if a severe streak exists (>= 5 unique reporters in 24h)
     // Isolated reports (1-4) NEVER penalize trust_score. Only severe streaks trigger automod action.

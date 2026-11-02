@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Compass, Home, Rocket } from "lucide-react";
+import { Compass, Home, LayoutDashboard } from "lucide-react";
 import "./globals.css";
 
 export default function GlobalNotFound() {
@@ -41,11 +41,11 @@ export default function GlobalNotFound() {
               </Link>
 
               <Link
-                href="/en/login"
+                href="/en/dashboard"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-void-surface hover:bg-void-deep border border-void-border hover:border-gray-600 text-gray-300 hover:text-white font-semibold text-sm transition-all duration-200 cursor-pointer"
               >
-                <Rocket className="w-4 h-4 text-plasma-cyan" />
-                <span>Explore Missions</span>
+                <LayoutDashboard className="w-4 h-4 text-plasma-cyan" />
+                <span>Control Dashboard</span>
               </Link>
             </div>
           </div>

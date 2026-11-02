@@ -1,1 +1,147 @@
-[]
+[
+  {
+    "relPath": "app/[locale]/dashboard/moderator-panel/ModeratorPanelClient.tsx",
+    "findings": [
+      {
+        "line": 839,
+        "category": "JSX_TEXT",
+        "text": "Escalate to Admin"
+      },
+      {
+        "line": 1188,
+        "category": "JSX_TEXT",
+        "text": "Escalate Ticket to Admin"
+      },
+      {
+        "line": 1201,
+        "category": "JSX_TEXT",
+        "text": "Ticket Subject"
+      },
+      {
+        "line": 1208,
+        "category": "JSX_TEXT",
+        "text": "Target Authority"
+      },
+      {
+        "line": 1211,
+        "category": "JSX_TEXT",
+        "text": "Executive Administration (#admin-command)"
+      },
+      {
+        "line": 1217,
+        "category": "JSX_TEXT_STANDALONE",
+        "text": "Reason for Escalation"
+      },
+      {
+        "line": 1236,
+        "category": "JSX_TEXT_STANDALONE",
+        "text": "Cancel"
+      },
+      {
+        "line": 1247,
+        "category": "JSX_TEXT",
+        "text": "Escalating..."
+      },
+      {
+        "line": 1252,
+        "category": "JSX_TEXT",
+        "text": "Transmit Escalation"
+      },
+      {
+        "line": 187,
+        "category": "toast.error()",
+        "text": "Please detail the reason for escalation to Admin."
+      },
+      {
+        "line": 199,
+        "category": "toast.success()",
+        "text": "Support ticket escalated to Executive Administration."
+      },
+      {
+        "line": 1224,
+        "category": "ATTR_HARDCODED",
+        "text": "Detail why this user support inquiry requires executive intervention or administrative dat"
+      }
+    ]
+  },
+  {
+    "relPath": "app/[locale]/dashboard/support-panel/SupportPanelClient.tsx",
+    "findings": [
+      {
+        "line": 565,
+        "category": "JSX_TEXT",
+        "text": "Escalate"
+      },
+      {
+        "line": 1044,
+        "category": "JSX_TEXT_STANDALONE",
+        "text": "Escalate To"
+      },
+      {
+        "line": 1056,
+        "category": "JSX_TEXT",
+        "text": "To Moderator"
+      },
+      {
+        "line": 1067,
+        "category": "JSX_TEXT",
+        "text": "To Admin"
+      },
+      {
+        "line": 1151,
+        "category": "JSX_TEXT",
+        "text": "Escalate Support Ticket"
+      },
+      {
+        "line": 1164,
+        "category": "JSX_TEXT",
+        "text": "Ticket Subject"
+      },
+      {
+        "line": 1171,
+        "category": "JSX_TEXT",
+        "text": "Escalate To"
+      },
+      {
+        "line": 1182,
+        "category": "JSX_TEXT",
+        "text": "To Moderator"
+      },
+      {
+        "line": 1193,
+        "category": "JSX_TEXT",
+        "text": "To Admin"
+      },
+      {
+        "line": 1200,
+        "category": "JSX_TEXT_STANDALONE",
+        "text": "Reason for Escalation"
+      },
+      {
+        "line": 1219,
+        "category": "JSX_TEXT_STANDALONE",
+        "text": "Cancel"
+      },
+      {
+        "line": 1230,
+        "category": "JSX_TEXT",
+        "text": "Escalating..."
+      },
+      {
+        "line": 1235,
+        "category": "JSX_TEXT",
+        "text": "Transmit Escalation"
+      },
+      {
+        "line": 216,
+        "category": "toast.error()",
+        "text": "Please detail the reason for escalation."
+      },
+      {
+        "line": 1207,
+        "category": "ATTR_HARDCODED",
+        "text": "Detail the complex policy inquiry, severe dispute, or executive intervention needed..."
+      }
+    ]
+  }
+]

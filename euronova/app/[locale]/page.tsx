@@ -30,6 +30,7 @@ import {
 
 interface PageProps {
   params: Promise<{ locale: string }>;
+  searchParams?: Promise<{ uat_error?: string }>;
 }
 
 export async function generateMetadata({
@@ -79,7 +80,12 @@ export async function generateMetadata({
   };
 }
 
-export default async function Home({ params }: PageProps) {
+export default async function Home({ params, searchParams }: PageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  if (resolvedSearchParams?.uat_error === "500") {
+    throw new Error("[UAT Simulation] Deliberate test error triggered by architect parameter ?uat_error=500.");
+  }
+
   const [{ locale }, supabase] = await Promise.all([
     params,
     createClient(),

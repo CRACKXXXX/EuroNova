@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { AlertOctagon, RotateCcw, RefreshCw } from "lucide-react";
+import Link from "next/link";
+import { AlertOctagon, RotateCcw, RefreshCw, Home } from "lucide-react";
 import { reportCrashTelemetry } from "@/lib/telemetry";
 
 interface GlobalErrorProps {
@@ -17,6 +18,11 @@ interface GlobalErrorProps {
  */
 export default function GlobalError({ error, reset }: GlobalErrorProps) {
   useEffect(() => {
+    // Unset any scroll locks if a modal or drawer crashed with overflow:hidden
+    if (typeof document !== "undefined" && document.body) {
+      document.body.style.overflow = "unset";
+    }
+
     void reportCrashTelemetry(error, {
       digest: error.digest,
       route: typeof window !== "undefined" ? window.location.pathname : "root-layout",
@@ -57,11 +63,11 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
             </h1>
             <p className="text-sm text-gray-400 font-light leading-relaxed">
               An unexpected anomaly disrupted the root application layout. Our telemetry
-              engine has scrubbed all PII and dispatched diagnostics to the control grid.
+              engine has scrubbed all diagnostic details and logged the incident.
             </p>
           </div>
 
-          {/* Secure Incident Digest */}
+          {/* Secure Incident Digest (Scrubbed - Zero Stack Trace Leaks) */}
           {error.digest && (
             <div className="bg-[#08090E] border border-[#1E2640] rounded-xl px-4 py-2.5 text-left font-mono text-[11px] text-gray-500 overflow-x-auto">
               <span className="text-gray-400 font-semibold">Incident Digest: </span>
@@ -69,7 +75,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
             </div>
           )}
 
-          {/* Recovery Actions */}
+          {/* Recovery Actions: Try Again, Return Home, and Hard Reload */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <button
               type="button"
@@ -80,13 +86,21 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
               <span>Recover Session</span>
             </button>
 
+            <Link
+              href="/"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#08090E] hover:bg-[#111420] border border-[#1E2640] hover:border-gray-600 text-gray-300 hover:text-white font-semibold text-sm transition-all duration-200 cursor-pointer"
+            >
+              <Home className="w-4 h-4 text-[#00E5FF]" />
+              <span>Return to Gateway</span>
+            </Link>
+
             <button
               type="button"
               onClick={handleHardReload}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#08090E] hover:bg-[#111420] border border-[#1E2640] hover:border-gray-600 text-gray-300 hover:text-white font-semibold text-sm transition-all duration-200 cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-[#111420] hover:bg-[#08090E] border border-[#1E2640] text-gray-400 hover:text-gray-200 text-xs transition-all duration-200 cursor-pointer"
             >
-              <RefreshCw className="w-4 h-4" />
-              <span>Reload Application</span>
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Reload</span>
             </button>
           </div>
         </main>

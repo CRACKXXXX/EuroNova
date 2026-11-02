@@ -108,10 +108,10 @@ export function ProjectsViewManager({ projects }: ProjectsViewManagerProps) {
             <Search className="w-8 h-8" />
           </div>
           <h3 className="text-lg font-bold text-white">
-            {t("noMissionsFound")}
+            {t("waitingTransmissions")}
           </h3>
           <p className="text-sm text-gray-400 max-w-sm mx-auto">
-            {t("noMissionsFoundDesc")}
+            {t("adjustFilters")}
           </p>
         </div>
       )}

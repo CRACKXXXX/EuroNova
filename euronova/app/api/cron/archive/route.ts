@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { verifyCronAuthorization, unauthorizedCronResponse } from "@/lib/cronAuth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -14,7 +15,8 @@ interface ArchivedProject {
  * Cron Job: Safe Auto-Archiver with 60-Day / 2-Month Buffer
  *
  * Security:
- * Requires Authorization: Bearer <CRON_SECRET> header or ?secret=<CRON_SECRET> query parameter.
+ * Protected by timingSafeEqual constant-time token verification (lib/cronAuth.ts).
+ * Allows Bearer Authorization or root administrator session.
  *
  * Logic:
  * Uses SUPABASE_SERVICE_ROLE_KEY to bypass RLS.
@@ -23,15 +25,10 @@ interface ArchivedProject {
  */
 export async function GET(request: NextRequest) {
   try {
-    // 1. Strict Cryptographic Secret Verification (Fail-Closed)
-    const cronSecret = process.env.CRON_SECRET;
-    const authHeader = request.headers.get("authorization") || request.headers.get("Authorization");
-
-    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized: Invalid or missing cron secret" },
-        { status: 401 }
-      );
+    // 1. Strict Cryptographic Constant-Time Authorization
+    const auth = await verifyCronAuthorization(request);
+    if (!auth.isAuthorized) {
+      return unauthorizedCronResponse(auth.error);
     }
 
     // 2. Verificación de Variables de Entorno Supabase
@@ -61,30 +58,51 @@ export async function GET(request: NextRequest) {
     const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
     const cutoffDate = sixtyDaysAgo.toISOString().split("T")[0]; // Formato YYYY-MM-DD
 
-    // 5. Actualización atómica de proyectos expirados
-    const { data: updatedData, error: updateError } = await adminDb
+    // 5. Bounded chunk selection to prevent PostgreSQL table locks (Limit 100 per run)
+    const { data: candidatesToArchive, error: selectError } = await adminDb
       .from("projects")
-      .update({ status: "archived" })
+      .select("id")
       .eq("status", "published")
       .not("end_date", "is", null)
       .lt("end_date", cutoffDate)
-      .select("id, title, end_date");
+      .limit(100);
 
-    if (updateError) {
-      console.error("[Cron Archive] Error archiving projects in Supabase:", updateError);
+    if (selectError) {
+      console.error("[Cron Archive] Error selecting expired projects:", selectError);
       return NextResponse.json(
         {
           success: false,
-          error: updateError.message,
-          code: updateError.code,
+          error: selectError.message,
+          code: selectError.code,
         },
         { status: 500 }
       );
     }
 
-    const archivedProjects = (updatedData as ArchivedProject[] | null) || [];
-    const archivedIds = archivedProjects.map((p) => p.id);
+    let archivedProjects: ArchivedProject[] = [];
+    if (candidatesToArchive && candidatesToArchive.length > 0) {
+      const idsToArchive = candidatesToArchive.map((p) => p.id);
+      const { data: updatedData, error: updateError } = await adminDb
+        .from("projects")
+        .update({ status: "archived" })
+        .in("id", idsToArchive)
+        .select("id, title, end_date");
 
+      if (updateError) {
+        console.error("[Cron Archive] Error archiving projects in Supabase:", updateError);
+        return NextResponse.json(
+          {
+            success: false,
+            error: updateError.message,
+            code: updateError.code,
+          },
+          { status: 500 }
+        );
+      }
+      archivedProjects = (updatedData as ArchivedProject[] | null) || [];
+    }
+
+    const archivedIds = archivedProjects.map((p) => p.id);
 
     // 6. Registro y Respuesta Detallada
     return NextResponse.json({

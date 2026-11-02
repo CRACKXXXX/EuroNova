@@ -11,9 +11,9 @@ const cspDirectives = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "img-src 'self' data: blob: https://*.supabase.co https://flagcdn.com https://*.cartocdn.com https://basemaps.cartocdn.com https://euronova.vercel.app",
+  "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://flagcdn.com https://*.cartocdn.com https://basemaps.cartocdn.com https://euronova.vercel.app https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://images.unsplash.com https://ec.europa.eu https://youth.europa.eu",
   "font-src 'self' data: https://fonts.gstatic.com https://fonts.openmaptiles.org https://basemaps.cartocdn.com",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.cartocdn.com https://basemaps.cartocdn.com https://nominatim.openstreetmap.org https://fonts.openmaptiles.org",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.supabase.in wss://*.supabase.in https://*.cartocdn.com https://basemaps.cartocdn.com https://nominatim.openstreetmap.org https://fonts.openmaptiles.org",
   "worker-src 'self' blob:",
   "child-src 'self' blob:",
   "frame-ancestors 'none'",
@@ -41,7 +41,7 @@ const securityHeaders = [
   },
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",
+    value: "camera=(), microphone=(), geolocation=(self)",
   },
   {
     key: "Strict-Transport-Security",
@@ -64,12 +64,44 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "**.supabase.co",
       },
+      {
+        protocol: "https",
+        hostname: "*.supabase.co",
+      },
+      {
+        protocol: "https",
+        hostname: "**.supabase.in",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "euronova.vercel.app",
+      },
+      {
+        protocol: "https",
+        hostname: "ec.europa.eu",
+      },
+      {
+        protocol: "https",
+        hostname: "youth.europa.eu",
+      },
     ],
   },
   async headers() {
     return [
       {
-        source: "/:path*",
+        source: "/(.*)",
         headers: securityHeaders,
       },
     ];

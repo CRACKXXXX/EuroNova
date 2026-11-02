@@ -3,8 +3,7 @@ import * as cheerio from "cheerio";
 import { createClient } from "@supabase/supabase-js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { stripDangerousHtml, sanitizeUnicode } from "@/lib/securitySanitizer";
-import { getUserRole } from "@/lib/roles";
-import { createClient as createServerClient } from "@/utils/supabase/server";
+import { verifyCronAuthorization, unauthorizedCronResponse } from "@/lib/cronAuth";
 import {
   cleanScrapedTitle,
   cleanProjectDescription,
@@ -1129,7 +1128,7 @@ async function fetchYeAggregatorProjects(): Promise<ScrapedCandidate[]> {
 // MAIN PIPELINE PROCESSING FOR INDIVIDUAL CANDIDATE
 // ============================================================================
 
-async function processCandidate(candidate: ScrapedCandidate): Promise<ValidatedProject> {
+export async function processCandidate(candidate: ScrapedCandidate): Promise<ValidatedProject> {
   const cleanTitle = cleanScrapedTitle(candidate.title);
   candidate.title = cleanTitle;
 
@@ -1240,34 +1239,10 @@ async function processCandidate(candidate: ScrapedCandidate): Promise<ValidatedP
 // ============================================================================
 
 export async function GET(request: NextRequest) {
-  // 1. Authorization check (Fail-Closed)
-  const cronSecret = process.env.CRON_SECRET;
-  const authHeader = request.headers.get("authorization") || request.headers.get("Authorization");
-  const querySecret = request.nextUrl.searchParams.get("secret");
-
-  let isAuthorized = Boolean(
-    cronSecret && (authHeader === `Bearer ${cronSecret}` || querySecret === cronSecret)
-  );
-
-  if (!isAuthorized) {
-    try {
-      const supabase = await createServerClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        const role = await getUserRole(user.id, user.email);
-        if (role === "admin" || role === "root" || user.email === "euronovaofficial@gmail.com") {
-          isAuthorized = true;
-        }
-      }
-    } catch {
-      // Session verification fallback cleanly
-    }
-  }
-
-  if (!isAuthorized) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  // 1. Authorization check (Constant-time cryptographic check + Root/Admin session)
+  const auth = await verifyCronAuthorization(request, { allowAdmin: true });
+  if (!auth.isAuthorized) {
+    return unauthorizedCronResponse(auth.error);
   }
 
   // 2. In-memory execution lock (Prevent simultaneous overlapping scraper runs)

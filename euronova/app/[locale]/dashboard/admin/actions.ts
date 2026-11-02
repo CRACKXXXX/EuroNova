@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { sendEmailAction } from "@/actions/sendEmail";
 import { sendEscalationAlert } from "@/lib/externalAlerts";
 import type { UserRole } from "@/lib/roles";
+import { executeGdprAccountErasure } from "@/lib/gdprDeletion";
 import {
   ADMIN_EMAIL,
   getServiceRoleClient,
@@ -243,65 +244,9 @@ export async function deleteOrganization(orgId: string): Promise<AdminActionResu
       return { error: "Organization ID is required." };
     }
 
-    const adminDb = getServiceRoleClient();
-
-    // 1. Explicit cascade cleanup for NGO dynamic surveys & votes
-    try {
-      const { data: orgSurveys } = await adminDb.from("ngo_surveys").select("id").eq("org_id", orgId);
-      if (orgSurveys && orgSurveys.length > 0) {
-        const surveyIds = orgSurveys.map((s) => s.id);
-        await adminDb.from("ngo_survey_votes").delete().in("survey_id", surveyIds);
-        await adminDb.from("ngo_survey_options").delete().in("survey_id", surveyIds);
-        await adminDb.from("ngo_surveys").delete().eq("org_id", orgId);
-      }
-    } catch (e) {
-      console.warn("deleteOrganization: non-blocking survey cleanup warning:", e);
-    }
-
-    // 2. Cascade cleanup for organization metadata tables
-    try {
-      await adminDb.from("org_team_members").delete().eq("org_id", orgId);
-      await adminDb.from("org_webhooks").delete().eq("org_id", orgId);
-      await adminDb.from("org_surveys").delete().eq("org_id", orgId);
-    } catch (e) {
-      console.warn("deleteOrganization: non-blocking org tools cleanup warning:", e);
-    }
-
-    // 3. Cascade cleanup for associated projects and child dependencies
-    try {
-      const { data: orgProjects } = await adminDb.from("projects").select("id").eq("org_id", orgId);
-      if (orgProjects && orgProjects.length > 0) {
-        const projectIds = orgProjects.map((p) => p.id);
-        await adminDb.from("project_reports").delete().in("project_id", projectIds);
-        await adminDb.from("applications").delete().in("project_id", projectIds);
-        await adminDb.from("user_project_interactions").delete().in("project_id", projectIds);
-        await adminDb.from("project_forum_messages").delete().in("project_id", projectIds);
-        await adminDb.from("projects").delete().eq("org_id", orgId);
-      }
-    } catch (e) {
-      console.warn("deleteOrganization: non-blocking projects cleanup warning:", e);
-    }
-
-    // 4. Cascade cleanup for reviews
-    try {
-      await adminDb.from("reviews").delete().eq("org_id", orgId);
-      await adminDb.from("org_reviews").delete().eq("org_id", orgId);
-    } catch (e) {
-      console.warn("deleteOrganization: non-blocking reviews cleanup warning:", e);
-    }
-
-    // 5. Delete public table entity record
-    const { error: orgError } = await adminDb.from("users_org").delete().eq("id", orgId);
-    if (orgError) throw orgError;
-
-    // 6. Delete underlying auth user to prevent ghost accounts in Supabase Auth (fault-tolerant)
-    try {
-      const { error: authError } = await adminDb.auth.admin.deleteUser(orgId);
-      if (authError && !authError.message.toLowerCase().includes("not found")) {
-        console.warn("deleteOrganization auth deletion warning:", authError.message);
-      }
-    } catch (e) {
-      console.warn("deleteOrganization auth user delete exception:", e);
+    const result = await executeGdprAccountErasure(orgId, { hardDeleteForums: true });
+    if (!result.success) {
+      return { error: result.error || "Failed to delete organization." };
     }
 
     safeRevalidate("/dashboard/admin");
@@ -598,37 +543,9 @@ export async function deleteYouthUser(userId: string): Promise<AdminActionResult
       return { error: "User ID is required." };
     }
 
-    const adminDb = getServiceRoleClient();
-
-    // 1. Explicit cascade cleanup for user-linked dependencies
-    try {
-      await adminDb.from("applications").delete().eq("youth_id", userId);
-      await adminDb.from("reviews").delete().eq("youth_id", userId);
-      await adminDb.from("org_reviews").delete().eq("youth_id", userId);
-      await adminDb.from("user_project_interactions").delete().eq("user_id", userId);
-      await adminDb.from("user_xp_logs").delete().eq("user_id", userId);
-      await adminDb.from("notifications").delete().eq("user_id", userId);
-      await adminDb.from("notification_preferences").delete().eq("user_id", userId);
-      await adminDb.from("ngo_survey_votes").delete().eq("user_id", userId);
-      await adminDb.from("support_tickets").delete().eq("user_id", userId);
-      await adminDb.from("project_reports").delete().eq("reporter_id", userId);
-      await adminDb.from("project_reports").delete().eq("target_user_id", userId);
-    } catch (cleanErr) {
-      console.warn("deleteYouthUser non-blocking cascade cleanup:", cleanErr);
-    }
-
-    // 2. Delete public youth profile record
-    const { error: youthError } = await adminDb.from("users_youth").delete().eq("id", userId);
-    if (youthError) throw youthError;
-
-    // 3. Delete underlying auth user to prevent ghost accounts in Supabase Auth (fault-tolerant)
-    try {
-      const { error: authError } = await adminDb.auth.admin.deleteUser(userId);
-      if (authError && !authError.message.toLowerCase().includes("not found")) {
-        console.warn("deleteYouthUser auth deletion warning:", authError.message);
-      }
-    } catch (authException) {
-      console.warn("deleteYouthUser auth deletion exception:", authException);
+    const result = await executeGdprAccountErasure(userId, { hardDeleteForums: true });
+    if (!result.success) {
+      return { error: result.error || "Failed to delete youth user." };
     }
 
     safeRevalidate("/dashboard/admin");

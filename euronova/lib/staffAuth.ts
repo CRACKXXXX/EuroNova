@@ -52,6 +52,20 @@ export async function verifyAdmin() {
       return { supabase, isAuthorized: false, user: null, role: "user" as UserRole };
     }
 
+    // Real-time Session Ban Enforcement for Staff
+    const meta = user.user_metadata || {};
+    const appMeta = user.app_metadata || {};
+    const isBanned =
+      meta.banned === true ||
+      meta.is_banned === true ||
+      appMeta.banned === true ||
+      appMeta.is_banned === true ||
+      Boolean(user.banned_until && new Date(user.banned_until).getTime() > Date.now());
+
+    if (isBanned) {
+      return { supabase, isAuthorized: false, user, role: "user" as UserRole };
+    }
+
     const role = await getUserRole(user.id, user.email);
     const isAuthorized = role === "admin" || role === "root";
     return { supabase, isAuthorized, user, role };
@@ -79,6 +93,20 @@ export async function verifyModeratorOrAdmin() {
       return { supabase, isAuthorized: false, user: null, role: "user" as UserRole };
     }
 
+    // Real-time Session Ban Enforcement for Staff
+    const meta = user.user_metadata || {};
+    const appMeta = user.app_metadata || {};
+    const isBanned =
+      meta.banned === true ||
+      meta.is_banned === true ||
+      appMeta.banned === true ||
+      appMeta.is_banned === true ||
+      Boolean(user.banned_until && new Date(user.banned_until).getTime() > Date.now());
+
+    if (isBanned) {
+      return { supabase, isAuthorized: false, user, role: "user" as UserRole };
+    }
+
     const role = await getUserRole(user.id, user.email);
     const isAuthorized =
       role === "root" || role === "admin" || role === "moderator" || role === "support";
@@ -103,6 +131,20 @@ export async function verifyStaff() {
 
     if (userError || !user) {
       return { supabase, isAuthorized: false, user: null, role: "user" as UserRole };
+    }
+
+    // Real-time Session Ban Enforcement for Staff
+    const meta = user.user_metadata || {};
+    const appMeta = user.app_metadata || {};
+    const isBanned =
+      meta.banned === true ||
+      meta.is_banned === true ||
+      appMeta.banned === true ||
+      appMeta.is_banned === true ||
+      Boolean(user.banned_until && new Date(user.banned_until).getTime() > Date.now());
+
+    if (isBanned) {
+      return { supabase, isAuthorized: false, user, role: "user" as UserRole };
     }
 
     const role = await getUserRole(user.id, user.email);

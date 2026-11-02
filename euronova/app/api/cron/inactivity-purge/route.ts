@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { maskEmail } from "@/lib/externalAlerts";
+import { verifyCronAuthorization, unauthorizedCronResponse } from "@/lib/cronAuth";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 const ROOT_ADMIN_EMAIL = "euronovaofficial@gmail.com";
 const GHOST_USER_EMAIL = "archive-anonymized@euronova.internal";
@@ -17,14 +19,9 @@ export async function POST(request: Request) {
 
 async function handleInactivityPurge(request: Request) {
   try {
-    const authHeader = request.headers.get("authorization") || request.headers.get("Authorization");
-    const cronSecret = process.env.CRON_SECRET;
-
-    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json(
-        { error: "Unauthorized: Invalid or missing cron secret" },
-        { status: 401 }
-      );
+    const auth = await verifyCronAuthorization(request);
+    if (!auth.isAuthorized) {
+      return unauthorizedCronResponse(auth.error);
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

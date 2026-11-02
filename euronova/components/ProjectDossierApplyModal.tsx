@@ -300,7 +300,7 @@ export function ProjectDossierApplyModal({
   if (!isLoggedIn) {
     return (
       <Link
-        href={`/${locale}/auth/login`}
+        href={`/${locale}/login`}
         className="w-full px-6 py-4 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 text-void-deep bg-plasma-cyan hover:bg-plasma-cyan/90 shadow-[0_0_20px_rgba(0,229,255,0.3)] hover:shadow-[0_0_35px_rgba(0,229,255,0.6)] hover:scale-[1.02] active:scale-[0.98] text-lg cursor-pointer"
       >
         <FileText className="w-5 h-5" />

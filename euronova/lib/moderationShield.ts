@@ -146,8 +146,14 @@ export async function verifyMidSessionActiveStatus(
       if (!authErr && authData?.user) {
         const u = authData.user;
         const meta = u.user_metadata || {};
+        const appMeta = u.app_metadata || {};
 
-        if (meta.banned === true || meta.is_banned === true) {
+        if (
+          meta.banned === true ||
+          meta.is_banned === true ||
+          appMeta.banned === true ||
+          appMeta.is_banned === true
+        ) {
           return {
             allowed: false,
             isBanned: true,
