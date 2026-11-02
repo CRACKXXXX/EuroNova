@@ -120,7 +120,8 @@
     "supportEuroNova": "EuroNova unterstützen",
     "language": "Sprache",
     "supportHelpCenter": "Support & Hilfe",
-    "ecosystem": "Ökosystem"
+    "ecosystem": "Ökosystem",
+    "more": "Mehr"
   },
   "Sidebar": {
     "search": "Suche",
@@ -657,7 +658,11 @@
     "copyright": "EuroNova Projekt. Alle Rechte vorbehalten.",
     "fiscalShieldTitle": "Hinweis zu freiwilligen Infrastruktur-Spenden (P2P)",
     "fiscalShieldDesc": "EuroNova ist eine unabhängige, nicht-kommerzielle Open-Access-Initiative. Finanzielle Zuwendungen via Revolut, PayPal oder SEPA-Überweisung sind rein freiwillige persönliche Geschenke (P2P), die ausschließlich für Hosting und Serverbetrieb verwendet werden. Sie stellen keinen gewerblichen Kauf, Sponsoring oder steuerlich abzugsfähige Spende dar. Es werden keine digitalen Güter oder kommerziellen Vorteile gewährt. Spender verzichten ausdrücklich auf Erstattungsansprüche nach EU-Verbraucherschutzrecht.",
-    "ecosystem": "Erasmus+ Ökosystem"
+    "ecosystem": "Erasmus+ Ökosystem",
+    "navTitle": "Navigation",
+    "home": "Startseite",
+    "community": "Community",
+    "map": "Missions-Radar"
   },
   "DashboardContent": {
     "transmissionsReceived": "Internationale Missionen",
@@ -2303,6 +2308,8 @@
     "noResultsTitle": "Keine Ressourcen gefunden",
     "noResultsDesc": "Passen Sie Ihre Suchbegriffe oder Kategoriefilter an, um Ressourcen zu finden.",
     "resetFilters": "Filter zurücksetzen",
-    "linkPending": "Link Ausstehend / Demnächst"
+    "linkPending": "Link Ausstehend / Demnächst",
+    "searchGoogle": "Auf Google suchen (Links laufen ab)",
+    "clearSearch": "Suche löschen"
   }
 }

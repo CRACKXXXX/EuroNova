@@ -4,13 +4,16 @@ import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { 
+  Home,
+  Users,
+  Compass,
+  Globe,
   ShieldCheck, 
   Scale, 
   FileText, 
   LifeBuoy,
   Heart,
-  Cookie,
-  Globe
+  Cookie
 } from "lucide-react";
 import { CookieConsentGatekeeper } from "@/components/CookieConsentGatekeeper";
 
@@ -24,7 +27,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
           
           {/* Identidad de Marca y Misión */}
-          <div className="md:col-span-6 space-y-3 text-center sm:text-left">
+          <div className="md:col-span-4 space-y-3 text-center sm:text-left">
             <div className="flex items-center justify-center sm:justify-start gap-2.5">
               <Image
                 src="/logo-big.png"
@@ -40,6 +43,51 @@ export function Footer() {
             <p className="text-xs sm:text-sm text-gray-400 leading-relaxed max-w-md mx-auto sm:mx-0">
               {t("tagline")}
             </p>
+          </div>
+
+          {/* Navegación Principal */}
+          <div className="md:col-span-2 space-y-2.5 text-center sm:text-left">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-gray-300">
+              {t("navTitle")}
+            </h4>
+            <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
+              <li>
+                <Link
+                  href="/"
+                  className="flex items-center justify-center sm:justify-start gap-2 transition-colors hover:text-plasma-cyan group"
+                >
+                  <Home className="w-3.5 h-3.5 text-plasma-cyan/70 group-hover:text-plasma-cyan transition-colors" />
+                  <span>{t("home")}</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/ecosystem"
+                  className="flex items-center justify-center sm:justify-start gap-2 transition-colors hover:text-plasma-cyan group"
+                >
+                  <Globe className="w-3.5 h-3.5 text-plasma-cyan/70 group-hover:text-plasma-cyan transition-colors" />
+                  <span>{t("ecosystem")}</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/community"
+                  className="flex items-center justify-center sm:justify-start gap-2 transition-colors hover:text-plasma-cyan group"
+                >
+                  <Users className="w-3.5 h-3.5 text-hyper-violet/70 group-hover:text-hyper-violet transition-colors" />
+                  <span>{t("community")}</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/map"
+                  className="flex items-center justify-center sm:justify-start gap-2 transition-colors hover:text-plasma-cyan group"
+                >
+                  <Compass className="w-3.5 h-3.5 text-plasma-cyan/70 group-hover:text-plasma-cyan transition-colors" />
+                  <span>{t("map")}</span>
+                </Link>
+              </li>
+            </ul>
           </div>
 
           {/* Enlaces Legales */}
@@ -107,15 +155,6 @@ export function Footer() {
               {t("supportTitle")}
             </h4>
             <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
-              <li>
-                <Link
-                  href="/ecosystem"
-                  className="flex items-center justify-center sm:justify-start gap-2 transition-colors hover:text-plasma-cyan group"
-                >
-                  <Globe className="w-3.5 h-3.5 text-plasma-cyan/70 group-hover:text-plasma-cyan transition-colors" />
-                  <span>{t("ecosystem")}</span>
-                </Link>
-              </li>
               <li>
                 <Link
                   href="/dashboard/support"

@@ -120,7 +120,8 @@
     "supportEuroNova": "Soutenir EuroNova",
     "language": "Langue",
     "supportHelpCenter": "Support et Aide",
-    "ecosystem": "Écosystème"
+    "ecosystem": "Écosystème",
+    "more": "Plus"
   },
   "Sidebar": {
     "search": "Recherche",
@@ -657,7 +658,11 @@
     "copyright": "Projet EuroNova. Tous droits réservés.",
     "fiscalShieldTitle": "Avis sur les contributions volontaires d'infrastructure (P2P)",
     "fiscalShieldDesc": "EuroNova est une initiative indépendante, non commerciale et en libre accès. Les soutiens financiers versés via Revolut, PayPal ou virement bancaire SEPA sont des dons de pair-à-pair (P2P) strictement volontaires, dédiés exclusivement à l'hébergement serveur et aux coûts de domaine. Ils ne constituent pas un achat commercial, un parrainage ou un don défiscalisable. Aucun produit ou avantage commercial n'est accordé en échange. Les donateurs renoncent expressément à tout droit de rétractation selon les règles de protection des consommateurs de l'UE.",
-    "ecosystem": "Écosystème Erasmus+"
+    "ecosystem": "Écosystème Erasmus+",
+    "navTitle": "Navigation",
+    "home": "Accueil",
+    "community": "Communauté",
+    "map": "Radar de Missions"
   },
   "DashboardContent": {
     "transmissionsReceived": "Missions Internationales",
@@ -2303,6 +2308,8 @@
     "noResultsTitle": "Aucune ressource trouvée",
     "noResultsDesc": "Essayez de modifier vos critères de recherche ou de filtre de catégorie.",
     "resetFilters": "Réinitialiser les filtres",
-    "linkPending": "Lien en Attente / Bientôt Disponible"
+    "linkPending": "Lien en Attente / Bientôt Disponible",
+    "searchGoogle": "Rechercher sur Google (Liens expirent)",
+    "clearSearch": "Effacer la recherche"
   }
 }

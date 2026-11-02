@@ -443,7 +443,7 @@ export default async function Home({ params, searchParams }: PageProps) {
         </MotionSection>
 
         {/* ============================================================ */}
-        {/* F. PLATFORM INNOVATIONS (RESPONSIVE NON-COLLAPSING GRID)     */}
+        {/* F. PLATFORM INNOVATIONS (PERFECTLY SYMMETRIC 3-1-3 7-GRID)   */}
         {/* ============================================================ */}
         <MotionSection
           initial={{ opacity: 0, y: 30 }}
@@ -465,11 +465,11 @@ export default async function Home({ params, searchParams }: PageProps) {
             </p>
           </div>
 
-          {/* Balanced Responsive Grid: 7-Item Symmetric Bento Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
+          {/* Symmetrical Bento Grid: 3 Cards (Top) - 1 Centerpiece Hub - 3 Cards (Bottom) */}
+          <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-6 gap-6 lg:gap-8 items-stretch">
 
             {/* Bento Card 1: Erasmus+ Info & Dynamic FAQ */}
-            <div className="bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-plasma-cyan/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
+            <div className="col-span-1 md:col-span-3 lg:col-span-2 order-1 md:order-1 lg:order-1 bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-plasma-cyan/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
               <div className="space-y-4">
                 <div className="w-14 h-14 rounded-2xl bg-plasma-cyan/15 border border-plasma-cyan/30 flex items-center justify-center text-plasma-cyan shadow-[0_0_20px_rgba(0,229,255,0.2)]">
                   <HelpCircle className="w-7 h-7" />
@@ -489,7 +489,7 @@ export default async function Home({ params, searchParams }: PageProps) {
             </div>
 
             {/* Bento Card 2: Global Community Forums */}
-            <div className="bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-hyper-violet/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
+            <div className="col-span-1 md:col-span-3 lg:col-span-2 order-2 md:order-2 lg:order-2 bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-hyper-violet/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
               <div className="space-y-4">
                 <div className="w-14 h-14 rounded-2xl bg-hyper-violet/15 border border-hyper-violet/30 flex items-center justify-center text-hyper-violet shadow-[0_0_20px_rgba(99,102,241,0.2)]">
                   <MessageSquare className="w-7 h-7" />
@@ -509,7 +509,7 @@ export default async function Home({ params, searchParams }: PageProps) {
             </div>
 
             {/* Bento Card 3: True Trust Protocol 0-100 XP */}
-            <div className="bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-rup-emerald/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
+            <div className="col-span-1 md:col-span-3 lg:col-span-2 order-3 md:order-3 lg:order-3 bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-rup-emerald/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
               <div className="space-y-4">
                 <div className="w-14 h-14 rounded-2xl bg-rup-emerald/15 border border-rup-emerald/30 flex items-center justify-center text-rup-emerald shadow-[0_0_20px_rgba(0,230,118,0.2)]">
                   <ShieldCheck className="w-7 h-7" />
@@ -528,8 +528,59 @@ export default async function Home({ params, searchParams }: PageProps) {
               </div>
             </div>
 
+            {/* Bento Card 7: Panoramic Master Centerpiece — External Erasmus+ Ecosystem Hub */}
+            <div className="col-span-1 md:col-span-6 lg:col-span-6 order-4 md:order-5 lg:order-4 bg-gradient-to-r from-void-surface/95 via-void-surface/85 to-void-deep/95 border border-plasma-cyan/40 hover:border-plasma-cyan backdrop-blur-3xl transition-all duration-500 shadow-[0_0_50px_rgba(0,229,255,0.12)] hover:shadow-[0_0_70px_rgba(0,229,255,0.25)] flex flex-col p-8 sm:p-10 lg:p-12 rounded-3xl relative overflow-hidden group">
+              {/* Ambient Glows */}
+              <div className="absolute top-0 right-0 w-80 h-80 bg-plasma-cyan/15 rounded-full blur-[100px] pointer-events-none group-hover:bg-plasma-cyan/25 transition-all duration-700" />
+              <div className="absolute bottom-0 left-1/4 w-72 h-72 bg-hyper-violet/15 rounded-full blur-[100px] pointer-events-none group-hover:bg-hyper-violet/25 transition-all duration-700" />
+
+              <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                {/* Left Column: Icon, Title, Description, Tags */}
+                <div className="space-y-5 max-w-2xl">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="w-14 h-14 rounded-2xl bg-plasma-cyan/20 border border-plasma-cyan/40 flex items-center justify-center text-plasma-cyan shadow-[0_0_25px_rgba(0,229,255,0.35)] group-hover:scale-110 transition-transform duration-300">
+                      <Globe2 className="w-7 h-7" />
+                    </div>
+                    <span className="px-3.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-plasma-cyan/15 text-plasma-cyan border border-plasma-cyan/40">
+                      {t("tagPanEuropean")}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h4 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white group-hover:text-plasma-cyan transition-colors">
+                      {t("featEcosystemTitle")}
+                    </h4>
+                    <p className="text-sm sm:text-base text-gray-300 font-light leading-relaxed mt-2.5">
+                      {t("featEcosystemDesc")}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 pt-2 text-xs font-mono text-gray-400">
+                    <span className="px-3 py-1.5 rounded-lg bg-void-deep/90 border border-void-border/80 text-gray-300">{t("tagExternalTools")}</span>
+                    <span className="px-3 py-1.5 rounded-lg bg-void-deep/90 border border-void-border/80 text-gray-300">{t("tagCommunityChannels")}</span>
+                    <span className="px-3 py-1.5 rounded-lg bg-void-deep/90 border border-void-border/80 text-gray-300">{t("tagPanEuropean")}</span>
+                  </div>
+                </div>
+
+                {/* Right Column: CTA & Visual Highlights */}
+                <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end justify-between gap-4 shrink-0 lg:border-l lg:border-void-border/60 lg:pl-8">
+                  <div className="text-left sm:text-right hidden sm:block">
+                    <span className="text-xs text-gray-400 block font-medium">Pan-European Network</span>
+                    <span className="text-sm font-bold text-plasma-cyan font-mono">100% Free & Open Access</span>
+                  </div>
+                  <Link
+                    href="/ecosystem"
+                    className="inline-flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl bg-plasma-cyan/20 hover:bg-plasma-cyan/30 border border-plasma-cyan/50 hover:border-plasma-cyan text-plasma-cyan hover:text-white text-sm font-extrabold transition-all duration-300 shadow-[0_0_25px_rgba(0,229,255,0.25)] hover:scale-105 active:scale-95 group/btn"
+                  >
+                    <Globe2 className="w-4 h-4 transition-transform duration-300 group-hover/btn:rotate-45" />
+                    <span>{tCommon("ecosystem")}</span>
+                  </Link>
+                </div>
+              </div>
+            </div>
+
             {/* Bento Card 4: Direct Support & Problem Solving */}
-            <div className="bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-plasma-cyan/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
+            <div className="col-span-1 md:col-span-3 lg:col-span-2 order-5 md:order-4 lg:order-5 bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-plasma-cyan/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
               <div className="space-y-4">
                 <div className="w-14 h-14 rounded-2xl bg-plasma-cyan/15 border border-plasma-cyan/30 flex items-center justify-center text-plasma-cyan shadow-[0_0_20px_rgba(0,229,255,0.2)]">
                   <Headphones className="w-7 h-7" />
@@ -549,7 +600,7 @@ export default async function Home({ params, searchParams }: PageProps) {
             </div>
 
             {/* Bento Card 5: Mission Radar GPS */}
-            <div className="bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-hyper-violet/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
+            <div className="col-span-1 md:col-span-3 lg:col-span-2 order-6 md:order-6 lg:order-6 bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-hyper-violet/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
               <div className="space-y-4">
                 <div className="w-14 h-14 rounded-2xl bg-hyper-violet/15 border border-hyper-violet/30 flex items-center justify-center text-hyper-violet shadow-[0_0_20px_rgba(99,102,241,0.2)]">
                   <Compass className="w-7 h-7" />
@@ -569,7 +620,7 @@ export default async function Home({ params, searchParams }: PageProps) {
             </div>
 
             {/* Bento Card 6: Verified Organizations Directory */}
-            <div className="bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-rup-emerald/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
+            <div className="col-span-1 md:col-span-3 lg:col-span-2 order-7 md:order-7 lg:order-7 bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-rup-emerald/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
               <div className="space-y-4">
                 <div className="w-14 h-14 rounded-2xl bg-rup-emerald/15 border border-rup-emerald/30 flex items-center justify-center text-rup-emerald shadow-[0_0_20px_rgba(0,230,118,0.2)]">
                   <Building2 className="w-7 h-7" />
@@ -585,36 +636,6 @@ export default async function Home({ params, searchParams }: PageProps) {
                 <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">{t("tagOidCheck")}</span>
                 <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">{t("tagNonProfit")}</span>
                 <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">{t("tagOfficialPdn")}</span>
-              </div>
-            </div>
-
-            {/* Bento Card 7: External Erasmus+ Ecosystem Hub (Symmetric Center Anchor) */}
-            <div className="md:col-span-2 lg:col-span-1 lg:col-start-2 bg-gradient-to-br from-plasma-cyan/15 via-void-surface/90 to-void-deep/90 border border-plasma-cyan/40 hover:border-plasma-cyan backdrop-blur-2xl transition-all duration-300 shadow-[0_0_40px_rgba(0,229,255,0.15)] flex flex-col h-full p-8 rounded-3xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-plasma-cyan/10 rounded-full blur-3xl pointer-events-none group-hover:bg-plasma-cyan/20 transition-all duration-500" />
-              <div className="space-y-4 relative z-10">
-                <div className="w-14 h-14 rounded-2xl bg-plasma-cyan/20 border border-plasma-cyan/40 flex items-center justify-center text-plasma-cyan shadow-[0_0_25px_rgba(0,229,255,0.3)] group-hover:scale-105 transition-transform">
-                  <Globe2 className="w-7 h-7" />
-                </div>
-                <h4 className="text-2xl font-bold text-white group-hover:text-plasma-cyan transition-colors">
-                  {t("featEcosystemTitle")}
-                </h4>
-                <p className="text-sm text-gray-300 font-light leading-relaxed">
-                  {t("featEcosystemDesc")}
-                </p>
-              </div>
-              <div className="mt-auto pt-6 flex flex-wrap items-center justify-between gap-4 border-t border-void-border/50 relative z-10">
-                <div className="flex flex-wrap gap-2 text-xs font-mono text-gray-400">
-                  <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">{t("tagExternalTools")}</span>
-                  <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">{t("tagCommunityChannels")}</span>
-                  <span className="px-3 py-1.5 rounded-lg bg-void-deep border border-void-border">{t("tagPanEuropean")}</span>
-                </div>
-                <Link
-                  href="/ecosystem"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-plasma-cyan/15 hover:bg-plasma-cyan/25 border border-plasma-cyan/40 hover:border-plasma-cyan text-plasma-cyan text-xs font-bold transition-all shadow-[0_0_15px_rgba(0,229,255,0.2)] hover:scale-105"
-                >
-                  <Globe2 className="w-3.5 h-3.5" />
-                  <span>{tCommon("ecosystem")}</span>
-                </Link>
               </div>
             </div>
 
