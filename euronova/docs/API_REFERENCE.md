@@ -1,59 +1,59 @@
-# EuroNova — Manual de Referencia de API, Telemetría y Webhooks
+# EuroNova — API Reference, Telemetry & Webhooks Manual
 
-**Versión:** 1.0.0 — Documento de Referencia Técnica y Auditoría Externa  
-**Especificación OpenAPI 3.1:** [`openapi.yaml`](openapi.yaml)  
-**Host de Producción:** `https://euronova.vercel.app`  
-**Host de Desarrollo:** `http://localhost:3000`  
-
----
-
-## 1. Modelo de Seguridad y Autenticación
-
-Los Route Handlers y endpoints en segundo plano de EuroNova implementan un esquema de seguridad multi-capa:
-
-### 1.1 Verificación Criptográfica en Tiempo Constante (`CRON_SECRET`)
-Para prevenir ataques de canal lateral basados en temporización (*Timing Side-Channel Attacks*), la cabecera `Authorization: Bearer <CRON_SECRET>` se evalúa mediante:
-1. Pre-hasheo con **SHA-256** de ambos tokens (el recibido y el almacenado en `process.env.CRON_SECRET`), garantizando buffers de longitud idéntica de 32 bytes.
-2. Comparación bit a bit utilizando `crypto.timingSafeEqual`.
-3. Esto garantiza que el tiempo de respuesta sea estrictamente idéntico sin importar cuántos caracteres coincidan.
-
-### 1.2 Sesión de Administrador Raíz (*Root Admin Fallback*)
-Si una petición manual se realiza desde el navegador sin cabecera Bearer, el middleware de autorización (`lib/cronAuth.ts`) consulta la sesión de Supabase Auth en las cookies. Si el usuario ostenta el rol `root` (o el email maestro del sistema), la petición se autoriza legítimamente.
-
-### 1.3 Bloqueo Anti-Concurrencia en Memoria (*Overlap Lock*)
-Endpoints pesados como el Auto-Scraper cuentan con una bandera en memoria (`isScrapeRunning`) con expiración de 60 segundos. Si una invocación llega mientras otra sigue en curso, la nueva petición se descarta de inmediato con código **429 Too Many Requests**, evitando sobrecarga de CPU y memoria en Vercel Serverless.
+**Version:** 1.0.0 — Technical Reference & External Audit Document  
+**OpenAPI 3.1 Specification:** [`openapi.yaml`](openapi.yaml)  
+**Production Host:** `https://euronova.vercel.app`  
+**Development Host:** `http://localhost:3000`  
 
 ---
 
-## 2. Catálogo Detallado de Endpoints
+## 1. Security & Authentication Model
+
+All Route Handlers and background endpoints in EuroNova implement a multi-layered security framework:
+
+### 1.1 Constant-Time Cryptographic Verification (`CRON_SECRET`)
+To prevent Timing Side-Channel Attacks, the `Authorization: Bearer <CRON_SECRET>` header is evaluated via:
+1. **SHA-256 pre-hashing** of both tokens (the incoming token and `process.env.CRON_SECRET`), guaranteeing identical 32-byte buffers.
+2. Bitwise comparison utilizing Node.js `crypto.timingSafeEqual`.
+3. Ensures execution time is strictly identical regardless of character match length or invalid prefixes.
+
+### 1.2 Root Admin Fallback Session
+If a manual maintenance request is initiated from an authenticated browser session without a Bearer header, the authorization guard (`lib/cronAuth.ts`) inspects the Supabase Auth session in cookies. If the caller holds the `root` role (or matches the master administrative email), the request is legitimately authorized.
+
+### 1.3 In-Memory Concurrency Lock (*Overlap Lock*)
+Resource-intensive pipelines such as the Auto-Scraper enforce an in-memory lock flag (`isScrapeRunning`) with a 60-second automatic safety release (`SCRAPE_LOCK_TIMEOUT_MS`). If a concurrent invocation arrives while a cycle is active, it is immediately discarded with **HTTP 429 Too Many Requests**, preventing CPU and memory exhaustion across serverless runtimes.
+
+---
+
+## 2. Detailed Endpoints Catalog
 
 ---
 
 ### `GET /api/health`
-**Propósito:** Telemetría en tiempo real sin caché que evalúa la salud de la infraestructura y calcula la latencia de ida y vuelta (*round-trip latency*) con Supabase PostgreSQL.
+**Purpose:** Real-time, un-cached telemetry assessing infrastructure vitality and measuring round-trip database latency with Supabase PostgreSQL.
 
-* **Autenticación:** Pública (Sin token).
-* **Encabezado de Caché:** `Cache-Control: no-store, no-cache, must-revalidate`.
+* **Authentication:** Public (No token required).
+* **Cache Headers:** `Cache-Control: no-store, no-cache, must-revalidate`.
 
-#### Diagnóstico Interno:
-1. Ejecuta consultas SQL paralelas y ligeras a las tablas principales (`projects` y `org_surveys`).
-2. Mide la latencia con `performance.now()`.
-3. Retorna `db_connected: true` y `status: "healthy"` con código **200 OK** mientras la base de datos responda de forma operativa.
-4. Reporta el estado de esquema en `schema_ready` (indica si todas las migraciones recientes están activas).
+#### Internal Diagnostics:
+1. Executes concurrent, lightweight SQL queries to primary tables (`projects` and `org_surveys`).
+2. Calculates precision latency via `performance.now()`.
+3. Returns `db_connected: true` and `status: "healthy"` with **HTTP 200 OK** whenever database connectivity is operational.
+4. Reports migration state in `schema_ready` (confirming all recent migrations are applied).
 
-#### Ejemplo `curl` (Local):
+#### Example `curl` (Local):
 ```bash
 curl -X GET http://localhost:3000/api/health \
   -H "Accept: application/json"
 ```
 
-#### Ejemplo `curl` (Producción):
+#### Example `curl` (Production):
 ```bash
 curl -X GET https://euronova.vercel.app/api/health \
   -H "Accept: application/json"
 ```
 
-#### Respuesta Exitosa (`200 OK`):
+#### Successful Response (`200 OK`):
 ```json
 {
   "status": "healthy",
@@ -67,34 +67,34 @@ curl -X GET https://euronova.vercel.app/api/health \
 ---
 
 ### `POST /api/telemetry/error`
-**Propósito:** Recepción de informes de fallos y excepciones no controladas capturadas por los Error Boundaries del cliente React 19.
+**Purpose:** Ingests unhandled runtime exceptions and error reports intercepted by React 19 client Error Boundaries.
 
-* **Autenticación:** Pública (Protegida por Rate Limiting y límite estricto de tamaño).
-* **Límite de Carga Útil:** **10 KB (10,240 bytes)**. Peticiones mayores retornan **413 Payload Too Large**.
-* **Limitador de Tasa (*Rate Limiter*):** Ventana deslizante por IP de cliente. Excesos retornan **429 Too Many Requests**.
+* **Authentication:** Public (Rate-limited, strictly bounded payload).
+* **Payload Limit:** **10 KB (10,240 bytes)**. Requests exceeding this return **HTTP 413 Payload Too Large**.
+* **Rate Limiting:** Sliding-window by client IP. Excess requests return **HTTP 429 Too Many Requests**.
 
-#### Defensas de Seguridad y Privacidad:
-1. **Server-Side PII Scrubbing:** Todo mensaje, nombre y *stack trace* pasa por `scrubPII` antes de ser almacenado o notificado, eliminando automáticamente:
-   - Direcciones de correo electrónico (`[REDACTED_EMAIL]`).
-   - Tokens JWT y API Keys (`[REDACTED_TOKEN]`).
-   - Contraseñas y cadenas de conexión a base de datos.
-2. **Anonimización de IP:** La IP de origen se enmascara (ej. `192.168.1.***`).
-3. **Alerta Opcional a Discord:** Si `DISCORD_WEBHOOK_URL` está configurado, despacha una notificación enriquecida.
+#### Privacy & Security Defenses:
+1. **Server-Side PII Scrubbing:** All messages, error names, and stack traces pass through `scrubPII` before storage or alerting:
+   - Email addresses (`[REDACTED_EMAIL]`).
+   - JWT tokens and API keys (`[REDACTED_TOKEN]`).
+   - Passwords and database connection URIs.
+2. **IP Anonymization:** Origin IP addresses are masked (e.g., `192.168.1.***`).
+3. **Optional Discord Alerts:** If `DISCORD_WEBHOOK_URL` is set, dispatches an enriched security notification.
 
-#### Ejemplo `curl` (Local):
+#### Example `curl` (Local):
 ```bash
 curl -X POST http://localhost:3000/api/telemetry/error \
   -H "Content-Type: application/json" \
   -d '{
     "name": "TypeError",
     "message": "Cannot read properties of undefined (reading '\''map'\'')",
-    "route": "/es/community",
+    "route": "/en/community",
     "digest": "2847193751",
     "timestamp": "2026-11-02T01:45:00.000Z"
   }'
 ```
 
-#### Ejemplo `curl` (Producción):
+#### Example `curl` (Production):
 ```bash
 curl -X POST https://euronova.vercel.app/api/telemetry/error \
   -H "Content-Type: application/json" \
@@ -105,7 +105,7 @@ curl -X POST https://euronova.vercel.app/api/telemetry/error \
   }'
 ```
 
-#### Respuesta Exitosa (`200 OK`):
+#### Successful Response (`200 OK`):
 ```json
 {
   "success": true
@@ -115,25 +115,25 @@ curl -X POST https://euronova.vercel.app/api/telemetry/error \
 ---
 
 ### `GET /api/scraper/official`
-**Propósito:** Motor extractor de oportunidades europeas (SALTO Youth, European Youth Portal ESC, Proactive Projects y Youth Exchange Aggregators).
+**Purpose:** Autonomous ingestion and curation engine for European youth opportunities (SALTO-Youth, European Youth Portal ESC, Proactive Projects, and Youth Exchange aggregators).
 
-* **Autenticación:** `Authorization: Bearer <CRON_SECRET>` o sesión de usuario con rol `root`/`admin`.
-* **Tiempo Máximo de Ejecución:** 60 segundos (`maxDuration: 60`).
-* **Protección Concurrente:** Retorna **429** si ya existe una ejecución activa en la instancia.
+* **Authentication:** `Authorization: Bearer <CRON_SECRET>` or active `root`/`admin` session.
+* **Max Execution Time:** 60 seconds (`maxDuration: 60`).
+* **Concurrency Guard:** Rejects with **HTTP 429** if a scraper execution is currently running.
 
-#### Ejemplo `curl` (Local):
+#### Example `curl` (Local):
 ```bash
 curl -X GET http://localhost:3000/api/scraper/official \
   -H "Authorization: Bearer your_cron_secret_token_here"
 ```
 
-#### Ejemplo `curl` (Producción):
+#### Example `curl` (Production):
 ```bash
 curl -X GET https://euronova.vercel.app/api/scraper/official \
   -H "Authorization: Bearer your_cron_secret_token_here"
 ```
 
-#### Respuesta Exitosa (`200 OK`):
+#### Successful Response (`200 OK`):
 ```json
 {
   "success": true,
@@ -155,18 +155,18 @@ curl -X GET https://euronova.vercel.app/api/scraper/official \
 ---
 
 ### `GET /api/cron/scrape`
-**Propósito:** Orquestador de la tarea cron programada en Vercel (`0 2 * * *` — diariamente a las 02:00 AM UTC).
+**Purpose:** Background cron orchestrator scheduled in Vercel (`0 2 * * *` — Daily at 02:00 AM UTC).
 
-* **Autenticación:** `Authorization: Bearer <CRON_SECRET>`.
-* **Mecanismo:** Delega internamente a `/api/scraper/official` sin mutar la lógica de extracción.
+* **Authentication:** `Authorization: Bearer <CRON_SECRET>`.
+* **Mechanism:** Safely delegates in-process to `/api/scraper/official` without duplicating extraction logic.
 
-#### Ejemplo `curl` (Producción):
+#### Example `curl` (Production):
 ```bash
 curl -X GET https://euronova.vercel.app/api/cron/scrape \
   -H "Authorization: Bearer your_cron_secret_token_here"
 ```
 
-#### Respuesta Exitosa (`200 OK`):
+#### Successful Response (`200 OK`):
 ```json
 {
   "success": true,
@@ -180,18 +180,18 @@ curl -X GET https://euronova.vercel.app/api/cron/scrape \
 ---
 
 ### `GET /api/cron/archive`
-**Propósito:** Archivero automatizado con margen de seguridad de 60 días (`0 3 * * *` — diariamente a las 03:00 AM UTC).
+**Purpose:** Automated archival cron with a 60-day safety buffer (`0 3 * * *` — Daily at 03:00 AM UTC).
 
-* **Autenticación:** `Authorization: Bearer <CRON_SECRET>`.
-* **Lógica Failsafe:** Solo archiva proyectos con `status = 'published'` cuya fecha de fin (`end_date`) haya expirado hace **más de 60 días (2 meses)**, previniendo la desaparición prematura de proyectos con plazos prorrogados. Procesa en lotes acotados de 100 para evitar bloqueos de tabla.
+* **Authentication:** `Authorization: Bearer <CRON_SECRET>`.
+* **Failsafe Rules:** Only transitions projects with `status = 'published'` whose `end_date` expired **more than 60 days ago**, preventing premature removal of projects with extended application windows. Runs in batches of 100 to avoid table locks.
 
-#### Ejemplo `curl` (Producción):
+#### Example `curl` (Production):
 ```bash
 curl -X GET https://euronova.vercel.app/api/cron/archive \
   -H "Authorization: Bearer your_cron_secret_token_here"
 ```
 
-#### Respuesta Exitosa (`200 OK`):
+#### Successful Response (`200 OK`):
 ```json
 {
   "success": true,
@@ -206,18 +206,18 @@ curl -X GET https://euronova.vercel.app/api/cron/archive \
 ---
 
 ### `GET` / `POST /api/cron/purge-logs`
-**Propósito:** Purga de registros de auditoría y tickets resueltos con retención de 48 horas (`0 4 * * *` — diariamente a las 04:00 AM UTC).
+**Purpose:** 48-hour retention cleanup of resolved support tickets and moderation logs (`0 4 * * *` — Daily at 04:00 AM UTC).
 
-* **Autenticación:** `Authorization: Bearer <CRON_SECRET>`.
-* **Principio GDPR:** Minimización de Datos (Art. 5.1.c). Elimina reportes de moderación, tickets de soporte y escalaciones resueltas hace más de 48 horas.
+* **Authentication:** `Authorization: Bearer <CRON_SECRET>`.
+* **GDPR Principle:** Data Minimization (Art. 5.1.c). Purges resolved moderation reports, support tickets, and escalations resolved over 48 hours ago.
 
-#### Ejemplo `curl` (Producción):
+#### Example `curl` (Production):
 ```bash
 curl -X POST https://euronova.vercel.app/api/cron/purge-logs \
   -H "Authorization: Bearer your_cron_secret_token_here"
 ```
 
-#### Respuesta Exitosa (`200 OK`):
+#### Successful Response (`200 OK`):
 ```json
 {
   "success": true,
@@ -239,26 +239,26 @@ curl -X POST https://euronova.vercel.app/api/cron/purge-logs \
 ---
 
 ### `GET` / `POST /api/cron/inactivity-purge`
-**Propósito:** Purga definitiva de cuentas de usuario inactivas tras 2 años (`0 5 * * *` — diariamente a las 05:00 AM UTC).
+**Purpose:** Permanent purge of user accounts inactive for > 2 years (`0 5 * * *` — Daily at 05:00 AM UTC).
 
-* **Autenticación:** `Authorization: Bearer <CRON_SECRET>`.
-* **Principio GDPR:** Limitación del Plazo de Conservación (Art. 5.1.e).
-* **Preservación Art. 17:** Para mantener la integridad de los foros comunitarios sin violar restricciones de clave foránea ni conservar datos personales, los mensajes de usuarios inactivos se reasignan a un usuario pseudónimo del sistema (*Ghost User* / `"Deleted User"`), eliminando irreversiblemente credenciales en Auth, notificaciones, postulaciones y perfiles.
+* **Authentication:** `Authorization: Bearer <CRON_SECRET>`.
+* **GDPR Principle:** Storage Limitation (Art. 5.1.e).
+* **Art. 17 Preservation:** To preserve community forum threads and relational referential integrity without retaining personal data, inactive accounts are anonymized to a system Ghost User (`"Deleted User"`), permanently deleting auth credentials, profile information, and private dossiers.
 
-#### Ejemplo `curl` (Producción):
+#### Example `curl` (Production):
 ```bash
 curl -X POST https://euronova.vercel.app/api/cron/inactivity-purge \
   -H "Authorization: Bearer your_cron_secret_token_here"
 ```
 
-#### Respuesta Exitosa (`200 OK`):
+#### Successful Response (`200 OK`):
 ```json
 {
   "success": true,
   "timestamp": "2026-11-02T05:00:00.000Z",
   "retentionRule": "2 Years Data Decay (GDPR Art. 5.1.e)",
   "cutoffDate": "2024-11-02T05:00:00.000Z",
-  "totalInactiveDetected: 2,
+  "totalInactiveDetected": 2,
   "purgedCount": 2,
   "purgedUsers": [
     {
@@ -273,38 +273,37 @@ curl -X POST https://euronova.vercel.app/api/cron/inactivity-purge \
 
 ---
 
-## 3. Arquitectura Failsafe de Webhooks y SMTP (Timeout No Bloqueante)
+## 3. Failsafe Webhook & SMTP Architecture (Non-Blocking Timeouts)
 
-Para garantizar que un fallo en servidores externos (ej. caída de Discord, congestión de la red o lentitud en servidores SMTP de Google) **jamás bloquee las acciones de los usuarios** ni cause timeouts de 60 segundos en Vercel, todos los despachos externos implementan un límite estricto de **5 segundos**:
+To ensure external service disruptions (e.g., Discord downtime, network congestion, or slow Google SMTP servers) **never block user interactions** or cause 60-second timeouts on Vercel, all external dispatches enforce a strict **5-second timeout limit**:
 
-### 3.1 Webhooks Salientes (Discord / Slack)
+### 3.1 Outgoing Webhooks (Discord / Slack)
 ```typescript
-// Implementación en lib/externalAlerts.ts
+// Implementation in lib/externalAlerts.ts
 const res = await fetch(webhookUrl, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify(payload),
-  signal: AbortSignal.timeout(5000), // Cancelación obligatoria a los 5000ms
-  redirect: "error",                 // Previene redirecciones no seguras (Anti-SSRF)
+  signal: AbortSignal.timeout(5000), // Mandatory abort after 5000ms
+  redirect: "error",                 // Prevents unsecure redirects (Anti-SSRF)
 });
 ```
 
-### 3.2 Envío de Correos Transaccionales (SMTP / Nodemailer)
+### 3.2 Transactional Email Delivery (SMTP / Nodemailer)
 ```typescript
-// Carrera de Promesas (Promise.race) con Timeout de 5000ms en lib/externalAlerts.ts
+// Promise race with 5000ms timeout in lib/externalAlerts.ts
 const timeoutPromise = new Promise<never>((_, reject) =>
   setTimeout(() => reject(new Error("SMTP timeout after 5000ms")), 5000)
 );
 
 const sendPromise = transporter.sendMail({ ...mailOptions });
 
-// Si SMTP tarda más de 5 segundos, timeoutPromise gana la carrera y la excepción se captura limpiamente
+// If SMTP takes > 5 seconds, timeoutPromise wins and the error is cleanly caught
 await Promise.race([sendPromise, timeoutPromise]);
 ```
 
-### 3.3 Protección Anti-SSRF en Webhooks
-Toda URL configurada por el usuario o administradores se valida mediante `validateSafeHttpsUrl`:
-- Se rechaza cualquier protocolo distinto a `https://`.
-- Se bloquean rangos de red locales y privados (`127.0.0.1`, `localhost`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`).
-- Se bloquea la IP de metadatos de proveedores en la nube (`169.254.169.254`).
-
+### 3.3 Anti-SSRF Protection on Webhooks
+All user- or staff-configured webhook URLs are validated via `validateSafeHttpsUrl`:
+- Rejects non-`https://` protocols.
+- Blocks local and private IP ranges (`127.0.0.1`, `localhost`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`).
+- Blocks cloud metadata service endpoints (`169.254.169.254`).

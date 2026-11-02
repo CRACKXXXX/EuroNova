@@ -1,4 +1,4 @@
-# 🌌 EuroNova — Plataforma Cósmica de Voluntariado Europeo y Oportunidades Juveniles
+# 🌌 EuroNova — Cosmic Platform for European Volunteering and Youth Opportunities
 
 ![Next.js 15](https://img.shields.io/badge/Next.js-15.0%2B-black?style=for-the-badge&logo=next.js)
 ![React 19](https://img.shields.io/badge/React-19.2.8-blue?style=for-the-badge&logo=react)
@@ -8,135 +8,135 @@
 ![i18n](https://img.shields.io/badge/i18n-7_Locales_(100%25)-purple?style=for-the-badge)
 ![Deployment](https://img.shields.io/badge/Vercel-Production_Edge-000000?style=for-the-badge&logo=vercel)
 
-EuroNova es una plataforma web moderna de alto rendimiento diseñada para conectar a jóvenes con oportunidades de voluntariado europeo, proyectos Erasmus+, Cuerpos Europeos de Solidaridad (ESC) y formación internacional. Desarrollada bajo el sistema de diseño visual **"Cosmic Dark Mode"**, una arquitectura server-first blindada con Supabase y soporte multilingüe en 7 idiomas.
+EuroNova is a high-performance, modern web platform engineered to connect young individuals with European volunteering opportunities, Erasmus+ projects, European Solidarity Corps (ESC) missions, and international youth exchanges. Built upon the **"Cosmic Dark Mode"** visual design system, a hardened server-first architecture powered by Supabase, and comprehensive multilingual support across 7 European languages.
 
 ---
 
-## 🚀 Características Principales
+## 🚀 Key Features
 
-* 🎨 **Sistema de Diseño Cósmico (Cosmic Dark Mode):** Paleta visual futurista basada en Tailwind CSS v4 (`void-deep`, `void-surface`, `plasma-cyan`, `hyper-violet`, `nova-flare`, `rup-emerald`) con animaciones fluidas vía Framer Motion y componentes accesibles Radix UI / Shadcn.
-* 🌐 **Internacionalización Integral (7 Idiomas):** Cobertura del 100% de paridad con 2,138 claves sincronizadas en Español (`es`), Inglés (`en`), Alemán (`de`), Francés (`fr`), Italiano (`it`), Ruso (`ru`) y Portugués (`pt`).
-* 🔒 **Seguridad y Defensas Multi-Capa:**
-  - Encabezados HTTP estrictos (Content-Security-Policy, HSTS preloaded, X-Frame DENY, nosniff).
-  - Autenticación persistente sincronizada en cookies `httpOnly` mediante `@supabase/ssr`.
-  - Protección de endpoints de fondo (`/api/cron/*`) con verificación criptográfica en tiempo constante (`crypto.timingSafeEqual`).
-* 🗄️ **Base de Datos Supabase con RLS:** 32 migraciones SQL idempotentes con políticas Row Level Security (RLS) anti-escalamiento de privilegios, soporte omnicanal y eliminación atómica GDPR Art. 17 (*Right to be Forgotten*).
-* 🔄 **Respaldos Automatizados a Google Drive (Safe Rotation):** Flujo diario en GitHub Actions (`.github/workflows/db-backup.yml`) a las 04:00 AM UTC que extrae la base de datos vía `pg_dump`, la comprime con gzip y la almacena en Google Drive, eliminando el respaldo anterior únicamente tras verificar el 100% del éxito de la nueva subida.
-* 📊 **Telemetría y Límites de Error en Vivo:** Endpoint `/api/health` sin caché para monitorizar latencia en milisegundos y captura de excepciones 404/500 sin fugas de trazas sensibles.
+* 🎨 **Cosmic Dark Mode Design System:** Futuristic visual palette based on Tailwind CSS v4 (`void-deep`, `void-surface`, `plasma-cyan`, `hyper-violet`, `nova-flare`, `rup-emerald`) with fluid 60fps animations via Framer Motion and accessible Radix UI / Shadcn primitives.
+* 🌐 **Comprehensive Internationalization (7 Languages):** 100% parity across 2,138 synchronized keys in Spanish (`es`), English (`en`), German (`de`), French (`fr`), Italian (`it`), Russian (`ru`), and Portuguese (`pt`).
+* 🔒 **Hardened Multi-Layer Security:**
+  - Strict HTTP security headers (Content-Security-Policy, HSTS preloaded, X-Frame-Options DENY, X-Content-Type-Options nosniff).
+  - Persistent, synchronized sessions via `httpOnly` cookies using `@supabase/ssr`.
+  - Constant-time cryptographic verification (`crypto.timingSafeEqual`) on background cron endpoints (`/api/cron/*`).
+* 🗄️ **Supabase Database with RLS:** 32 idempotent SQL migrations with Row Level Security (RLS) policies preventing privilege escalation, full relational integrity, and atomic GDPR Art. 17 (*Right to be Forgotten*) execution.
+* 🔄 **Automated Google Drive DB Backups (Safe Rotation):** Daily automated pipeline on GitHub Actions (`.github/workflows/db-backup.yml`) executing at 04:00 AM UTC via `pg_dump` and gzip compression, rotating backups safely only after verifying a 100% successful remote upload.
+* 📊 **Real-Time Telemetry & Error Boundaries:** Zero-cache `/api/health` diagnostic endpoint measuring database round-trip latency in milliseconds, plus client-side Error Boundaries capturing exceptions without leaking sensitive stack traces.
 
 ---
 
-## 📂 Estructura del Repositorio
+## 📂 Repository Structure
 
 ```text
 EuroNova/
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml                           # Quality Gatekeeper automatizado en cada push/PR
-│       └── db-backup.yml                    # Backup diario a Google Drive con Safe Rotation
+│       ├── ci.yml                           # Automated Quality Gatekeeper on push/PR
+│       └── db-backup.yml                    # Daily Google Drive backup with Safe Rotation
 ├── docs/
-│   ├── ARCHITECTURE_AND_DEPLOYMENT.md       # Arquitectura detallada, diagramas Mermaid y locks
-│   ├── API_REFERENCE.md                     # Manual humano de API HTTP y webhooks de fondo
-│   ├── openapi.yaml                         # Especificación estándar OpenAPI 3.1 máquina-legible
-│   ├── ADMIN_AND_TRUST_MANUAL.md            # Manual de Auto-Scraper y matemática True Trust
-│   ├── GDPR_SECURITY_AND_RECOVERY.md        # Auditoría RGPD, Disaster Recovery y Quality Gates
-│   └── BACKUP_SETUP.md                      # Configuración de Service Account y Google Drive
+│   ├── ARCHITECTURE_AND_DEPLOYMENT.md       # Visual architecture, Mermaid diagrams & dependency locks
+│   ├── API_REFERENCE.md                     # Human-readable API, Route Handlers & background webhooks
+│   ├── openapi.yaml                         # Machine-readable OpenAPI 3.1 specification
+│   ├── ADMIN_AND_TRUST_MANUAL.md            # Auto-Scraper internals & True Trust Protocol mathematics
+│   ├── GDPR_SECURITY_AND_RECOVERY.md        # GDPR Art. 17 audit, Disaster Recovery & CI/CD guides
+│   └── BACKUP_SETUP.md                      # Service Account & Google Drive setup tutorial
 ├── supabase/
-│   ├── migrations/                          # 32 scripts SQL de esquema, índices y RLS
+│   ├── migrations/                          # 32 idempotent SQL migration scripts & RLS policies
 │   └── recovery/
-│       └── emergency_rollback_and_audit.sql # Kit SQL de contingencia en 5 bloques
-├── vercel.json                              # Calibración de Crons y funciones Edge en Vercel
-├── euronova/                                # Directorio principal de la aplicación Next.js
-│   ├── actions/                             # Server Actions (Mutaciones atómicas de backend)
+│       └── emergency_rollback_and_audit.sql # 5-block emergency containment SQL recovery kit
+├── vercel.json                              # Cron schedules & Edge Function execution calibrations
+├── euronova/                                # Main Next.js application root
+│   ├── actions/                             # Server Actions (Atomic backend mutations)
 │   ├── app/                                 # Next.js 15 App Router ([locale], legal, dashboard, etc.)
-│   ├── components/                          # Componentes React (CosmicTooltip, Modales, Mapas)
-│   ├── i18n/                                # Configuración de idiomas y routing de next-intl
-│   ├── lib/                                 # Utilidades (Supabase clients, auth, cronAuth, GDPR)
-│   ├── messages/                            # Diccionarios de traducción (en, es, de, fr, it, ru, pt)
-│   ├── scripts/                             # Scripts de auditoría y validación pre-vuelo
-│   ├── .env.example                         # Plantilla de variables de entorno sanitizada
-│   └── package.json                         # Dependencias y scripts de construcción
-└── README.md                                # Documento maestro del proyecto
+│   ├── components/                          # React components (CosmicTooltip, Modals, Maps)
+│   ├── i18n/                                # Locale configurations & next-intl routing
+│   ├── lib/                                 # Shared utilities (Supabase clients, auth, GDPR engine)
+│   ├── messages/                            # i18n translation dictionaries (en, es, de, fr, it, ru, pt)
+│   ├── scripts/                             # Pre-flight audit, lint, and security validation scripts
+│   ├── .env.example                         # Sanitized environment variable template
+│   └── package.json                         # Dependencies and build lifecycle scripts
+└── README.md                                # Master project documentation
 ```
 
 ---
 
-## ⚡ Inicio Rápido (Local Development)
+## ⚡ Quick Start (Local Development)
 
-### 1. Clonar el Repositorio e Instalar Dependencias
+### 1. Clone the Repository & Install Dependencies
 ```bash
 git clone https://github.com/CRACKXXXX/EuroNova.git
 cd EuroNova/euronova
 npm ci
 ```
 
-### 2. Configurar Variables de Entorno
+### 2. Configure Environment Variables
 ```bash
 cp .env.example .env.local
 ```
-Completa las variables requeridas en `.env.local` y ejecuta el validador pre-vuelo:
+Fill in the required credentials in `.env.local` and execute the pre-flight validator:
 ```bash
 node scripts/validate-env.mjs
 ```
 
-### 3. Aplicar Migraciones en Supabase
-Ejecuta los scripts ubicados en `supabase/migrations/` en el **SQL Editor** de tu proyecto Supabase (o mediante `npx supabase db push`).
+### 3. Apply Supabase Migrations
+Execute the SQL scripts in `supabase/migrations/` sequentially inside your Supabase **SQL Editor** (or via `npx supabase db push`).
 
-### 4. Iniciar el Servidor de Desarrollo
+### 4. Start Development Server
 ```bash
 npm run dev
 ```
-La aplicación estará disponible en [http://localhost:3000](http://localhost:3000).
+The application will be live at [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## 🛡️ Controles de Calidad Pre-Commit (Quality Gates)
+## 🛡️ Pre-Commit Quality Gates
 
-Para garantizar la estabilidad absoluta en producción, ejecuta los controles bloqueantes:
+To ensure zero regressions and production-grade stability, execute the 7 blocking quality gates:
 
 ```bash
-# 1. Validador de entorno y credenciales
+# 1. Environment & credentials audit
 node scripts/validate-env.mjs
 
-# 2. Validador estricto de paridad i18n (100% de paridad en 7 idiomas)
+# 2. Strict i18n parity check (100% coverage across 7 locales)
 node scripts/validate-i18n.mjs --strict
 
-# 3. Escáner de texto estático y toasts en componentes
+# 3. Static text & toast scanner in components
 node scripts/scan-hardcoded.mjs
 
-# 4. Escáner de internacionalización en rutas del App Router
+# 4. App Router internationalization route scanner
 node scripts/scan-routes.mjs
 
-# 5. Verificación de tipos estricta en TypeScript
+# 5. Strict TypeScript type check
 npx tsc --noEmit
 
-# 6. Linter ESLint con 0 advertencias toleradas
+# 6. ESLint validation with zero allowed warnings
 npx eslint app components lib actions --max-warnings=0
 
-# 7. Compilación final de producción
+# 7. Production build compilation
 npm run build
 ```
 
 ---
 
-## 📚 Índice Maestro de Documentación (Phase H & Phase I)
+## 📚 Master Documentation Index
 
-La plataforma cuenta con documentación exhaustiva para desarrolladores, auditores de la Unión Europea y administradores de sistemas:
+Comprehensive documentation is provided for developers, European Union compliance auditors, and system administrators:
 
-1. 📐 **[Arquitectura Visual, Despliegue en Vercel & Dependency Locks](docs/ARCHITECTURE_AND_DEPLOYMENT.md)**  
-   *Diagramas de arquitectura Mermaid, pipelines de datos, guía de configuración Zero-to-Hero y candados de dependencias.*
-2. 🔌 **[Especificación OpenAPI 3.1 Swagger](docs/openapi.yaml)**  
-   *Especificación estándar máquina-legible para todos los 7 Route Handlers de EuroNova con esquemas de autenticación Bearer.*
-3. 📖 **[Manual de Referencia de API & Webhooks](docs/API_REFERENCE.md)**  
-   *Guía legible para humanos con ejemplos cURL, códigos HTTP, límites de tasa y verificación de Crons.*
-4. 🛡️ **[Manual del Administrador: Auto-Scraper y True Trust Protocol](docs/ADMIN_AND_TRUST_MANUAL.md)**  
-   *Internas del Auto-Scraper, deduplicación en 3 capas, matemática del True Trust Protocol (escala 0-100) y progresión de 50 niveles.*
-5. ⚖️ **[Dossier de Seguridad RGPD, Disaster Recovery & Guía CI/CD](docs/GDPR_SECURITY_AND_RECOVERY.md)**  
-   *Auditoría Art. 17 ("Right to be Forgotten"), política de decay a 2 años Art. 5.1.e, restauración paso a paso de copias de Google Drive y guía de scripts CI/CD.*
-6. 💾 **[Configuración de Copias de Seguridad en Google Drive](docs/BACKUP_SETUP.md)**  
-   *Guía paso a paso para configurar la Google Cloud Console, Service Account y rotación segura en GitHub Actions.*
-7. 🆘 **[Kit SQL de Emergencia, Bloqueo y Auditoría](supabase/recovery/emergency_rollback_and_audit.sql)**  
-   *Script SQL de contingencia en 5 bloques para bloqueo 1-click en solo lectura, reversión de lotes del scraper y purga de botnets.*
+1. 📐 **[Visual Architecture, Vercel Deployment & Dependency Locks](docs/ARCHITECTURE_AND_DEPLOYMENT.md)**  
+   *Mermaid architecture diagrams, request lifecycles, Zero-to-Hero deployment guide, and dependency locks.*
+2. 🔌 **[OpenAPI 3.1 Swagger Specification](docs/openapi.yaml)**  
+   *Machine-readable specification covering all EuroNova Route Handlers with Bearer authentication schemes.*
+3. 📖 **[API & Webhooks Reference Manual](docs/API_REFERENCE.md)**  
+   *Human-readable guide with cURL examples, HTTP status codes, rate limits, and timing-safe cron verification.*
+4. 🛡️ **[Administrator Manual: Auto-Scraper & True Trust Protocol](docs/ADMIN_AND_TRUST_MANUAL.md)**  
+   *Scraper engine internals, 3-layer deduplication, True Trust mathematical economy (0-100 scale), and 50-tier leveling.*
+5. ⚖️ **[GDPR Compliance, Disaster Recovery & CI/CD Guide](docs/GDPR_SECURITY_AND_RECOVERY.md)**  
+   *GDPR Art. 17 ("Right to be Forgotten") audit, 2-year storage decay (Art. 5.1.e), Google Drive restore protocol, and CI/CD guardian scripts.*
+6. 💾 **[Google Drive Backup Setup Guide](docs/BACKUP_SETUP.md)**  
+   *Step-by-step tutorial for Google Cloud Console, Service Account creation, and Safe Rotation in GitHub Actions.*
+7. 🆘 **[Emergency SQL Containment & Rollback Kit](supabase/recovery/emergency_rollback_and_audit.sql)**  
+   *5-block emergency SQL script for 1-click read-only lockdown, scraper batch rollbacks, and botnet mitigation.*
 
 ---
 **EuroNova Engineering Team** — *Built for European Youth Mobility & Solidarity.*

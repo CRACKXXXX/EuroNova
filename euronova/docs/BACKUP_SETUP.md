@@ -1,146 +1,145 @@
-# EuroNova — Configuración del Backup Automático en Google Drive (Safe Rotation)
+# EuroNova — Automated Google Drive Database Backup Setup (Safe Rotation)
 
-Este documento detalla el procedimiento paso a paso para configurar la canalización automatizada de copias de seguridad de la base de datos Supabase (PostgreSQL) hacia Google Drive mediante GitHub Actions y Google Cloud Service Accounts.
+This document provides a step-by-step operational guide for configuring the automated database backup pipeline from Supabase (PostgreSQL) to Google Drive utilizing GitHub Actions and Google Cloud Service Accounts.
 
 ---
 
-## 🏗️ 1. Arquitectura de la Solución
+## 🏗️ 1. Solution Architecture
 
-El pipeline se ejecuta diariamente a las **04:00 AM UTC** (y bajo demanda mediante `workflow_dispatch` en GitHub Actions):
+The automated pipeline executes daily at **04:00 AM UTC** (and on-demand via `workflow_dispatch` in GitHub Actions):
 
 ```mermaid
 flowchart TD
     A["GitHub Actions Cron (04:00 UTC)"] --> B["1. pg_dump (Supabase DB)"]
-    B --> C["2. Compresión Streaming (gzip nivel 9)"]
-    C --> D["3. Autenticación Google Drive API (Service Account)"]
-    D --> E["4. Subida a Google Drive Folder ID"]
-    E --> F{"¿Subida exitosa y Size > 0?"}
-    F -- "NO / Fallo" --> G["❌ ABORTAR PIPELINE (Exit 1)<br/>Backup previo NO se elimina"]
-    F -- "SÍ" --> H["5. Safe Rotation: Buscar backup del día anterior"]
-    H --> I["6. Eliminar backup anterior de Google Drive"]
-    I --> J["7. Limpieza temporal local & Finalización Exit 0"]
+    B --> C["2. Streaming Compression (gzip level 9)"]
+    C --> D["3. Google Drive API Authentication (Service Account)"]
+    D --> E["4. Upload to Target Google Drive Folder ID"]
+    E --> F{"Upload Successful & Size > 0?"}
+    F -- "NO / Failed" --> G["❌ ABORT PIPELINE (Exit 1)<br/>Previous backup is NOT deleted"]
+    F -- "YES" --> H["5. Safe Rotation: Query previous backup file"]
+    H --> I["6. Delete previous backup from Google Drive"]
+    I --> J["7. Clean temporary files & Exit 0"]
 ```
 
 ---
 
-## 🔑 2. Paso a Paso: Configuración en Google Cloud Platform (GCP)
+## 🔑 2. Step-by-Step: Google Cloud Platform (GCP) Configuration
 
-### Paso 2.1: Habilitar la Google Drive API
-1. Abre [Google Cloud Console](https://console.cloud.google.com/) con tu cuenta de Google.
-2. Crea un nuevo proyecto (o selecciona el proyecto existente, ej. `EuroNova`).
-3. En el menú de navegación lateral, dirígete a **APIs y servicios** > **Biblioteca** (*APIs & Services > Library*).
-4. Busca **"Google Drive API"**.
-5. Haz clic en **Google Drive API** y pulsa el botón **Habilitar** (*Enable*).
+### Step 2.1: Enable the Google Drive API
+1. Open the [Google Cloud Console](https://console.cloud.google.com/) using your Google account.
+2. Create a new project (or select an existing project, e.g. `EuroNova`).
+3. In the left navigation menu, go to **APIs & Services** > **Library**.
+4. Search for **"Google Drive API"**.
+5. Click **Google Drive API** and click the **Enable** button.
 
-### Paso 2.2: Crear la Cuenta de Servicio (Service Account)
-1. Ve a **APIs y servicios** > **Credenciales** (*APIs & Services > Credentials*).
-2. Haz clic en **+ Crear credenciales** (*+ Create Credentials*) en la parte superior y selecciona **Cuenta de servicio** (*Service account*).
-3. Configura los detalles de la cuenta de servicio:
-   - **Nombre de la cuenta de servicio:** `euronova-db-backup`
-   - **ID de la cuenta de servicio:** Se autogenerará (ej. `euronova-db-backup@<tu-proyecto-id>.iam.gserviceaccount.com`).
-   - **Descripción:** `Automatización de backups diarios de Supabase a Google Drive`.
-4. Haz clic en **Crear y continuar** (*Create and continue*).
-5. En el paso de roles (*Roles*), **no es necesario asignar ningún rol en el proyecto de GCP**, ya que el acceso a Google Drive se gestiona directamente compartiendo la carpeta de destino. Pulsa **Continuar** y luego **Listo** (*Done*).
+### Step 2.2: Create a Dedicated Service Account
+1. Go to **APIs & Services** > **Credentials**.
+2. Click **+ Create Credentials** at the top and select **Service Account**.
+3. Configure the service account details:
+   - **Service account name:** `euronova-db-backup`
+   - **Service account ID:** Will be generated automatically (e.g. `euronova-db-backup@<your-project-id>.iam.gserviceaccount.com`).
+   - **Description:** `Automated daily database backups from Supabase to Google Drive`.
+4. Click **Create and Continue**.
+5. In the project roles step, **no GCP project roles are required**, as Google Drive folder access is granted directly via folder sharing. Click **Continue** and then **Done**.
 
-### Paso 2.3: Generar la Clave Privada en Formato JSON
-1. En la lista de **Cuentas de servicio**, haz clic en la cuenta de servicio recién creada (`euronova-db-backup@...`).
-2. Dirígete a la pestaña **Claves** (*Keys*).
-3. Haz clic en **Agregar clave** > **Crear clave nueva** (*Add Key > Create new key*).
-4. Selecciona el tipo de clave **JSON** y pulsa **Crear** (*Create*).
-5. Se descargará automáticamente un archivo `.json` a tu ordenador (ej. `<tu-proyecto-id>-xxxx.json`).
-6. **Copia y anota el email de la cuenta de servicio** (lo necesitarás en el paso siguiente):
+### Step 2.3: Generate Private Key in JSON Format
+1. From the **Service Accounts** list, click on the newly created service account (`euronova-db-backup@...`).
+2. Navigate to the **Keys** tab.
+3. Click **Add Key** > **Create new key**.
+4. Select the **JSON** key type and click **Create**.
+5. A `.json` file will automatically download to your computer (e.g. `<your-project-id>-xxxx.json`).
+6. **Copy and save the service account email** (required in the next step):
    ```text
-   euronova-db-backup@<tu-proyecto-id>.iam.gserviceaccount.com
+   euronova-db-backup@<your-project-id>.iam.gserviceaccount.com
    ```
 > [!CAUTION]
-> Guarda este archivo JSON en un lugar seguro. Contiene la clave privada para autenticarse como la cuenta de servicio. Nunca lo subas a GitHub ni lo compartas en repositorios públicos.
+> Store this JSON file securely. It contains the private key that authenticates as the service account. Never commit it to GitHub or share it publicly.
 
 ---
 
-## 📁 3. Paso a Paso: Configurar Google Drive con la Cuenta Personal
+## 📁 3. Step-by-Step: Configure Google Drive with Personal Account
 
-Debes crear la carpeta de backups en tu cuenta personal de Google Drive y darle permisos a la Cuenta de Servicio.
+You must create the backup folder in your personal Google Drive account and grant editor permissions to the Service Account.
 
-1. **Inicia sesión en Google Drive** con tu cuenta específica:
+1. **Sign in to Google Drive** with your designated account:
    👉 **`joelrjtirma@gmail.com`**
-2. En la raíz de "Mi unidad" (*My Drive*), haz clic en **+ Nuevo** > **Nueva carpeta**.
-3. Nombra la carpeta:
+2. In the root of "My Drive", click **+ New** > **New folder**.
+3. Name the folder:
    ```text
    EuroNova_Backups
    ```
-4. Haz clic derecho sobre la carpeta `EuroNova_Backups` y selecciona **Compartir** > **Compartir** (*Share*).
-5. En el campo *"Añadir personas y grupos"*, pega el **Email de la Cuenta de Servicio** que creaste en el paso 2.3:
+4. Right-click the `EuroNova_Backups` folder and select **Share** > **Share**.
+5. In the *"Add people and groups"* field, paste the **Service Account Email** created in Step 2.3:
    ```text
-   euronova-db-backup@<tu-proyecto-id>.iam.gserviceaccount.com
+   euronova-db-backup@<your-project-id>.iam.gserviceaccount.com
    ```
-6. **Asigna el rol de "Editor"**:
-   - ⚠️ **IMPRESCINDIBLE:** Debe tener permisos de **Editor** para que el script pueda:
-     1. Subir los nuevos archivos `.sql.gz`.
-     2. Consultar y eliminar el backup del día anterior (Safe Rotation).
-7. Desmarca la casilla *"Notificar a los usuarios"* (las cuentas de servicio no tienen bandeja de entrada) y haz clic en **Compartir** (*Share*).
-8. **Obtén el ID de la carpeta (`GDRIVE_FOLDER_ID`)**:
-   - Abre la carpeta `EuroNova_Backups` en tu navegador.
-   - Observa la barra de direcciones URL:
+6. **Assign the "Editor" role**:
+   - ⚠️ **MANDATORY:** Must have **Editor** permissions so the backup script can:
+     1. Upload new `.sql.gz` dump archives.
+     2. Query and delete the previous day's backup (Safe Rotation).
+7. Uncheck the *"Notify people"* box (service accounts have no inbox) and click **Share**.
+8. **Obtain the Folder ID (`GDRIVE_FOLDER_ID`)**:
+   - Open the `EuroNova_Backups` folder in your browser.
+   - Inspect the browser URL address bar:
      ```text
      https://drive.google.com/drive/folders/1a2B3c4D5e6F7g8H9i0J_kLmNoPqRsTuV
      ```
-   - El código alfanumérico final después de `/folders/` es tu **Folder ID** (en el ejemplo: `1a2B3c4D5e6F7g8H9i0J_kLmNoPqRsTuV`).
+   - The alphanumeric string following `/folders/` is your **Folder ID** (in this example: `1a2B3c4D5e6F7g8H9i0J_kLmNoPqRsTuV`).
 
 ---
 
-## 🗄️ 4. Obtener la Cadena de Conexión de Supabase (`SUPABASE_DB_URL`)
+## 🗄️ 4. Obtain the Supabase PostgreSQL Connection String (`SUPABASE_DB_URL`)
 
-1. Entra a tu panel de control en [Supabase Dashboard](https://supabase.com/dashboard).
-2. Selecciona el proyecto **EuroNova**.
-3. Ve a **Project Settings** (icono de engranaje) > **Database**.
-4. Desplázate hacia abajo hasta la sección **Connection string**.
-5. Selecciona la pestaña **URI**.
-6. Elige el modo **Direct connection** (Puerto `5432`) o **Session Pooler** (Puerto `5432`):
-   - ⚠️ **NO utilices el Transaction Pooler (puerto 6543)**, ya que `pg_dump` requiere características de sesión de PostgreSQL.
-7. La cadena tendrá el siguiente formato:
+1. Log in to your [Supabase Dashboard](https://supabase.com/dashboard).
+2. Select the **EuroNova** project.
+3. Go to **Project Settings** (gear icon) > **Database**.
+4. Scroll down to the **Connection string** section.
+5. Select the **URI** tab.
+6. Choose **Direct connection** (Port `5432`) or **Session Pooler** (Port `5432`):
+   - ⚠️ **DO NOT use the Transaction Pooler (Port 6543)**, as `pg_dump` requires PostgreSQL session-level features.
+7. The connection string format is:
    ```text
    postgresql://postgres.[PROJECT_REF]:[YOUR-PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres
    ```
-   *(o `postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres`)*.
-8. Sustituye `[YOUR-PASSWORD]` por la contraseña real del usuario administrador de tu base de datos.
+   *(or `postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres`)*.
+8. Replace `[YOUR-PASSWORD]` with your active database master password.
 
 ---
 
-## 🔐 5. Configurar los Secretos en GitHub Actions
+## 🔐 5. Configure Secrets in GitHub Actions
 
-1. Ve a tu repositorio de GitHub: `https://github.com/<tu-usuario>/EuroNova`.
-2. Dirígete a **Settings** > **Secrets and variables** > **Actions**.
-3. Haz clic en el botón verde **New repository secret** y añade los siguientes 3 secretos:
+1. Go to your GitHub repository: `https://github.com/<your-user>/EuroNova`.
+2. Navigate to **Settings** > **Secrets and variables** > **Actions**.
+3. Click the green **New repository secret** button and add the following 3 secrets:
 
-| Nombre del Secreto | Valor a Configurar |
+| Secret Name | Value |
 |---|---|
-| `SUPABASE_DB_URL` | La URI completa de PostgreSQL obtenida en el Paso 4 (incluyendo usuario y contraseña en puerto 5432). |
-| `GDRIVE_SERVICE_ACCOUNT_JSON` | Todo el contenido del archivo `.json` descargado en el Paso 2.3 (abre el archivo con un editor de texto, copia todo el texto JSON `{ ... }` y pégalo tal cual). |
-| `GDRIVE_FOLDER_ID` | El ID alfanumérico de la carpeta de Google Drive obtenido en el Paso 3.8. |
+| `SUPABASE_DB_URL` | Full PostgreSQL connection URI obtained in Step 4 (including user, password, and port 5432). |
+| `GDRIVE_SERVICE_ACCOUNT_JSON` | Full raw contents of the `.json` key file downloaded in Step 2.3 (open in a text editor, copy all JSON text `{ ... }`, and paste as-is). |
+| `GDRIVE_FOLDER_ID` | Alphanumeric Google Drive folder ID obtained in Step 3.8. |
 
 ---
 
-## 🧪 6. Probar y Verificar el Backup Manualmente (UAT)
+## 🧪 6. Manually Trigger and Verify Backup (UAT)
 
-Para certificar que todo funciona sin esperar a las 04:00 AM:
+To certify the pipeline without waiting for the scheduled 04:00 AM UTC cron:
 
-1. En tu repositorio de GitHub, haz clic en la pestaña **Actions**.
-2. En la barra lateral izquierda, selecciona el flujo de trabajo:
+1. In your GitHub repository, click the **Actions** tab.
+2. In the left workflow sidebar, select:
    **"EuroNova Database Backup to Google Drive (Safe Rotation)"**.
-3. A la derecha verás un desplegable: **Run workflow** > haz clic en el botón verde **Run workflow**.
-4. Haz clic en la ejecución iniciada para ver los logs en tiempo real.
-5. Deberás ver los 4 pasos completados con éxito:
-   - `[STEP 1/4] DUMPING SUPABASE DATABASE (pg_dump + gzip)` -> Archivo `.sql.gz` generado.
-   - `[STEP 2/4] AUTHENTICATING WITH GOOGLE DRIVE API` -> Autenticado como la Service Account.
-   - `[STEP 3/4] UPLOADING COMPRESSED BACKUP TO GOOGLE DRIVE` -> Subida confirmada y tamaño verificado.
-   - `[STEP 4/4] EXECUTING SAFE ROTATION` -> En la primera ejecución confirmará retención inicial; en días posteriores eliminará el backup anterior.
-6. Entra a tu Google Drive con `joelrjtirma@gmail.com` y abre `EuroNova_Backups`: verás el nuevo archivo `euronova_backup_YYYY-MM-DD_HH-MM-SS.sql.gz`.
+3. In the upper-right corner, click **Run workflow** > green **Run workflow** button.
+4. Click on the triggered run to watch live execution logs.
+5. Verify that all 4 steps succeed:
+   - `[STEP 1/4] DUMPING SUPABASE DATABASE (pg_dump + gzip)` -> `.sql.gz` archive generated.
+   - `[STEP 2/4] AUTHENTICATING WITH GOOGLE DRIVE API` -> Authenticated as Service Account.
+   - `[STEP 3/4] UPLOADING COMPRESSED BACKUP TO GOOGLE DRIVE` -> Upload confirmed and size verified.
+   - `[STEP 4/4] EXECUTING SAFE ROTATION` -> Retains initial backup or safely deletes prior rotation.
+6. Open Google Drive with `joelrjtirma@gmail.com` and open `EuroNova_Backups`: confirm the new `euronova_backup_YYYY-MM-DD_HH-MM-SS.sql.gz` file is present.
 
 ---
 
-## 🛡️ 7. Mecanismo de Rotación Segura (Safe Rotation)
+## 🛡️ 7. Safe Rotation Mechanism
 
-* **Protección contra pérdida de datos:** Si `pg_dump`, la conexión a la base de datos o la subida a Google Drive experimentan un error (por ejemplo, timeout o corte de red), el script **aborta de inmediato** con código de error `1`.
-* La etapa de borrado (**Step 4**) se encuentra estrictamente condicionada a que la API de Google Drive confirme que el nuevo archivo tiene un `fileId` válido y un tamaño remoto superior a 0 bytes.
-* Si el backup de hoy falla, **el backup del día anterior se conserva intacto**.
-
+* **Data Loss Prevention:** If `pg_dump`, database connectivity, compression, or Google Drive upload encounters an error, the script **immediately terminates with exit code 1**.
+* Step 4 (deletion of previous backup) is strictly conditioned upon the Google Drive API confirming that the new file exists with a valid `fileId` and a remote file size > 0 bytes.
+* If today's backup fails for any reason, **the previous day's backup remains completely intact and untouched**.

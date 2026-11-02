@@ -1,17 +1,17 @@
-# EuroNova — Arquitectura Visual, Guía de Despliegue Zero-to-Hero & Matriz de Dependencias
+# EuroNova — Visual Architecture, Zero-to-Hero Deployment Guide & Dependency Matrix
 
-**Versión:** 1.0.0 — Documento Maestro de Traspaso y Operaciones  
-**Autor:** Principal Software Architect & Technical Documentation Lead  
-**Fecha:** Noviembre 2026  
-**Entorno de Referencia:** Next.js 15 (React 19), Supabase (PostgreSQL + RLS), Tailwind CSS v4, Vercel Anycast Edge  
+**Version:** 1.0.0 — Master Handover & Operations Guide  
+**Author:** Principal Software Architect & Technical Documentation Lead  
+**Date:** November 2026  
+**Reference Environment:** Next.js 15 (React 19), Supabase (PostgreSQL + RLS), Tailwind CSS v4, Vercel Anycast Edge  
 
 ---
 
-## 1. Diagramas de Arquitectura del Sistema (Mermaid.js)
+## 1. System Architecture Diagrams (Mermaid.js)
 
-### Diagrama 1: Topología General del Sistema (High-Level System Topology)
+### Diagram 1: High-Level System Topology
 
-El siguiente diagrama detalla la interacción integral entre el navegador del cliente, la red Edge de Vercel, el motor App Router de Next.js 15, la base de datos Supabase, los cron jobs criptográficos y los respaldos hacia Google Drive:
+The following diagram details the comprehensive interaction between the client browser, Vercel Edge Network, Next.js 15 App Router server engine, Supabase managed infrastructure, cryptographic background crons, and Google Drive backups:
 
 ```mermaid
 flowchart TD
@@ -59,9 +59,9 @@ flowchart TD
 
 ---
 
-### Diagrama 2: Ciclo de Vida de Peticiones y Segregación de Caché (Request Lifecycle & Cache Segregation)
+### Diagram 2: Request Lifecycle & Cache Segregation
 
-Muestra cómo Vercel y Next.js discriminan rutas públicas de alto rendimiento frente a rutas autenticadas protegidas contra envenenamiento de caché (*cache poisoning*):
+Illustrates how Vercel and Next.js discriminate high-performance public cached routes versus authenticated routes shielded against cache poisoning:
 
 ```mermaid
 flowchart TD
@@ -84,159 +84,158 @@ flowchart TD
 
 ---
 
-## 2. Guía de Instalación y Despliegue Zero-to-Hero
+## 2. Zero-to-Hero Installation & Deployment Guide
 
-### 2.1 Requisitos Previos del Sistema
-- **Node.js:** Versión `20.x` o `22.x` (LTS recomendada).
-- **Gestor de Paquetes:** `npm` (versión 10+).
-- **Git:** Instalado en el sistema operativo.
-- **PostgreSQL Client (`pg_dump`):** Requerido para pruebas locales del script de backup.
-- **Cuenta de Supabase:** Proyecto creado en la plataforma de Supabase.
+### 2.1 System Prerequisites
+- **Node.js:** Version `20.x` or `22.x` (LTS recommended).
+- **Package Manager:** `npm` (version 10+).
+- **Git:** Installed on operating system.
+- **PostgreSQL Client (`pg_dump`):** Required for local testing of backup script.
+- **Supabase Account:** Active project on Supabase Cloud.
 
 ---
 
-### 2.2 Paso 1: Clonar el Repositorio e Instalar Dependencias
-Desde la terminal del sistema:
+### 2.2 Step 1: Clone Repository & Install Dependencies
+From your system terminal:
 
 ```bash
-# 1. Clonar el repositorio
+# 1. Clone the repository
 git clone https://github.com/CRACKXXXX/EuroNova.git
 cd EuroNova
 
-# 2. Navegar al directorio de la aplicación
+# 2. Navigate to application root
 cd euronova
 
-# 3. Instalar dependencias con el candado exacto
+# 3. Install dependencies using exact locked versions
 npm ci
 ```
 
 ---
 
-### 2.3 Paso 2: Configurar las Variables de Entorno (`.env.local`)
-Copia la plantilla sanitizada y añade tus credenciales reales:
+### 2.3 Step 2: Configure Environment Variables (`.env.local`)
+Copy the sanitized environment template and populate your real credentials:
 
 ```bash
-# Dentro de la carpeta euronova/
+# Inside euronova/ directory
 cp .env.example .env.local
 ```
 
-Edita `.env.local` con tus claves reales:
-- `NEXT_PUBLIC_SUPABASE_URL`: `https://<tu-id>.supabase.co`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Token JWT público (Anon).
-- `SUPABASE_SERVICE_ROLE_KEY`: Token JWT de administración (Service Role).
-- `SUPABASE_DB_URL`: URI de conexión directa de PostgreSQL (puerto 5432).
-- `CRON_SECRET`: Cadena criptográfica aleatoria de al menos 32 caracteres.
-- `NEXT_PUBLIC_SITE_URL`: `https://euronova.vercel.app` (o tu dominio local `http://localhost:3000`).
+Edit `.env.local` with your active keys:
+- `NEXT_PUBLIC_SUPABASE_URL`: `https://<your-id>.supabase.co`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Public JWT token (Anon key).
+- `SUPABASE_SERVICE_ROLE_KEY`: Administrative JWT token (Service Role key).
+- `SUPABASE_DB_URL`: Direct PostgreSQL connection URI (Port 5432).
+- `CRON_SECRET`: Random cryptographic secret string (>= 32 characters recommended).
+- `NEXT_PUBLIC_SITE_URL`: `https://euronova.vercel.app` (or `http://localhost:3000` locally).
 
-Valida tu configuración antes de continuar ejecutando:
+Validate your configuration before proceeding:
 ```bash
 node scripts/validate-env.mjs
 ```
-*Debe reportar 0 errores críticos (`Exit Code 0`).*
+*Must report 0 critical failures (`Exit Code 0`).*
 
 ---
 
-### 2.4 Paso 3: Inicialización del Esquema y Migraciones de Supabase
-El repositorio contiene **32 scripts de migración SQL** idempotentes en `supabase/migrations/`.
+### 2.4 Step 3: Supabase Schema Initialization & SQL Migrations
+The repository houses **32 idempotent SQL migration scripts** in `supabase/migrations/`.
 
-1. Accede a tu panel en [Supabase Dashboard](https://supabase.com/dashboard) > **SQL Editor**.
-2. Ejecuta secuencialmente los scripts de migración desde `00001_initial_schema.sql` hasta `99999999_production_zero_indexes_and_rls.sql`.
-   - Alternativamente, si tienes instalado Supabase CLI:
+1. Navigate to your [Supabase Dashboard](https://supabase.com/dashboard) > **SQL Editor**.
+2. Sequentially run migration scripts from `00001_initial_schema.sql` through `99999999_production_zero_indexes_and_rls.sql`.
+   - Alternatively, if you have the Supabase CLI installed:
      ```bash
      npx supabase db push
      ```
 
 ---
 
-### 2.5 Paso 4: Creación y Configuración de Buckets de Storage
-La plataforma requiere **3 buckets de almacenamiento** en Supabase Storage:
+### 2.5 Step 4: Storage Bucket Creation & Configuration
+The platform requires **3 storage buckets** in Supabase Storage:
 
-1. **`avatars`** (Público):
-   - Uso: Fotos de perfil de usuarios jóvenes y logos de organizaciones.
-   - Tamaño máximo: 5 MB.
-   - Tipos MIME: `image/jpeg`, `image/png`, `image/webp`.
-2. **`documents`** (Privado / Con RLS):
-   - Uso: CVs en PDF, expedientes de postulación (*dossiers*), documentación legal de ONGs.
-   - Tamaño máximo: 20 MB.
-   - Tipos MIME: `application/pdf`, `image/jpeg`, `image/png`.
-3. **`projects`** (Público):
-   - Uso: Banners e imágenes ilustrativas de los voluntariados y proyectos europeos.
-   - Tamaño máximo: 10 MB.
-   - Tipos MIME: `image/jpeg`, `image/png`, `image/webp`.
+1. **`avatars`** (Public):
+   - Usage: User profile avatars and organization logos.
+   - Size limit: 5 MB.
+   - MIME types: `image/jpeg`, `image/png`, `image/webp`.
+2. **`documents`** (Private / RLS-Governed):
+   - Usage: PDF resumes/CVs, candidate dossiers, and NGO legal documentation.
+   - Size limit: 20 MB.
+   - MIME types: `application/pdf`, `image/jpeg`, `image/png`.
+3. **`projects`** (Public):
+   - Usage: Banners and illustrative media for European volunteer missions.
+   - Size limit: 10 MB.
+   - MIME types: `image/jpeg`, `image/png`, `image/webp`.
 
-*Nota:* El script de migración `99999999_production_zero_indexes_and_rls.sql` incluye la provisión automática e idempotente de las políticas y buckets principales.
+*Note:* Migration script `99999999_production_zero_indexes_and_rls.sql` automatically provisions these buckets and their associated RLS storage policies.
 
 ---
 
-### 2.6 Paso 5: Ejecución en Entorno Local
-Para iniciar el servidor de desarrollo:
+### 2.6 Step 5: Local Environment Execution
+To launch the development server:
 
 ```bash
-# Ejecutar validaciones y servidor de desarrollo
+# Execute validations and launch Next.js dev server
 npm run dev
 ```
-Abre en tu navegador: [http://localhost:3000](http://localhost:3000).
+Open your browser at: [http://localhost:3000](http://localhost:3000).
 
-Para compilar y verificar el build idéntico a producción localmente:
+To compile and verify the exact production build locally:
 ```bash
-# Compilación estricta y servidor de producción
+# Strict production build and start
 npm run build
 npm run start
 ```
 
 ---
 
-### 2.7 Paso 6: Despliegue en Vercel (Configuración Crítica de Monorepo)
+### 2.7 Step 6: Vercel Cloud Deployment (Critical Monorepo Configuration)
 
-Debido a que el repositorio aloja el código Next.js en la subcarpeta `euronova/`:
+Because the repository houses the Next.js application inside the `euronova/` subdirectory:
 
-1. Conecta tu repositorio de GitHub `EuroNova` en Vercel.
-2. En la pantalla de importación o en **Project Settings > General**:
-   - **Root Directory:** Establece obligatoriamente:  
+1. Connect your GitHub repository `EuroNova` to Vercel.
+2. In the import configuration screen or under **Project Settings > General**:
+   - **Root Directory:** You MUST explicitly set:  
      👉 `euronova`
-3. En **Environment Variables**, añade todas las claves especificadas en `.env.example`:
+3. Under **Environment Variables**, configure all keys specified in `.env.example`:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `CRON_SECRET`
    - `NEXT_PUBLIC_SITE_URL`
-   - `EMAIL_USER` / `EMAIL_PASSWORD` (o SMTP)
+   - `EMAIL_USER` / `EMAIL_PASSWORD` (or SMTP credentials)
    - `GEMINI_API_KEY`
-4. Pulsa **Deploy**. Vercel compilará automáticamente utilizando Webpack con paridad del 100% de traducciones en los 7 idiomas.
+4. Click **Deploy**. Vercel will build using Webpack with 100% i18n parity across all 7 languages.
 
 ---
 
-## 3. Matriz de Bloqueo de Dependencias (Dependency Version Lock Matrix)
+## 3. Dependency Version Lock Matrix
 
-Para preservar la estabilidad arquitectónica de EuroNova, las siguientes dependencias tienen **restricción estricta de actualización** y **no deben ser modificadas sin un plan de migración formal**:
+To preserve EuroNova's architectural stability, the following dependencies are under **strict upgrade locks** and **must not be updated without a formal architectural migration plan**:
 
-| Paquete | Versión Bloqueada | Justificación Arquitectónica y Riesgo Crítico si se Modifica |
+| Package | Locked Version | Architectural Justification & Critical Regression Risk |
 |---|---|---|
-| **`react` / `react-dom`** | `19.2.8` *(Fijada estrictamente)* | **Riesgo Crítico de Hidratación:** Next.js 15 App Router depende internamente del protocolo de Server Components y Server Actions de React 19. Modificar esta versión causa desajustes de hidratación en caliente, pérdida de contexto en hooks asíncronos y fallos de renderizado en `sonner` y `framer-motion`. |
-| **`next`** | `^16.4.2` *(Next.js 15 / Webpack)* | **Riesgo de Regresión en Caché y Proxy:** Gestiona la segregación de caché de rutas dinámicas frente a estáticas y la convención de middleware proxy. Actualizarla sin validación puede romper la compilación de rutas hreflang en `sitemap.ts` o alterar el comportamiento de `force-dynamic`. |
-| **`next-intl`** | `^4.14.9` | **Riesgo de Ruptura de Enrutamiento i18n:** Administra la matriz de 7 locales (`es`, `en`, `de`, `fr`, `it`, `ru`, `pt`) y 2,138 claves por idioma. Versiones mayores introducen cambios incompatibles en `createNavigation` y el middleware de detección de idioma. |
-| **`tailwindcss` & `@tailwindcss/postcss`** | `^4.0.0` *(Tailwind v4)* | **Riesgo en el Sistema de Diseño Cósmico:** EuroNova utiliza la arquitectura CSS-first de Tailwind v4 sin `tailwind.config.js`. Actualizar PostCSS o plugins de Tailwind sin compatibilidad desactiva la paleta cósmica (`void-deep`, `void-surface`, `plasma-cyan`, `hyper-violet`, `nova-flare`). |
-| **`@radix-ui/react-tooltip`** | `^1.4.1` | **Riesgo de Desbordamiento de Tooltips:** Proporciona los motores de detección de colisiones de pantalla (*Collision Detection* y *Viewport Awareness*) para el componente `CosmicTooltip`. Una versión divergente puede provocar parpadeo del portal DOM o corte visual en cabeceras fijas. |
-| **`@supabase/ssr`** | `^0.12.7` | **Riesgo de Seguridad en Sesiones:** Controla la propagación defensiva de cookies `httpOnly` entre middleware, Server Components y Server Actions. Cambios en sus contratos de `getAll`/`setAll` provocan bucles de redirección infinita a `/login`. |
-| **`googleapis`** | `^189.0.0` | **Riesgo en Copias de Seguridad:** Utilizado en `scripts/backup-db.mjs` para autenticarse con Service Accounts en Google Drive y ejecutar la rotación segura. |
+| **`react` / `react-dom`** | `19.2.8` *(Strictly Fixed)* | **Critical Hydration Risk:** Next.js 15 App Router relies internally on React 19's Server Components and Server Actions protocol. Upgrading outside this lock introduces hot-reload hydration mismatches, async hook context loss, and rendering crashes in `sonner` and `framer-motion`. |
+| **`next`** | `^16.4.2` *(Next.js 15 / Webpack)* | **Cache & Proxy Regression Risk:** Governs dynamic vs static route cache segregation and proxy middleware conventions. Modifying without validation breaks hreflang compilation in `sitemap.ts` or alters `force-dynamic` behaviors. |
+| **`next-intl`** | `^4.14.9` | **i18n Routing Breakage Risk:** Manages 7 locales (`es`, `en`, `de`, `fr`, `it`, `ru`, `pt`) and 2,138 keys per language. Major versions introduce breaking changes in `createNavigation` and locale detection middleware. |
+| **`tailwindcss` & `@tailwindcss/postcss`** | `^4.0.0` *(Tailwind v4)* | **Cosmic Design System Risk:** EuroNova uses Tailwind v4's CSS-first architecture without `tailwind.config.js`. Incompatible PostCSS upgrades deactivate the cosmic palette (`void-deep`, `void-surface`, `plasma-cyan`, `hyper-violet`, `nova-flare`). |
+| **`@radix-ui/react-tooltip`** | `^1.4.1` | **Tooltip Viewport Overflow Risk:** Powers collision detection and viewport awareness for `CosmicTooltip`. Incompatible versions trigger DOM portal flickering or clipping on sticky headers. |
+| **`@supabase/ssr`** | `^0.12.7` | **Session Security Risk:** Controls defensive `httpOnly` cookie propagation across middleware, Server Components, and Server Actions. Contract mismatches in `getAll`/`setAll` cause infinite redirect loops to `/login`. |
+| **`googleapis`** | `^189.0.0` | **Database Backup Pipeline Risk:** Utilized in `scripts/backup-db.mjs` for Service Account authentication with Google Drive and atomic Safe Rotation verification. |
 
 ---
 
-## 4. Controles de Calidad Previos a Commit (Pre-Flight Quality Gates)
+## 4. Pre-Flight Quality Gates
 
-Antes de fusionar código en `main` o desplegar a producción, es obligatorio ejecutar localmente los 4 controles bloqueantes:
+Before merging code into `main` or deploying to production, all 4 automated blocking checks must be executed locally:
 
 ```bash
-# 1. Validador de entorno y seguridad
+# 1. Environment and security validator
 node scripts/validate-env.mjs
 
-# 2. Validador estricto de paridad de idiomas (100% de cobertura en los 7 idiomas)
+# 2. Strict i18n parity check (100% coverage across 7 languages)
 node scripts/validate-i18n.mjs --strict
 
-# 3. Chequeo estricto de tipado TypeScript
+# 3. Strict TypeScript type check
 npx tsc --noEmit
 
-# 4. Linter de código limpio (0 errores, 0 advertencias)
+# 4. Clean code linter (0 errors, 0 warnings allowed)
 npx eslint app components lib actions --max-warnings=0
 ```
-
