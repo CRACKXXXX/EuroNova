@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { COUNTRIES } from "@/lib/constants/countries";
 import {
   Globe,
@@ -116,8 +117,14 @@ export function CountryBadge({ countryCode }: { countryCode: string | null }) {
   const c = COUNTRIES.find((x) => x.code === countryCode);
   return c ? (
     <span className="flex items-center gap-1.5 text-xs text-gray-300">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={c.flagUrl} alt={c.name} className="w-4 h-auto rounded-[2px]" title={c.name} />
+      <Image
+        src={c.flagUrl}
+        alt={c.name}
+        width={16}
+        height={12}
+        className="w-4 h-auto rounded-[2px]"
+        title={c.name}
+      />
       {c.name}
     </span>
   ) : (

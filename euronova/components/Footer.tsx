@@ -11,6 +11,7 @@ import {
   Heart,
   Cookie
 } from "lucide-react";
+import { CookieConsentGatekeeper } from "@/components/CookieConsentGatekeeper";
 
 export function Footer() {
   const t = useTranslations("Footer");
@@ -135,6 +136,7 @@ export function Footer() {
           </p>
         </div>
       </div>
+      <CookieConsentGatekeeper />
     </footer>
   );
 }

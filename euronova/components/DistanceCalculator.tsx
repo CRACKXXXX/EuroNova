@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
+import Image from "next/image";
 import { Plane, Compass, Sparkles, Leaf, Info, ChevronDown, Euro } from "lucide-react";
 import { useTranslations, useFormatter } from "next-intl";
 import { COUNTRIES } from "@/lib/constants/countries";
@@ -125,6 +126,15 @@ export function DistanceCalculator({
   const [originCode, setOriginCode] = useState<string>(userCountryCode || "ES");
   const [isChangingOrigin, setIsChangingOrigin] = useState<boolean>(false);
 
+  const handleToggleOrigin = useCallback(() => {
+    setIsChangingOrigin((prev) => !prev);
+  }, []);
+
+  const handleOriginSelect = useCallback((code: string) => {
+    setOriginCode(code);
+    setIsChangingOrigin(false);
+  }, []);
+
   const normalizedDest = destCountryCode ? destCountryCode.toUpperCase().trim() : "";
   const normalizedOrigin = originCode.toUpperCase().trim();
 
@@ -182,7 +192,7 @@ export function DistanceCalculator({
 
         <button
           type="button"
-          onClick={() => setIsChangingOrigin((prev) => !prev)}
+          onClick={handleToggleOrigin}
           className="text-[10px] font-bold text-plasma-cyan hover:text-white px-2.5 py-1 rounded-md bg-plasma-cyan/10 hover:bg-plasma-cyan/20 border border-plasma-cyan/30 transition-all cursor-pointer flex items-center gap-1 shrink-0 ml-auto sm:ml-0"
         >
           <span>{t("changeOrigin")}</span>
@@ -198,10 +208,7 @@ export function DistanceCalculator({
           </label>
           <select
             value={originCode}
-            onChange={(e) => {
-              setOriginCode(e.target.value);
-              setIsChangingOrigin(false);
-            }}
+            onChange={(e) => handleOriginSelect(e.target.value)}
             className="w-full bg-void-surface border border-void-border rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-plasma-cyan transition-colors cursor-pointer"
           >
             {COUNTRIES.map((c) => (
@@ -237,10 +244,11 @@ export function DistanceCalculator({
         {/* Origin Column */}
         <div className="flex flex-col items-center text-center px-1 min-w-0">
           {originCountryObj && (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
+            <Image
               src={originCountryObj.flagUrl}
               alt={originCountryObj.name}
+              width={24}
+              height={16}
               className="w-6 h-auto rounded-[2px] mb-1 shadow-sm shrink-0"
             />
           )}
@@ -263,10 +271,11 @@ export function DistanceCalculator({
         {/* Destination Column */}
         <div className="flex flex-col items-center text-center px-1 min-w-0">
           {destCountryObj && (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
+            <Image
               src={destCountryObj.flagUrl}
               alt={destCountryObj.name}
+              width={24}
+              height={16}
               className="w-6 h-auto rounded-[2px] mb-1 shadow-sm shrink-0"
             />
           )}

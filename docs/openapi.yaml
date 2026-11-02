@@ -1,0 +1,584 @@
+openapi: 3.1.0
+info:
+  title: EuroNova Production Engine API
+  version: 1.0.0
+  description: |
+    Formal OpenAPI 3.1.0 specification for EuroNova's live Route Handlers, Background Crons,
+    Telemetry Ingestion, and Health Telemetry endpoints.
+    
+    All cron and administrative automation routes are fortified with constant-time SHA-256
+    cryptographic verification (`crypto.timingSafeEqual`) and in-memory overlap execution locks.
+  contact:
+    name: EuroNova Engineering Team
+    email: api-support@euronova.org
+    url: https://euronova.vercel.app
+
+servers:
+  - url: https://euronova.vercel.app
+    description: Production Anycast Edge Environment
+  - url: http://localhost:3000
+    description: Local Development & Staging Environment
+
+security:
+  - BearerAuth: []
+  - CookieAuth: []
+
+paths:
+  /api/health:
+    get:
+      summary: Real-Time System & Supabase Database Health Telemetry
+      description: |
+        Zero-cache telemetry route that performs lightweight parallel SQL queries on Supabase
+        and computes real-time round-trip latency in milliseconds.
+      operationId: getHealthStatus
+      security: [] # Public endpoint
+      responses:
+        '200':
+          description: System and database are fully operational.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: "no-store, no-cache, must-revalidate"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                healthy:
+                  summary: Fully Healthy Instance
+                  value:
+                    status: "healthy"
+                    db_connected: true
+                    schema_ready: true
+                    latency_ms: 124.5
+                    timestamp: "2026-11-02T01:16:48.768Z"
+        '503':
+          description: Database unreachable, degraded, or credentials misconfigured.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                degraded:
+                  summary: Database Disconnected
+                  value:
+                    status: "degraded"
+                    db_connected: false
+                    schema_ready: false
+                    latency_ms: 502.1
+                    timestamp: "2026-11-02T01:16:48.768Z"
+
+  /api/telemetry/error:
+    post:
+      summary: Client Crash Report & Telemetry Ingestion
+      description: |
+        Ingests client-side React error boundaries and unhandled exceptions.
+        Enforces a strict 10KB payload limit, sliding-window IP rate limiting,
+        server-side PII scrubbing (emails, passwords, tokens), structured logging,
+        and non-blocking Discord webhook alerts.
+      operationId: reportClientCrash
+      security: [] # Public endpoint protected by Rate Limiter & Byte Cap
+      requestBody:
+        required: true
+        description: Scrubbed crash telemetry payload (Maximum 10,240 bytes).
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrashTelemetryInput'
+      responses:
+        '200':
+          description: Telemetry event successfully scrubbed and recorded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '400':
+          description: Malformed JSON, empty body, or invalid telemetry format.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                malformed:
+                  value:
+                    error: "Malformed JSON payload."
+        '413':
+          description: Telemetry payload exceeds the strict 10KB limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                tooLarge:
+                  value:
+                    error: "Payload Too Large: Telemetry payload exceeds 10KB limit."
+        '429':
+          description: Rate limit exceeded (sliding window per client IP).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                throttled:
+                  value:
+                    error: "Too many telemetry transmissions. Throttled."
+        '500':
+          description: Internal processing exception.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/scraper/official:
+    get:
+      summary: European Youth Opportunities Auto-Scraper Engine
+      description: |
+        Executes parallel extraction from SALTO, EYP, Proactive, and Youth Exchange portals.
+        Protected by constant-time SHA-256 token verification, memory deduplication,
+        HTML sanitization, and an in-memory execution lock preventing overlap.
+      operationId: runOfficialScraper
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - name: secret
+          in: query
+          required: false
+          description: Optional query parameter token fallback (evaluated in constant time).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Scraping cycle completed successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScraperResponse'
+        '401':
+          description: Missing or invalid authorization token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Overlap lock active (a scraping loop is already running on this instance).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                activeLock:
+                  value:
+                    success: false
+                    error: "Scraper execution is already active on this instance. Request dropped to prevent overlap."
+        '500':
+          description: Fatal scraping or database insertion error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/cron/scrape:
+    get:
+      summary: Automated Daily Scraper Orchestrator Cron
+      description: |
+        Scheduled cron endpoint triggered daily at 02:00 AM UTC via Vercel Cron.
+        Cryptographically delegates in-process to `/api/scraper/official`.
+      operationId: triggerScraperCron
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Cron execution finished successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScraperResponse'
+        '401':
+          description: Unauthorized cron invocation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Scraper concurrency lock conflict.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Cron execution failure.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/cron/archive:
+    get:
+      summary: Safe Auto-Archiver Cron (60-Day Buffer)
+      description: |
+        Scheduled cron endpoint triggered daily at 03:00 AM UTC via Vercel Cron.
+        Finds all projects with status = 'published' whose `end_date` is older than 60 days
+        and updates their status to 'archived' in batches of 100 to prevent database locks.
+      operationId: triggerArchiveCron
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Archival batch completed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArchiveCronResponse'
+        '401':
+          description: Unauthorized invocation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Database update failure.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/cron/purge-logs:
+    get:
+      summary: Audit Logs & Resolved Tickets Purge (48-Hour Retention)
+      description: |
+        Purges resolved project reports, support tickets, and moderator escalations
+        older than 48 hours to minimize relational table bloat (GDPR Data Minimization).
+      operationId: triggerPurgeLogsGet
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Purge completed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgeLogsResponse'
+        '401':
+          description: Unauthorized invocation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Database purge failure.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Audit Logs & Resolved Tickets Purge (POST Trigger)
+      description: Identical to GET handler for automated webhook triggers.
+      operationId: triggerPurgeLogsPost
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Purge completed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgeLogsResponse'
+        '401':
+          description: Unauthorized invocation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Database purge failure.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/cron/inactivity-purge:
+    get:
+      summary: GDPR Inactive Account Purge (2-Year Decay)
+      description: |
+        Pursuant to GDPR Art. 5.1.e (Storage Limitation), purges inactive user accounts
+        with no login activity in over 2 years. Forum contributions are preserved
+        anonymously under a Ghost User record.
+      operationId: triggerInactivityPurgeGet
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Inactivity purge executed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InactivityPurgeResponse'
+        '401':
+          description: Unauthorized invocation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Auth admin or relational purge failure.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: GDPR Inactive Account Purge (POST Trigger)
+      description: Identical to GET handler for webhook invocations.
+      operationId: triggerInactivityPurgePost
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Inactivity purge executed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InactivityPurgeResponse'
+        '401':
+          description: Unauthorized invocation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Auth admin or relational purge failure.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: |
+        Secret cryptographic token passed as `Authorization: Bearer <CRON_SECRET>`.
+        Validated via constant-time SHA-256 pre-hashed buffers (`crypto.timingSafeEqual`).
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: sb-access-token
+      description: |
+        Authenticated session cookie verified against Supabase Auth.
+        Requires user role `root` or `admin`.
+
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - db_connected
+        - schema_ready
+        - latency_ms
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded]
+          example: healthy
+        db_connected:
+          type: boolean
+          example: true
+        schema_ready:
+          type: boolean
+          example: true
+        latency_ms:
+          type: number
+          format: float
+          example: 124.5
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-11-02T01:16:48.768Z"
+
+    CrashTelemetryInput:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          example: "TypeError"
+        message:
+          type: string
+          maxLength: 1000
+          example: "Cannot read properties of undefined (reading 'map')"
+        stack:
+          type: string
+          maxLength: 4000
+          example: "TypeError: Cannot read properties of undefined..."
+        componentStack:
+          type: string
+          maxLength: 2000
+        route:
+          type: string
+          maxLength: 255
+          example: "/es/community"
+        digest:
+          type: string
+          maxLength: 100
+          example: "2847193751"
+        timestamp:
+          type: string
+          format: date-time
+
+    ScraperResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        source:
+          type: string
+          example: "multisource_aggregator"
+        inserted:
+          type: integer
+          example: 8
+        duplicates_skipped:
+          type: integer
+          example: 14
+        duration_ms:
+          type: integer
+          example: 14250
+        inserted_projects:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              title:
+                type: string
+              status:
+                type: string
+              duration_days:
+                type: integer
+                nullable: true
+
+    ArchiveCronResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Archival process complete. Archived 5 projects older than 60 days past end date."
+        cutoff_date:
+          type: string
+          format: date
+          example: "2026-09-03"
+        archived_count:
+          type: integer
+          example: 5
+        archived_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        timestamp:
+          type: string
+          format: date-time
+
+    PurgeLogsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        timestamp:
+          type: string
+          format: date-time
+        cutoffDate:
+          type: string
+          format: date-time
+        purged:
+          type: object
+          properties:
+            reportsCount:
+              type: integer
+              example: 3
+            ticketsCount:
+              type: integer
+              example: 7
+            escalationsCount:
+              type: integer
+              example: 2
+        errors:
+          type: object
+          properties:
+            reports:
+              type: string
+              nullable: true
+            tickets:
+              type: string
+              nullable: true
+            escalations:
+              type: string
+              nullable: true
+
+    InactivityPurgeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        timestamp:
+          type: string
+          format: date-time
+        retentionRule:
+          type: string
+          example: "2 Years Data Decay (GDPR Art. 5.1.e)"
+        cutoffDate:
+          type: string
+          format: date-time
+        totalInactiveDetected:
+          type: integer
+          example: 4
+        purgedCount:
+          type: integer
+          example: 4
+        purgedUsers:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              maskedEmail:
+                type: string
+                example: "jo***a@gmail.com"
+              lastActivity:
+                type: string
+                format: date-time
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              error:
+                type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Unauthorized: Invalid or missing cron secret."

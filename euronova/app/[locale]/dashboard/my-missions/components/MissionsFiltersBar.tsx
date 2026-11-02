@@ -1,7 +1,7 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
 import React from "react";
+import Image from "next/image";
 import {
   Bookmark,
   Send,
@@ -178,9 +178,11 @@ export function MissionsFiltersBar({
                   }`}
                 >
                   {countryInfo ? (
-                    <img
+                    <Image
                       src={countryInfo.flagUrl}
                       alt={countryInfo.name}
+                      width={16}
+                      height={12}
                       className="w-4 h-auto rounded-[2px]"
                     />
                   ) : (

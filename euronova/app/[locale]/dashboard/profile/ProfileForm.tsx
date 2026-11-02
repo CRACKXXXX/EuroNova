@@ -2,6 +2,7 @@
 
 import { useActionState, useState, useEffect, useTransition, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import { updateProfile, deleteMyAccount, ProfileActionState } from "./actions";
 import {
   Save,
@@ -343,10 +344,11 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
                     const c = COUNTRIES.find((x) => x.code === youthCountryCode);
                     return c ? (
                       <span className="flex items-center gap-1.5">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <Image
                           src={c.flagUrl}
                           alt={c.name}
+                          width={20}
+                          height={14}
                           className="w-5 h-auto rounded-[2px]"
                           title={c.name}
                         />
@@ -446,10 +448,11 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
                       const c = COUNTRIES.find((x) => x.code === orgCountryHq);
                       return c ? (
                         <span className="flex items-center gap-1.5">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
+                          <Image
                             src={c.flagUrl}
                             alt={c.name}
+                            width={20}
+                            height={14}
                             className="w-5 h-auto rounded-[2px]"
                             title={c.name}
                           />
