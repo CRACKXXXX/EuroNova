@@ -17,7 +17,7 @@ const emptySubscribe = () => () => {};
 export function hasCookieConsent(): boolean {
   if (typeof window === "undefined") return false;
   const val = localStorage.getItem("euronova_cookie_consent");
-  return val === "accepted" || val === "granted";
+  return val === "accepted" || val === "granted" || val === "necessary_only";
 }
 
 /**

@@ -7,6 +7,7 @@ import { login } from "@/app/[locale]/login/actions";
 import { useTranslations } from "next-intl";
 import { Sparkles, CheckCircle2, AlertCircle, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import { useCookieConsent } from "@/hooks/useCookieConsent";
 
 interface LoginFormProps {
   onToggleView?: () => void;
@@ -22,6 +23,7 @@ export function LoginForm({ onToggleView }: LoginFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
   const mounted = useSyncExternalStore(subscribe, () => true, () => false);
+  const { isGranted: _hasCookieConsent } = useCookieConsent();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

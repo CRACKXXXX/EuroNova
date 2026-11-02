@@ -239,7 +239,11 @@
     "orbitalDeparture": "Orbital Departure",
     "transmissionConfirmed": "Transmission Confirmed",
     "welcomeToastTitle": "Welcome to EuroNova",
-    "google": "Google"
+    "google": "Google",
+    "cookieConsentRequired": "Cookie consent is required to sign in with Google.",
+    "cookieConsentNotice": "Cookie consent is required to sign in with Google.",
+    "manageCookiePreferences": "Open Preferences",
+    "cookiesRequired": "Cookies Required"
   },
   "Profile": {
     "title": "Profile Configuration",

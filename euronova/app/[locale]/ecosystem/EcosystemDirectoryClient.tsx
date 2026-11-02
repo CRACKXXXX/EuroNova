@@ -222,96 +222,103 @@ export function EcosystemDirectoryClient() {
             })}
           </div>
 
-          {/* Custom Accessible Country Dropdown with Flags */}
-          <div ref={countryDropdownRef} className="relative flex items-center gap-2 shrink-0">
-            <span className="text-xs font-semibold text-gray-400 flex items-center gap-1.5 shrink-0">
-              <MapPin className="w-3.5 h-3.5 text-hyper-violet" />
+          {/* Custom Accessible Country Dropdown with Overhauled Cosmic UI */}
+          <div ref={countryDropdownRef} className="relative flex items-center gap-2 shrink-0 w-full sm:w-auto">
+            <span className="text-xs font-semibold text-gray-400 flex items-center gap-1.5 shrink-0 hidden sm:inline-flex">
+              <MapPin className="w-3.5 h-3.5 text-plasma-cyan" />
               <span>Location:</span>
             </span>
 
-            <CosmicTooltip content="Filter by European country / Region" side="top">
+            <div className="relative w-full sm:w-auto">
               <button
                 type="button"
                 aria-haspopup="listbox"
                 aria-expanded={isCountryDropdownOpen}
                 onClick={() => setIsCountryDropdownOpen((prev) => !prev)}
-                className="flex items-center justify-between gap-2.5 px-3.5 py-2 min-h-[40px] rounded-xl bg-void-deep border border-void-border hover:border-hyper-violet/60 focus-visible:ring-2 focus-visible:ring-hyper-violet focus-visible:outline-none text-xs font-semibold text-gray-200 transition-all cursor-pointer shadow-inner min-w-[190px] sm:min-w-[220px]"
+                className="w-full sm:w-auto flex items-center justify-between gap-3 px-3.5 py-2.5 min-h-[42px] rounded-xl bg-void-deep border border-void-border hover:border-plasma-cyan/60 focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none text-xs sm:text-sm font-semibold text-white transition-all cursor-pointer shadow-inner min-w-[210px] sm:min-w-[250px]"
               >
-                <div className="flex items-center gap-2 truncate">
-                  <span className="text-sm shrink-0">{currentCountryOption.flag}</span>
+                <div className="flex items-center gap-2.5 truncate">
+                  <span className="text-base shrink-0 leading-none" role="img" aria-label={currentCountryOption.label}>
+                    {currentCountryOption.flag}
+                  </span>
                   <span className="truncate">{currentCountryOption.label}</span>
                 </div>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 text-gray-400 shrink-0 transition-transform duration-200 ${
-                    isCountryDropdownOpen ? "rotate-180 text-hyper-violet" : ""
-                  }`}
-                />
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[10px] font-mono text-gray-400 px-1.5 py-0.5 rounded bg-void-surface border border-void-border">
+                    {currentCountryOption.count}
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 ${
+                      isCountryDropdownOpen ? "rotate-180 text-plasma-cyan" : ""
+                    }`}
+                  />
+                </div>
               </button>
-            </CosmicTooltip>
 
-            {/* Dropdown Menu */}
-            {isCountryDropdownOpen && (
-              <div
-                role="listbox"
-                className="absolute right-0 top-full mt-2 w-72 max-h-80 overflow-y-auto overscroll-contain rounded-xl bg-void-surface/98 border border-void-border shadow-[0_15px_40px_rgba(0,0,0,0.8)] backdrop-blur-2xl z-50 p-2 space-y-1 animate-in fade-in zoom-in-95 duration-150"
-              >
-                {/* Search input inside country dropdown */}
-                <div className="px-1 pb-2 mb-1 border-b border-void-border/60">
-                  <div className="relative">
-                    <Search className="w-3 h-3 text-gray-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              {/* Dropdown Menu Overhaul: Solid Background (bg-void-deep), z-50, max-h-64 overflow-y-auto */}
+              {isCountryDropdownOpen && (
+                <div
+                  role="listbox"
+                  className="absolute right-0 top-full mt-2 w-full sm:w-80 rounded-2xl bg-void-deep border border-void-border shadow-[0_20px_50px_rgba(0,0,0,0.95),0_0_20px_rgba(0,229,255,0.1)] z-50 p-2 space-y-2 animate-in fade-in zoom-in-95 duration-150"
+                >
+                  {/* Pinned Search Input at the top */}
+                  <div className="relative pb-1 border-b border-void-border/60">
+                    <Search className="w-3.5 h-3.5 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="text"
                       value={countrySearchQuery}
                       onChange={(e) => setCountrySearchQuery(e.target.value)}
                       placeholder="Search country..."
-                      className="w-full pl-7 pr-2 py-1.5 bg-void-deep rounded-lg border border-void-border text-xs text-white placeholder-gray-500 outline-none focus:border-hyper-violet"
+                      className="w-full pl-8 pr-3 py-2 bg-void-surface rounded-xl border border-void-border text-xs text-white placeholder-gray-500 outline-none focus:border-plasma-cyan transition-colors"
                       onClick={(e) => e.stopPropagation()}
                     />
                   </div>
-                </div>
 
-                {/* Country Options List */}
-                <div className="space-y-0.5">
-                  {filteredCountryOptions.map((c) => {
-                    const isSelected = selectedCountry === c.code;
-                    return (
-                      <button
-                        key={c.code}
-                        type="button"
-                        role="option"
-                        aria-selected={isSelected}
-                        onClick={() => {
-                          setSelectedCountry(c.code);
-                          setIsCountryDropdownOpen(false);
-                          setCountrySearchQuery("");
-                        }}
-                        className={`w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer text-left ${
-                          isSelected
-                            ? "bg-hyper-violet/20 text-plasma-cyan font-bold"
-                            : "text-gray-300 hover:bg-void-deep/80 hover:text-white"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-sm shrink-0">{c.flag}</span>
-                          <span className="truncate">{c.label}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <span className="text-[10px] font-mono text-gray-500 px-1.5 py-0.5 rounded bg-void-deep border border-void-border/60">
-                            {c.count}
-                          </span>
-                          {isSelected && <Check className="w-3.5 h-3.5 text-plasma-cyan shrink-0" />}
-                        </div>
-                      </button>
-                    );
-                  })}
-                  {filteredCountryOptions.length === 0 && (
-                    <div className="text-center py-4 text-xs text-gray-500">
-                      No country found
-                    </div>
-                  )}
+                  {/* Constrained Height with Smooth Scrolling: max-h-64 overflow-y-auto */}
+                  <div className="max-h-64 overflow-y-auto overscroll-contain space-y-1 pr-1">
+                    {filteredCountryOptions.map((c) => {
+                      const isSelected = selectedCountry === c.code;
+                      return (
+                        <button
+                          key={c.code}
+                          type="button"
+                          role="option"
+                          aria-selected={isSelected}
+                          onClick={() => {
+                            setSelectedCountry(c.code);
+                            setIsCountryDropdownOpen(false);
+                            setCountrySearchQuery("");
+                          }}
+                          className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-xs sm:text-sm transition-all cursor-pointer text-left ${
+                            isSelected
+                              ? "bg-plasma-cyan/15 text-plasma-cyan font-bold border border-plasma-cyan/40 shadow-[0_0_15px_rgba(0,229,255,0.15)]"
+                              : "text-gray-300 hover:bg-void-surface hover:text-white border border-transparent"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="text-base shrink-0 leading-none" role="img" aria-label={c.label}>
+                              {c.flag}
+                            </span>
+                            <span className="truncate font-medium">{c.label}</span>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-[10px] font-mono text-gray-400 px-1.5 py-0.5 rounded bg-void-surface border border-void-border">
+                              {c.count}
+                            </span>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-plasma-cyan shrink-0" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                    {filteredCountryOptions.length === 0 && (
+                      <div className="text-center py-6 text-xs text-gray-500 font-mono">
+                        No country found
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
 
@@ -362,7 +369,9 @@ export function EcosystemDirectoryClient() {
 
                     {/* Country Badge with Flag Emoji */}
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-void-deep border border-void-border text-gray-300">
-                      <span className="text-xs">{flagEmoji}</span>
+                      <span className="text-sm shrink-0 leading-none" role="img" aria-label={res.countryName}>
+                        {flagEmoji}
+                      </span>
                       <span>{res.countryName}</span>
                     </span>
                   </div>
