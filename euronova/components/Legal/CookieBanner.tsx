@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
 import { createPortal } from "react-dom";
 import { Cookie, ShieldCheck, Settings, Check, X, ExternalLink, Lock } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -16,8 +17,18 @@ const emptySubscribe = () => () => {};
  */
 export function hasCookieConsent(): boolean {
   if (typeof window === "undefined") return false;
-  const val = localStorage.getItem("euronova_cookie_consent");
-  return val === "accepted" || val === "granted" || val === "necessary_only";
+  try {
+    const val = localStorage.getItem("euronova_cookie_consent");
+    if (val) return val === "accepted" || val === "granted" || val === "necessary_only";
+    const match = document.cookie.match(/(?:^|;\s*)euronova_consent=([^;]+)/);
+    if (match) {
+      const cookieVal = match[1];
+      return cookieVal === "accepted" || cookieVal === "granted" || cookieVal === "necessary_only";
+    }
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -31,12 +42,22 @@ export function initAnalytics(): boolean {
   return true;
 }
 
-function getConsentSnapshot(): "accepted" | "rejected" | null {
+export function getConsentSnapshot(): "accepted" | "rejected" | null {
   if (typeof window === "undefined") return null;
-  const val = localStorage.getItem("euronova_cookie_consent");
-  if (val === "accepted" || val === "granted") return "accepted";
-  if (val === "rejected" || val === "denied") return "rejected";
-  return null;
+  try {
+    const val = localStorage.getItem("euronova_cookie_consent");
+    if (val === "accepted" || val === "granted") return "accepted";
+    if (val === "rejected" || val === "denied") return "rejected";
+    const match = document.cookie.match(/(?:^|;\s*)euronova_consent=([^;]+)/);
+    if (match) {
+      const cookieVal = match[1];
+      if (cookieVal === "accepted" || cookieVal === "granted") return "accepted";
+      if (cookieVal === "rejected" || cookieVal === "denied") return "rejected";
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 function subscribeConsent(callback: () => void) {
@@ -50,6 +71,7 @@ function subscribeConsent(callback: () => void) {
 }
 
 export function CookieBanner() {
+  const pathname = usePathname();
   const t = useTranslations("CookieBanner");
   const tErrors = useTranslations("Errors");
 
@@ -67,14 +89,16 @@ export function CookieBanner() {
 
   const [showPreferences, setShowPreferences] = useState(false);
   const [customAnalyticsToggle, setCustomAnalyticsToggle] = useState<boolean | null>(null);
-  const [dismissed, setDismissed] = useState(false);
 
   const isAnalyticsActive = customAnalyticsToggle !== null ? customAnalyticsToggle : consentStatus === "accepted";
+
+  // Exact root public paths: '/' or '/<locale>' (e.g. '/es', '/en', etc.)
+  const isRootPublicPath = !pathname || pathname === "/" || /^\/[a-zA-Z]{2}\/?$/.test(pathname);
+  const isBlockingRoute = !isRootPublicPath;
 
   // Listen to external requests to open cookie preferences (e.g. from /legal/cookies or Footer)
   useEffect(() => {
     const handleOpen = () => {
-      setDismissed(false);
       setShowPreferences(true);
     };
 
@@ -102,15 +126,18 @@ export function CookieBanner() {
     };
   }, [tErrors]);
 
-  // Lock body scroll when modal is open
+  // Lock body scroll when in blocking mode or when preferences modal is open
   useEffect(() => {
-    if (!mounted || !showPreferences) return;
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, [showPreferences, mounted]);
+    if (!mounted) return;
+    const isBlockingModalOpen = isBlockingRoute && consentStatus === null;
+    if (isBlockingModalOpen || showPreferences) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [mounted, isBlockingRoute, consentStatus, showPreferences]);
 
   const saveConsent = (choice: "accepted" | "rejected") => {
     try {
@@ -123,7 +150,6 @@ export function CookieBanner() {
     } catch {
       // LocalStorage access resilient fallback
     }
-    setDismissed(true);
     setShowPreferences(false);
     setCustomAnalyticsToggle(null);
   };
@@ -140,13 +166,85 @@ export function CookieBanner() {
     saveConsent(isAnalyticsActive ? "accepted" : "rejected");
   };
 
-  // Only render banner if mounted, user hasn't made a decision yet, not dismissed, and modal is not active
-  const shouldRenderBanner = mounted && !dismissed && consentStatus === null && !showPreferences;
+  if (!mounted) return null;
 
   return (
     <>
-      {/* 1. Native Initial Bottom Banner (Shown only once for new visitors) */}
-      {shouldRenderBanner && (
+      {/* 1. Persistent Fullscreen GDPR Blocking Wall on Non-Public Routes (First Visit, Strictly Null) */}
+      {consentStatus === null && isBlockingRoute && (
+        <aside
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("title")}
+          className="fixed inset-0 z-[9999] bg-void-deep/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300"
+        >
+          <div className="w-full max-w-lg bg-void-surface border border-plasma-cyan/40 rounded-3xl p-6 sm:p-8 shadow-[0_0_60px_rgba(0,0,0,0.95),0_0_35px_rgba(0,229,255,0.2)] relative space-y-5 animate-in zoom-in-95 duration-200">
+            {/* Ambient Cosmic Gradients */}
+            <div className="absolute top-0 right-0 w-36 h-36 bg-hyper-violet/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-36 h-36 bg-plasma-cyan/10 rounded-full blur-2xl pointer-events-none" />
+
+            <div className="flex items-start gap-3 relative z-10">
+              <div className="w-10 h-10 rounded-xl bg-plasma-cyan/15 border border-plasma-cyan/35 flex items-center justify-center text-plasma-cyan shrink-0">
+                <Cookie className="w-5 h-5 text-plasma-cyan" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-white tracking-tight">
+                  {t("title")}
+                </h3>
+                <p className="text-[11px] font-mono text-plasma-cyan uppercase tracking-wider">
+                  GDPR Art. 7 & ePrivacy Compliance
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs sm:text-sm text-gray-300 leading-relaxed font-light relative z-10">
+              {t("description")}
+            </p>
+
+            {/* Actions: Accept All, Reject Non-Essential, Manage Preferences */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-2 relative z-10">
+              <button
+                type="button"
+                onClick={handleAcceptAll}
+                className="flex-1 py-3 px-4 rounded-xl bg-plasma-cyan hover:bg-plasma-cyan/90 text-void-deep text-xs font-black transition-all shadow-[0_0_20px_rgba(0,229,255,0.35)] hover:shadow-[0_0_25px_rgba(0,229,255,0.55)] text-center cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Check className="w-4 h-4 stroke-[3]" />
+                <span>{t("acceptAll")}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleRejectNonEssential}
+                className="flex-1 py-3 px-4 rounded-xl bg-void-deep hover:bg-void-surface border border-void-border hover:border-gray-500 text-xs font-bold text-gray-300 hover:text-white transition-all text-center cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <X className="w-4 h-4" />
+                <span>{t("rejectNonEssential")}</span>
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between pt-1 text-xs text-gray-400 relative z-10">
+              <button
+                type="button"
+                onClick={() => setShowPreferences(true)}
+                className="hover:text-plasma-cyan transition-colors inline-flex items-center gap-1 text-xs font-medium cursor-pointer"
+              >
+                <Settings className="w-3.5 h-3.5" />
+                <span>{t("managePreferences")}</span>
+              </button>
+              <Link
+                href="/legal/cookies"
+                className="hover:text-plasma-cyan transition-colors inline-flex items-center gap-1 text-[11px] font-mono"
+              >
+                <span>{t("policyLink")}</span>
+                <ExternalLink className="w-3 h-3 text-gray-500" />
+              </Link>
+            </div>
+          </div>
+        </aside>
+      )}
+
+      {/* 2. Initial Floating Bottom Banner for Root Public Routes (e.g. '/' or '/es') */}
+      {consentStatus === null && isRootPublicPath && !showPreferences && (
         <aside
           role="region"
           aria-label={t("title")}
@@ -216,7 +314,7 @@ export function CookieBanner() {
         </aside>
       )}
 
-      {/* 2. Centered Modal Dialog for Cookie Preferences (Via Portal) */}
+      {/* 3. Centered Modal Dialog for Cookie Preferences (Via Portal) */}
       {showPreferences && mounted && createPortal(
         <div
           role="dialog"

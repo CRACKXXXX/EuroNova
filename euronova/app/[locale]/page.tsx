@@ -443,7 +443,7 @@ export default async function Home({ params, searchParams }: PageProps) {
         </MotionSection>
 
         {/* ============================================================ */}
-        {/* F. PLATFORM INNOVATIONS (PERFECTLY SYMMETRIC 3-1-3 7-GRID)   */}
+        {/* F. PLATFORM INNOVATIONS (6-CARD SYMMETRIC BENTO GRID)        */}
         {/* ============================================================ */}
         <MotionSection
           initial={{ opacity: 0, y: 30 }}
@@ -465,11 +465,11 @@ export default async function Home({ params, searchParams }: PageProps) {
             </p>
           </div>
 
-          {/* Symmetrical Bento Grid: 3 Cards (Top) - 1 Centerpiece Hub - 3 Cards (Bottom) */}
+          {/* Symmetrical Bento Grid: 6 Core Features (2x3 on desktop, 3x2 on tablet) */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch">
 
             {/* Bento Card 1: Erasmus+ Info & Dynamic FAQ */}
-            <div className="col-span-1 order-1 md:order-1 lg:order-1 bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-plasma-cyan/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
+            <div className="col-span-1 bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-plasma-cyan/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
               <div className="space-y-4">
                 <div className="w-14 h-14 rounded-2xl bg-plasma-cyan/15 border border-plasma-cyan/30 flex items-center justify-center text-plasma-cyan shadow-[0_0_20px_rgba(0,229,255,0.2)]">
                   <HelpCircle className="w-7 h-7" />
@@ -489,7 +489,7 @@ export default async function Home({ params, searchParams }: PageProps) {
             </div>
 
             {/* Bento Card 2: Global Community Forums */}
-            <div className="col-span-1 order-2 md:order-2 lg:order-2 bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-hyper-violet/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
+            <div className="col-span-1 bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-hyper-violet/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
               <div className="space-y-4">
                 <div className="w-14 h-14 rounded-2xl bg-hyper-violet/15 border border-hyper-violet/30 flex items-center justify-center text-hyper-violet shadow-[0_0_20px_rgba(99,102,241,0.2)]">
                   <MessageSquare className="w-7 h-7" />
@@ -509,7 +509,7 @@ export default async function Home({ params, searchParams }: PageProps) {
             </div>
 
             {/* Bento Card 3: True Trust Protocol 0-100 XP */}
-            <div className="col-span-1 order-3 md:order-3 lg:order-3 bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-rup-emerald/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
+            <div className="col-span-1 bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-rup-emerald/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
               <div className="space-y-4">
                 <div className="w-14 h-14 rounded-2xl bg-rup-emerald/15 border border-rup-emerald/30 flex items-center justify-center text-rup-emerald shadow-[0_0_20px_rgba(0,230,118,0.2)]">
                   <ShieldCheck className="w-7 h-7" />
@@ -528,52 +528,8 @@ export default async function Home({ params, searchParams }: PageProps) {
               </div>
             </div>
 
-            {/* Bento Card 7: Panoramic Master Centerpiece — External Erasmus+ Ecosystem Hub */}
-            <div className="col-span-1 md:col-span-2 lg:col-span-3 order-4 md:order-5 lg:order-4 bg-gradient-to-r from-void-surface/95 via-void-surface/85 to-void-deep/95 border border-plasma-cyan/40 hover:border-plasma-cyan backdrop-blur-3xl transition-all duration-500 shadow-[0_0_50px_rgba(0,229,255,0.12)] hover:shadow-[0_0_70px_rgba(0,229,255,0.25)] flex flex-col p-8 sm:p-10 lg:p-12 rounded-3xl relative overflow-hidden group">
-              {/* Ambient Glows */}
-              <div className="absolute top-0 right-0 w-80 h-80 bg-plasma-cyan/15 rounded-full blur-[100px] pointer-events-none group-hover:bg-plasma-cyan/25 transition-all duration-700" />
-              <div className="absolute bottom-0 left-1/4 w-72 h-72 bg-hyper-violet/15 rounded-full blur-[100px] pointer-events-none group-hover:bg-hyper-violet/25 transition-all duration-700" />
-
-              <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-                {/* Left Column: Icon, Title, Description, Tags */}
-                <div className="space-y-5 max-w-2xl">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="w-14 h-14 rounded-2xl bg-plasma-cyan/20 border border-plasma-cyan/40 flex items-center justify-center text-plasma-cyan shadow-[0_0_25px_rgba(0,229,255,0.35)] group-hover:scale-110 transition-transform duration-300">
-                      <Globe2 className="w-7 h-7" />
-                    </div>
-                    <span className="px-3.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-plasma-cyan/15 text-plasma-cyan border border-plasma-cyan/40">
-                      {t("tagPanEuropean")}
-                    </span>
-                  </div>
-
-                  <div>
-                    <h4 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white group-hover:text-plasma-cyan transition-colors">
-                      {t("featEcosystemTitle")}
-                    </h4>
-                    <p className="text-sm sm:text-base text-gray-300 font-light leading-relaxed mt-2.5">
-                      {t("featEcosystemDesc")}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 pt-2 text-xs font-mono text-gray-400">
-                    <span className="px-3 py-1.5 rounded-lg bg-void-deep/90 border border-void-border/80 text-gray-300">{t("tagExternalTools")}</span>
-                    <span className="px-3 py-1.5 rounded-lg bg-void-deep/90 border border-void-border/80 text-gray-300">{t("tagCommunityChannels")}</span>
-                    <span className="px-3 py-1.5 rounded-lg bg-void-deep/90 border border-void-border/80 text-gray-300">{t("tagPanEuropean")}</span>
-                  </div>
-                </div>
-
-                {/* Right Column: Visual Highlights */}
-                <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end justify-center gap-2 shrink-0 lg:border-l lg:border-void-border/60 lg:pl-8">
-                  <div className="text-left sm:text-right hidden sm:block">
-                    <span className="text-xs text-gray-400 block font-medium">Pan-European Network</span>
-                    <span className="text-sm font-bold text-plasma-cyan font-mono">100% Free & Open Access</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Bento Card 4: Direct Support & Problem Solving */}
-            <div className="col-span-1 order-5 md:order-4 lg:order-5 bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-plasma-cyan/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
+            <div className="col-span-1 bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-plasma-cyan/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
               <div className="space-y-4">
                 <div className="w-14 h-14 rounded-2xl bg-plasma-cyan/15 border border-plasma-cyan/30 flex items-center justify-center text-plasma-cyan shadow-[0_0_20px_rgba(0,229,255,0.2)]">
                   <Headphones className="w-7 h-7" />
@@ -593,7 +549,7 @@ export default async function Home({ params, searchParams }: PageProps) {
             </div>
 
             {/* Bento Card 5: Mission Radar GPS */}
-            <div className="col-span-1 order-6 md:order-6 lg:order-6 bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-hyper-violet/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
+            <div className="col-span-1 bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-hyper-violet/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
               <div className="space-y-4">
                 <div className="w-14 h-14 rounded-2xl bg-hyper-violet/15 border border-hyper-violet/30 flex items-center justify-center text-hyper-violet shadow-[0_0_20px_rgba(99,102,241,0.2)]">
                   <Compass className="w-7 h-7" />
@@ -613,7 +569,7 @@ export default async function Home({ params, searchParams }: PageProps) {
             </div>
 
             {/* Bento Card 6: Verified Organizations Directory */}
-            <div className="col-span-1 order-7 md:order-7 lg:order-7 bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-rup-emerald/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
+            <div className="col-span-1 bg-gradient-to-br from-void-surface/90 to-void-deep/90 border border-void-border hover:border-rup-emerald/50 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_35px_rgba(0,0,0,0.5)] flex flex-col h-full p-8 rounded-3xl">
               <div className="space-y-4">
                 <div className="w-14 h-14 rounded-2xl bg-rup-emerald/15 border border-rup-emerald/30 flex items-center justify-center text-rup-emerald shadow-[0_0_20px_rgba(0,230,118,0.2)]">
                   <Building2 className="w-7 h-7" />

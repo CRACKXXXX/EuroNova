@@ -76,7 +76,7 @@ export function RegisterForm({ onToggleView }: RegisterFormProps) {
           }, 850);
         }
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "An unexpected error occurred during account creation.");
+        setError(err instanceof Error ? err.message : t("unexpectedError"));
       }
     });
   };

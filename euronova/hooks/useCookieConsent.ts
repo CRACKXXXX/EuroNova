@@ -12,16 +12,26 @@ export function hasCookieConsent(): boolean {
   if (typeof window === "undefined") return false;
   try {
     const val = localStorage.getItem("euronova_cookie_consent");
-    return val === "granted" || val === "accepted" || val === "necessary_only";
+    if (val) return val === "granted" || val === "accepted" || val === "necessary_only";
+    const match = document.cookie.match(/(?:^|;\s*)euronova_consent=([^;]+)/);
+    if (match) {
+      const cookieVal = match[1];
+      return cookieVal === "granted" || cookieVal === "accepted" || cookieVal === "necessary_only";
+    }
+    return false;
   } catch {
     return false;
   }
 }
 
-function getConsentSnapshot(): string | null {
+export function getConsentSnapshot(): string | null {
   if (typeof window === "undefined") return null;
   try {
-    return localStorage.getItem("euronova_cookie_consent");
+    const local = localStorage.getItem("euronova_cookie_consent");
+    if (local) return local;
+    const match = document.cookie.match(/(?:^|;\s*)euronova_consent=([^;]+)/);
+    if (match) return match[1];
+    return null;
   } catch {
     return null;
   }
@@ -58,7 +68,7 @@ export function useCookieConsent() {
     }
   }, []);
 
-  const saveConsent = useCallback((choice: "granted" | "necessary_only" | "denied") => {
+  const saveConsent = useCallback((choice: "granted" | "accepted" | "necessary_only" | "denied" | "rejected") => {
     if (typeof window === "undefined") return;
     try {
       localStorage.setItem("euronova_cookie_consent", choice);
@@ -78,4 +88,3 @@ export function useCookieConsent() {
     saveConsent,
   };
 }
-

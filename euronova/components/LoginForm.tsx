@@ -73,7 +73,7 @@ export function LoginForm({ onToggleView }: LoginFormProps) {
           }, 850);
         }
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "An unexpected error occurred during authentication.");
+        setError(err instanceof Error ? err.message : t("unexpectedError"));
       }
     });
   };

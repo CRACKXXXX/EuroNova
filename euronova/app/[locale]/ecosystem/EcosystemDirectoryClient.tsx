@@ -37,11 +37,17 @@ export function EcosystemDirectoryClient() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<"all" | EcosystemCategory>("all");
   const [selectedCountry, setSelectedCountry] = useState<string>("all");
+  const [page, setPage] = useState(1);
 
   // Custom accessible dropdown state
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const [countrySearchQuery, setCountrySearchQuery] = useState("");
   const countryDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Reset page to 1 whenever filters change
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, selectedCategory, selectedCountry]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -105,7 +111,7 @@ export function EcosystemDirectoryClient() {
     );
   }, [countryOptions, countrySearchQuery]);
 
-  // Main resource list filtering
+  // Main resource list filtering with normalized tags
   const filteredResources = useMemo(() => {
     return ECOSYSTEM_RESOURCES.filter((res) => {
       // Category filter
@@ -116,13 +122,13 @@ export function EcosystemDirectoryClient() {
       if (selectedCountry !== "all" && res.countryCode !== selectedCountry) {
         return false;
       }
-      // Search query filter
+      // Search query filter (checks title, description, country name, and normalized tags)
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const matchesTitle = res.title.toLowerCase().includes(q);
         const matchesDesc = res.description.toLowerCase().includes(q);
         const matchesCountry = res.countryName.toLowerCase().includes(q);
-        const matchesTags = res.tags.some((tag) => tag.toLowerCase().includes(q));
+        const matchesTags = res.tags.some((tag) => tag.toLowerCase().trim().includes(q));
         if (!matchesTitle && !matchesDesc && !matchesCountry && !matchesTags) {
           return false;
         }
@@ -131,12 +137,16 @@ export function EcosystemDirectoryClient() {
     });
   }, [searchQuery, selectedCategory, selectedCountry]);
 
+  // Paginated slice (50 items per page)
+  const paginatedResources = filteredResources.slice(0, page * 50);
+
   const handleResetFilters = () => {
     setSearchQuery("");
     setSelectedCategory("all");
     setSelectedCountry("all");
     setIsCountryDropdownOpen(false);
     setCountrySearchQuery("");
+    setPage(1);
   };
 
   const getCategoryTheme = (category: EcosystemCategory) => {
@@ -366,107 +376,131 @@ export function EcosystemDirectoryClient() {
 
       {/* Grid of External Resource Cards (relative z-10 ensures dropdown z-30 is on top) */}
       {filteredResources.length > 0 ? (
-        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredResources.map((res: EcosystemResource) => {
-            const theme = getCategoryTheme(res.category);
-            const CategoryIcon = theme.icon;
+        <div className="space-y-8">
+          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {paginatedResources.map((res: EcosystemResource) => {
+              const theme = getCategoryTheme(res.category);
+              const CategoryIcon = theme.icon;
 
-            return (
-              <div
-                key={res.id}
-                className="bg-void-surface/90 border border-void-border rounded-2xl p-6 flex flex-col h-full hover:border-plasma-cyan/50 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(0,0,0,0.6)] group"
-              >
-                {/* Top Badge Row */}
-                <div className="flex items-center justify-between gap-2 mb-4">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {/* Category Badge */}
-                    <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${theme.badge}`}
-                    >
-                      <CategoryIcon className="w-3 h-3 shrink-0" />
-                      <span>{theme.label}</span>
-                    </span>
+              return (
+                <div
+                  key={res.id}
+                  className="bg-void-surface/90 border border-void-border rounded-2xl p-6 flex flex-col h-full hover:border-plasma-cyan/50 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(0,0,0,0.6)] group"
+                >
+                  {/* Top Badge Row */}
+                  <div className="flex items-center justify-between gap-2 mb-4">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {/* Category Badge */}
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${theme.badge}`}
+                      >
+                        <CategoryIcon className="w-3 h-3 shrink-0" />
+                        <span>{theme.label}</span>
+                      </span>
 
-                    {/* Country Badge with Flag Image */}
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-void-deep border border-void-border text-gray-300">
-                      <Image
-                        src={getFlagUrl(res.countryCode)}
-                        alt={res.countryName}
-                        width={20}
-                        height={15}
-                        unoptimized
-                        className="rounded-sm object-cover shrink-0"
-                      />
-                      <span>{res.countryName}</span>
-                    </span>
+                      {/* Country Badge with Flag Image */}
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-void-deep border border-void-border text-gray-300">
+                        <Image
+                          src={getFlagUrl(res.countryCode)}
+                          alt={res.countryName}
+                          width={20}
+                          height={15}
+                          unoptimized
+                          className="rounded-sm object-cover shrink-0"
+                        />
+                        <span>{res.countryName}</span>
+                      </span>
+                    </div>
+
+                    {/* Badge mapped through i18n */}
+                    {(res.badgeKey || res.badge) && (
+                      <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider hidden sm:inline-block">
+                        {res.badgeKey ? t(res.badgeKey) : res.badge}
+                      </span>
+                    )}
                   </div>
 
-                  {res.badge && (
-                    <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider hidden sm:inline-block">
-                      {res.badge}
-                    </span>
-                  )}
-                </div>
+                  {/* Title */}
+                  <h3 className="text-lg font-bold text-white mb-2 group-hover:text-plasma-cyan transition-colors line-clamp-2">
+                    {res.title}
+                  </h3>
 
-                {/* Title */}
-                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-plasma-cyan transition-colors line-clamp-2">
-                  {res.title}
-                </h3>
+                  {/* Description */}
+                  <p className="text-xs sm:text-sm text-gray-300 font-light leading-relaxed mb-4 flex-1">
+                    {res.description}
+                  </p>
 
-                {/* Description */}
-                <p className="text-xs sm:text-sm text-gray-300 font-light leading-relaxed mb-4 flex-1">
-                  {res.description}
-                </p>
+                  {/* Normalized Tags */}
+                  <div className="flex flex-wrap gap-1.5 mb-6">
+                    {res.tags.map((tag, idx) => {
+                      const normalizedTag = tag.toLowerCase().trim();
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setSearchQuery(normalizedTag)}
+                          className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-void-deep/80 hover:bg-void-surface border border-void-border hover:border-plasma-cyan/40 text-gray-400 hover:text-plasma-cyan transition-colors cursor-pointer"
+                        >
+                          #{normalizedTag}
+                        </button>
+                      );
+                    })}
+                  </div>
 
-                {/* Tags */}
-                <div className="flex flex-wrap gap-1.5 mb-6">
-                  {res.tags.map((tag, idx) => (
-                    <span
-                      key={idx}
-                      className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-void-deep/80 border border-void-border text-gray-400"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Card Action: Verified Direct Link or Google Search Fallback for Expired Community Links */}
-                <div className="mt-auto pt-4 border-t border-void-border/60">
-                  {res.url === "#" ? (
-                    <CosmicTooltip
-                      content={t("expiredLinkTooltip")}
-                      side="top"
-                    >
-                      <a
-                        href={`https://www.google.com/search?q=${encodeURIComponent(res.title + " Erasmus group")}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 hover:border-amber-400 text-amber-300 font-bold text-xs sm:text-sm transition-all group/btn shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:scale-[1.01]"
+                  {/* Card Action: Verified Direct Link or Google Search Fallback for Expired Community Links */}
+                  <div className="mt-auto pt-4 border-t border-void-border/60">
+                    {res.url === "#" ? (
+                      <CosmicTooltip
+                        content={t("expiredLinkTooltip")}
+                        side="top"
                       >
-                        <Search className="w-4 h-4 transition-transform group-hover/btn:scale-110 shrink-0 text-amber-400" />
-                        <span>{t("searchGoogle")}</span>
-                      </a>
-                    </CosmicTooltip>
-                  ) : (
-                    <CosmicTooltip
-                      content={`${t("openResource")} (${res.title})`}
-                      side="top"
-                    >
-                      <a
-                        href={res.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-plasma-cyan/10 hover:bg-plasma-cyan/20 border border-plasma-cyan/30 hover:border-plasma-cyan text-plasma-cyan font-bold text-xs sm:text-sm transition-all group/btn shadow-[0_0_15px_rgba(0,229,255,0.1)]"
+                        <a
+                          href={`https://www.google.com/search?q=${encodeURIComponent(res.title + " " + t("searchGoogleSuffix"))}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 hover:border-amber-400 text-amber-300 font-bold text-xs sm:text-sm transition-all group/btn shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:scale-[1.01]"
+                        >
+                          <Search className="w-4 h-4 transition-transform group-hover/btn:scale-110 shrink-0 text-amber-400" />
+                          <span>{t("searchGoogle")}</span>
+                        </a>
+                      </CosmicTooltip>
+                    ) : (
+                      <CosmicTooltip
+                        content={`${t("openResource")}: ${res.title}`}
+                        side="top"
                       >
-                        <span>{t("openResource")}</span>
-                        <ExternalLink className="w-4 h-4 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 shrink-0" />
-                      </a>
-                    </CosmicTooltip>
-                  )}
+                        <a
+                          href={res.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-plasma-cyan/10 hover:bg-plasma-cyan/20 border border-plasma-cyan/30 hover:border-plasma-cyan text-plasma-cyan font-bold text-xs sm:text-sm transition-all group/btn shadow-[0_0_15px_rgba(0,229,255,0.1)]"
+                        >
+                          <span>{t("openResource")}</span>
+                          <ExternalLink className="w-4 h-4 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 shrink-0" />
+                        </a>
+                      </CosmicTooltip>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+
+          {/* Load More Pagination Button */}
+          {filteredResources.length > page * 50 && (
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-6 pb-2">
+              <button
+                type="button"
+                onClick={() => setPage((prev) => prev + 1)}
+                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-void-surface hover:bg-void-surface/80 border border-plasma-cyan/40 hover:border-plasma-cyan text-plasma-cyan font-bold text-sm transition-all duration-300 hover:shadow-[0_0_25px_rgba(0,229,255,0.25)] hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-3 shadow-lg group"
+              >
+                <span>{t("loadMore")}</span>
+                <span className="text-xs font-mono text-gray-400 bg-void-deep px-2.5 py-1 rounded-lg border border-void-border group-hover:border-plasma-cyan/30">
+                  {paginatedResources.length} / {filteredResources.length}
+                </span>
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         /* Empty State */
