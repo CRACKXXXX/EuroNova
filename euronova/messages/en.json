@@ -186,7 +186,11 @@
     "missionRadar": "Mission Radar",
     "missionRadarDesc": "Explore a fully interactive 3D map of all active European opportunities.",
     "communityHub": "Community Hub & FAQ",
-    "communityHubDesc": "Connect with fellow European volunteers, share experiences, and access Erasmus+ guides."
+    "communityHubDesc": "Connect with fellow European volunteers, share experiences, and access Erasmus+ guides.",
+    "ecosystemHub": "External Ecosystem & Resources",
+    "ecosystemHubDesc": "Discover 240+ verified national agencies, tools, platforms, and official networks across all European programme countries.",
+    "ecosystemBadge": "Pan-European Network",
+    "exploreHub": "Explore Ecosystem"
   },
   "Login": {
     "welcome": "Access your command center",
@@ -2314,6 +2318,11 @@
     "resetFilters": "Reset Filters",
     "linkPending": "Link Pending / Coming Soon",
     "searchGoogle": "Search on Google (Links expire)",
-    "clearSearch": "Clear search"
+    "clearSearch": "Clear search",
+    "locationLabel": "Location:",
+    "filterByCountryTooltip": "Filter by European country / Region",
+    "searchCountryPlaceholder": "Search country...",
+    "noCountryFound": "No country found",
+    "expiredLinkTooltip": "Expired community link — Search current active invitations on Google"
   }
 }

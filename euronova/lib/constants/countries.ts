@@ -44,9 +44,18 @@ const CUSTOM_COUNTRY_NAMES: Record<string, string> = {
   MK: 'North Macedonia',
 };
 
+export const getFlagUrl = (c: string): string => {
+  if (!c || typeof c !== 'string') return 'https://flagcdn.com/w20/eu.png';
+  const upper = c.trim().toUpperCase();
+  if (upper === 'UK' || upper === 'GB') return 'https://flagcdn.com/w20/gb.png';
+  if (upper === 'EU') return 'https://flagcdn.com/w20/eu.png';
+  if (upper === 'XK') return 'https://flagcdn.com/w20/xk.png';
+  return `https://flagcdn.com/w20/${upper.toLowerCase()}.png`;
+};
+
 export const COUNTRIES = EUROPEAN_COUNTRY_CODES.map(code => ({
   code,
   name: CUSTOM_COUNTRY_NAMES[code] || regionNames.of(code) || code,
   flag: getFlag(code),
-  flagUrl: code === 'UK' ? 'https://flagcdn.com/w20/gb.png' : `https://flagcdn.com/w20/${code.toLowerCase()}.png`
+  flagUrl: getFlagUrl(code),
 }));

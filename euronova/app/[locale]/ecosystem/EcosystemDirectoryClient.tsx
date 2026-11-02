@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
+import Image from "next/image";
 import {
   Search,
   ExternalLink,
@@ -15,7 +16,7 @@ import {
   Check,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { COUNTRIES, getFlag } from "@/lib/constants/countries";
+import { COUNTRIES, getFlagUrl } from "@/lib/constants/countries";
 import {
   ECOSYSTEM_RESOURCES,
   type EcosystemCategory,
@@ -79,12 +80,12 @@ export function EcosystemDirectoryClient() {
     );
 
     return [
-      { code: "all", label: t("countryAll"), flag: "🌐", count: ECOSYSTEM_RESOURCES.length },
-      { code: "EU", label: t("countryEurope"), flag: "🇪🇺", count: countsByCode["EU"] || 0 },
+      { code: "all", label: t("countryAll"), flagUrl: "", count: ECOSYSTEM_RESOURCES.length },
+      { code: "EU", label: t("countryEurope"), flagUrl: "https://flagcdn.com/w20/eu.png", count: countsByCode["EU"] || 0 },
       ...list.map((c) => ({
         code: c.code,
         label: c.name,
-        flag: c.flag || getFlag(c.code) || "🏳️",
+        flagUrl: c.flagUrl || getFlagUrl(c.code),
         count: countsByCode[c.code] || 0,
       })),
     ];
@@ -169,8 +170,8 @@ export function EcosystemDirectoryClient() {
 
   return (
     <div className="space-y-8">
-      {/* Search & Filter Control Deck */}
-      <div className="bg-void-surface/90 border border-void-border rounded-2xl p-6 backdrop-blur-xl shadow-2xl space-y-6">
+      {/* Search & Filter Control Deck (relative z-30 solves stacking context over resource cards) */}
+      <div className="relative z-30 bg-void-surface/90 border border-void-border rounded-2xl p-6 backdrop-blur-xl shadow-2xl space-y-6">
         {/* Top: Live Search Input */}
         <div className="relative">
           <Search className="w-5 h-5 text-gray-500 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -222,38 +223,49 @@ export function EcosystemDirectoryClient() {
             })}
           </div>
 
-          {/* Custom Accessible Country Dropdown with Overhauled Cosmic UI */}
+          {/* Custom Accessible Country Dropdown with FlagCDN Image Support */}
           <div ref={countryDropdownRef} className="relative flex items-center gap-2 shrink-0 w-full sm:w-auto">
             <span className="text-xs font-semibold text-gray-400 flex items-center gap-1.5 shrink-0 hidden sm:inline-flex">
               <MapPin className="w-3.5 h-3.5 text-plasma-cyan" />
-              <span>Location:</span>
+              <span>{t("locationLabel")}</span>
             </span>
 
             <div className="relative w-full sm:w-auto">
-              <button
-                type="button"
-                aria-haspopup="listbox"
-                aria-expanded={isCountryDropdownOpen}
-                onClick={() => setIsCountryDropdownOpen((prev) => !prev)}
-                className="w-full sm:w-auto flex items-center justify-between gap-3 px-3.5 py-2.5 min-h-[42px] rounded-xl bg-void-deep border border-void-border hover:border-plasma-cyan/60 focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none text-xs sm:text-sm font-semibold text-white transition-all cursor-pointer shadow-inner min-w-[210px] sm:min-w-[250px]"
-              >
-                <div className="flex items-center gap-2.5 truncate">
-                  <span className="text-base shrink-0 leading-none" role="img" aria-label={currentCountryOption.label}>
-                    {currentCountryOption.flag}
-                  </span>
-                  <span className="truncate">{currentCountryOption.label}</span>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-[10px] font-mono text-gray-400 px-1.5 py-0.5 rounded bg-void-surface border border-void-border">
-                    {currentCountryOption.count}
-                  </span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 ${
-                      isCountryDropdownOpen ? "rotate-180 text-plasma-cyan" : ""
-                    }`}
-                  />
-                </div>
-              </button>
+              <CosmicTooltip content={t("filterByCountryTooltip")} side="top">
+                <button
+                  type="button"
+                  aria-haspopup="listbox"
+                  aria-expanded={isCountryDropdownOpen}
+                  onClick={() => setIsCountryDropdownOpen((prev) => !prev)}
+                  className="w-full sm:w-auto flex items-center justify-between gap-3 px-3.5 py-2.5 min-h-[42px] rounded-xl bg-void-deep border border-void-border hover:border-plasma-cyan/60 focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none text-xs sm:text-sm font-semibold text-white transition-all cursor-pointer shadow-inner min-w-[210px] sm:min-w-[250px]"
+                >
+                  <div className="flex items-center gap-2.5 truncate">
+                    {currentCountryOption.code === "all" ? (
+                      <Globe className="w-4 h-4 text-plasma-cyan shrink-0" />
+                    ) : (
+                      <Image
+                        src={currentCountryOption.flagUrl || getFlagUrl(currentCountryOption.code)}
+                        alt={currentCountryOption.label}
+                        width={20}
+                        height={15}
+                        unoptimized
+                        className="rounded-sm object-cover shrink-0"
+                      />
+                    )}
+                    <span className="truncate">{currentCountryOption.label}</span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[10px] font-mono text-gray-400 px-1.5 py-0.5 rounded bg-void-surface border border-void-border">
+                      {currentCountryOption.count}
+                    </span>
+                    <ChevronDown
+                      className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 ${
+                        isCountryDropdownOpen ? "rotate-180 text-plasma-cyan" : ""
+                      }`}
+                    />
+                  </div>
+                </button>
+              </CosmicTooltip>
 
               {/* Dropdown Menu Overhaul: Solid Background (bg-void-deep), z-50, max-h-64 overflow-y-auto */}
               {isCountryDropdownOpen && (
@@ -268,7 +280,7 @@ export function EcosystemDirectoryClient() {
                       type="text"
                       value={countrySearchQuery}
                       onChange={(e) => setCountrySearchQuery(e.target.value)}
-                      placeholder="Search country..."
+                      placeholder={t("searchCountryPlaceholder")}
                       className="w-full pl-8 pr-3 py-2 bg-void-surface rounded-xl border border-void-border text-xs text-white placeholder-gray-500 outline-none focus:border-plasma-cyan transition-colors"
                       onClick={(e) => e.stopPropagation()}
                     />
@@ -296,9 +308,18 @@ export function EcosystemDirectoryClient() {
                           }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <span className="text-base shrink-0 leading-none" role="img" aria-label={c.label}>
-                              {c.flag}
-                            </span>
+                            {c.code === "all" ? (
+                              <Globe className="w-4 h-4 text-plasma-cyan shrink-0" />
+                            ) : (
+                              <Image
+                                src={c.flagUrl || getFlagUrl(c.code)}
+                                alt={c.label}
+                                width={20}
+                                height={15}
+                                unoptimized
+                                className="rounded-sm object-cover shrink-0"
+                              />
+                            )}
                             <span className="truncate font-medium">{c.label}</span>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
@@ -312,7 +333,7 @@ export function EcosystemDirectoryClient() {
                     })}
                     {filteredCountryOptions.length === 0 && (
                       <div className="text-center py-6 text-xs text-gray-500 font-mono">
-                        No country found
+                        {t("noCountryFound")}
                       </div>
                     )}
                   </div>
@@ -343,13 +364,12 @@ export function EcosystemDirectoryClient() {
         </div>
       </div>
 
-      {/* Grid of External Resource Cards */}
+      {/* Grid of External Resource Cards (relative z-10 ensures dropdown z-30 is on top) */}
       {filteredResources.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredResources.map((res: EcosystemResource) => {
             const theme = getCategoryTheme(res.category);
             const CategoryIcon = theme.icon;
-            const flagEmoji = res.countryCode === "EU" ? "🇪🇺" : getFlag(res.countryCode) || "🌐";
 
             return (
               <div
@@ -367,11 +387,16 @@ export function EcosystemDirectoryClient() {
                       <span>{theme.label}</span>
                     </span>
 
-                    {/* Country Badge with Flag Emoji */}
+                    {/* Country Badge with Flag Image */}
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-void-deep border border-void-border text-gray-300">
-                      <span className="text-sm shrink-0 leading-none" role="img" aria-label={res.countryName}>
-                        {flagEmoji}
-                      </span>
+                      <Image
+                        src={getFlagUrl(res.countryCode)}
+                        alt={res.countryName}
+                        width={20}
+                        height={15}
+                        unoptimized
+                        className="rounded-sm object-cover shrink-0"
+                      />
                       <span>{res.countryName}</span>
                     </span>
                   </div>
@@ -409,7 +434,7 @@ export function EcosystemDirectoryClient() {
                 <div className="mt-auto pt-4 border-t border-void-border/60">
                   {res.url === "#" ? (
                     <CosmicTooltip
-                      content="Expired community link — Search current active invitations on Google"
+                      content={t("expiredLinkTooltip")}
                       side="top"
                     >
                       <a

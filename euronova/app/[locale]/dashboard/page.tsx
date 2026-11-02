@@ -1,5 +1,5 @@
 import { Link } from "@/i18n/routing";
-import { Search, Building, User, Briefcase, Globe, Users } from "lucide-react";
+import { Search, Building, User, Briefcase, Globe, Users, Compass, ArrowRight } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
@@ -28,78 +28,123 @@ export default async function DashboardHome({
         </p>
       </div>
 
+      {/* Symmetrical 3-1-3 Responsive Grid (Desktop: 3-1-3, Tablet: 2-2-2-2, Mobile: 1-col) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        {/* Row 1 / Item 1: Search Projects */}
         <Link
           href="/dashboard/projects"
-          className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-plasma-cyan transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,229,255,0.15)] flex flex-col items-center text-center overflow-hidden"
+          className="order-1 md:order-1 lg:order-1 col-span-1 group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-plasma-cyan transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,229,255,0.15)] flex flex-col items-center text-center overflow-hidden"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-plasma-cyan/5 rounded-full blur-[40px] pointer-events-none group-hover:bg-plasma-cyan/10 transition-colors" />
           <div className="w-16 h-16 bg-plasma-cyan/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
             <Search className="w-8 h-8 text-plasma-cyan" />
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">{t("searchProjects")}</h2>
-          <p className="text-gray-400 text-sm">{t("searchProjectsDesc")}</p>
+          <p className="text-gray-400 text-sm leading-relaxed">{t("searchProjectsDesc")}</p>
         </Link>
 
+        {/* Row 1 / Item 2: Mission Radar */}
         <Link
           href="/map"
-          className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-plasma-cyan transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,229,255,0.15)] flex flex-col items-center text-center overflow-hidden"
+          className="order-2 md:order-2 lg:order-2 col-span-1 group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-plasma-cyan transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,229,255,0.15)] flex flex-col items-center text-center overflow-hidden"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-plasma-cyan/5 rounded-full blur-[40px] pointer-events-none group-hover:bg-plasma-cyan/10 transition-colors" />
           <div className="w-16 h-16 bg-plasma-cyan/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
             <Globe className="w-8 h-8 text-plasma-cyan" />
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">{t("missionRadar")}</h2>
-          <p className="text-gray-400 text-sm">{t("missionRadarDesc")}</p>
+          <p className="text-gray-400 text-sm leading-relaxed">{t("missionRadarDesc")}</p>
         </Link>
 
+        {/* Row 1 / Item 3: Search Organizations */}
         <Link
           href="/dashboard/organizations"
-          className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-hyper-violet transition-all duration-300 hover:shadow-[0_0_30px_rgba(99,102,241,0.15)] flex flex-col items-center text-center overflow-hidden"
+          className="order-3 md:order-4 lg:order-3 col-span-1 group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-hyper-violet transition-all duration-300 hover:shadow-[0_0_30px_rgba(99,102,241,0.15)] flex flex-col items-center text-center overflow-hidden"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-hyper-violet/5 rounded-full blur-[40px] pointer-events-none group-hover:bg-hyper-violet/10 transition-colors" />
           <div className="w-16 h-16 bg-hyper-violet/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
             <Building className="w-8 h-8 text-hyper-violet" />
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">{t("searchOrgs")}</h2>
-          <p className="text-gray-400 text-sm">{t("searchOrgsDesc")}</p>
+          <p className="text-gray-400 text-sm leading-relaxed">{t("searchOrgsDesc")}</p>
         </Link>
 
+        {/* Centerpiece Panoramic Row 2: External Erasmus+ Ecosystem Hub */}
+        <Link
+          href="/ecosystem"
+          className="order-4 md:order-3 lg:order-4 col-span-1 md:col-span-2 lg:col-span-3 group relative bg-gradient-to-r from-void-surface/95 via-void-surface/85 to-void-deep/95 border border-plasma-cyan/40 hover:border-plasma-cyan rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 transition-all duration-500 hover:shadow-[0_0_50px_rgba(0,229,255,0.2)] flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden"
+        >
+          {/* Ambient Glows */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-plasma-cyan/10 rounded-full blur-[90px] pointer-events-none group-hover:bg-plasma-cyan/20 transition-all duration-700" />
+          <div className="absolute bottom-0 left-1/4 w-72 h-72 bg-hyper-violet/10 rounded-full blur-[90px] pointer-events-none group-hover:bg-hyper-violet/20 transition-all duration-700" />
+
+          {/* Left / Center content: Icon, Title & Description */}
+          <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-5 text-center sm:text-left">
+            <div className="w-16 h-16 rounded-2xl bg-plasma-cyan/15 border border-plasma-cyan/40 flex items-center justify-center text-plasma-cyan shadow-[0_0_20px_rgba(0,229,255,0.25)] group-hover:scale-110 transition-transform duration-300 shrink-0">
+              <Compass className="w-8 h-8 text-plasma-cyan" />
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white group-hover:text-plasma-cyan transition-colors">
+                  {t("ecosystemHub")}
+                </h2>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-plasma-cyan/15 text-plasma-cyan border border-plasma-cyan/40">
+                  {t("ecosystemBadge")}
+                </span>
+              </div>
+              <p className="text-gray-400 text-sm sm:text-base font-light max-w-2xl leading-relaxed">
+                {t("ecosystemHubDesc")}
+              </p>
+            </div>
+          </div>
+
+          {/* Right action visual pill */}
+          <div className="relative z-10 hidden lg:flex items-center gap-2 px-5 py-3 rounded-2xl bg-plasma-cyan/10 border border-plasma-cyan/30 text-plasma-cyan text-sm font-bold tracking-wide uppercase group-hover:bg-plasma-cyan/20 group-hover:border-plasma-cyan transition-all duration-300 shrink-0">
+            <span>{t("exploreHub")}</span>
+            <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+          </div>
+        </Link>
+
+        {/* Row 3 / Item 1: My Missions */}
         <Link
           href="/dashboard/my-missions"
-          className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-plasma-cyan transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,229,255,0.15)] flex flex-col items-center text-center overflow-hidden"
+          className="order-5 md:order-5 lg:order-5 col-span-1 group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-plasma-cyan transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,229,255,0.15)] flex flex-col items-center text-center overflow-hidden"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-plasma-cyan/5 rounded-full blur-[40px] pointer-events-none group-hover:bg-plasma-cyan/10 transition-colors" />
           <div className="w-16 h-16 bg-plasma-cyan/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
             <Briefcase className="w-8 h-8 text-plasma-cyan" />
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">{t("myMissions")}</h2>
-          <p className="text-gray-400 text-sm">{t("myMissionsDesc")}</p>
+          <p className="text-gray-400 text-sm leading-relaxed">{t("myMissionsDesc")}</p>
         </Link>
 
-        <Link
-          href="/dashboard/profile"
-          className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-nova-flare transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,46,99,0.15)] flex flex-col items-center text-center overflow-hidden"
-        >
-          <div className="absolute top-0 right-0 w-32 h-32 bg-nova-flare/5 rounded-full blur-[40px] pointer-events-none group-hover:bg-nova-flare/10 transition-colors" />
-          <div className="w-16 h-16 bg-nova-flare/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-            <User className="w-8 h-8 text-nova-flare" />
-          </div>
-          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">{t("myProfile")}</h2>
-          <p className="text-gray-400 text-sm">{t("myProfileDesc")}</p>
-        </Link>
-
+        {/* Row 3 / Item 2: Community Hub */}
         <Link
           href="/community"
-          className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-rup-emerald transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,230,118,0.15)] flex flex-col items-center text-center overflow-hidden"
+          className="order-6 md:order-6 lg:order-6 col-span-1 group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-rup-emerald transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,230,118,0.15)] flex flex-col items-center text-center overflow-hidden"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-rup-emerald/5 rounded-full blur-[40px] pointer-events-none group-hover:bg-rup-emerald/10 transition-colors" />
           <div className="w-16 h-16 bg-rup-emerald/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
             <Users className="w-8 h-8 text-rup-emerald" />
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">{t("communityHub")}</h2>
-          <p className="text-gray-400 text-sm">{t("communityHubDesc")}</p>
+          <p className="text-gray-400 text-sm leading-relaxed">{t("communityHubDesc")}</p>
         </Link>
+
+        {/* Row 3 / Item 3: My Profile */}
+        <Link
+          href="/dashboard/profile"
+          className="order-7 md:order-7 lg:order-7 col-span-1 group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-nova-flare transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,46,99,0.15)] flex flex-col items-center text-center overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-nova-flare/5 rounded-full blur-[40px] pointer-events-none group-hover:bg-nova-flare/10 transition-colors" />
+          <div className="w-16 h-16 bg-nova-flare/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+            <User className="w-8 h-8 text-nova-flare" />
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">{t("myProfile")}</h2>
+          <p className="text-gray-400 text-sm leading-relaxed">{t("myProfileDesc")}</p>
+        </Link>
+
       </div>
     </div>
   );

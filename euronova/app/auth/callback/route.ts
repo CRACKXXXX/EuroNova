@@ -60,9 +60,9 @@ export async function GET(request: Request) {
               try {
                 cookieStore.set(name, value, {
                   ...options,
-                  maxAge: options?.maxAge ?? 60 * 60 * 24 * 30,
-                  path: options?.path ?? '/',
-                  sameSite: options?.sameSite ?? 'lax',
+                  maxAge: 2592000,
+                  path: '/',
+                  sameSite: 'lax',
                 });
               } catch {
                 // Silently catch if in non-writable context
@@ -77,8 +77,8 @@ export async function GET(request: Request) {
                 value,
                 options: {
                   ...options,
-                  maxAge: options?.maxAge ?? 60 * 60 * 24 * 30,
-                  path: options?.path ?? '/',
+                  maxAge: 2592000,
+                  path: '/',
                   sameSite: sameSiteVal,
                   secure: process.env.NODE_ENV === 'production',
                 },
@@ -171,26 +171,24 @@ export async function GET(request: Request) {
         },
       });
 
-      // Flush all tracked session cookies
-      trackedCookies.forEach(({ name, value, options }) => {
+      // Explicitly inject all tracked session cookies and all cookies from cookieStore.getAll()
+      // into this HTML response using response.cookies.set() with path: '/', sameSite: 'lax', and maxAge: 2592000
+      trackedCookies.forEach(({ name, value }) => {
         response.cookies.set(name, value, {
-          ...options,
-          path: options?.path ?? '/',
-          sameSite: options?.sameSite ?? 'lax',
+          path: '/',
+          sameSite: 'lax',
           secure: process.env.NODE_ENV === 'production',
+          maxAge: 2592000,
         });
       });
 
-      // Also ensure any existing request cookies are passed through
       cookieStore.getAll().forEach((cookie) => {
-        if (!response.cookies.get(cookie.name)) {
-          response.cookies.set(cookie.name, cookie.value, {
-            path: '/',
-            sameSite: 'lax',
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 60 * 60 * 24 * 30,
-          });
-        }
+        response.cookies.set(cookie.name, cookie.value, {
+          path: '/',
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production',
+          maxAge: 2592000,
+        });
       });
 
       return response;
@@ -208,6 +206,7 @@ export async function GET(request: Request) {
       path: '/',
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
+      maxAge: 2592000,
     });
   });
   return errorResponse;

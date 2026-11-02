@@ -562,19 +562,12 @@ export default async function Home({ params, searchParams }: PageProps) {
                   </div>
                 </div>
 
-                {/* Right Column: CTA & Visual Highlights */}
-                <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end justify-between gap-4 shrink-0 lg:border-l lg:border-void-border/60 lg:pl-8">
+                {/* Right Column: Visual Highlights */}
+                <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end justify-center gap-2 shrink-0 lg:border-l lg:border-void-border/60 lg:pl-8">
                   <div className="text-left sm:text-right hidden sm:block">
                     <span className="text-xs text-gray-400 block font-medium">Pan-European Network</span>
                     <span className="text-sm font-bold text-plasma-cyan font-mono">100% Free & Open Access</span>
                   </div>
-                  <Link
-                    href="/ecosystem"
-                    className="inline-flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl bg-plasma-cyan/20 hover:bg-plasma-cyan/30 border border-plasma-cyan/50 hover:border-plasma-cyan text-plasma-cyan hover:text-white text-sm font-extrabold transition-all duration-300 shadow-[0_0_25px_rgba(0,229,255,0.25)] hover:scale-105 active:scale-95 group/btn"
-                  >
-                    <Globe2 className="w-4 h-4 transition-transform duration-300 group-hover/btn:rotate-45" />
-                    <span>{tCommon("ecosystem")}</span>
-                  </Link>
                 </div>
               </div>
             </div>
