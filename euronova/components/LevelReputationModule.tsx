@@ -113,10 +113,10 @@ export function LevelReputationModule({
               data-testid="trust-score-header-badge"
               data-trust-score={safeTrustScore}
               data-trust-tier={trustTier.tier}
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-sm shrink-0 transition-colors duration-300 text-[11px] sm:text-xs font-black tracking-wide ${trustTier.badgeClass}`}
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-sm max-w-full break-words hyphens-auto min-w-0 transition-colors duration-300 text-[11px] sm:text-xs font-black tracking-wide ${trustTier.badgeClass}`}
             >
               <TrustIcon className="w-4 h-4 shrink-0" />
-              <span>
+              <span className="truncate">
                 {trustTier.label} ({safeTrustScore}/100)
               </span>
             </div>
@@ -204,12 +204,12 @@ export function LevelReputationModule({
             </div>
 
             {/* Fila de Estado del Multiplicador de XP con Margen y Relleno Limpio */}
-            <div className="pt-3 mt-1 border-t border-void-border/70 flex items-center justify-between text-xs">
-              <span className="text-gray-400 font-medium flex items-center gap-1.5 shrink-0">
+            <div className="pt-3 mt-1 border-t border-void-border/70 flex flex-wrap items-center justify-between gap-1 min-w-0 break-words hyphens-auto text-xs">
+              <span className="text-gray-400 font-medium flex items-center gap-1.5 min-w-0">
                 <Zap className="w-3.5 h-3.5 text-plasma-cyan shrink-0" />
-                <span>{t("xpMultiplier")}:</span>
+                <span className="truncate">{t("xpMultiplier")}:</span>
               </span>
-              <span className={`font-black ml-2 text-right ${multDetails.colorClass}`}>
+              <span className={`font-black ml-auto text-right min-w-0 break-words ${multDetails.colorClass}`}>
                 {t(multDetails.translationKey)}
               </span>
             </div>

@@ -25,6 +25,7 @@ import {
   getOrgSurveysAction
 } from "@/actions/surveys";
 import { OrganizationNavTabs } from "@/components/OrganizationNavTabs";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SurveyBuilderClient } from "./SurveyBuilderClient";
 import {
   AlertDialog,
@@ -38,16 +39,19 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useTranslations, useLocale } from "next-intl";
 
 interface NgoSurveysManagerProps {
   orgId: string;
+  orgName?: string;
   initialSurveys: SurveysPaginationResult;
 }
 
-export function NgoSurveysManager({ orgId, initialSurveys }: NgoSurveysManagerProps) {
+export function NgoSurveysManager({ orgId, orgName = "Organization", initialSurveys }: NgoSurveysManagerProps) {
   const format = useFormatter();
   const t = useTranslations("Surveys");
+  const tOrg = useTranslations("Organizations");
+  const locale = useLocale();
   const [activeSubTab, setActiveSubTab] = useState<"community_surveys" | "application_dossier">("community_surveys");
   const [surveysData, setSurveysData] = useState<SurveysPaginationResult>(initialSurveys);
 
@@ -203,7 +207,16 @@ export function NgoSurveysManager({ orgId, initialSurveys }: NgoSurveysManagerPr
   };
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-6xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 py-6">
+      <div className="mb-2">
+        <Breadcrumbs
+          items={[
+            { label: tOrg("directory") || "Organizations", href: `/${locale}/dashboard/organizations` },
+            { label: orgName, href: `/${locale}/dashboard/organizations/${orgId}` },
+            { label: "Surveys" }
+          ]}
+        />
+      </div>
       {/* 1. Header Navigation Tabs */}
       <OrganizationNavTabs orgId={orgId} isOwner={true} />
 

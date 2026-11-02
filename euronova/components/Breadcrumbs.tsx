@@ -231,10 +231,10 @@ export function Breadcrumbs({ items, className = "" }: BreadcrumbsProps) {
             <ChevronRight className="w-3 h-3 text-void-border shrink-0" />
 
             {item.href && !isLast ? (
-              <div className="relative">
+              <div className="relative min-w-0">
                 <Link
                   href={item.href}
-                  className="flex items-center gap-1 px-1.5 py-0.5 rounded text-gray-400 hover:text-plasma-cyan hover:bg-void-surface/60 transition-colors truncate max-w-[150px] sm:max-w-xs group"
+                  className="flex items-center gap-1 px-1.5 py-0.5 rounded text-gray-400 hover:text-plasma-cyan hover:bg-void-surface/60 transition-colors truncate max-w-[120px] sm:max-w-xs group"
                 >
                   <span className="truncate">{item.label}</span>
                   {hasQuickLinks && (
@@ -245,7 +245,7 @@ export function Breadcrumbs({ items, className = "" }: BreadcrumbsProps) {
                 {hasQuickLinks && activeDropdown === dropdownKey && renderDropdown(quickLinks)}
               </div>
             ) : (
-              <span className="text-plasma-cyan font-semibold truncate max-w-[200px] sm:max-w-md px-1">
+              <span className="text-plasma-cyan font-semibold truncate max-w-[140px] sm:max-w-md px-1">
                 {item.label}
               </span>
             )}

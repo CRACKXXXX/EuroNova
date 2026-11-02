@@ -20,6 +20,13 @@ export default async function Page(props: { params: Promise<{ id: string; locale
   // Fetch organization's community surveys with 50-item pagination
   const initialSurveys = await getOrgSurveysAction(id, 1, 50);
 
+  // Fetch organization name for breadcrumb navigation
+  const { data: org } = await supabase
+    .from("users_org")
+    .select("org_name")
+    .eq("id", id)
+    .maybeSingle();
+
   // Render the Dynamic NGO Surveys creator and manager
-  return <NgoSurveysManager orgId={id} initialSurveys={initialSurveys} />; 
+  return <NgoSurveysManager orgId={id} orgName={org?.org_name || "Organization"} initialSurveys={initialSurveys} />; 
 }

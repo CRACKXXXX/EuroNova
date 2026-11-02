@@ -16,6 +16,7 @@ export interface SubmitGlobalReportPayload {
   targetTitle: string;
   reason: string;
   description?: string;
+  attachments?: { name: string; url: string; size?: number; type?: string }[];
 }
 
 export interface SubmitReportPayload {
@@ -98,6 +99,7 @@ export async function submitGlobalReportAction(
       reason: reason,
       description: description ? description : null,
       status: "pending",
+      attachments: payload.attachments || [],
     };
 
     if (targetType === "project") {

@@ -3,7 +3,7 @@
 import { useActionState, useState, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { createTicket } from "./actions";
-import { Mail, Phone, MessageSquare, Send, Sparkles, Globe, MessageCircle, Info } from "lucide-react";
+import { Mail, Phone, MessageSquare, Send, Sparkles, Globe, MessageCircle, Info, Paperclip, Image as ImageIcon, Upload, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -28,6 +28,7 @@ export function SupportForm() {
 
   const [contactMethod, setContactMethod] = useState<"website" | "email" | "whatsapp">("website");
   const [selectedReason, setSelectedReason] = useState(defaultReason);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [subjectValue, setSubjectValue] = useState(
     defaultReason === "apply_support"
       ? "Application for EuroNova Community Support Specialist (Level 10+)"
@@ -37,16 +38,61 @@ export function SupportForm() {
   const [state, action, isPending] = useActionState(createTicket, null);
   const inFlightRef = useRef(false);
 
+  const [prevSuccess, setPrevSuccess] = useState<boolean>(false);
+  if (state?.success && !prevSuccess) {
+    setPrevSuccess(true);
+    setSelectedFiles([]);
+  }
+
   useEffect(() => {
     if (state?.error === "RATE_LIMIT_EXCEEDED") {
       toast.warning(tErrors("rateLimitExceeded"), { id: "rate-limit-toast", icon: "⏳" });
     }
   }, [state?.error, tErrors]);
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"];
+    const maxSizeBytes = 5 * 1024 * 1024;
+    const newFiles: File[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (selectedFiles.length + newFiles.length >= 3) {
+        toast.warning(t("attachmentMaxCount"));
+        break;
+      }
+      if (file.size > maxSizeBytes) {
+        toast.error(`${file.name}: ${t("attachmentTooLarge")}`);
+        continue;
+      }
+      if (!allowedMimeTypes.includes(file.type)) {
+        toast.error(`${file.name}: ${t("attachmentInvalidType")}`);
+        continue;
+      }
+      newFiles.push(file);
+    }
+
+    if (newFiles.length > 0) {
+      setSelectedFiles((prev) => [...prev, ...newFiles].slice(0, 3));
+    }
+    e.target.value = "";
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleAction = async (formData: FormData) => {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
     try {
+      formData.delete("attachments");
+      for (const file of selectedFiles) {
+        formData.append("attachments", file);
+      }
       await action(formData);
     } finally {
       inFlightRef.current = false;
@@ -75,11 +121,10 @@ export function SupportForm() {
           <button
             type="button"
             onClick={() => setContactMethod("website")}
-            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
-              contactMethod === "website"
+            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${contactMethod === "website"
                 ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.2)]"
                 : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-700"
-            }`}
+              }`}
           >
             <Globe className="w-4 h-4" />
             <span>{t("contactMethodWebsite")}</span>
@@ -88,11 +133,10 @@ export function SupportForm() {
           <button
             type="button"
             onClick={() => setContactMethod("email")}
-            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
-              contactMethod === "email"
+            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${contactMethod === "email"
                 ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.2)]"
                 : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-700"
-            }`}
+              }`}
           >
             <Mail className="w-4 h-4" />
             <span>{t("contactMethodEmail")}</span>
@@ -101,11 +145,10 @@ export function SupportForm() {
           <button
             type="button"
             onClick={() => setContactMethod("whatsapp")}
-            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
-              contactMethod === "whatsapp"
+            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${contactMethod === "whatsapp"
                 ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.2)]"
                 : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-700"
-            }`}
+              }`}
           >
             <MessageCircle className="w-4 h-4" />
             <span>{t("contactMethodWhatsapp")}</span>
@@ -146,11 +189,10 @@ export function SupportForm() {
               name="phone"
               required={contactMethod === "whatsapp"}
               maxLength={30}
-              className={`w-full bg-void-deep border rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-1 transition-all ${
-                contactMethod === "whatsapp"
+              className={`w-full bg-void-deep border rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-1 transition-all ${contactMethod === "whatsapp"
                   ? "border-plasma-cyan/60 focus:border-plasma-cyan focus:ring-plasma-cyan"
                   : "border-void-border focus:border-plasma-cyan focus:ring-plasma-cyan"
-              }`}
+                }`}
               placeholder={
                 contactMethod === "whatsapp"
                   ? t("phoneWhatsappPlaceholder")
@@ -218,13 +260,67 @@ export function SupportForm() {
         </div>
       </div>
 
+      {/* Photo Attachments Multi-Uploader (Max 3, 5MB each, JPG/PNG/WEBP) */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+            <Paperclip className="w-4 h-4 text-plasma-cyan" />
+            <span>{t("attachmentsLabel")}</span>
+          </label>
+          <span className="text-xs text-gray-500 font-mono">
+            {selectedFiles.length}/3
+          </span>
+        </div>
+
+        {selectedFiles.length < 3 && (
+          <label className="flex flex-col items-center justify-center p-4 border border-dashed border-void-border hover:border-plasma-cyan/60 rounded-xl bg-void-deep/60 hover:bg-void-deep cursor-pointer transition-all group">
+            <Upload className="w-5 h-5 text-gray-500 group-hover:text-plasma-cyan transition-colors mb-1" />
+            <span className="text-xs text-gray-400 group-hover:text-gray-200">
+              {t("attachmentsHint")}
+            </span>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              disabled={isPending || selectedFiles.length >= 3}
+              onChange={handleFileSelect}
+            />
+          </label>
+        )}
+
+        {selectedFiles.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {selectedFiles.map((file, idx) => (
+              <div
+                key={idx}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-void-surface border border-void-border text-xs text-gray-300"
+              >
+                <ImageIcon className="w-3.5 h-3.5 text-plasma-cyan shrink-0" />
+                <span className="truncate max-w-[150px]">{file.name}</span>
+                <span className="text-[10px] text-gray-500 font-mono">
+                  ({(file.size / (1024 * 1024)).toFixed(1)}MB)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => removeFile(idx)}
+                  className="text-gray-500 hover:text-nova-flare transition-colors p-0.5 cursor-pointer"
+                  aria-label={t("removeAttachment")}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {state?.error && (
         <div className="p-4 rounded-lg bg-nova-flare/20 border border-nova-flare text-nova-flare text-sm font-medium text-center">
           {state.error === "RATE_LIMIT_EXCEEDED"
             ? tErrors("rateLimitExceeded")
             : state.error === "AUTH_REQUIRED"
-            ? tErrors("authRequired")
-            : state.error}
+              ? tErrors("authRequired")
+              : state.error}
         </div>
       )}
 

@@ -78,7 +78,22 @@
     "tagAutoPurgePrivacy": "Eliminação Automática de Registos em 48h (Privacidade)",
     "tagCommunityFunded": "Financiado pela Comunidade • Infraestrutura Independente",
     "logoAlt": "Logótipo EuroNova",
-    "searchGuidesDynamic": "{count, plural, =0 {Pesquisar guias...} one {Pesquisar em # guia...} other {Pesquisar em mais de # guias (ex: UNMASKED, Secret Buddy, Werewolf, Zorro, Ryanair, Cigna)...}}"
+    "searchGuidesDynamic": "{count, plural, =0 {Pesquisar guias...} one {Pesquisar em # guia...} other {Pesquisar em mais de # guias (ex: UNMASKED, Secret Buddy, Werewolf, Zorro, Ryanair, Cigna)...}}",
+    "featRadarTitle": "Radar de Missões & Mapa GPS",
+    "featRadarDesc": "Mapeamento geográfico interativo de oportunidades Erasmus+ financiadas na Europa e Regiões Ultraperiféricas com bandas de distância em tempo real.",
+    "featOrgsDirectoryTitle": "Diretório de Entidades Verificadas",
+    "featOrgsDirectoryDesc": "Validação automatizada do registo OID da Comissão Europeia eliminando intermediários. Ligação direta a ONGs anfitriãs verificadas.",
+    "featEcosystemTitle": "Hub do Ecossistema Externo Erasmus+",
+    "featEcosystemDesc": "Portal aberto e verificado que conecta portais oficiais da UE, agências nacionais da juventude, redes WhatsApp/Telegram ativas e associações veteranas.",
+    "tagRadar": "Radar Interativo",
+    "tagGpsLocation": "Coordenadas GPS",
+    "tagOutermostRegions": "Regiões Ultraperiféricas",
+    "tagOidCheck": "Verificação de Registo OID",
+    "tagNonProfit": "100% Sem fins lucrativos",
+    "tagOfficialPdn": "Rota Direta",
+    "tagExternalTools": "Recursos Abertos",
+    "tagCommunityChannels": "Redes & Grupos de Chat",
+    "tagPanEuropean": "Paneuropeu"
   },
   "PublicHeader": {
     "support": "Suporte",
@@ -104,7 +119,8 @@
     "supportPanel": "Painel de Suporte",
     "supportEuroNova": "Apoiar EuroNova",
     "language": "Idioma",
-    "supportHelpCenter": "Suporte e Ajuda"
+    "supportHelpCenter": "Suporte e Ajuda",
+    "ecosystem": "Ecossistema"
   },
   "Sidebar": {
     "search": "Pesquisa",
@@ -363,7 +379,11 @@
     "tiktokLabel": "TikTok",
     "youtubeLabel": "YouTube",
     "linkedinLabel": "LinkedIn",
-    "levelXpBadge": "Nível {level} · {xp} XP"
+    "levelXpBadge": "Nível {level} · {xp} XP",
+    "entityType": "Tipo de Entidade",
+    "entityTypeNgo": "ONG / Organização Não Governamental",
+    "entityTypeInformalGroup": "Grupo Informal de Jovens",
+    "entityTypePublicBody": "Organismo Público / Instituição"
   },
   "Projects": {
     "backHome": "Voltar ao Início",
@@ -458,7 +478,11 @@
     "publishNewMission": "Publicar Nova Missão",
     "editProfile": "Editar Perfil",
     "shareView": "Partilhar perfil",
-    "copiedLink": "Copiado!"
+    "copiedLink": "Copiado!",
+    "entityType": "Tipo de Entidade",
+    "entityTypeNgo": "ONG",
+    "entityTypeInformalGroup": "Grupo Informal",
+    "entityTypePublicBody": "Organismo Público"
   },
   "NewProject": {
     "backHome": "Voltar ao Início",
@@ -632,7 +656,8 @@
     "supportEuroNova": "Apoiar a EuroNova",
     "copyright": "Projeto EuroNova. Todos os direitos reservados.",
     "fiscalShieldTitle": "Aviso de Apoio Voluntário à Infraestrutura (P2P)",
-    "fiscalShieldDesc": "A EuroNova é uma iniciativa independente e não comercial de acesso aberto. As contribuições financeiras enviadas por Revolut, PayPal ou transferência bancária SEPA constituem donativos pessoais estritamente voluntários (P2P), dedicados em exclusivo ao alojamento em nuvem e à manutenção dos servidores. As contribuições não configuram uma compra comercial, patrocínio nem donativo dedutível nos impostos. Nenhum produto, serviço digital ou benefício comercial é atribuído em troca. Os doadores renunciam expressamente aos direitos de reembolso comercial no âmbito da legislação da UE."
+    "fiscalShieldDesc": "A EuroNova é uma iniciativa independente e não comercial de acesso aberto. As contribuições financeiras enviadas por Revolut, PayPal ou transferência bancária SEPA constituem donativos pessoais estritamente voluntários (P2P), dedicados em exclusivo ao alojamento em nuvem e à manutenção dos servidores. As contribuições não configuram uma compra comercial, patrocínio nem donativo dedutível nos impostos. Nenhum produto, serviço digital ou benefício comercial é atribuído em troca. Os doadores renunciam expressamente aos direitos de reembolso comercial no âmbito da legislação da UE.",
+    "ecosystem": "Ecossistema Erasmus+"
   },
   "DashboardContent": {
     "transmissionsReceived": "Missões Internacionais Disponíveis",
@@ -682,7 +707,13 @@
     "fasterResolutionTip": "For faster resolution, we recommend using the Website.",
     "phoneWhatsappRequired": "Phone Number with Country Code *",
     "phoneWhatsappPlaceholder": "+34 600 000 000 (Required for WhatsApp)",
-    "applySupportPlaceholder": "Describe your European mobility background, countries visited, spoken languages, and why you wish to assist fellow volunteers on EuroNova..."
+    "applySupportPlaceholder": "Describe your European mobility background, countries visited, spoken languages, and why you wish to assist fellow volunteers on EuroNova...",
+    "attachmentsLabel": "Anexar Fotos (Máx. 3, até 5MB cada)",
+    "attachmentsHint": "Formatos permitidos: JPG, PNG, WEBP (Máx. 3 fotos, 5MB cada)",
+    "attachmentTooLarge": "O ficheiro é demasiado grande. Tamanho máximo 5MB.",
+    "attachmentInvalidType": "Tipo de ficheiro inválido. Apenas imagens JPG, PNG e WEBP são suportadas.",
+    "attachmentMaxCount": "Só pode anexar até 3 imagens.",
+    "removeAttachment": "Remover anexo"
   },
   "OrgFilters": {
     "searchPlaceholder": "Pesquisar organizações por nome...",
@@ -1670,7 +1701,8 @@
     "breadcrumb": "Trilho de navegação",
     "goBack": "Voltar à página anterior",
     "avatarAlt": "Avatar",
-    "noOptions": "Nenhuma opção disponível"
+    "noOptions": "Nenhuma opção disponível",
+    "ecosystem": "Ecossistema"
   },
   "Reports": {
     "reportOrgTitle": "Denunciar esta organização aos moderadores",
@@ -2252,5 +2284,25 @@
     "replyFailed": "Could not submit your reply. Please try again.",
     "ticketNotFound": "Ticket not found or you do not have permission to access it.",
     "authRequired": "You must be signed in to perform this action."
+  },
+  "Ecosystem": {
+    "title": "Ecossistema Externo Erasmus+",
+    "subtitle": "Diretório verificado de portais oficiais da Comissão Europeia, agências nacionais, ONGs juvenis e grupos comunitários ativos em toda a Europa.",
+    "badge": "PORTAL DE RECURSOS ABERTOS",
+    "searchPlaceholder": "Pesquisar recursos, ferramentas, portais ou canais...",
+    "categoryAll": "Todas as categorias",
+    "categoryOfficial": "Portais Oficiais",
+    "categoryNgo": "ONGs & Associações",
+    "categoryWhatsapp": "Grupos do WhatsApp",
+    "categoryTelegram": "Canais do Telegram",
+    "countryAll": "Todos os países",
+    "countryEurope": "Paneuropeu",
+    "openResource": "Abrir Recurso Externo",
+    "verifiedPartner": "Fonte Verificada",
+    "resultsCount": "{count} recursos verificados em órbita",
+    "noResultsTitle": "Nenhum recurso encontrado",
+    "noResultsDesc": "Tente ajustar os seus critérios de pesquisa ou filtros de categoria.",
+    "resetFilters": "Repor Filtros",
+    "linkPending": "Link em Moderação / Em Breve"
   }
 }

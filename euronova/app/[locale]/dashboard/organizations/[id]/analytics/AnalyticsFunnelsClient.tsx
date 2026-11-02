@@ -20,7 +20,8 @@ import {
   MapPin
 } from "lucide-react";
 import { OrganizationNavTabs } from "@/components/OrganizationNavTabs";
-import { useTranslations, useFormatter } from "next-intl";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { useTranslations, useFormatter, useLocale } from "next-intl";
 import {
   getOrgVerifiableAnalyticsAction,
   type OrgVerifiableAnalytics,
@@ -31,8 +32,10 @@ interface AnalyticsFunnelsClientProps {
   orgName?: string;
 }
 
-export function AnalyticsFunnelsClient({ orgId }: AnalyticsFunnelsClientProps) {
+export function AnalyticsFunnelsClient({ orgId, orgName = "Organization" }: AnalyticsFunnelsClientProps) {
   const t = useTranslations("OrgAnalytics");
+  const tOrg = useTranslations("Organizations");
+  const locale = useLocale();
   const format = useFormatter();
   const [timeRange, setTimeRange] = useState<"30d" | "90d" | "all">("all");
   const [isLoading, setIsLoading] = useState(true);
@@ -177,7 +180,16 @@ export function AnalyticsFunnelsClient({ orgId }: AnalyticsFunnelsClientProps) {
   ];
 
   return (
-    <div className="space-y-8 animate-fade-in pb-16">
+    <div className="max-w-6xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 py-6 animate-fade-in pb-16">
+      <div className="mb-2">
+        <Breadcrumbs
+          items={[
+            { label: tOrg("directory") || "Organizations", href: `/${locale}/dashboard/organizations` },
+            { label: orgName, href: `/${locale}/dashboard/organizations/${orgId}` },
+            { label: t("title") || "Analytics & Funnels" }
+          ]}
+        />
+      </div>
       <OrganizationNavTabs orgId={orgId} />
 
       {/* Header & Filter Controls */}

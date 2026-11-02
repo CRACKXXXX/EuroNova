@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
+import { Globe } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export function PublicHeader() {
@@ -43,8 +44,15 @@ export function PublicHeader() {
           </div>
         </Link>
 
-        {/* Right: Language Switcher */}
-        <div className="flex items-center gap-4">
+        {/* Right: Ecosystem Link & Language Switcher */}
+        <div className="flex items-center gap-4 sm:gap-6">
+          <Link
+            href="/ecosystem"
+            className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 hover:text-plasma-cyan transition-colors px-3 py-1.5 rounded-lg border border-void-border/60 hover:border-plasma-cyan/40 bg-void-surface/50"
+          >
+            <Globe className="w-4 h-4 text-plasma-cyan" />
+            <span className="hidden xs:inline">{t("ecosystem")}</span>
+          </Link>
           <LanguageSwitcher />
         </div>
       </div>

@@ -7,7 +7,6 @@ import { Heart } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 export const metadata: Metadata = {
-  title: "EuroNova",
   description: "Support EuroNova: 100% free, zero ads platform connecting European youth to Erasmus+ and ESC mobility opportunities.",
 };
 

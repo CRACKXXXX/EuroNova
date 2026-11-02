@@ -17,9 +17,10 @@ import {
   AlertTriangle,
   Loader2
 } from "lucide-react";
-import { useTranslations, useFormatter } from "next-intl";
+import { useTranslations, useFormatter, useLocale } from "next-intl";
 import { toast } from "sonner";
 import { OrganizationNavTabs } from "@/components/OrganizationNavTabs";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { createClient } from "@/utils/supabase/client";
 
 export type MemberRole = "Owner" | "Coordinator" | "Reviewer";
@@ -42,6 +43,8 @@ interface TeamClientProps {
 
 export function TeamClient({ orgId, orgName = "Organization" }: TeamClientProps) {
   const t = useTranslations("OrgTeam");
+  const tOrg = useTranslations("Organizations");
+  const locale = useLocale();
   const format = useFormatter();
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -252,6 +255,15 @@ export function TeamClient({ orgId, orgName = "Organization" }: TeamClientProps)
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 py-6">
+      <div className="mb-2">
+        <Breadcrumbs
+          items={[
+            { label: tOrg("directory") || "Organizations", href: `/${locale}/dashboard/organizations` },
+            { label: orgName, href: `/${locale}/dashboard/organizations/${orgId}` },
+            { label: t("tabsTeam") || "Team Squad" }
+          ]}
+        />
+      </div>
       <OrganizationNavTabs orgId={orgId} isOwner={true} />
 
       {/* Control bar: Search & Invite Button */}

@@ -32,16 +32,16 @@ export function SupportHeaderNav() {
       </button>
 
       {/* Rastro de Migas de Pan (Breadcrumbs) */}
-      <nav aria-label={tCommon("breadcrumb")} className="flex items-center gap-2 text-xs text-gray-400 font-medium">
+      <nav aria-label={tCommon("breadcrumb")} className="flex flex-wrap items-center gap-2 text-xs text-gray-400 font-medium min-w-0 break-words">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-gray-400 hover:text-plasma-cyan transition-colors"
+          className="inline-flex items-center gap-1.5 text-gray-400 hover:text-plasma-cyan transition-colors shrink-0"
         >
           <Home className="w-3.5 h-3.5" />
           <span>{tHeader("home")}</span>
         </Link>
         <ChevronRight className="w-3.5 h-3.5 text-gray-600 shrink-0" />
-        <span className="text-gray-200 font-semibold" aria-current="page">
+        <span className="text-gray-200 font-semibold truncate max-w-[180px] sm:max-w-none" aria-current="page">
           {tHeader("supportEuroNova")}
         </span>
       </nav>

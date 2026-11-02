@@ -78,7 +78,22 @@
     "tagAutoPurgePrivacy": "Автоматическое удаление логов через 48 часов",
     "tagCommunityFunded": "Финансируется сообществом • Независимая инфраструктура",
     "logoAlt": "Логотип EuroNova",
-    "searchGuidesDynamic": "{count, plural, =0 {Поиск по руководствам...} one {Поиск среди # руководства (напр., UNMASKED, Secret Buddy)...} few {Поиск среди # руководств (напр., UNMASKED, Secret Buddy, Werewolf, Zorro, Ryanair, Cigna)...} many {Поиск среди более чем # руководств (напр., UNMASKED, Secret Buddy, Werewolf, Zorro, Ryanair, Cigna)...} other {Поиск среди # руководств...}}"
+    "searchGuidesDynamic": "{count, plural, =0 {Поиск по руководствам...} one {Поиск среди # руководства (напр., UNMASKED, Secret Buddy)...} few {Поиск среди # руководств (напр., UNMASKED, Secret Buddy, Werewolf, Zorro, Ryanair, Cigna)...} many {Поиск среди более чем # руководств (напр., UNMASKED, Secret Buddy, Werewolf, Zorro, Ryanair, Cigna)...} other {Поиск среди # руководств...}}",
+    "featRadarTitle": "Радар миссий и GPS-карта",
+    "featRadarDesc": "Интерактивная географическая карта финансируемых возможностей Erasmus+ в Европе и самых удаленных регионах с телеметрией расстояний.",
+    "featOrgsDirectoryTitle": "Каталог верифицированных организаций",
+    "featOrgsDirectoryDesc": "Автоматическая валидация OID реестра Европейской комиссии, исключающая сомнительных посредников. Прямая связь с проверенными НКО.",
+    "featEcosystemTitle": "Центр внешней экосистемы Erasmus+",
+    "featEcosystemDesc": "Открытый каталог официальных порталов ЕС, национальных агентств, активных сообществ WhatsApp/Telegram и ассоциаций выпускников.",
+    "tagRadar": "Интерактивный радар",
+    "tagGpsLocation": "Координаты GPS",
+    "tagOutermostRegions": "Удаленные регионы",
+    "tagOidCheck": "Проверка реестра OID",
+    "tagNonProfit": "100% Некоммерческий",
+    "tagOfficialPdn": "Прямой маршрут",
+    "tagExternalTools": "Открытые ресурсы",
+    "tagCommunityChannels": "Сети и чат-сообщества",
+    "tagPanEuropean": "Общеевропейский"
   },
   "PublicHeader": {
     "support": "Служба поддержки",
@@ -104,7 +119,8 @@
     "supportPanel": "Панель поддержки",
     "supportEuroNova": "Поддержать EuroNova",
     "language": "Язык",
-    "supportHelpCenter": "Поддержка и помощь"
+    "supportHelpCenter": "Поддержка и помощь",
+    "ecosystem": "Экосистема"
   },
   "Sidebar": {
     "search": "Поиск",
@@ -363,7 +379,11 @@
     "tiktokLabel": "TikTok",
     "youtubeLabel": "YouTube",
     "linkedinLabel": "LinkedIn",
-    "levelXpBadge": "Уровень {level} · {xp} XP"
+    "levelXpBadge": "Уровень {level} · {xp} XP",
+    "entityType": "Тип организации",
+    "entityTypeNgo": "НКО / Неправительственная организация",
+    "entityTypeInformalGroup": "Неформальная молодежная группа",
+    "entityTypePublicBody": "Государственное учреждение"
   },
   "Projects": {
     "backHome": "Вернуться на главную",
@@ -458,7 +478,11 @@
     "publishNewMission": "Опубликовать новую миссию",
     "editProfile": "Редактировать профиль",
     "shareView": "Поделиться профилем",
-    "copiedLink": "Скопировано!"
+    "copiedLink": "Скопировано!",
+    "entityType": "Тип организации",
+    "entityTypeNgo": "НКО",
+    "entityTypeInformalGroup": "Неформальная группа",
+    "entityTypePublicBody": "Госучреждение"
   },
   "NewProject": {
     "backHome": "Вернуться на главную",
@@ -632,7 +656,8 @@
     "supportEuroNova": "Поддержать EuroNova",
     "copyright": "Проект EuroNova. Все права защищены.",
     "fiscalShieldTitle": "Уведомление о добровольной поддержке инфраструктуры (P2P)",
-    "fiscalShieldDesc": "EuroNova является независимой некоммерческой инициативой открытого доступа. Финансовые переводы через Revolut, PayPal или банковские реквизиты SEPA представляют собой добровольные безвозмездные дарения (P2P), направляемые исключительно на оплату хостинга и обеспечение серверов. Вклады не являются коммерческой сделкой, оплатой услуг, спонсорством или благотворительностью, уменьшающей налоги. Никаких цифровых или коммерческих привилегий в обмен не предоставляется. Доноры отказываются от прав потребительского возврата в рамках правил ЕС."
+    "fiscalShieldDesc": "EuroNova является независимой некоммерческой инициативой открытого доступа. Финансовые переводы через Revolut, PayPal или банковские реквизиты SEPA представляют собой добровольные безвозмездные дарения (P2P), направляемые исключительно на оплату хостинга и обеспечение серверов. Вклады не являются коммерческой сделкой, оплатой услуг, спонсорством или благотворительностью, уменьшающей налоги. Никаких цифровых или коммерческих привилегий в обмен не предоставляется. Доноры отказываются от прав потребительского возврата в рамках правил ЕС.",
+    "ecosystem": "Экосистема Erasmus+"
   },
   "DashboardContent": {
     "transmissionsReceived": "Доступные международные миссии",
@@ -682,7 +707,13 @@
     "fasterResolutionTip": "For faster resolution, we recommend using the Website.",
     "phoneWhatsappRequired": "Phone Number with Country Code *",
     "phoneWhatsappPlaceholder": "+34 600 000 000 (Required for WhatsApp)",
-    "applySupportPlaceholder": "Describe your European mobility background, countries visited, spoken languages, and why you wish to assist fellow volunteers on EuroNova..."
+    "applySupportPlaceholder": "Describe your European mobility background, countries visited, spoken languages, and why you wish to assist fellow volunteers on EuroNova...",
+    "attachmentsLabel": "Прикрепить фото (макс. 3, до 5МБ)",
+    "attachmentsHint": "Допустимые форматы: JPG, PNG, WEBP (макс. 3 фото, 5МБ)",
+    "attachmentTooLarge": "Файл слишком большой. Максимальный размер 5МБ.",
+    "attachmentInvalidType": "Недопустимый тип файла. Поддерживаются только JPG, PNG и WEBP.",
+    "attachmentMaxCount": "Можно прикрепить не более 3 изображений.",
+    "removeAttachment": "Удалить вложение"
   },
   "OrgFilters": {
     "searchPlaceholder": "Поиск организаций по названию...",
@@ -1670,7 +1701,8 @@
     "breadcrumb": "Навигационная цепочка",
     "goBack": "Вернуться на предыдущую страницу",
     "avatarAlt": "Аватар",
-    "noOptions": "Нет доступных вариантов"
+    "noOptions": "Нет доступных вариантов",
+    "ecosystem": "Экосистема"
   },
   "Reports": {
     "reportOrgTitle": "Пожаловаться на эту организацию модераторам",
@@ -2252,5 +2284,25 @@
     "replyFailed": "Could not submit your reply. Please try again.",
     "ticketNotFound": "Ticket not found or you do not have permission to access it.",
     "authRequired": "You must be signed in to perform this action."
+  },
+  "Ecosystem": {
+    "title": "Внешняя экосистема Erasmus+",
+    "subtitle": "Проверенный каталог официальных порталов Европейской комиссии, национальных агентств, молодежных НКО и активных групп сообщества по всей Европе.",
+    "badge": "ОТКРЫТЫЙ ПОРТАЛ РЕСУРСОВ",
+    "searchPlaceholder": "Поиск ресурсов, инструментов, порталов или каналов...",
+    "categoryAll": "Все категории",
+    "categoryOfficial": "Официальные порталы",
+    "categoryNgo": "НКО и ассоциации",
+    "categoryWhatsapp": "Группы WhatsApp",
+    "categoryTelegram": "Каналы Telegram",
+    "countryAll": "Все страны",
+    "countryEurope": "Общеевропейский",
+    "openResource": "Открыть внешний ресурс",
+    "verifiedPartner": "Проверенный источник",
+    "resultsCount": "{count} проверенных ресурсов на орбите",
+    "noResultsTitle": "Ресурсы не найдены",
+    "noResultsDesc": "Попробуйте изменить поисковый запрос или фильтры категорий.",
+    "resetFilters": "Сбросить фильтры",
+    "linkPending": "Ссылка на Модерации / Скоро"
   }
 }

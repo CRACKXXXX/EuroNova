@@ -78,7 +78,22 @@
     "tagAutoPurgePrivacy": "48h Auto-Purge Privacy",
     "tagCommunityFunded": "Community Funded • Independent Infrastructure",
     "logoAlt": "EuroNova Logo",
-    "searchGuidesDynamic": "{count, plural, =0 {Search guides...} one {Search # guide (e.g., UNMASKED, Secret Buddy)...} other {Search #+ guides (e.g., UNMASKED, Secret Buddy, Werewolf, Zorro, Ryanair, Cigna)...}}"
+    "searchGuidesDynamic": "{count, plural, =0 {Search guides...} one {Search # guide (e.g., UNMASKED, Secret Buddy)...} other {Search #+ guides (e.g., UNMASKED, Secret Buddy, Werewolf, Zorro, Ryanair, Cigna)...}}",
+    "featRadarTitle": "Mission Radar & GPS Map",
+    "featRadarDesc": "Interactive geographic radar mapping funded Erasmus+ opportunities across Europe and Outermost Regions with real-time distance bands.",
+    "featOrgsDirectoryTitle": "Verified Organizations Directory",
+    "featOrgsDirectoryDesc": "Automated European Commission OID registry validation eliminating unaccredited intermediaries. Direct connection to verified hosting NGOs.",
+    "featEcosystemTitle": "External Erasmus+ Ecosystem Hub",
+    "featEcosystemDesc": "Curated open gateway connecting official EU portals, national youth agencies, active WhatsApp/Telegram networks, and veteran associations.",
+    "tagRadar": "Interactive Radar",
+    "tagGpsLocation": "GPS Coordinates",
+    "tagOutermostRegions": "Outermost Regions",
+    "tagOidCheck": "OID Registry Check",
+    "tagNonProfit": "100% Non-Profit",
+    "tagOfficialPdn": "Direct Route",
+    "tagExternalTools": "Open Resources",
+    "tagCommunityChannels": "Social & Chat Networks",
+    "tagPanEuropean": "Pan-European"
   },
   "PublicHeader": {
     "support": "Support",
@@ -104,7 +119,8 @@
     "supportPanel": "Support Panel",
     "supportEuroNova": "Support EuroNova",
     "language": "Language",
-    "supportHelpCenter": "Support & Help"
+    "supportHelpCenter": "Support & Help",
+    "ecosystem": "Ecosystem"
   },
   "Sidebar": {
     "search": "Search",
@@ -245,6 +261,10 @@
     "orgNamePlaceholder": "Ex: Youth Association EuroNova",
     "picNumber": "PIC Number (Erasmus+)",
     "picNumberPlaceholder": "Ex: 123456789",
+    "entityType": "Entity Type",
+    "entityTypeNgo": "NGO / Non-Governmental Organization",
+    "entityTypeInformalGroup": "Informal Group of Young People",
+    "entityTypePublicBody": "Public Body / Institution",
     "countryHq": "Headquarters Country",
     "saving": "Saving...",
     "save": "Save Changes",
@@ -458,7 +478,11 @@
     "publishNewMission": "Publish New Mission",
     "editProfile": "Edit Profile",
     "shareView": "Share Profile",
-    "copiedLink": "Copied!"
+    "copiedLink": "Copied!",
+    "entityType": "Entity Type",
+    "entityTypeNgo": "NGO",
+    "entityTypeInformalGroup": "Informal Group",
+    "entityTypePublicBody": "Public Body"
   },
   "NewProject": {
     "backHome": "Back to Home",
@@ -632,7 +656,8 @@
     "supportEuroNova": "Support EuroNova",
     "copyright": "EuroNova Project. All rights reserved.",
     "fiscalShieldTitle": "P2P Fiscal & Legal Immunity Notice (Voluntary Infrastructure Support)",
-    "fiscalShieldDesc": "EuroNova is an independent, non-commercial open-access initiative. Financial contributions made via Revolut, PayPal, or SEPA bank transfers are strictly voluntary peer-to-peer (P2P) personal gifts dedicated exclusively to cloud hosting and server sustainability. Contributions do not constitute a purchase, commercial sale, sponsorship, tax-deductible charitable donation, or binding service contract. No goods, digital services, or commercial benefits are exchanged. Donors explicitly waive commercial refund rights under EU consumer protection regulations, and EuroNova assumes zero tax or corporate fiscal liability for voluntary community contributions."
+    "fiscalShieldDesc": "EuroNova is an independent, non-commercial open-access initiative. Financial contributions made via Revolut, PayPal, or SEPA bank transfers are strictly voluntary peer-to-peer (P2P) personal gifts dedicated exclusively to cloud hosting and server sustainability. Contributions do not constitute a purchase, commercial sale, sponsorship, tax-deductible charitable donation, or binding service contract. No goods, digital services, or commercial benefits are exchanged. Donors explicitly waive commercial refund rights under EU consumer protection regulations, and EuroNova assumes zero tax or corporate fiscal liability for voluntary community contributions.",
+    "ecosystem": "Erasmus+ Ecosystem"
   },
   "DashboardContent": {
     "transmissionsReceived": "International Missions",
@@ -682,7 +707,13 @@
     "fasterResolutionTip": "For faster resolution, we recommend using the Website.",
     "phoneWhatsappRequired": "Phone Number with Country Code *",
     "phoneWhatsappPlaceholder": "+34 600 000 000 (Required for WhatsApp)",
-    "applySupportPlaceholder": "Describe your European mobility background, countries visited, spoken languages, and why you wish to assist fellow volunteers on EuroNova..."
+    "applySupportPlaceholder": "Describe your European mobility background, countries visited, spoken languages, and why you wish to assist fellow volunteers on EuroNova...",
+    "attachmentsLabel": "Attach Photos (Max 3, up to 5MB each)",
+    "attachmentsHint": "Allowed formats: JPG, PNG, WEBP (Max 3 photos, 5MB each)",
+    "attachmentTooLarge": "File is too large. Maximum size is 5MB.",
+    "attachmentInvalidType": "Invalid file type. Only JPG, PNG, and WEBP images are supported.",
+    "attachmentMaxCount": "You can only attach up to 3 images.",
+    "removeAttachment": "Remove attachment"
   },
   "OrgFilters": {
     "searchPlaceholder": "Search by organization name...",
@@ -1670,7 +1701,8 @@
     "breadcrumb": "Breadcrumb",
     "goBack": "Go back to previous page",
     "avatarAlt": "Avatar",
-    "noOptions": "No options available"
+    "noOptions": "No options available",
+    "ecosystem": "Ecosystem"
   },
   "Reports": {
     "reportOrgTitle": "Report this organization to moderators",
@@ -2252,5 +2284,25 @@
     "replyFailed": "Could not submit your reply. Please try again.",
     "ticketNotFound": "Ticket not found or you do not have permission to access it.",
     "authRequired": "You must be signed in to perform this action."
+  },
+  "Ecosystem": {
+    "title": "Erasmus+ External Ecosystem",
+    "subtitle": "Verified directory of European Commission official portals, national agencies, youth NGOs, and active community groups across Europe.",
+    "badge": "OPEN RESOURCE GATEWAY",
+    "searchPlaceholder": "Search resources, tools, portals, or channels...",
+    "categoryAll": "All Categories",
+    "categoryOfficial": "Official Portals",
+    "categoryNgo": "NGOs & Associations",
+    "categoryWhatsapp": "WhatsApp Groups",
+    "categoryTelegram": "Telegram Channels",
+    "countryAll": "All Countries",
+    "countryEurope": "Pan-European",
+    "openResource": "Open External Resource",
+    "verifiedPartner": "Verified Source",
+    "resultsCount": "{count} verified resources in orbit",
+    "noResultsTitle": "No resources found",
+    "noResultsDesc": "Try adjusting your search criteria or category filter to discover resources.",
+    "resetFilters": "Reset Filters",
+    "linkPending": "Link Pending / Coming Soon"
   }
 }

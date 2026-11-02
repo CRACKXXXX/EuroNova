@@ -16,6 +16,13 @@ export default async function Page(props: { params: Promise<{ id: string; locale
     redirect(`/${locale}/dashboard/organizations/${id}`);
   }
 
-  // Render the real tool, passing the dynamic organization ID
-  return <TeamClient orgId={id} />; 
+  // Fetch organization name for breadcrumb navigation
+  const { data: org } = await supabase
+    .from("users_org")
+    .select("org_name")
+    .eq("id", id)
+    .maybeSingle();
+
+  // Render the real tool, passing the dynamic organization ID and name
+  return <TeamClient orgId={id} orgName={org?.org_name || "Organization"} />; 
 }

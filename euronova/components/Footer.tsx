@@ -9,7 +9,8 @@ import {
   FileText, 
   LifeBuoy,
   Heart,
-  Cookie
+  Cookie,
+  Globe
 } from "lucide-react";
 import { CookieConsentGatekeeper } from "@/components/CookieConsentGatekeeper";
 
@@ -106,6 +107,15 @@ export function Footer() {
               {t("supportTitle")}
             </h4>
             <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
+              <li>
+                <Link
+                  href="/ecosystem"
+                  className="flex items-center justify-center sm:justify-start gap-2 transition-colors hover:text-plasma-cyan group"
+                >
+                  <Globe className="w-3.5 h-3.5 text-plasma-cyan/70 group-hover:text-plasma-cyan transition-colors" />
+                  <span>{t("ecosystem")}</span>
+                </Link>
+              </li>
               <li>
                 <Link
                   href="/dashboard/support"

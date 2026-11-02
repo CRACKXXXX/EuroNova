@@ -3,7 +3,10 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import nodemailer from "nodemailer";
-import { TicketSubmissionSchema } from "@/lib/schemas";
+import {
+  TicketSubmissionSchema,
+  TicketAttachmentsSchema,
+} from "@/lib/schemas";
 import { stripDangerousHtml } from "@/lib/securitySanitizer";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimiter";
 import { getServiceRoleClient } from "@/lib/staffAuth";
@@ -32,6 +35,7 @@ export interface UserTicketItem {
   updated_at?: string | null;
   resolved_at?: string | null;
   resolution_action?: string | null;
+  attachments?: { name: string; url: string; size?: number; type?: string }[] | null;
   replies?: TicketReplyItem[];
 }
 
@@ -85,6 +89,60 @@ export async function createTicket(prevState: unknown, formData: FormData) {
     return { error: "CONTENT_TOO_SHORT" };
   }
 
+  // 4. Validate & Process Photo Attachments (Max 3, Max 5MB each, JPG/PNG/WEBP)
+  const rawFiles = formData.getAll("attachments");
+  const files: File[] = [];
+  for (const item of rawFiles) {
+    if (item && typeof item === "object" && "size" in item && (item as File).size > 0) {
+      files.push(item as File);
+    }
+  }
+
+  if (files.length > 3) {
+    return { error: "A maximum of 3 attachments are allowed per ticket." };
+  }
+
+  const fileMeta = files.map((f) => ({
+    name: f.name,
+    size: f.size,
+    type: f.type,
+  }));
+
+  const attachmentsValidation = TicketAttachmentsSchema.safeParse(fileMeta);
+  if (!attachmentsValidation.success) {
+    const errorMsg = attachmentsValidation.error.issues[0]?.message || "Invalid attachments.";
+    return { error: errorMsg };
+  }
+
+  const uploadedAttachments: { name: string; url: string; size: number; type: string }[] = [];
+  for (const file of files) {
+    const safeBaseName = (file.name || "attachment").replace(/[^a-zA-Z0-9.-]/g, "_");
+    const filePath = `${user.id}/${Date.now()}-${safeBaseName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("support_attachments")
+      .upload(filePath, file, {
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error("Storage upload error for ticket attachment:", uploadError);
+      return { error: "Failed to upload attachments. Please try again." };
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from("support_attachments")
+      .getPublicUrl(filePath);
+
+    uploadedAttachments.push({
+      name: file.name,
+      url: publicUrl,
+      size: file.size,
+      type: file.type,
+    });
+  }
+
   const { error } = await supabase
     .from("support_tickets")
     .insert({
@@ -95,6 +153,7 @@ export async function createTicket(prevState: unknown, formData: FormData) {
       subject,
       reason,
       content,
+      attachments: uploadedAttachments,
     });
 
   if (error) {

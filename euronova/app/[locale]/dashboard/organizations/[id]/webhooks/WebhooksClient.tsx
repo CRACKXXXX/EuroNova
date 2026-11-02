@@ -12,9 +12,10 @@ import {
   RefreshCw,
   Loader2
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { toast } from "sonner";
 import { OrganizationNavTabs } from "@/components/OrganizationNavTabs";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { testWebhookAction, TriggerWebhookResult } from "@/actions/webhooks";
 import { createClient } from "@/utils/supabase/client";
 
@@ -23,8 +24,10 @@ interface WebhooksClientProps {
   orgName?: string;
 }
 
-export function WebhooksClient({ orgId }: WebhooksClientProps) {
+export function WebhooksClient({ orgId, orgName = "Organization" }: WebhooksClientProps) {
   const t = useTranslations("Webhooks");
+  const tOrg = useTranslations("Organizations");
+  const locale = useLocale();
 
   const [discordUrl, setDiscordUrl] = useState("");
   const [slackUrl, setSlackUrl] = useState("");
@@ -191,6 +194,15 @@ export function WebhooksClient({ orgId }: WebhooksClientProps) {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 py-6">
+      <div className="mb-2">
+        <Breadcrumbs
+          items={[
+            { label: tOrg("directory") || "Organizations", href: `/${locale}/dashboard/organizations` },
+            { label: orgName, href: `/${locale}/dashboard/organizations/${orgId}` },
+            { label: t("title") || "Webhooks" }
+          ]}
+        />
+      </div>
       <OrganizationNavTabs orgId={orgId} isOwner={true} />
 
       {/* Control bar / Status banner */}

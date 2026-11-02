@@ -18,6 +18,7 @@ import {
   ArrowLeft,
   Mail,
   Phone,
+  Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslations, useFormatter } from "next-intl";
@@ -458,8 +459,24 @@ export function UserSupportHubClient({
                               })}
                             </span>
                           </div>
-                          <div className="p-4 rounded-2xl rounded-tl-sm bg-void-deep border border-void-border text-gray-200 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap shadow-inner">
-                            {activeTicket.content}
+                          <div className="p-4 rounded-2xl rounded-tl-sm bg-void-deep border border-void-border text-gray-200 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap shadow-inner space-y-3">
+                            <div>{activeTicket.content}</div>
+                            {activeTicket.attachments && activeTicket.attachments.length > 0 && (
+                              <div className="pt-2 border-t border-void-border/50 flex flex-wrap gap-2">
+                                {activeTicket.attachments.map((att, idx) => (
+                                  <a
+                                    key={idx}
+                                    href={att.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-void-surface border border-void-border text-[11px] text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all"
+                                  >
+                                    <ImageIcon className="w-3.5 h-3.5 shrink-0" />
+                                    <span className="truncate max-w-[120px]">{att.name || `Photo ${idx + 1}`}</span>
+                                  </a>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

@@ -566,13 +566,13 @@ export default async function ProfilePage(props: {
                 })}
               </div>
             </div>
+
+            {/* RECENTLY VIEWED MISSIONS (Youth only - Strictly excluded for Organizations) */}
+            <div className="mt-12 pt-8 border-t border-void-border">
+              <RecentlyViewedMissions userId={user?.id} />
+            </div>
           </>
         )}
-
-        {/* RECENTLY VIEWED MISSIONS */}
-        <div className="mt-12 pt-8 border-t border-void-border">
-          <RecentlyViewedMissions userId={user?.id} />
-        </div>
       </div>
     </div>
   );

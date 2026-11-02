@@ -42,6 +42,29 @@ export const AuthCredentialsSchema = z.object({
 });
 
 // 3. Support Ticket Submission Schema
+export const ALLOWED_ATTACHMENT_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const;
+
+export const MAX_ATTACHMENT_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+
+export const TicketAttachmentFileSchema = z.object({
+  name: z.string().optional(),
+  size: z
+    .number()
+    .max(MAX_ATTACHMENT_SIZE_BYTES, "Attachment size exceeds the 5MB limit."),
+  type: z.enum(ALLOWED_ATTACHMENT_MIME_TYPES, {
+    message: "Only JPEG, PNG, and WebP image attachments are supported.",
+  }),
+  url: z.string().url().optional(),
+});
+
+export const TicketAttachmentsSchema = z
+  .array(TicketAttachmentFileSchema)
+  .max(3, "A maximum of 3 attachments are allowed per ticket or report.");
+
 export const TicketSubmissionSchema = z
   .object({
     email: z
@@ -79,6 +102,7 @@ export const TicketSubmissionSchema = z
       .min(10, "Message content must be at least 10 characters.")
       .max(5000, "Message content cannot exceed 5000 characters.")
       .refine(noNullBytes, "Message content cannot contain null bytes."),
+    attachments: TicketAttachmentsSchema.optional().default([]),
   })
   .refine(
     (data) => {
@@ -182,6 +206,7 @@ export const ReportSubmissionSchema = z.object({
     .refine(noNullBytes, "Description cannot contain null bytes.")
     .optional()
     .nullable(),
+  attachments: TicketAttachmentsSchema.optional().default([]),
 });
 
 export type ReportSubmissionInput = z.infer<typeof ReportSubmissionSchema>;

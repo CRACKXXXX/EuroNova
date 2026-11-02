@@ -123,16 +123,27 @@ export async function getUserForumEligibility(): Promise<UserEligibilityResponse
     const statusCheck = await verifyMidSessionActiveStatus(user.id);
     const isMuted = !statusCheck.allowed;
 
+    // Single source of truth: Always fetch trust_score and xp from users_youth
+    const { data: youthData } = await supabase
+      .from("users_youth")
+      .select("xp, trust_score")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const trustScore = typeof youthData?.trust_score === "number" ? youthData.trust_score : 30;
+    const rawXp = typeof youthData?.xp === "number" ? youthData.xp : 0;
+    const trustMultiplier = getTrustXpMultiplier(trustScore);
+
     if (userRole === "admin" || user.email === "euronovaofficial@gmail.com") {
       return {
         isAuthenticated: true,
         userId: user.id,
         role: "admin",
         userRole: "admin",
-        xp: 99999,
-        level: 99,
-        trustScore: 100,
-        trustMultiplier: 1.5,
+        xp: rawXp || 99999,
+        level: calculateLevelFromXp(rawXp || 99999),
+        trustScore,
+        trustMultiplier,
         canPost: !isMuted,
         isMuted,
         xpNeeded: 0,
@@ -152,27 +163,19 @@ export async function getUserForumEligibility(): Promise<UserEligibilityResponse
         userId: user.id,
         role: "coordinator",
         userRole,
-        xp: 2500,
-        level: 10,
-        trustScore: 80,
-        trustMultiplier: 1.5,
+        xp: rawXp || 2500,
+        level: calculateLevelFromXp(rawXp || 2500),
+        trustScore,
+        trustMultiplier,
         canPost: !isMuted,
         isMuted,
         xpNeeded: 0,
       };
     }
 
-    // Check youth volunteer profile and XP
-    const { data: youthData } = await supabase
-      .from("users_youth")
-      .select("xp, trust_score")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    const xp = typeof youthData?.xp === "number" ? youthData.xp : 0;
-    const trustScore = typeof youthData?.trust_score === "number" ? youthData.trust_score : 30;
+    // Youth volunteer profile
+    const xp = rawXp;
     const level = calculateLevelFromXp(xp);
-    const trustMultiplier = getTrustXpMultiplier(trustScore);
 
     // Strict Dual Gate: Requires Level >= 2 AND Trust Score >= 30 AND !isMuted
     // This blocks Level 1 disposable spam accounts while allowing authentic volunteers in good standing.

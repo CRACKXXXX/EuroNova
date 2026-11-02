@@ -18,7 +18,6 @@ const ProjectsMap = dynamic(
 );
 
 export const metadata: Metadata = {
-  title: "EuroNova",
   description: "Interactive real-time map of all European mobility, Erasmus+, and volunteering missions.",
 };
 

@@ -8,6 +8,8 @@ import { BackToTop } from "@/components/BackToTop";
 import { ScrollRestoration } from "@/components/ScrollRestoration";
 import { CookieBanner } from "@/components/Legal/CookieBanner";
 import { routing } from "@/i18n/routing";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,8 +44,8 @@ export async function generateMetadata({
   return {
     metadataBase: new URL(siteUrl),
     title: {
-      default: "EuroNova — The Gateway to Erasmus+ & European Solidarity Corps",
-      template: "%s | EuroNova",
+      default: "EuroNova",
+      template: "EuroNova",
     },
     description:
       "Discover verified Erasmus+ and European Solidarity Corps youth mobility missions across 30+ European nations with 100% funding.",
@@ -62,7 +64,7 @@ export async function generateMetadata({
       locale,
       url: `/${locale}`,
       siteName: "EuroNova",
-      title: "EuroNova — The Gateway to Erasmus+ & European Solidarity Corps",
+      title: "EuroNova",
       description:
         "Discover verified Erasmus+ and European Solidarity Corps youth mobility missions across 30+ European nations with 100% funding.",
       images: [
@@ -76,7 +78,7 @@ export async function generateMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: "EuroNova — The Gateway to Erasmus+ & European Solidarity Corps",
+      title: "EuroNova",
       description:
         "Discover verified Erasmus+ and European Solidarity Corps youth mobility missions across 30+ European nations with 100% funding.",
       images: ["/logo-big.png"],
@@ -113,6 +115,8 @@ export default async function RootLayout({
           <CookieBanner />
           <BackToTop />
         </NextIntlClientProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

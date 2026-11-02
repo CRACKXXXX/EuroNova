@@ -14,7 +14,6 @@ import { getTranslations } from "next-intl/server";
 import { createClient } from "@/utils/supabase/server";
 
 export const metadata: Metadata = {
-  title: "EuroNova",
   description:
     "Connect with European volunteers, find travel companions, coordinate NGO initiatives, and explore the complete Erasmus+ and ESC FAQ knowledge base.",
 };

@@ -41,7 +41,6 @@ export async function generateMetadata(
 
   if (!project) {
     return {
-      title: "Mission Not Found",
       description: "The requested Erasmus+ or ESC mobility project could not be found.",
     };
   }
@@ -77,7 +76,6 @@ export async function generateMetadata(
   const canonicalUrl = `${siteUrl.replace(/\/$/, "")}/${locale}/dashboard/projects/${id}`;
 
   return {
-    title: projectTitle,
     description: cleanDescription,
     alternates: {
       canonical: canonicalUrl,

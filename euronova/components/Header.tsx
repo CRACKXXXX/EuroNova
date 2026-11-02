@@ -16,7 +16,8 @@ import {
   ShieldCheck,
   Headphones,
   Map as MapIcon,
-  Users
+  Users,
+  Globe
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { LogoutButton } from "@/components/LogoutButton";
@@ -59,6 +60,7 @@ export function Header({
   const isMissionsActive = pathname.startsWith(`/${locale}/dashboard/my-missions`) || pathname.startsWith("/dashboard/my-missions");
   const isCommunityActive = pathname.startsWith(`/${locale}/community`) || pathname.startsWith("/community");
   const isMapActive = pathname.startsWith(`/${locale}/map`) || pathname.startsWith("/map");
+  const isEcosystemActive = pathname.startsWith(`/${locale}/ecosystem`) || pathname.startsWith("/ecosystem");
 
   // Automatically dismiss mobile menu on route changes
   const [prevPathname, setPrevPathname] = useState(pathname);
@@ -284,6 +286,21 @@ export function Header({
                 <span>{t("map")}</span>
               </Link>
             </CosmicTooltip>
+
+            <CosmicTooltip content={t("ecosystem")} side="bottom">
+              <Link
+                href={`/${locale}/ecosystem`}
+                aria-label={t("ecosystem")}
+                className={`flex items-center gap-1.5 text-sm py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent group ${
+                  isEcosystemActive
+                    ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
+                    : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
+                }`}
+              >
+                <Globe className={`w-4 h-4 transition-colors ${isEcosystemActive ? "text-plasma-cyan" : "text-gray-400 group-hover:text-plasma-cyan"}`} />
+                <span>{t("ecosystem")}</span>
+              </Link>
+            </CosmicTooltip>
           </nav>
         </div>
 
@@ -490,6 +507,17 @@ export function Header({
             >
               <MapIcon className={`w-6 h-6 transition-colors ${isMapActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
               <span>{t("map")}</span>
+            </Link>
+
+            <Link
+              href={`/${locale}/ecosystem`}
+              onClick={() => setIsOpen(false)}
+              className={`text-2xl sm:text-3xl tracking-tight transition-all flex items-center gap-3.5 group ${
+                isEcosystemActive ? "font-black text-plasma-cyan" : "font-extrabold text-gray-300 hover:text-plasma-cyan"
+              }`}
+            >
+              <Globe className={`w-6 h-6 transition-colors ${isEcosystemActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
+              <span>{t("ecosystem")}</span>
             </Link>
 
             {isOrg && (

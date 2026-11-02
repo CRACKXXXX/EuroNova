@@ -283,6 +283,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
     const youthIsRup = getBoolean(currentData, "is_rup_region");
 
     const orgName = getString(currentData, "org_name");
+    const orgEntityType = getString(currentData, "entity_type") || "ngo";
     const orgOid = getString(currentData, "oid_number");
     const orgCountryHq = getString(currentData, "country_hq");
     const orgContactEmail = getString(currentData, "contact_email");
@@ -438,6 +439,18 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider">
+                    {t("entityType")}
+                  </p>
+                  <p className="font-semibold text-white mt-1">
+                    {orgEntityType === "informal_group"
+                      ? t("entityTypeInformalGroup")
+                      : orgEntityType === "public_body"
+                      ? t("entityTypePublicBody")
+                      : t("entityTypeNgo")}
+                  </p>
+                </div>
                 <div>
                   <p className="text-xs text-gray-500 uppercase tracking-wider">
                     {t("countryHq")}
@@ -621,6 +634,7 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
   const defaultYouthLanguages = getStringArray(currentData, "languages").join(", ");
 
   const defaultOrgName = getString(currentData, "org_name");
+  const defaultOrgEntityType = getString(currentData, "entity_type") || "ngo";
   const defaultOrgOid = getString(currentData, "oid_number");
   const defaultOrgCountryHq = getString(currentData, "country_hq");
   const defaultOrgContactEmail = getString(currentData, "contact_email");
@@ -810,18 +824,35 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
         </>
       ) : (
         <>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">
-              {t("orgName")}
-            </label>
-            <input
-              type="text"
-              name="org_name"
-              maxLength={150}
-              defaultValue={defaultOrgName}
-              className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet transition-all"
-              placeholder={t("orgNamePlaceholder")}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">
+                {t("orgName")}
+              </label>
+              <input
+                type="text"
+                name="org_name"
+                maxLength={150}
+                defaultValue={defaultOrgName}
+                className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet transition-all"
+                placeholder={t("orgNamePlaceholder")}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">
+                {t("entityType")}
+              </label>
+              <select
+                name="entity_type"
+                defaultValue={defaultOrgEntityType}
+                className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet transition-all cursor-pointer"
+              >
+                <option value="ngo">{t("entityTypeNgo")}</option>
+                <option value="informal_group">{t("entityTypeInformalGroup")}</option>
+                <option value="public_body">{t("entityTypePublicBody")}</option>
+              </select>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

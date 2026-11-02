@@ -40,6 +40,12 @@ const youthProfileSchema = z.object({
 
 const orgProfileSchema = z.object({
   org_name: z.string().trim().max(150).refine(noNullBytes, "Organization name cannot contain null bytes.").optional().or(z.literal("")).nullable(),
+  entity_type: z
+    .enum(["ngo", "informal_group", "public_body"])
+    .default("ngo")
+    .optional()
+    .or(z.literal(""))
+    .nullable(),
   oid_number: z.string().trim().max(50).refine(noNullBytes, "OID number cannot contain null bytes.").optional().or(z.literal("")).nullable(),
   country_hq: z.string().trim().max(10).refine(noNullBytes, "Country HQ cannot contain null bytes.").optional().or(z.literal("")).nullable(),
   description: z.string().trim().max(5000).refine(noNullBytes, "Description cannot contain null bytes.").optional().or(z.literal("")).nullable(),
@@ -124,6 +130,7 @@ interface YouthUpdatePayload {
 interface OrgUpdatePayload {
   id: string;
   org_name: string | null;
+  entity_type?: string | null;
   oid_number: string | null;
   country_hq: string | null;
   description: string | null;
@@ -448,6 +455,7 @@ export async function updateProfile(
     } else {
       const rawData = {
         org_name: formData.get("org_name")?.toString() ?? "",
+        entity_type: formData.get("entity_type")?.toString() ?? "ngo",
         oid_number: formData.get("oid_number")?.toString() ?? "",
         country_hq: formData.get("country_hq")?.toString() ?? "",
         description: formData.get("description")?.toString() ?? "",
@@ -469,6 +477,7 @@ export async function updateProfile(
 
       const {
         org_name,
+        entity_type,
         oid_number,
         country_hq,
         description,
@@ -485,6 +494,7 @@ export async function updateProfile(
       const payload: OrgUpdatePayload = {
         id: user.id,
         org_name: sanitizeOptionalString(org_name),
+        entity_type: sanitizeOptionalString(entity_type) || "ngo",
         oid_number: sanitizeOptionalString(oid_number),
         country_hq: sanitizeOptionalString(country_hq),
         description: sanitizeOptionalString(description),
@@ -496,17 +506,39 @@ export async function updateProfile(
         social_linkedin: sanitizeOptionalString(social_linkedin),
         notification_email: sanitizeOptionalString(notification_email),
         discord_webhook_url: sanitizeOptionalString(discord_webhook_url),
-        verification_status: "pending",
       };
 
       if (avatar_url) {
         payload.avatar_url = avatar_url;
       }
 
-      const { error } = await supabase.from("users_org").upsert(payload);
+      // Check if organization already exists in database
+      const { data: existingOrg } = await supabase
+        .from("users_org")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
 
-      if (error) {
-        return { error: error.message };
+      if (existingOrg) {
+        // Safe UPDATE: omits verification_status so the anti-privilege escalation trigger is NOT triggered
+        const { error: updateError } = await supabase
+          .from("users_org")
+          .update(payload)
+          .eq("id", user.id);
+
+        if (updateError) {
+          return { error: updateError.message };
+        }
+      } else {
+        // Initial INSERT for newly self-registered organization
+        const { error: insertError } = await supabase.from("users_org").insert({
+          ...payload,
+          verification_status: "pending",
+        });
+
+        if (insertError) {
+          return { error: insertError.message };
+        }
       }
     }
 

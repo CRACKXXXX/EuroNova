@@ -13,6 +13,7 @@ import { CosmicTooltip } from "@/components/CosmicTooltip";
 export interface OrganizationData {
   id: string;
   org_name?: string | null;
+  entity_type?: string | null;
   country_hq?: string | null;
   verification_status?: string | null;
   description?: string | null;
@@ -105,9 +106,18 @@ export function OrganizationCard({ org }: { org: OrganizationData }) {
         </div>
       </div>
 
-      {/* OID & PIC Badges with Tooltips if present */}
-      {(picValue || oidValue) && (
+      {/* Entity Type, OID & PIC Badges with Tooltips if present */}
+      {(picValue || oidValue || org.entity_type) && (
         <div className="flex flex-wrap items-center gap-2 mb-3">
+          {org.entity_type && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-void-deep border border-void-border text-gray-300 uppercase tracking-wider">
+              {org.entity_type === "informal_group"
+                ? t("entityTypeInformalGroup")
+                : org.entity_type === "public_body"
+                ? t("entityTypePublicBody")
+                : t("entityTypeNgo")}
+            </span>
+          )}
           {picValue && (
             <TermTooltip term="PIC">
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-hyper-violet/15 border border-hyper-violet/30 text-hyper-violet uppercase tracking-wider">
