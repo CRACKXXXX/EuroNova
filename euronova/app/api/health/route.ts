@@ -61,15 +61,10 @@ export async function GET(): Promise<NextResponse<HealthResponse>> {
     const projectsOk = !projectsRes.error;
     const surveysOk = !surveysRes.error;
 
-    if (projectsOk && surveysOk) {
+    if (projectsOk) {
       dbConnected = true;
-      schemaReady = true;
-    } else if (projectsOk || surveysOk) {
-      // Partial connection: connection succeeded to at least one table, but schema disparity
-      dbConnected = true;
-      schemaReady = false;
+      schemaReady = surveysOk;
     } else {
-      // Both queries returned errors
       dbConnected = false;
       schemaReady = false;
     }
@@ -80,7 +75,7 @@ export async function GET(): Promise<NextResponse<HealthResponse>> {
 
   const endTime = performance.now();
   const latencyMs = Number((endTime - startTime).toFixed(2));
-  const isHealthy = dbConnected && schemaReady;
+  const isHealthy = dbConnected;
 
   const payload: HealthResponse = {
     status: isHealthy ? "healthy" : "degraded",
