@@ -1750,6 +1750,52 @@ export async function resolveAdminEscalation(
 }
 
 /**
+ * Deletes a resolved escalation permanently from the database.
+ * SECURITY: Only available to 'admin' and 'root' roles, and ONLY for escalations that have a resolved status (status !== 'pending').
+ */
+export async function deleteAdminEscalation(escalationId: string): Promise<AdminActionResult> {
+  try {
+    const { isAuthorized, role } = await verifyAdmin();
+    if (!isAuthorized || (role !== "admin" && role !== "root")) {
+      return { error: "Unauthorized: Admin clearance required." };
+    }
+
+    if (!escalationId) {
+      return { error: "Escalation ID is required." };
+    }
+
+    const adminDb = getServiceRoleClient();
+
+    const { data: esc, error: fetchErr } = await adminDb
+      .from("admin_escalations")
+      .select("id, status")
+      .eq("id", escalationId)
+      .maybeSingle();
+
+    if (fetchErr || !esc) {
+      return { error: "Escalation record not found." };
+    }
+
+    if (esc.status === "pending") {
+      return { error: "Security restriction: Only resolved escalations can be deleted." };
+    }
+
+    const { error: delErr } = await adminDb
+      .from("admin_escalations")
+      .delete()
+      .eq("id", escalationId);
+
+    if (delErr) throw delErr;
+
+    safeRevalidate("/dashboard/admin");
+    return { success: true };
+  } catch (err: unknown) {
+    console.error("deleteAdminEscalation error:", err);
+    return { error: err instanceof Error ? err.message : "Failed to delete escalation." };
+  }
+}
+
+/**
  * Updates a Support Ticket's status and optionally sends a notification/response to the user.
  */
 export async function updateSupportTicketStatus(

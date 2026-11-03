@@ -187,12 +187,12 @@ export function ProjectCard({
   };
 
   return (
-    <div className="bg-void-surface border border-void-border rounded-2xl overflow-visible hover:border-plasma-cyan/60 hover:shadow-[0_10px_35px_-10px_rgba(0,0,0,0.85),0_0_25px_rgba(0,229,255,0.22),inset_0_1px_1px_rgba(255,255,255,0.12)] hover:-translate-y-2 hover:scale-[1.01] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group/card flex flex-col h-full relative">
-      {/* Shimmer Sheen on Hover */}
-      <div className="absolute inset-0 -translate-x-full group-hover/card:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-plasma-cyan/10 to-transparent pointer-events-none rounded-2xl overflow-hidden" />
-
-      {/* Ambient Internal Nebula Glow */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-plasma-cyan/5 rounded-full blur-2xl pointer-events-none group-hover/card:bg-plasma-cyan/15 transition-colors duration-500" />
+    <div className="bg-void-surface border border-void-border rounded-2xl overflow-visible hover:border-plasma-cyan/40 hover:shadow-[0_8px_25px_-5px_rgba(0,0,0,0.7),0_0_15px_rgba(0,229,255,0.15)] hover:-translate-y-1.5 transition-all duration-300 ease-out group/card flex flex-col h-full relative">
+      {/* Shimmer Sheen & Ambient Nebula Glow - Strictly clipped within rounded bounds to prevent overflow artifacts */}
+      <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none z-0">
+        <div className="absolute inset-0 -translate-x-full group-hover/card:translate-x-full transition-transform duration-1000 ease-out bg-gradient-to-r from-transparent via-plasma-cyan/5 to-transparent" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-plasma-cyan/[0.03] rounded-full blur-2xl group-hover/card:bg-plasma-cyan/[0.08] transition-colors duration-500" />
+      </div>
 
       {/* Badge "NEW" 24h con pulso y brillo neón */}
       {isNew && (
@@ -259,7 +259,7 @@ export function ProjectCard({
             {/* AI Anti-Scam Shield micro-badge */}
             <CosmicTooltip content={t("antiScamVerifiedTitle")} side="top">
               <div
-                className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/40 shadow-[0_0_12px_rgba(0,230,118,0.25)] flex items-center gap-1 shrink-0 select-none cursor-default hover:scale-105 transition-transform"
+                className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/40 shadow-[0_0_10px_rgba(0,230,118,0.2)] flex items-center gap-1 shrink-0 select-none cursor-default hover:scale-105 transition-all duration-300 ease-out"
               >
                 <ShieldCheck className="w-3 h-3 text-rup-emerald shrink-0" />
                 <span>{t("antiScamVerified")}</span>
@@ -267,7 +267,7 @@ export function ProjectCard({
             </CosmicTooltip>
           </div>
 
-          {/* Botones de acción interactiva: Guardar (Favorite) y Aplicar (Applied) con física táctil Uiverse */}
+          {/* Botones de acción interactiva: Guardar (Favorite) y Aplicar (Applied) con física táctil suave */}
           <div className={`flex items-center gap-1.5 shrink-0 z-10 transition-all ${isNew ? "mt-6" : ""}`}>
             {/* Botón Favorito */}
             <CosmicTooltip content={isFavorite ? t("removeFromFavorites") : t("addToFavorites")} side="top">
@@ -276,15 +276,15 @@ export function ProjectCard({
                 onClick={handleToggleFavorite}
                 disabled={isPendingFav}
                 aria-label={isFavorite ? t("removeFromFavorites") : t("addToFavorites")}
-                className={`p-2 rounded-xl border transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] cursor-pointer hover:scale-110 active:scale-90 ${
+                className={`p-2 rounded-xl border transition-all duration-300 ease-out cursor-pointer hover:scale-105 active:scale-95 ${
                   isFavorite
-                    ? "bg-nova-flare/20 border-nova-flare/60 text-nova-flare shadow-[0_0_15px_rgba(255,46,99,0.4),0_0_30px_rgba(255,46,99,0.2)]"
-                    : "bg-void-deep/80 border-void-border text-gray-400 hover:text-white hover:border-gray-500 hover:shadow-[0_0_12px_rgba(255,255,255,0.1)]"
+                    ? "bg-nova-flare/20 border-nova-flare/50 text-nova-flare shadow-[0_0_12px_rgba(255,46,99,0.3)]"
+                    : "bg-void-deep/80 border-void-border text-gray-400 hover:text-white hover:border-gray-500 hover:shadow-[0_0_10px_rgba(255,255,255,0.08)]"
                 }`}
               >
                 <Heart
-                  className={`w-4 h-4 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
-                    isFavorite ? "fill-nova-flare scale-110" : "group-hover:scale-105"
+                  className={`w-4 h-4 transition-transform duration-300 ease-out ${
+                    isFavorite ? "fill-nova-flare scale-105" : ""
                   }`}
                 />
               </button>
@@ -297,15 +297,15 @@ export function ProjectCard({
                 onClick={handleToggleApplied}
                 disabled={isPendingApp}
                 aria-label={isApplied ? t("applied") : t("markAsApplied")}
-                className={`p-2 rounded-xl border transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] cursor-pointer hover:scale-110 active:scale-90 ${
+                className={`p-2 rounded-xl border transition-all duration-300 ease-out cursor-pointer hover:scale-105 active:scale-95 ${
                   isApplied
-                    ? "bg-hyper-violet/25 border-hyper-violet/60 text-hyper-violet shadow-[0_0_15px_rgba(99,102,241,0.4),0_0_30px_rgba(99,102,241,0.2)]"
-                    : "bg-void-deep/80 border-void-border text-gray-400 hover:text-white hover:border-gray-500 hover:shadow-[0_0_12px_rgba(255,255,255,0.1)]"
+                    ? "bg-hyper-violet/20 border-hyper-violet/50 text-hyper-violet shadow-[0_0_12px_rgba(99,102,241,0.3)]"
+                    : "bg-void-deep/80 border-void-border text-gray-400 hover:text-white hover:border-gray-500 hover:shadow-[0_0_10px_rgba(255,255,255,0.08)]"
                 }`}
               >
                 <Briefcase
-                  className={`w-4 h-4 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
-                    isApplied ? "fill-hyper-violet/40 scale-110" : "group-hover:scale-105"
+                  className={`w-4 h-4 transition-transform duration-300 ease-out ${
+                    isApplied ? "fill-hyper-violet/40 scale-105" : ""
                   }`}
                 />
               </button>
@@ -329,7 +329,7 @@ export function ProjectCard({
               fallbackType="org"
               name={project.org_name}
               sizeClassName="w-5 h-5"
-              className="border border-void-border bg-void-deep group-hover/avatar:scale-110 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+              className="border border-void-border bg-void-deep group-hover/avatar:scale-105 transition-transform duration-300 ease-out"
               iconClassName="w-3 h-3 text-plasma-cyan"
             />
             <span className="text-sm text-gray-400 font-medium truncate">
@@ -423,7 +423,7 @@ export function ProjectCard({
       <div className="p-4 border-t border-void-border bg-void-deep/50 mt-auto">
         <Link
           href={`/dashboard/projects/${project.id}`}
-          className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-plasma-cyan/15 text-white font-bold text-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] border border-void-border hover:border-plasma-cyan/50 hover:shadow-[0_0_20px_rgba(0,229,255,0.25)] hover:scale-[1.01] active:scale-[0.98] flex justify-center items-center gap-2 text-center break-words min-w-0 px-3 cursor-pointer"
+          className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-plasma-cyan/15 text-white font-bold text-sm transition-all duration-300 ease-out border border-void-border hover:border-plasma-cyan/40 hover:shadow-[0_0_15px_rgba(0,229,255,0.18)] hover:scale-[1.01] active:scale-[0.98] flex justify-center items-center gap-2 text-center break-words min-w-0 px-3 cursor-pointer"
         >
           {t("viewDetails")}
         </Link>

@@ -15,7 +15,7 @@ jobs:
   db-backup:
     name: Supabase Dump & Safe Google Drive Rotation
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
 
     defaults:
       run:
@@ -25,10 +25,17 @@ jobs:
       - name: 🛰️ Checkout Codebase
         uses: actions/checkout@v4
 
-      - name: 🐘 Install PostgreSQL Client (pg_dump)
+      - name: 🐘 Install PostgreSQL 16 Client (pg_dump)
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y postgresql-client
+          sudo apt-get install -y lsb-release ca-certificates curl gnupg
+          sudo install -d /etc/apt/keyrings
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/keyrings/postgresql.gpg
+          echo "deb [signed-by=/etc/apt/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -y
+          sudo apt-get install -y postgresql-client-16
+          echo "Installed pg_dump version:"
+          pg_dump --version
 
       - name: ⚙️ Setup Node.js 20 & NPM Cache
         uses: actions/setup-node@v4
@@ -38,12 +45,12 @@ jobs:
           cache-dependency-path: euronova/package-lock.json
 
       - name: 📦 Install googleapis
-        run: npm install googleapis
+        run: npm install --no-audit --no-fund googleapis
 
       - name: 🛡️ Execute Database Backup & Safe Rotation
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-          GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
-          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+          GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON || secrets.GDRIVE_CREDENTIALS_DATA || secrets.GDRIVE_CREDENTIALS }}
+          GDRIVE_CREDENTIALS_DATA: ${{ secrets.GDRIVE_CREDENTIALS_DATA || secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
+          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID || secrets.FOLDER_ID }}
         run: node scripts/backup-db.mjs
-

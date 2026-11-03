@@ -301,7 +301,7 @@ export function ProjectDossierApplyModal({
     return (
       <Link
         href={`/${locale}/login`}
-        className="w-full px-6 py-4 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 text-void-deep bg-plasma-cyan hover:bg-plasma-cyan/90 shadow-[0_0_20px_rgba(0,229,255,0.3)] hover:shadow-[0_0_35px_rgba(0,229,255,0.6)] hover:scale-[1.02] active:scale-[0.98] text-lg cursor-pointer"
+        className="w-full px-6 py-4 rounded-xl font-bold transition-all duration-300 ease-out flex items-center justify-center gap-2 text-void-deep bg-plasma-cyan hover:bg-plasma-cyan/90 shadow-[0_0_15px_rgba(0,229,255,0.25)] hover:shadow-[0_0_25px_rgba(0,229,255,0.35)] hover:scale-[1.015] active:scale-[0.985] text-lg cursor-pointer"
       >
         <FileText className="w-5 h-5" />
         <span>{t("applyWithDossier")}</span>
@@ -315,7 +315,7 @@ export function ProjectDossierApplyModal({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="w-full px-6 py-4 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 text-void-deep bg-plasma-cyan hover:bg-plasma-cyan/90 shadow-[0_0_20px_rgba(0,229,255,0.3)] hover:shadow-[0_0_35px_rgba(0,229,255,0.6)] hover:scale-[1.02] active:scale-[0.98] text-lg cursor-pointer group"
+        className="w-full px-6 py-4 rounded-xl font-bold transition-all duration-300 ease-out flex items-center justify-center gap-2 text-void-deep bg-plasma-cyan hover:bg-plasma-cyan/90 shadow-[0_0_15px_rgba(0,229,255,0.25)] hover:shadow-[0_0_25px_rgba(0,229,255,0.35)] hover:scale-[1.015] active:scale-[0.985] text-lg cursor-pointer group"
       >
         <Sparkles className="w-5 h-5 transition-transform duration-300 group-hover:rotate-12" />
         <span>{t("applyWithDossier")}</span>

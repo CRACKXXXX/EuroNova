@@ -121,9 +121,9 @@ export function SupportForm() {
           <button
             type="button"
             onClick={() => setContactMethod("website")}
-            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] active:scale-[0.98] cursor-pointer ${
+            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all duration-300 ease-out hover:scale-[1.015] active:scale-[0.985] cursor-pointer ${
               contactMethod === "website"
-                ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_20px_rgba(0,229,255,0.25)]"
+                ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.18)]"
                 : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-700 hover:bg-void-surface"
             }`}
           >
@@ -134,9 +134,9 @@ export function SupportForm() {
           <button
             type="button"
             onClick={() => setContactMethod("email")}
-            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] active:scale-[0.98] cursor-pointer ${
+            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all duration-300 ease-out hover:scale-[1.015] active:scale-[0.985] cursor-pointer ${
               contactMethod === "email"
-                ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_20px_rgba(0,229,255,0.25)]"
+                ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.18)]"
                 : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-700 hover:bg-void-surface"
             }`}
           >
@@ -147,9 +147,9 @@ export function SupportForm() {
           <button
             type="button"
             onClick={() => setContactMethod("whatsapp")}
-            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] active:scale-[0.98] cursor-pointer ${
+            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all duration-300 ease-out hover:scale-[1.015] active:scale-[0.985] cursor-pointer ${
               contactMethod === "whatsapp"
-                ? "bg-rup-emerald/15 border-rup-emerald text-rup-emerald shadow-[0_0_20px_rgba(0,230,118,0.25)]"
+                ? "bg-rup-emerald/15 border-rup-emerald text-rup-emerald shadow-[0_0_15px_rgba(0,230,118,0.18)]"
                 : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-700 hover:bg-void-surface"
             }`}
           >
@@ -314,7 +314,7 @@ export function SupportForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full font-bold py-4 px-4 rounded-xl transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex items-center justify-center gap-2 text-void-deep bg-plasma-cyan hover:bg-plasma-cyan/90 shadow-[0_0_20px_rgba(0,229,255,0.35)] hover:shadow-[0_0_35px_rgba(0,229,255,0.6)] hover:scale-[1.015] active:scale-[0.985] disabled:opacity-50 cursor-pointer"
+          className="w-full font-bold py-4 px-4 rounded-xl transition-all duration-300 ease-out flex items-center justify-center gap-2 text-void-deep bg-plasma-cyan hover:bg-plasma-cyan/90 shadow-[0_0_15px_rgba(0,229,255,0.25)] hover:shadow-[0_0_25px_rgba(0,229,255,0.35)] hover:scale-[1.015] active:scale-[0.985] disabled:opacity-50 cursor-pointer"
         >
           <Send className="w-5 h-5" />
           <span>{isPending ? t("submitting") : t("submit")}</span>

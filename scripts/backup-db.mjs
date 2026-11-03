@@ -6,7 +6,7 @@
  * ==============================================================================
  * Pipeline:
  *  1. Execute pg_dump (via SUPABASE_DB_URL) piped through gzip to a local .sql.gz
- *  2. Authenticate with Google Drive API via Service Account JSON
+ *  2. Authenticate with Google Drive API via Service Account JSON or OAuth
  *  3. Upload the compressed backup to the target Google Drive Folder ID
  *  4. Verify the remote upload is 100% valid (fileId exists, size > 0)
  *  5. ONLY THEN: Safe Rotation — search and delete the previous day's backup
@@ -38,6 +38,8 @@ async function loadGoogleApis() {
     return mod.google;
   } catch {
     const fallbackPaths = [
+      path.resolve(__dirname, '..', 'node_modules', 'googleapis', 'build', 'src', 'index.js'),
+      path.resolve(process.cwd(), 'node_modules', 'googleapis', 'build', 'src', 'index.js'),
       path.resolve(__dirname, '..', 'euronova', 'node_modules', 'googleapis', 'build', 'src', 'index.js'),
       path.resolve(process.cwd(), 'euronova', 'node_modules', 'googleapis', 'build', 'src', 'index.js'),
     ];
@@ -73,7 +75,7 @@ function toMegabytes(bytes) {
 }
 
 /**
- * Optional local environment loader: loads .env.local if present (useful for local CLI runs)
+ * Optional local environment loader: loads .env.local if present
  */
 function loadLocalEnvIfPresent() {
   const envCandidates = [
@@ -111,6 +113,97 @@ function loadLocalEnvIfPresent() {
   }
 }
 
+/**
+ * Parses and normalizes Google credentials (supports raw JSON, Base64 JSON, and handles literal newlines in private keys)
+ */
+function parseGoogleCredentials(rawInput) {
+  if (!rawInput) {
+    throw new Error('No Google credentials provided. Set GDRIVE_SERVICE_ACCOUNT_JSON or GDRIVE_CREDENTIALS_DATA.');
+  }
+
+  let text = rawInput.trim();
+  if ((text.startsWith("'") && text.endsWith("'")) || (text.startsWith('"') && text.endsWith('"'))) {
+    text = text.slice(1, -1).trim();
+  }
+
+  let creds;
+  try {
+    if (text.startsWith('{')) {
+      creds = JSON.parse(text);
+    } else {
+      const decoded = Buffer.from(text, 'base64').toString('utf8');
+      creds = JSON.parse(decoded);
+    }
+  } catch (err) {
+    throw new Error(`Failed to parse Google credentials. Ensure the secret contains valid JSON or Base64 JSON: ${err.message}`);
+  }
+
+  if (creds.private_key && typeof creds.private_key === 'string') {
+    creds.private_key = creds.private_key.replace(/\\n/g, '\n');
+  }
+
+  return creds;
+}
+
+/**
+ * Cleans folder ID if user pasted full browser URL
+ */
+function sanitizeFolderId(input) {
+  if (!input) return '';
+  const trimmed = input.trim();
+  const match = trimmed.match(/folders\/([a-zA-Z0-9_-]+)/);
+  if (match) {
+    return match[1];
+  }
+  return trimmed;
+}
+
+/**
+ * Validates database URL structure, detects Transaction Pooler misuse and IPv6 timeout risks
+ */
+function inspectAndValidateDbUrl(rawUrl) {
+  let parsed;
+  try {
+    parsed = new URL(rawUrl);
+  } catch (e) {
+    throw new Error(`Invalid SUPABASE_DB_URL format: ${e.message}`);
+  }
+
+  if (parsed.protocol !== 'postgresql:' && parsed.protocol !== 'postgres:') {
+    throw new Error(`Invalid database protocol in SUPABASE_DB_URL: expected "postgresql:" or "postgres:", got "${parsed.protocol}"`);
+  }
+
+  const hostname = parsed.hostname;
+  const port = parsed.port || '5432';
+
+  if (port === '6543') {
+    throw new Error(
+      'CRITICAL: SUPABASE_DB_URL is configured with port 6543 (Transaction Pooler / PgBouncer). ' +
+      'pg_dump requires session-level PostgreSQL features and will fail on port 6543. ' +
+      'Please switch the port to 5432 (Session Mode Pooler): postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres'
+    );
+  }
+
+  if (hostname.startsWith('db.') && hostname.endsWith('.supabase.co')) {
+    console.warn('\n⚠️ [NETWORK WARNING] Direct Supabase host detected: ' + hostname);
+    console.warn('⚠️ GitHub Actions hosted runners operate on IPv4. Direct "db.*.supabase.co" endpoints on modern Supabase projects resolve to IPv6 only.');
+    console.warn('⚠️ If pg_dump hangs or times out with "Connection timed out", switch your SUPABASE_DB_URL to the IPv4-compatible Session Pooler:');
+    console.warn('⚠️ Example: postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres\n');
+  }
+
+  const dbPassword = parsed.password || '';
+  const maskedPort = parsed.port ? `:${parsed.port}` : '';
+  const maskedTarget = `${parsed.protocol}//${parsed.username ? parsed.username + ':***@' : ''}${hostname}${maskedPort}${parsed.pathname}`;
+
+  return {
+    parsed,
+    hostname,
+    port,
+    dbPassword,
+    maskedTarget,
+  };
+}
+
 async function runBackupPipeline() {
   loadLocalEnvIfPresent();
 
@@ -120,66 +213,57 @@ async function runBackupPipeline() {
 
   // 1. Verify required environment variables
   const dbUrl = process.env.SUPABASE_DB_URL?.trim();
-  const rawServiceAccountJson = process.env.GDRIVE_SERVICE_ACCOUNT_JSON?.trim();
-  const folderId = process.env.GDRIVE_FOLDER_ID?.trim();
+  const rawServiceAccountJson = (
+    process.env.GDRIVE_SERVICE_ACCOUNT_JSON ||
+    process.env.GDRIVE_CREDENTIALS_DATA ||
+    process.env.GDRIVE_CREDENTIALS ||
+    process.env.GOOGLE_CREDENTIALS
+  )?.trim();
+  const rawFolderId = (
+    process.env.GDRIVE_FOLDER_ID ||
+    process.env.FOLDER_ID
+  )?.trim();
 
   const missingEnv = [];
   if (!dbUrl) missingEnv.push('SUPABASE_DB_URL');
-  if (!rawServiceAccountJson) missingEnv.push('GDRIVE_SERVICE_ACCOUNT_JSON');
-  if (!folderId) missingEnv.push('GDRIVE_FOLDER_ID');
+  if (!rawServiceAccountJson) missingEnv.push('GDRIVE_SERVICE_ACCOUNT_JSON (or GDRIVE_CREDENTIALS_DATA)');
+  if (!rawFolderId) missingEnv.push('GDRIVE_FOLDER_ID');
 
   if (missingEnv.length > 0) {
     throw new Error(`Missing required environment variables: ${missingEnv.join(', ')}`);
   }
 
-  // Extract database metadata safely for logging without leaking the password
-  let dbPassword = '';
-  let maskedDbTarget = 'postgresql://***';
-  try {
-    const parsedUrl = new URL(dbUrl);
-    dbPassword = parsedUrl.password || '';
-    const port = parsedUrl.port ? `:${parsedUrl.port}` : '';
-    maskedDbTarget = `${parsedUrl.protocol}//${parsedUrl.username ? parsedUrl.username + ':***@' : ''}${parsedUrl.hostname}${port}${parsedUrl.pathname}`;
-  } catch {
-    maskedDbTarget = 'postgresql://[DATABASE_TARGET_MASKED]';
+  const folderId = sanitizeFolderId(rawFolderId);
+  const dbInfo = inspectAndValidateDbUrl(dbUrl);
+  const sensitiveTokens = [dbUrl, dbInfo.dbPassword, rawServiceAccountJson];
+
+  // 2. Parse Google Credentials
+  const credentials = parseGoogleCredentials(rawServiceAccountJson);
+  const isServiceAccount = Boolean(credentials.client_email && credentials.private_key);
+  const isAuthorizedUser = Boolean(credentials.type === 'authorized_user' || credentials.refresh_token);
+
+  if (!isServiceAccount && !isAuthorizedUser) {
+    throw new Error('Invalid Google Credentials: Must contain either (client_email + private_key) for Service Accounts OR (refresh_token) for Authorized Users.');
   }
 
-  const sensitiveTokens = [dbUrl, dbPassword, rawServiceAccountJson];
-
-  // 2. Parse Google Service Account credentials (support raw JSON or base64)
-  let serviceAccountCredentials;
-  try {
-    if (rawServiceAccountJson.startsWith('{')) {
-      serviceAccountCredentials = JSON.parse(rawServiceAccountJson);
-    } else {
-      const decoded = Buffer.from(rawServiceAccountJson, 'base64').toString('utf8');
-      serviceAccountCredentials = JSON.parse(decoded);
-    }
-  } catch (parseError) {
-    throw new Error(`Failed to parse GDRIVE_SERVICE_ACCOUNT_JSON. Ensure it is valid JSON or Base64 JSON: ${parseError.message}`);
+  if (credentials.private_key) {
+    sensitiveTokens.push(credentials.private_key);
   }
 
-  if (!serviceAccountCredentials.client_email || !serviceAccountCredentials.private_key) {
-    throw new Error('Invalid Service Account JSON: Missing client_email or private_key fields.');
-  }
-
-  sensitiveTokens.push(serviceAccountCredentials.private_key);
-
-  console.log(`[Config Check] Target Database: ${maskedDbTarget}`);
-  console.log(`[Config Check] GDrive Service Account: ${serviceAccountCredentials.client_email}`);
+  console.log(`[Config Check] Target Database: ${dbInfo.maskedTarget}`);
+  console.log(`[Config Check] Auth Identity: ${credentials.client_email || credentials.client_id || 'OAuth User'}`);
   console.log(`[Config Check] GDrive Folder ID: ${folderId}`);
 
   // 3. Setup timestamped filenames
   const now = new Date();
-  const dateStr = now.toISOString().slice(0, 10); // "YYYY-MM-DD"
-  const timeStr = now.toISOString().slice(11, 19).replace(/:/g, '-'); // "HH-MM-SS"
+  const dateStr = now.toISOString().slice(0, 10);
+  const timeStr = now.toISOString().slice(11, 19).replace(/:/g, '-');
   const backupFileName = `${BACKUP_PREFIX}${dateStr}_${timeStr}.sql.gz`;
   const localBackupPath = path.resolve(process.cwd(), backupFileName);
 
   console.log(`\n--- [STEP 1/4] DUMPING SUPABASE DATABASE (pg_dump + gzip) ---`);
   console.log(`Target local file: ${backupFileName}`);
 
-  // Execute pg_dump streaming directly into Node.js gzip compression
   const pgDumpArgs = [
     `--dbname=${dbUrl}`,
     '--clean',
@@ -188,9 +272,16 @@ async function runBackupPipeline() {
     '--no-privileges',
   ];
 
+  const pgEnv = {
+    ...process.env,
+    PGPASSWORD: dbInfo.dbPassword || process.env.PGPASSWORD,
+    PGSSLMODE: process.env.PGSSLMODE || 'require',
+    PGCONNECT_TIMEOUT: '45',
+  };
+
   const pgDumpProcess = spawn('pg_dump', pgDumpArgs, {
     stdio: ['ignore', 'pipe', 'pipe'],
-    env: { ...process.env },
+    env: pgEnv,
   });
 
   const gzip = createGzip({ level: 9 });
@@ -210,7 +301,15 @@ async function runBackupPipeline() {
     pgDumpProcess.on('close', (code) => {
       if (code !== 0) {
         const cleanErr = sanitizeOutput(pgDumpStderr, sensitiveTokens).trim();
-        reject(new Error(`pg_dump exited with non-zero code (${code}): ${cleanErr || 'Unknown error'}`));
+        let hint = '';
+        if (cleanErr.includes('timeout') || cleanErr.includes('timed out') || cleanErr.includes('unreachable')) {
+          hint = '\n👉 DIAGNOSTIC HINT: Connection timed out. If your SUPABASE_DB_URL uses "db.<ref>.supabase.co", switch to the IPv4-compatible Session Pooler at "aws-0-<region>.pooler.supabase.com:5432".';
+        } else if (cleanErr.includes('password authentication failed')) {
+          hint = '\n👉 DIAGNOSTIC HINT: Password authentication failed. Check your database password in SUPABASE_DB_URL. Special characters must be URL-encoded (e.g., %23 instead of #).';
+        } else if (cleanErr.includes('server version mismatch')) {
+          hint = '\n👉 DIAGNOSTIC HINT: Server version mismatch. Ensure postgresql-client-16 is installed in the workflow.';
+        }
+        reject(new Error(`pg_dump exited with non-zero code (${code}): ${cleanErr || 'Unknown error'}${hint}`));
       } else {
         resolve();
       }
@@ -219,7 +318,6 @@ async function runBackupPipeline() {
 
   await Promise.all([streamPipelinePromise, processExitPromise]);
 
-  // Validate local file integrity
   if (!fs.existsSync(localBackupPath)) {
     throw new Error(`Backup file was not created: ${localBackupPath}`);
   }
@@ -235,7 +333,7 @@ async function runBackupPipeline() {
   console.log(`\n--- [STEP 2/4] AUTHENTICATING WITH GOOGLE DRIVE API ---`);
   const google = await loadGoogleApis();
   const auth = new google.auth.GoogleAuth({
-    credentials: serviceAccountCredentials,
+    credentials,
     scopes: ['https://www.googleapis.com/auth/drive'],
   });
 
@@ -246,25 +344,36 @@ async function runBackupPipeline() {
   console.log(`\n--- [STEP 3/4] UPLOADING COMPRESSED BACKUP TO GOOGLE DRIVE ---`);
   console.log(`Destination Folder ID: ${folderId}`);
 
-  const uploadResponse = await drive.files.create({
-    requestBody: {
-      name: backupFileName,
-      parents: [folderId],
-    },
-    media: {
-      mimeType: 'application/gzip',
-      body: fs.createReadStream(localBackupPath),
-    },
-    fields: 'id, name, size, mimeType',
-    supportsAllDrives: true,
-  });
+  let uploadResponse;
+  try {
+    uploadResponse = await drive.files.create({
+      requestBody: {
+        name: backupFileName,
+        parents: [folderId],
+      },
+      media: {
+        mimeType: 'application/gzip',
+        body: fs.createReadStream(localBackupPath),
+      },
+      fields: 'id, name, size, mimeType',
+      supportsAllDrives: true,
+    });
+  } catch (uploadError) {
+    const errMsg = uploadError?.message || '';
+    let hint = '';
+    if (errMsg.includes('storageQuotaExceeded') || errMsg.includes('quota')) {
+      hint = '\n👉 DIAGNOSTIC HINT: Google Drive error "storageQuotaExceeded". Google Service Accounts have 0 MB storage quota in personal Google Drive folders. Make sure you either: 1) Use a Google Workspace Shared Drive, OR 2) Share the folder with the Service Account and assign Editor permissions, OR 3) Use OAuth credentials for the personal account.';
+    } else if (errMsg.includes('File not found') || errMsg.includes('notFound')) {
+      hint = `\n👉 DIAGNOSTIC HINT: Google Drive folder "${folderId}" not found. Verify GDRIVE_FOLDER_ID and confirm the folder has been shared with "${credentials.client_email || 'Service Account'}" with Editor role.`;
+    }
+    throw new Error(`Google Drive upload failed: ${errMsg}${hint}`);
+  }
 
   const uploadedFileId = uploadResponse.data?.id;
   if (!uploadedFileId) {
     throw new Error('Google Drive API response did not contain a valid file ID.');
   }
 
-  // Verification: Fetch file metadata from Google Drive to confirm size > 0
   const verifyResponse = await drive.files.get({
     fileId: uploadedFileId,
     fields: 'id, name, size, trashed',
@@ -282,7 +391,7 @@ async function runBackupPipeline() {
   console.log(`\n--- [STEP 4/4] EXECUTING SAFE ROTATION (PREVIOUS DAY RETENTION) ---`);
 
   const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-  const yesterdayStr = yesterday.toISOString().slice(0, 10); // "YYYY-MM-DD"
+  const yesterdayStr = yesterday.toISOString().slice(0, 10);
   console.log(`Today date: ${dateStr} | Target previous day date: ${yesterdayStr}`);
 
   const listResponse = await drive.files.list({
@@ -295,19 +404,16 @@ async function runBackupPipeline() {
   const filesInFolder = listResponse.data.files || [];
   console.log(`Found ${filesInFolder.length} total file(s) in the target Google Drive folder.`);
 
-  // Find candidate backup files excluding the new one
   const previousBackups = filesInFolder.filter((file) => {
     return file.id !== uploadedFileId && file.name.startsWith(BACKUP_PREFIX);
   });
 
-  // Specifically match files containing yesterday's date
   const previousDayBackups = previousBackups.filter((file) => {
     return file.name.includes(yesterdayStr) || (file.createdTime && file.createdTime.startsWith(yesterdayStr));
   });
 
   let backupsToDelete = previousDayBackups;
 
-  // Fallback: If no backup specifically matches yesterday, find any older backups from days prior to today
   if (backupsToDelete.length === 0) {
     const olderBackups = previousBackups.filter((file) => !file.name.includes(dateStr));
     if (olderBackups.length > 0) {
@@ -339,6 +445,23 @@ async function runBackupPipeline() {
     console.warn(`[Cleanup Warning] Could not delete local temp file: ${cleanErr.message}`);
   }
 
+  // Generate GitHub Step Summary if running inside Actions
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    try {
+      const summaryContent = `### 🛡️ EuroNova Database Backup Status: SUCCESS
+- **Backup File:** \`${backupFileName}\`
+- **Size:** ${toMegabytes(remoteFileSize)}
+- **Google Drive File ID:** \`${uploadedFileId}\`
+- **Target Folder:** \`${folderId}\`
+- **Timestamp:** ${new Date().toISOString()}
+- **Safe Rotation:** ${backupsToDelete.length > 0 ? `Rotated ${backupsToDelete.length} prior backup(s)` : 'Initial backup established (no files deleted)'}
+`;
+      fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summaryContent);
+    } catch {
+      // Ignore summary write errors
+    }
+  }
+
   console.log('\n================================================================');
   console.log('✅ EuroNova Database Backup Pipeline Finished Successfully!');
   console.log('================================================================');
@@ -355,9 +478,29 @@ try {
 
   const cleanMessage = sanitizeOutput(
     error?.message || error || 'Unknown runtime error',
-    [process.env.SUPABASE_DB_URL, process.env.GDRIVE_SERVICE_ACCOUNT_JSON]
+    [
+      process.env.SUPABASE_DB_URL,
+      process.env.GDRIVE_SERVICE_ACCOUNT_JSON,
+      process.env.GDRIVE_CREDENTIALS_DATA,
+      process.env.GDRIVE_CREDENTIALS,
+    ]
   );
   console.error(cleanMessage);
+
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    try {
+      const summaryContent = `### ❌ EuroNova Database Backup Status: FAILED
+**Error Details:**
+\`\`\`text
+${cleanMessage}
+\`\`\`
+> Please check repository secrets (\`SUPABASE_DB_URL\`, \`GDRIVE_SERVICE_ACCOUNT_JSON\` / \`GDRIVE_CREDENTIALS_DATA\`, \`GDRIVE_FOLDER_ID\`) and ensure your database connection uses the IPv4 Session Pooler on port 5432.
+`;
+      fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summaryContent);
+    } catch {
+      // Ignore
+    }
+  }
 
   process.exit(1);
 }

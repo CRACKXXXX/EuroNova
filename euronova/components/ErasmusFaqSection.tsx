@@ -112,9 +112,9 @@ function UnmaskedWorkshopView({ rawAnswer }: { rawAnswer: string }) {
               key={lang.key}
               type="button"
               onClick={() => setActiveLang(lang.key)}
-              className={`inline-flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-xl text-xs font-bold transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none ${
+              className={`inline-flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-xl text-xs font-bold transition-all duration-300 ease-out cursor-pointer focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none hover:scale-[1.02] active:scale-[0.98] ${
                 isActive
-                  ? "bg-gradient-to-r from-plasma-cyan to-hyper-violet text-void-deep shadow-[0_0_15px_rgba(0,229,255,0.4)] scale-105"
+                  ? "bg-gradient-to-r from-plasma-cyan to-hyper-violet text-void-deep shadow-[0_0_12px_rgba(0,229,255,0.3)] scale-[1.02]"
                   : "bg-void-deep/90 text-gray-300 hover:text-white border border-void-border hover:border-plasma-cyan/40"
               }`}
             >
@@ -165,7 +165,7 @@ function UnmaskedWorkshopView({ rawAnswer }: { rawAnswer: string }) {
         href={parsed.driveLink}
         target="_blank"
         rel="noopener noreferrer"
-        className="group relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-hyper-violet/25 via-void-surface to-plasma-cyan/20 hover:from-plasma-cyan hover:via-hyper-violet hover:to-plasma-cyan border-2 border-plasma-cyan/50 hover:border-plasma-cyan transition-all duration-300 shadow-[0_0_25px_rgba(0,229,255,0.2)] hover:shadow-[0_0_40px_rgba(0,229,255,0.45)] cursor-pointer overflow-hidden"
+        className="group relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-hyper-violet/25 via-void-surface to-plasma-cyan/20 hover:from-plasma-cyan hover:via-hyper-violet hover:to-plasma-cyan border-2 border-plasma-cyan/50 hover:border-plasma-cyan transition-all duration-300 ease-out shadow-[0_0_15px_rgba(0,229,255,0.15)] hover:shadow-[0_0_25px_rgba(0,229,255,0.3)] hover:scale-[1.01] active:scale-[0.99] cursor-pointer overflow-hidden"
       >
         <div className="flex items-center gap-4 min-w-0">
           <div className="w-12 h-12 rounded-xl bg-plasma-cyan/20 group-hover:bg-void-deep border border-plasma-cyan/60 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(0,229,255,0.3)] transition-colors">
@@ -235,7 +235,7 @@ function formatAnswerWithLinks(text: string, t: FaqTranslator) {
             href={trimmed}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2.5 px-4 py-2.5 bg-plasma-cyan/15 hover:bg-plasma-cyan text-plasma-cyan hover:text-void-deep border border-plasma-cyan/50 hover:border-plasma-cyan rounded-xl transition-all font-bold text-xs sm:text-sm shadow-[0_0_20px_rgba(0,229,255,0.2)] hover:shadow-[0_0_25px_rgba(0,229,255,0.4)] group cursor-pointer"
+            className="inline-flex items-center gap-2.5 px-4 py-2.5 bg-plasma-cyan/15 hover:bg-plasma-cyan text-plasma-cyan hover:text-void-deep border border-plasma-cyan/50 hover:border-plasma-cyan rounded-xl transition-all duration-300 ease-out font-bold text-xs sm:text-sm shadow-[0_0_15px_rgba(0,229,255,0.15)] hover:shadow-[0_0_20px_rgba(0,229,255,0.3)] hover:scale-[1.015] active:scale-[0.985] group cursor-pointer"
           >
             <FileText className="w-4 h-4 text-plasma-cyan group-hover:text-void-deep transition-colors" />
             <span>{t("openUnmaskedGuide")}</span>
@@ -260,7 +260,7 @@ function formatAnswerWithLinks(text: string, t: FaqTranslator) {
                     href={part}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2.5 px-4 py-2.5 bg-plasma-cyan/15 hover:bg-plasma-cyan text-plasma-cyan hover:text-void-deep border border-plasma-cyan/50 hover:border-plasma-cyan rounded-xl transition-all font-bold text-xs sm:text-sm shadow-[0_0_20px_rgba(0,229,255,0.2)] hover:shadow-[0_0_25px_rgba(0,229,255,0.4)] group cursor-pointer"
+                    className="inline-flex items-center gap-2.5 px-4 py-2.5 bg-plasma-cyan/15 hover:bg-plasma-cyan text-plasma-cyan hover:text-void-deep border border-plasma-cyan/50 hover:border-plasma-cyan rounded-xl transition-all duration-300 ease-out font-bold text-xs sm:text-sm shadow-[0_0_20px_rgba(0,229,255,0.2)] hover:shadow-[0_0_25px_rgba(0,229,255,0.4)] hover:scale-[1.015] active:scale-[0.985] group cursor-pointer"
                   >
                     <FileText className="w-4 h-4 text-plasma-cyan group-hover:text-void-deep transition-colors" />
                     <span>{t("openUnmaskedGuide")}</span>
@@ -339,7 +339,7 @@ export function ErasmusFaqSection() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t("searchPlaceholder", { count: localizedFaqs.length })}
-              className="w-full bg-void-deep/90 border border-void-border rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-plasma-cyan transition-colors"
+              className="w-full bg-void-deep/90 border border-void-border rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan focus:shadow-[0_0_15px_rgba(0,229,255,0.15)] transition-all duration-300 ease-out"
             />
           </div>
         </div>
@@ -362,7 +362,7 @@ export function ErasmusFaqSection() {
             key={tab.key}
             type="button"
             onClick={() => setSelectedCategory(tab.key)}
-            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300 ease-out hover:scale-[1.02] active:scale-[0.98] cursor-pointer ${
               selectedCategory === tab.key
                 ? tab.isSpecial
                   ? "bg-gradient-to-r from-plasma-cyan to-hyper-violet text-void-deep font-bold shadow-[0_0_20px_rgba(0,229,255,0.4)]"
@@ -385,7 +385,7 @@ export function ErasmusFaqSection() {
           <button
             type="button"
             onClick={() => setSearchQuery("")}
-            className="text-plasma-cyan hover:underline cursor-pointer"
+            className="text-plasma-cyan hover:underline cursor-pointer transition-colors duration-200"
           >
             {t("clearSearch")}
           </button>
@@ -409,7 +409,7 @@ export function ErasmusFaqSection() {
             return (
               <div
                 key={faq.id}
-                className={`border rounded-2xl transition-all duration-200 overflow-hidden ${
+                className={`border rounded-2xl transition-all duration-300 ease-out overflow-hidden ${
                   isSpecialItem
                     ? isExpanded
                       ? "bg-gradient-to-b from-hyper-violet/25 via-void-surface/95 to-void-surface border-plasma-cyan shadow-[0_0_35px_rgba(0,229,255,0.18)] ring-1 ring-plasma-cyan/40"
@@ -450,8 +450,8 @@ export function ErasmusFaqSection() {
                   </div>
 
                   <div
-                    className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border border-void-border text-gray-400 group-hover:text-white transition-transform duration-200 ${
-                      isExpanded ? "rotate-180 bg-void-deep text-plasma-cyan" : "bg-void-surface"
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border border-void-border text-gray-400 group-hover:text-white transition-all duration-300 ease-out ${
+                      isExpanded ? "rotate-180 bg-void-deep text-plasma-cyan border-plasma-cyan/40 shadow-[0_0_10px_rgba(0,229,255,0.2)]" : "bg-void-surface"
                     }`}
                   >
                     <ChevronDown className="w-4 h-4" />

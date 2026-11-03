@@ -95,14 +95,14 @@ You must create the backup folder in your personal Google Drive account and gran
 3. Go to **Project Settings** (gear icon) > **Database**.
 4. Scroll down to the **Connection string** section.
 5. Select the **URI** tab.
-6. Choose **Direct connection** (Port `5432`) or **Session Pooler** (Port `5432`):
-   - ⚠️ **DO NOT use the Transaction Pooler (Port 6543)**, as `pg_dump` requires PostgreSQL session-level features.
-7. The connection string format is:
+6. ⚠️ **MANDATORY FOR GITHUB ACTIONS: Choose Session Pooler (Port `5432`)**:
+   - **Why?** GitHub Actions runners only have IPv4 connectivity. The direct connection (`db.[ref].supabase.co`) resolves to IPv6 only on modern Supabase databases, causing GitHub Actions to hang for ~1m 20s and time out with `Connection timed out`.
+   - ⚠️ **DO NOT use the Transaction Pooler (Port 6543)**, as `pg_dump` requires PostgreSQL session-level features and will crash with prepared statement errors.
+7. The required connection string format is:
    ```text
    postgresql://postgres.[PROJECT_REF]:[YOUR-PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres
    ```
-   *(or `postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres`)*.
-8. Replace `[YOUR-PASSWORD]` with your active database master password.
+8. Replace `[YOUR-PASSWORD]` with your active database master password. If your password contains special characters (like `#`, `@`, `!`, `%`), ensure they are properly URL-encoded (e.g. `%23` for `#`).
 
 ---
 
@@ -110,13 +110,13 @@ You must create the backup folder in your personal Google Drive account and gran
 
 1. Go to your GitHub repository: `https://github.com/<your-user>/EuroNova`.
 2. Navigate to **Settings** > **Secrets and variables** > **Actions**.
-3. Click the green **New repository secret** button and add the following 3 secrets:
+3. Click the green **New repository secret** button and add/verify the following secrets:
 
-| Secret Name | Value |
-|---|---|
-| `SUPABASE_DB_URL` | Full PostgreSQL connection URI obtained in Step 4 (including user, password, and port 5432). |
-| `GDRIVE_SERVICE_ACCOUNT_JSON` | Full raw contents of the `.json` key file downloaded in Step 2.3 (open in a text editor, copy all JSON text `{ ... }`, and paste as-is). |
-| `GDRIVE_FOLDER_ID` | Alphanumeric Google Drive folder ID obtained in Step 3.8. |
+| Secret Name | Accepted Aliases | Value |
+|---|---|---|
+| `SUPABASE_DB_URL` | - | Full PostgreSQL Session Pooler URI on Port 5432: `postgresql://postgres.[REF]:[PASS]@aws-0-[REGION].pooler.supabase.com:5432/postgres` |
+| `GDRIVE_SERVICE_ACCOUNT_JSON` | `GDRIVE_CREDENTIALS_DATA` | Full raw contents of the `.json` key file downloaded in Step 2.3 (or Base64 encoded). |
+| `GDRIVE_FOLDER_ID` | `FOLDER_ID` | Alphanumeric Google Drive folder ID obtained in Step 3.8 (e.g., `1a2B3c4D5e6F7g8H9i0J_kLmNoPqRsTuV`). |
 
 ---
 

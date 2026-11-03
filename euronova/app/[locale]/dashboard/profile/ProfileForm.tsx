@@ -610,10 +610,10 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
 
         <button
           onClick={() => setIsEditing(true)}
-          className={`w-full font-bold py-3.5 px-4 rounded-xl transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex items-center justify-center gap-2 border hover:scale-[1.01] active:scale-[0.985] cursor-pointer ${
+          className={`w-full font-bold py-3.5 px-4 rounded-xl transition-all duration-300 ease-out flex items-center justify-center gap-2 border hover:scale-[1.01] active:scale-[0.985] cursor-pointer ${
             role === "youth"
-              ? "border-plasma-cyan/40 hover:border-plasma-cyan hover:bg-plasma-cyan/15 hover:shadow-[0_0_25px_rgba(0,229,255,0.3)] text-plasma-cyan"
-              : "border-hyper-violet/40 hover:border-hyper-violet hover:bg-hyper-violet/15 hover:shadow-[0_0_25px_rgba(99,102,241,0.3)] text-hyper-violet"
+              ? "border-plasma-cyan/40 hover:border-plasma-cyan hover:bg-plasma-cyan/15 hover:shadow-[0_0_15px_rgba(0,229,255,0.2)] text-plasma-cyan"
+              : "border-hyper-violet/40 hover:border-hyper-violet hover:bg-hyper-violet/15 hover:shadow-[0_0_15px_rgba(99,102,241,0.2)] text-hyper-violet"
           }`}
         >
           <Edit2 className="w-5 h-5" />
@@ -1009,17 +1009,17 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
         <button
           type="button"
           onClick={() => setIsEditing(false)}
-          className="px-6 py-3 rounded-xl text-gray-400 hover:text-white transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-[1.02] active:scale-[0.98] border border-void-border hover:border-gray-600 hover:bg-void-surface cursor-pointer"
+          className="px-6 py-3 rounded-xl text-gray-400 hover:text-white transition-all duration-300 ease-out hover:scale-[1.015] active:scale-[0.985] border border-void-border hover:border-gray-600 hover:bg-void-surface cursor-pointer"
         >
           {t("cancel")}
         </button>
         <button
           type="submit"
           disabled={isPending}
-          className={`flex-1 font-bold py-3.5 px-4 rounded-xl transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex items-center justify-center gap-2 text-void-deep ${
+          className={`flex-1 font-bold py-3.5 px-4 rounded-xl transition-all duration-300 ease-out flex items-center justify-center gap-2 text-void-deep ${
             role === "youth"
-              ? "bg-plasma-cyan hover:bg-plasma-cyan/90 shadow-[0_0_20px_rgba(0,229,255,0.35)] hover:shadow-[0_0_35px_rgba(0,229,255,0.6)]"
-              : "bg-hyper-violet hover:bg-hyper-violet/90 shadow-[0_0_20px_rgba(99,102,241,0.35)] hover:shadow-[0_0_35px_rgba(99,102,241,0.6)]"
+              ? "bg-plasma-cyan hover:bg-plasma-cyan/90 shadow-[0_0_15px_rgba(0,229,255,0.25)] hover:shadow-[0_0_25px_rgba(0,229,255,0.4)]"
+              : "bg-hyper-violet hover:bg-hyper-violet/90 shadow-[0_0_15px_rgba(99,102,241,0.25)] hover:shadow-[0_0_25px_rgba(99,102,241,0.4)]"
           } hover:scale-[1.015] active:scale-[0.985] disabled:opacity-50 cursor-pointer`}
         >
           <Save className="w-5 h-5" />

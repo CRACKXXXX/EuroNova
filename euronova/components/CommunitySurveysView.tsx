@@ -223,7 +223,7 @@ export function CommunitySurveysView({
             return (
               <div
                 key={survey.id}
-                className="bg-void-surface/90 border border-void-border/80 hover:border-void-border rounded-2xl p-6 sm:p-7 shadow-lg transition-all duration-300 space-y-5"
+                className="bg-void-surface/90 border border-void-border/80 hover:border-plasma-cyan/35 rounded-2xl p-6 sm:p-7 shadow-lg hover:shadow-[0_8px_30px_-5px_rgba(0,0,0,0.8),0_0_15px_rgba(0,229,255,0.08)] transition-all duration-300 ease-out space-y-5"
               >
                 {/* Survey Meta Bar */}
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-void-border/50 pb-4">
@@ -347,7 +347,7 @@ export function CommunitySurveysView({
                         type="button"
                         onClick={() => handleOptionToggle(survey, option.id)}
                         disabled={isSubmittingThis}
-                        className={`w-full p-3.5 rounded-xl border text-left flex items-center justify-between gap-3 transition-all cursor-pointer ${
+                        className={`w-full p-3.5 rounded-xl border text-left flex items-center justify-between gap-3 transition-all duration-300 ease-out hover:scale-[1.01] active:scale-[0.985] cursor-pointer ${
                           isSelected
                             ? "bg-plasma-cyan/10 border-plasma-cyan text-white shadow-[0_0_15px_rgba(0,229,255,0.15)] ring-1 ring-plasma-cyan/40"
                             : "bg-void-deep/70 border-void-border/80 text-gray-300 hover:text-white hover:border-plasma-cyan/40 hover:bg-void-deep"
@@ -383,7 +383,7 @@ export function CommunitySurveysView({
                       type="button"
                       onClick={() => handleVoteSubmit(survey)}
                       disabled={isSubmittingThis || currentSelected.length === 0}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-plasma-cyan hover:bg-plasma-cyan/90 text-void-deep shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all cursor-pointer disabled:opacity-40 disabled:hover:bg-plasma-cyan disabled:cursor-not-allowed shrink-0"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-plasma-cyan hover:bg-plasma-cyan/90 text-void-deep shadow-[0_0_15px_rgba(0,229,255,0.25)] hover:shadow-[0_0_20px_rgba(0,229,255,0.35)] hover:scale-[1.015] active:scale-[0.985] transition-all duration-300 ease-out cursor-pointer disabled:opacity-40 disabled:hover:bg-plasma-cyan disabled:cursor-not-allowed shrink-0"
                     >
                       {isSubmittingThis ? (
                         <>

@@ -73,9 +73,9 @@ export function CreateAlertButton({ className = "" }: { className?: string }) {
           type="button"
           onClick={() => setIsOpen(true)}
           aria-label={alertTitle}
-          className={`inline-flex items-center gap-2 px-3.5 py-2 min-h-[44px] rounded-xl border border-void-border bg-void-surface hover:border-plasma-cyan/50 text-gray-300 hover:text-white focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-[1.03] active:scale-[0.96] hover:shadow-[0_0_20px_rgba(0,229,255,0.2)] text-xs font-semibold shadow-sm cursor-pointer group ${className}`}
+          className={`inline-flex items-center gap-2 px-3.5 py-2 min-h-[44px] rounded-xl border border-void-border bg-void-surface hover:border-plasma-cyan/40 text-gray-300 hover:text-white focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-all duration-300 ease-out hover:scale-[1.015] active:scale-[0.985] hover:shadow-[0_0_15px_rgba(0,229,255,0.15)] text-xs font-semibold shadow-sm cursor-pointer group ${className}`}
         >
-          <Bell className="w-4 h-4 text-plasma-cyan group-hover:rotate-12 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] shrink-0" />
+          <Bell className="w-4 h-4 text-plasma-cyan group-hover:rotate-12 transition-transform duration-300 ease-out shrink-0" />
           <span>{safeT("createAlert", "Create Alert")}</span>
         </button>
       </CosmicTooltip>
@@ -171,7 +171,7 @@ export function CreateAlertButton({ className = "" }: { className?: string }) {
                 <button
                   type="submit"
                   disabled={isPending || !email}
-                  className="flex-1 py-2.5 rounded-xl bg-plasma-cyan hover:bg-plasma-cyan/90 text-void-deep text-xs font-bold transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] shadow-[0_0_15px_rgba(0,229,255,0.3)] hover:shadow-[0_0_25px_rgba(0,229,255,0.5)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2.5 rounded-xl bg-plasma-cyan hover:bg-plasma-cyan/90 text-void-deep text-xs font-bold transition-all duration-300 ease-out shadow-[0_0_12px_rgba(0,229,255,0.25)] hover:shadow-[0_0_18px_rgba(0,229,255,0.35)] hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>{isPending ? t("calibrating") : safeT("activateAlert", "Activate Alert")}</span>

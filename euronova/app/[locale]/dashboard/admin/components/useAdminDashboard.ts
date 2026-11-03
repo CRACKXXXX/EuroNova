@@ -8,6 +8,7 @@ import {
   sendCustomAdminNotification,
   escalateReportToAdmin,
   resolveAdminEscalation,
+  deleteAdminEscalation,
   updateSupportTicketStatus,
   searchStaffUsers,
   updateUserRole,
@@ -68,6 +69,7 @@ export function useAdminDashboard(props: AdminDashboardClientProps) {
     decision: "approved" | "rejected";
   } | null>(null);
   const [resolveNotes, setResolveNotes] = useState("");
+  const [deletingEscalationId, setDeletingEscalationId] = useState<string | null>(null);
 
   // Support ticket response modal
   const [ticketReplyModal, setTicketReplyModal] = useState<{
@@ -203,6 +205,35 @@ export function useAdminDashboard(props: AdminDashboardClientProps) {
           type: "error",
           message: res?.error || "Failed to resolve escalation.",
         });
+      }
+    });
+  };
+
+  const handleDeleteEscalation = (escalationId: string) => {
+    if (!escalationId || isPending) return;
+    setDeletingEscalationId(escalationId);
+    startTransition(async () => {
+      try {
+        const res = await deleteAdminEscalation(escalationId);
+        if (res?.success) {
+          setFeedback({
+            type: "success",
+            message: t("escalationDeletedSuccess") || "Resolved escalation permanently deleted.",
+          });
+          router.refresh();
+        } else {
+          setFeedback({
+            type: "error",
+            message: res?.error || t("failedDeleteEscalation") || "Failed to delete escalation.",
+          });
+        }
+      } catch (err) {
+        setFeedback({
+          type: "error",
+          message: err instanceof Error ? err.message : "Failed to delete escalation.",
+        });
+      } finally {
+        setDeletingEscalationId(null);
       }
     });
   };
@@ -423,6 +454,8 @@ export function useAdminDashboard(props: AdminDashboardClientProps) {
     handleSendNotification,
     handleEscalateSubmit,
     handleResolveEscalateSubmit,
+    handleDeleteEscalation,
+    deletingEscalationId,
     handleTicketReplySubmit,
     projectOriginFilter,
     setProjectOriginFilter,

@@ -105,6 +105,8 @@ export function AdminDashboardClient(props: AdminDashboardClientProps) {
     handleSendNotification,
     handleEscalateSubmit,
     handleResolveEscalateSubmit,
+    handleDeleteEscalation,
+    deletingEscalationId,
     handleTicketReplySubmit,
     projectOriginFilter,
     setProjectOriginFilter,
@@ -300,6 +302,8 @@ export function AdminDashboardClient(props: AdminDashboardClientProps) {
             setResolveEscalateModal({ escalation: esc, decision });
             setResolveNotes("");
           }}
+          onDeleteEscalation={handleDeleteEscalation}
+          deletingEscalationId={deletingEscalationId}
           isPending={isPending}
           t={t}
           format={format}

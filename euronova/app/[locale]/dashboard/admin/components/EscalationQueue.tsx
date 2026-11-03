@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ShieldAlert, CheckCircle2 } from "lucide-react";
+import { ShieldAlert, CheckCircle2, Trash2, Loader2 } from "lucide-react";
 import { type AdminEscalationItem } from "../actions";
 import { type AdminTranslator, type AdminFormatter } from "./AdminTypes";
 
@@ -11,6 +11,8 @@ interface EscalationQueueProps {
   escalationStatusFilter: "all" | "pending" | "approved" | "rejected";
   onFilterChange: (status: "all" | "pending" | "approved" | "rejected") => void;
   onOpenResolveModal: (escalation: AdminEscalationItem, decision: "approved" | "rejected") => void;
+  onDeleteEscalation?: (escalationId: string) => void;
+  deletingEscalationId?: string | null;
   isPending: boolean;
   t: AdminTranslator;
   format: AdminFormatter;
@@ -22,6 +24,8 @@ export function EscalationQueue({
   escalationStatusFilter,
   onFilterChange,
   onOpenResolveModal,
+  onDeleteEscalation,
+  deletingEscalationId,
   isPending,
   t,
   format,
@@ -167,6 +171,41 @@ export function EscalationQueue({
                     >
                       <ShieldAlert className="w-4 h-4 shrink-0" />
                       <span>{t("approveExecuteAction")}</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Resolved Escalation Actions - Permanent Deletion (Admin/Root Only) */}
+                {!isPendingStatus && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-void-border/60">
+                    <div className="flex items-center gap-2 text-xs text-gray-500 font-mono">
+                      <span className={`w-2 h-2 rounded-full ${esc.status === "approved" || esc.status === "executed" ? "bg-rup-emerald" : "bg-gray-500"}`} />
+                      <span>
+                        {esc.status === "approved" || esc.status === "executed"
+                          ? "Resolved & Executed"
+                          : "Resolved & Dismissed"}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={isPending || deletingEscalationId === esc.id}
+                      onClick={() => {
+                        const confirmMsg = t("confirmDeleteEscalation") || "Permanently delete this resolved escalation record? This action cannot be undone.";
+                        if (typeof window !== "undefined" && window.confirm(confirmMsg)) {
+                          onDeleteEscalation?.(esc.id);
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-void-deep hover:bg-nova-flare/10 text-gray-400 hover:text-nova-flare border border-void-border hover:border-nova-flare/40 transition-all text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      title={t("deleteResolvedEscalation") || "Delete Escalation"}
+                      aria-label={t("deleteResolvedEscalation") || "Delete Escalation"}
+                    >
+                      {deletingEscalationId === esc.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-nova-flare" />
+                      ) : (
+                        <Trash2 className="w-3.5 h-3.5" />
+                      )}
+                      <span>{t("deleteResolvedEscalation") || "Delete"}</span>
                     </button>
                   </div>
                 )}

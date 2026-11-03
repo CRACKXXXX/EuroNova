@@ -51,16 +51,16 @@ export function RandomMissionButton({ projectIds = [], className = "" }: RandomM
       type="button"
       onClick={handleRandomize}
       disabled={isPending}
-      className={`relative inline-flex items-center justify-center gap-2.5 px-5 py-2.5 min-h-[44px] rounded-xl text-sm font-bold tracking-wide transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] cursor-pointer select-none border border-plasma-cyan/40 bg-gradient-to-r from-hyper-violet/20 via-plasma-cyan/15 to-hyper-violet/20 hover:from-hyper-violet/30 hover:to-plasma-cyan/30 text-white shadow-[0_0_20px_rgba(0,229,255,0.2)] hover:shadow-[0_0_30px_rgba(0,229,255,0.45)] hover:border-plasma-cyan hover:scale-[1.03] active:scale-[0.96] focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none disabled:opacity-60 disabled:cursor-not-allowed group overflow-hidden ${className}`}
+      className={`relative inline-flex items-center justify-center gap-2.5 px-5 py-2.5 min-h-[44px] rounded-xl text-sm font-bold tracking-wide transition-all duration-300 ease-out cursor-pointer select-none border border-plasma-cyan/40 bg-gradient-to-r from-hyper-violet/20 via-plasma-cyan/15 to-hyper-violet/20 hover:from-hyper-violet/30 hover:to-plasma-cyan/30 text-white shadow-[0_0_15px_rgba(0,229,255,0.15)] hover:shadow-[0_0_20px_rgba(0,229,255,0.25)] hover:border-plasma-cyan/70 hover:scale-[1.015] active:scale-[0.985] focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none disabled:opacity-60 disabled:cursor-not-allowed group overflow-hidden ${className}`}
       aria-label={t("randomMission")}
     >
       {/* Dynamic Sheen Sweep on Hover */}
-      <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
 
       {isPending ? (
         <Loader2 className="w-4 h-4 text-plasma-cyan animate-spin shrink-0" />
       ) : (
-        <Dices className="w-4 h-4 text-plasma-cyan group-hover:rotate-180 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] shrink-0" />
+        <Dices className="w-4 h-4 text-plasma-cyan group-hover:rotate-180 transition-transform duration-500 ease-out shrink-0" />
       )}
       <span className="relative z-10 font-bold">{isPending ? t("rolling") : t("randomMission")}</span>
     </button>

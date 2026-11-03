@@ -84,7 +84,7 @@ export function ForumThreadList({
           <button
             type="button"
             onClick={onOpenCreateModal}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-plasma-cyan text-void-deep text-xs font-bold hover:bg-plasma-cyan/90 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] shrink-0 cursor-pointer shadow-[0_0_15px_rgba(0,229,255,0.3)] hover:shadow-[0_0_25px_rgba(0,229,255,0.5)] hover:scale-[1.02] active:scale-[0.98]"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-plasma-cyan text-void-deep text-xs font-bold hover:bg-plasma-cyan/90 transition-all duration-300 ease-out shrink-0 cursor-pointer shadow-[0_0_15px_rgba(0,229,255,0.25)] hover:shadow-[0_0_20px_rgba(0,229,255,0.35)] hover:scale-[1.015] active:scale-[0.985]"
           >
             <PlusCircle className="w-3.5 h-3.5" />
             <span>{t("startDiscussion")}</span>
@@ -112,7 +112,7 @@ export function ForumThreadList({
               <button
                 type="button"
                 onClick={onOpenCreateModal}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-plasma-cyan text-void-deep text-xs font-bold hover:bg-plasma-cyan/90 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] cursor-pointer hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_15px_rgba(0,229,255,0.3)]"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-plasma-cyan text-void-deep text-xs font-bold hover:bg-plasma-cyan/90 transition-all duration-300 ease-out cursor-pointer hover:scale-[1.015] active:scale-[0.985] shadow-[0_0_15px_rgba(0,229,255,0.25)]"
               >
                 <PlusCircle className="w-3.5 h-3.5" />
                 <span>{t("startFirstDiscussion")}</span>
@@ -126,10 +126,10 @@ export function ForumThreadList({
             <div
               key={thread.id}
               onClick={() => onSelectThread(thread)}
-              className="p-5 rounded-2xl bg-void-surface/70 border border-void-border/80 hover:border-plasma-cyan/50 hover:bg-void-surface/90 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:scale-[1.008] active:scale-[0.99] hover:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.8),0_0_20px_rgba(0,229,255,0.15)] cursor-pointer group flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden"
+              className="p-5 rounded-2xl bg-void-surface/70 border border-void-border/80 hover:border-plasma-cyan/40 hover:bg-void-surface/90 transition-all duration-300 ease-out hover:-translate-y-1 active:scale-[0.995] hover:shadow-[0_8px_25px_-5px_rgba(0,0,0,0.8),0_0_15px_rgba(0,229,255,0.12)] cursor-pointer group flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden"
             >
               {/* Shimmer Sheen on Hover */}
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-plasma-cyan/5 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out bg-gradient-to-r from-transparent via-plasma-cyan/5 to-transparent pointer-events-none" />
 
               <div className="space-y-2 min-w-0 flex-1 relative z-10">
                 <div className="flex items-center gap-2 flex-wrap">

@@ -71,9 +71,9 @@ export function DashboardCardMotion({
   return (
     <motion.div
       variants={isCenterpiece ? centerpieceItemVariants : cardItemVariants}
-      whileHover={{ y: -6, scale: 1.015 }}
-      whileTap={{ scale: 0.985 }}
-      transition={{ type: "spring", stiffness: 400, damping: 28 }}
+      whileHover={{ y: -5, scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
+      transition={{ type: "spring", stiffness: 260, damping: 28 }}
       className={`h-full transform-gpu ${className}`}
     >
       {children}

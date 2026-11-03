@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
@@ -17,8 +17,7 @@ import {
   Headphones,
   Map as MapIcon,
   Users,
-  Globe,
-  ChevronDown
+  Globe
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { LogoutButton } from "@/components/LogoutButton";
@@ -44,8 +43,6 @@ export function Header({
   orgId?: string | null; 
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isMoreOpen, setIsMoreOpen] = useState(false);
-  const moreDropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname() || "";
   const locale = useLocale();
   const t = useTranslations("Header");
@@ -64,28 +61,13 @@ export function Header({
   const isCommunityActive = pathname.startsWith(`/${locale}/community`) || pathname.startsWith("/community");
   const isMapActive = pathname.startsWith(`/${locale}/map`) || pathname.startsWith("/map");
   const isEcosystemActive = pathname.startsWith(`/${locale}/ecosystem`) || pathname.startsWith("/ecosystem");
-  const isMoreActive = isCommunityActive || isMapActive || isEcosystemActive;
 
   // Automatically dismiss menus on route changes
   const [prevPathname, setPrevPathname] = useState(pathname);
   if (prevPathname !== pathname) {
     setPrevPathname(pathname);
     setIsOpen(false);
-    setIsMoreOpen(false);
   }
-
-  // Dismiss "More" dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (moreDropdownRef.current && !moreDropdownRef.current.contains(e.target as Node)) {
-        setIsMoreOpen(false);
-      }
-    };
-    if (isMoreOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [isMoreOpen]);
 
   // Lock body scroll while mobile drawer is open, and release safely on close or unmount
   useEffect(() => {
@@ -166,12 +148,11 @@ export function Header({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         if (isOpen) setIsOpen(false);
-        if (isMoreOpen) setIsMoreOpen(false);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, isMoreOpen]);
+  }, [isOpen]);
 
   return (
     <header className={`fixed top-0 left-0 right-0 h-16 bg-void-deep/90 backdrop-blur-md border-b border-void-border transition-colors ${isOpen ? "z-[9999]" : "z-40"}`}>
@@ -215,12 +196,12 @@ export function Header({
           </Link>
 
           {/* Desktop Navigation Links - Viewport-aware Cosmic Tooltips */}
-          <nav className="hidden xl:flex items-center gap-1 xl:gap-1.5 2xl:gap-2 flex-nowrap shrink-0 whitespace-nowrap">
+          <nav className="hidden xl:flex items-center gap-0.5 min-[1380px]:gap-1 2xl:gap-2 flex-nowrap shrink-0 whitespace-nowrap">
             <CosmicTooltip content={t("home")} side="bottom">
               <Link
                 href={`/${locale}/dashboard`}
                 aria-label={t("home")}
-                className={`flex items-center gap-1 2xl:gap-1.5 text-xs 2xl:text-[13px] px-2 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
+                className={`flex items-center gap-1 2xl:gap-1.5 text-[11px] min-[1380px]:text-xs 2xl:text-[13px] px-1.5 min-[1380px]:px-2 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
                   isHomeActive
                     ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
                     : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
@@ -235,7 +216,7 @@ export function Header({
               <Link
                 href={`/${locale}/dashboard/projects`}
                 aria-label={t("searchProjects")}
-                className={`flex items-center gap-1 2xl:gap-1.5 text-xs 2xl:text-[13px] px-2 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
+                className={`flex items-center gap-1 2xl:gap-1.5 text-[11px] min-[1380px]:text-xs 2xl:text-[13px] px-1.5 min-[1380px]:px-2 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
                   isProjectsActive
                     ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
                     : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
@@ -250,7 +231,7 @@ export function Header({
               <Link
                 href={`/${locale}/dashboard/organizations`}
                 aria-label={t("searchOrgs")}
-                className={`flex items-center gap-1 2xl:gap-1.5 text-xs 2xl:text-[13px] px-2 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
+                className={`flex items-center gap-1 2xl:gap-1.5 text-[11px] min-[1380px]:text-xs 2xl:text-[13px] px-1.5 min-[1380px]:px-2 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
                   isOrgsActive
                     ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
                     : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
@@ -265,7 +246,7 @@ export function Header({
               <Link
                 href={`/${locale}/dashboard/my-missions`}
                 aria-label={t("myMissions")}
-                className={`flex items-center gap-1 2xl:gap-1.5 text-xs 2xl:text-[13px] px-2 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
+                className={`flex items-center gap-1 2xl:gap-1.5 text-[11px] min-[1380px]:text-xs 2xl:text-[13px] px-1.5 min-[1380px]:px-2 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
                   isMissionsActive
                     ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
                     : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
@@ -276,106 +257,50 @@ export function Header({
               </Link>
             </CosmicTooltip>
 
-            {/* Desktop Ultra-Wide Inline links for Community, Map & Ecosystem (>=1800px) */}
-            <div className="hidden min-[1800px]:flex items-center gap-1.5 2xl:gap-2">
-              <CosmicTooltip content={t("community")} side="bottom">
-                <Link
-                  href={`/${locale}/community`}
-                  aria-label={t("community")}
-                  className={`flex items-center gap-1.5 text-xs 2xl:text-[13px] px-2 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent group ${
-                    isCommunityActive
-                      ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
-                      : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
-                  }`}
-                >
-                  <Users className={`w-3.5 h-3.5 2xl:w-4 2xl:h-4 transition-colors ${isCommunityActive ? "text-plasma-cyan" : "text-gray-400 group-hover:text-plasma-cyan"}`} />
-                  <span>{t("community")}</span>
-                </Link>
-              </CosmicTooltip>
-
-              <CosmicTooltip content={t("map")} side="bottom">
-                <Link
-                  href={`/${locale}/map`}
-                  aria-label={t("map")}
-                  className={`flex items-center gap-1.5 text-xs 2xl:text-[13px] px-2 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent group ${
-                    isMapActive
-                      ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
-                      : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
-                  }`}
-                >
-                  <MapIcon className={`w-3.5 h-3.5 2xl:w-4 2xl:h-4 transition-colors ${isMapActive ? "text-plasma-cyan" : "text-gray-400 group-hover:text-plasma-cyan"}`} />
-                  <span>{t("map")}</span>
-                </Link>
-              </CosmicTooltip>
-
-              <CosmicTooltip content={t("ecosystem")} side="bottom">
-                <Link
-                  href={`/${locale}/ecosystem`}
-                  aria-label={t("ecosystem")}
-                  className={`flex items-center gap-1.5 text-xs 2xl:text-[13px] px-2 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent group ${
-                    isEcosystemActive
-                      ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
-                      : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
-                  }`}
-                >
-                  <Globe className={`w-3.5 h-3.5 2xl:w-4 2xl:h-4 transition-colors ${isEcosystemActive ? "text-plasma-cyan" : "text-gray-400 group-hover:text-plasma-cyan"}`} />
-                  <span>{t("ecosystem")}</span>
-                </Link>
-              </CosmicTooltip>
-            </div>
-
-            {/* Adaptive "More" Dropdown (Active on all desktop viewports <1800px to guarantee 0 overflow) */}
-            <div ref={moreDropdownRef} className="relative hidden xl:block min-[1800px]:hidden">
-              <button
-                type="button"
-                onClick={() => setIsMoreOpen((prev) => !prev)}
-                className={`flex items-center gap-1 text-xs 2xl:text-[13px] py-1 px-2 transition-all whitespace-nowrap shrink-0 border-b-2 rounded-t cursor-pointer ${
-                  isMoreActive
+            <CosmicTooltip content={t("community")} side="bottom">
+              <Link
+                href={`/${locale}/community`}
+                aria-label={t("community")}
+                className={`flex items-center gap-1 2xl:gap-1.5 text-[11px] min-[1380px]:text-xs 2xl:text-[13px] px-1.5 min-[1380px]:px-2 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent group ${
+                  isCommunityActive
                     ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
                     : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
                 }`}
-                aria-expanded={isMoreOpen}
-                aria-haspopup="true"
               >
-                <span>{t("more")}</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isMoreOpen ? "rotate-180 text-plasma-cyan" : ""}`} />
-              </button>
+                <Users className={`w-3.5 h-3.5 2xl:w-4 2xl:h-4 transition-colors ${isCommunityActive ? "text-plasma-cyan" : "text-gray-400 group-hover:text-plasma-cyan"}`} />
+                <span>{t("community")}</span>
+              </Link>
+            </CosmicTooltip>
 
-              {isMoreOpen && (
-                <div className="absolute left-0 mt-2 w-52 py-2 bg-void-surface border border-void-border rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] backdrop-blur-xl z-50 animate-in fade-in zoom-in-95 duration-150 space-y-0.5">
-                  <Link
-                    href={`/${locale}/community`}
-                    onClick={() => setIsMoreOpen(false)}
-                    className={`flex items-center gap-2.5 px-3 py-2 text-xs font-medium transition-colors ${
-                      isCommunityActive ? "text-plasma-cyan font-bold bg-plasma-cyan/10" : "text-gray-300 hover:text-plasma-cyan hover:bg-void-deep/60"
-                    }`}
-                  >
-                    <Users className={`w-4 h-4 ${isCommunityActive ? "text-plasma-cyan" : "text-gray-400"}`} />
-                    <span>{t("community")}</span>
-                  </Link>
-                  <Link
-                    href={`/${locale}/map`}
-                    onClick={() => setIsMoreOpen(false)}
-                    className={`flex items-center gap-2.5 px-3 py-2 text-xs font-medium transition-colors ${
-                      isMapActive ? "text-plasma-cyan font-bold bg-plasma-cyan/10" : "text-gray-300 hover:text-plasma-cyan hover:bg-void-deep/60"
-                    }`}
-                  >
-                    <MapIcon className={`w-4 h-4 ${isMapActive ? "text-plasma-cyan" : "text-gray-400"}`} />
-                    <span>{t("map")}</span>
-                  </Link>
-                  <Link
-                    href={`/${locale}/ecosystem`}
-                    onClick={() => setIsMoreOpen(false)}
-                    className={`flex items-center gap-2.5 px-3 py-2 text-xs font-medium transition-colors ${
-                      isEcosystemActive ? "text-plasma-cyan font-bold bg-plasma-cyan/10" : "text-gray-300 hover:text-plasma-cyan hover:bg-void-deep/60"
-                    }`}
-                  >
-                    <Globe className={`w-4 h-4 ${isEcosystemActive ? "text-plasma-cyan" : "text-gray-400"}`} />
-                    <span>{t("ecosystem")}</span>
-                  </Link>
-                </div>
-              )}
-            </div>
+            <CosmicTooltip content={t("map")} side="bottom">
+              <Link
+                href={`/${locale}/map`}
+                aria-label={t("map")}
+                className={`flex items-center gap-1 2xl:gap-1.5 text-[11px] min-[1380px]:text-xs 2xl:text-[13px] px-1.5 min-[1380px]:px-2 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent group ${
+                  isMapActive
+                    ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
+                    : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
+                }`}
+              >
+                <MapIcon className={`w-3.5 h-3.5 2xl:w-4 2xl:h-4 transition-colors ${isMapActive ? "text-plasma-cyan" : "text-gray-400 group-hover:text-plasma-cyan"}`} />
+                <span>{t("map")}</span>
+              </Link>
+            </CosmicTooltip>
+
+            <CosmicTooltip content={t("ecosystem")} side="bottom">
+              <Link
+                href={`/${locale}/ecosystem`}
+                aria-label={t("ecosystem")}
+                className={`flex items-center gap-1 2xl:gap-1.5 text-[11px] min-[1380px]:text-xs 2xl:text-[13px] px-1.5 min-[1380px]:px-2 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent group ${
+                  isEcosystemActive
+                    ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
+                    : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
+                }`}
+              >
+                <Globe className={`w-3.5 h-3.5 2xl:w-4 2xl:h-4 transition-colors ${isEcosystemActive ? "text-plasma-cyan" : "text-gray-400 group-hover:text-plasma-cyan"}`} />
+                <span>{t("ecosystem")}</span>
+              </Link>
+            </CosmicTooltip>
           </nav>
         </div>
 

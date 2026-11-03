@@ -122,9 +122,9 @@ export function ShareProject({ project, className = "" }: ShareProjectProps) {
         <button
           type="button"
           onClick={() => setIsShareModalOpen(true)}
-          className="w-full px-5 py-3 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 text-white bg-void-surface hover:bg-void-border/80 border border-plasma-cyan/40 hover:border-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.12)] hover:shadow-[0_0_25px_rgba(0,229,255,0.25)] text-sm cursor-pointer group"
+          className="w-full px-5 py-3 rounded-xl font-bold transition-all duration-300 ease-out flex items-center justify-center gap-2 text-white bg-void-surface hover:bg-void-border/80 border border-plasma-cyan/40 hover:border-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.12)] hover:shadow-[0_0_20px_rgba(0,229,255,0.22)] hover:scale-[1.01] active:scale-[0.985] text-sm cursor-pointer group"
         >
-          <Share2 className="w-4 h-4 text-plasma-cyan group-hover:scale-110 transition-transform" />
+          <Share2 className="w-4 h-4 text-plasma-cyan group-hover:scale-110 transition-transform duration-300 ease-out" />
           <span>{getT("shareMission", "Share Mission")}</span>
         </button>
       </div>
@@ -279,7 +279,7 @@ export function ShareProject({ project, className = "" }: ShareProjectProps) {
                   setIsShareModalOpen(false);
                   setIsPostCardModalOpen(true);
                 }}
-                className="w-full py-2.5 px-4 rounded-xl font-bold bg-gradient-to-r from-hyper-violet/20 to-plasma-cyan/20 hover:from-hyper-violet/30 hover:to-plasma-cyan/30 border border-plasma-cyan/40 text-xs text-plasma-cyan flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_15px_rgba(0,229,255,0.1)]"
+                className="w-full py-2.5 px-4 rounded-xl font-bold bg-gradient-to-r from-hyper-violet/20 to-plasma-cyan/20 hover:from-hyper-violet/30 hover:to-plasma-cyan/30 border border-plasma-cyan/40 text-xs text-plasma-cyan flex items-center justify-center gap-2 transition-all duration-300 ease-out hover:scale-[1.01] active:scale-[0.985] cursor-pointer shadow-[0_0_15px_rgba(0,229,255,0.1)]"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>{getT("generatePostCard", "Generate Post Card")}</span>
@@ -408,7 +408,7 @@ export function ShareProject({ project, className = "" }: ShareProjectProps) {
                 id="download-card-graphic-btn"
                 onClick={handleSimulateDownload}
                 disabled={isDownloading}
-                className="w-full py-3 px-4 rounded-xl font-bold bg-plasma-cyan hover:bg-plasma-cyan/90 text-void-deep flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(0,229,255,0.3)] hover:shadow-[0_0_30px_rgba(0,229,255,0.5)]"
+                className="w-full py-3 px-4 rounded-xl font-bold bg-plasma-cyan hover:bg-plasma-cyan/90 text-void-deep flex items-center justify-center gap-2 transition-all duration-300 ease-out hover:scale-[1.015] active:scale-[0.985] cursor-pointer shadow-[0_0_15px_rgba(0,229,255,0.25)] hover:shadow-[0_0_20px_rgba(0,229,255,0.35)]"
               >
                 <Download className="w-4 h-4" />
                 <span>
