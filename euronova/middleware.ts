@@ -43,14 +43,6 @@ export async function middleware(request: NextRequest) {
   const currentLocale = localeMatch ? localeMatch[1] : routing.defaultLocale
   const pathWithoutLocale = pathname.replace(localeRegex, '') || '/'
 
-  // Lista estricta y blindada de rutas públicas accesibles sin autenticación
-  const isPublicRoute =
-    pathWithoutLocale === '/' ||
-    pathWithoutLocale.startsWith('/login') ||
-    pathWithoutLocale.startsWith('/signup') ||
-    pathWithoutLocale.startsWith('/support') ||
-    pathWithoutLocale.startsWith('/legal')
-
   // Helper para propagar cookies acumuladas durante redirecciones de autenticación
   const createRedirectResponse = (targetUrl: URL) => {
     const redirectResponse = NextResponse.redirect(targetUrl)
@@ -60,6 +52,23 @@ export async function middleware(request: NextRequest) {
     return redirectResponse
   }
 
+  // Interceptar si llega un query param ?code= en la raíz (ej. si Supabase redirige al Site URL root)
+  const codeParam = request.nextUrl.searchParams.get('code')
+  if (codeParam && (pathWithoutLocale === '/' || pathname === '/')) {
+    const callbackUrl = new URL('/auth/callback', request.url)
+    callbackUrl.searchParams.set('code', codeParam)
+    callbackUrl.searchParams.set('next', '/dashboard')
+    return createRedirectResponse(callbackUrl)
+  }
+
+  // Lista estricta y blindada de rutas públicas accesibles sin autenticación
+  const isPublicRoute =
+    pathWithoutLocale === '/' ||
+    pathWithoutLocale.startsWith('/login') ||
+    pathWithoutLocale.startsWith('/signup') ||
+    pathWithoutLocale.startsWith('/support') ||
+    pathWithoutLocale.startsWith('/legal')
+
   // Redirección inquebrantable si no hay usuario autenticado intentando acceder a rutas protegidas
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
@@ -68,10 +77,12 @@ export async function middleware(request: NextRequest) {
     return createRedirectResponse(url)
   }
 
-  // Si el usuario ya está autenticado e intenta ir a login o signup, enviarlo al dashboard
-  if (user && (pathWithoutLocale.startsWith('/login') || pathWithoutLocale.startsWith('/signup'))) {
+  // Si el usuario ya está autenticado e intenta ir a la raíz pública (/ o /{locale}) o a login/signup,
+  // enviarlo inmediatamente al dashboard
+  if (user && (pathWithoutLocale === '/' || pathWithoutLocale.startsWith('/login') || pathWithoutLocale.startsWith('/signup'))) {
     const url = request.nextUrl.clone()
     url.pathname = `/${currentLocale}/dashboard`
+    url.search = ''
     return createRedirectResponse(url)
   }
 

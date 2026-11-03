@@ -244,11 +244,14 @@
     "transmissionConfirmed": "Transmission Confirmed",
     "welcomeToastTitle": "Welcome to EuroNova",
     "google": "Google",
-    "cookieConsentRequired": "Cookie consent is required to sign in with Google.",
-    "cookieConsentNotice": "Cookie consent is required to sign in with Google.",
-    "manageCookiePreferences": "Open Preferences",
-    "cookiesRequired": "Cookies Required",
-    "unexpectedError": "An unexpected error occurred. Please try again."
+    "cookieConsentRequired": "Cookie consent is required to proceed with OAuth login.",
+    "cookieConsentNotice": "Strict GDPR mode active. Third-party authentication cookies require your consent.",
+    "manageCookiePreferences": "Manage preferences",
+    "cookiesRequired": "Cookies required",
+    "unexpectedError": "An unexpected error occurred. Please try again.",
+    "ageGateNotice": "Users must be at least 13 years old to register.",
+    "termsAgreement": "I agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
+    "parentalConsentLabel": "I confirm parental or legal guardian consent (if under 16)."
   },
   "Profile": {
     "title": "Profile Configuration",
@@ -2390,6 +2393,21 @@
     "badgeStudentCommunity": "Student Community",
     "badgeNGO": "Youth NGO",
     "badgeESNBranch": "ESN University Section",
-    "badgeRegionalCouncil": "Regional Youth Council"
+    "badgeRegionalCouncil": "Regional Youth Council",
+    "categoryLabel": "Category",
+    "tagsLabel": "Tags",
+    "filterByCategoryTooltip": "Filter by category",
+    "filterByTagsTooltip": "Filter by tags",
+    "searchTagsPlaceholder": "Search tags...",
+    "noTagsFound": "No tags found",
+    "clearTags": "Clear tags",
+    "allTags": "All Tags",
+    "previousPage": "Previous",
+    "nextPage": "Next",
+    "showingItems": "Showing {from}–{to} of {total}",
+    "badgeEUCommission": "European Commission",
+    "selectTags": "Select Tags",
+    "SearchTagsPlaceholder": "Search tags...",
+    "pageOf": "Page {current} of {total}"
   }
 }

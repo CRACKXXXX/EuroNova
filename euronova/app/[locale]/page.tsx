@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { Link, routing } from "@/i18n/routing";
@@ -91,9 +92,16 @@ export default async function Home({ params, searchParams }: PageProps) {
     createClient(),
   ]);
 
-  const [t, tCommon, { count, error }] = await Promise.all([
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    redirect(`/${locale}/dashboard`);
+  }
+
+  const [t, { count, error }] = await Promise.all([
     getTranslations({ locale, namespace: "Landing" }),
-    getTranslations({ locale, namespace: "Common" }),
     supabase.from("projects").select("*", { count: "exact", head: true }),
   ]);
 

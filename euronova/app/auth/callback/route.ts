@@ -3,12 +3,52 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { routing } from '@/i18n/routing';
 
+interface PendingCookie {
+  name: string;
+  value: string;
+  options?: {
+    domain?: string;
+    expires?: Date;
+    httpOnly?: boolean;
+    maxAge?: number;
+    path?: string;
+    sameSite?: true | false | 'lax' | 'strict' | 'none';
+    secure?: boolean;
+  };
+}
+
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
+
+  const cookieStore = await cookies();
+  const localeCookie = cookieStore.get('NEXT_LOCALE')?.value;
+  const currentLocale = (localeCookie && (routing.locales as readonly string[]).includes(localeCookie))
+    ? localeCookie
+    : routing.defaultLocale;
+
+  // Retrieve destination from query param, fallback to persistent short-lived auth cookie, or default
+  const authNextCookie = cookieStore.get('euronova_auth_next')?.value;
+  const rawNext = requestUrl.searchParams.get('next') || authNextCookie || '/dashboard';
+
   // Sanitize next parameter to prevent open redirect vulnerabilities
-  const rawNext = requestUrl.searchParams.get('next') ?? '/dashboard';
-  const sanitizedNext = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/dashboard';
+  let sanitizedNext = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/dashboard';
+
+  // Strip leading locale if redundant in sanitizedNext so we get the pure subpath
+  for (const loc of routing.locales) {
+    if (sanitizedNext === `/${loc}`) {
+      sanitizedNext = '/dashboard';
+      break;
+    } else if (sanitizedNext.startsWith(`/${loc}/`)) {
+      sanitizedNext = sanitizedNext.slice(loc.length + 1);
+      break;
+    }
+  }
+
+  // Strictly forbid landing on root or landing pages; default to /dashboard
+  if (sanitizedNext === '/' || sanitizedNext === '') {
+    sanitizedNext = '/dashboard';
+  }
 
   // Support Vercel reverse proxy / load balancer headers
   const forwardedHost = request.headers.get('x-forwarded-host');
@@ -18,18 +58,10 @@ export async function GET(request: Request) {
     ? requestUrl.origin
     : (forwardedHost ? `${forwardedProto}://${forwardedHost}` : requestUrl.origin);
 
-  const cookieStore = await cookies();
-  const localeCookie = cookieStore.get('NEXT_LOCALE')?.value;
-  const currentLocale = (localeCookie && (routing.locales as readonly string[]).includes(localeCookie))
-    ? localeCookie
-    : routing.defaultLocale;
+  const destinationUrl = `${origin}/${currentLocale}${sanitizedNext}`;
 
-  // Ensure target has locale prefix if not present (e.g., /dashboard -> /es/dashboard)
-  const hasLocalePrefix = (routing.locales as readonly string[]).some((loc) =>
-    sanitizedNext === `/${loc}` || sanitizedNext.startsWith(`/${loc}/`)
-  );
-  const targetPath = hasLocalePrefix ? sanitizedNext : `/${currentLocale}${sanitizedNext}`;
-  const destinationUrl = `${origin}${targetPath}`;
+  // Collector for cookies emitted by Supabase during exchangeCodeForSession
+  const pendingCookies: PendingCookie[] = [];
 
   if (code) {
     const supabase = createServerClient(
@@ -42,6 +74,7 @@ export async function GET(request: Request) {
           },
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value, options }) => {
+              pendingCookies.push({ name, value, options });
               try {
                 cookieStore.set(name, value, {
                   ...options,
@@ -51,7 +84,7 @@ export async function GET(request: Request) {
                   secure: process.env.NODE_ENV === 'production',
                 });
               } catch {
-                // Silently catch in server context
+                // Expected in Next.js 15 GET Route Handlers
               }
             });
           },
@@ -81,12 +114,9 @@ export async function GET(request: Request) {
         console.error("Profile check/creation error during OAuth callback:", profileErr);
       }
 
-      // Fully await and verify session is active before redirecting
-      await supabase.auth.getUser();
-
       const response = NextResponse.redirect(destinationUrl);
 
-      // Explicitly set all cookies on the response object created via NextResponse.redirect
+      // Copy existing incoming cookies
       cookieStore.getAll().forEach((cookie) => {
         response.cookies.set({
           name: cookie.name,
@@ -98,6 +128,28 @@ export async function GET(request: Request) {
         });
       });
 
+      // Explicitly set all cookies emitted by Supabase session exchange
+      pendingCookies.forEach(({ name, value, options }) => {
+        response.cookies.set({
+          name,
+          value,
+          path: options?.path ?? '/',
+          sameSite: (options?.sameSite as 'lax' | 'strict' | 'none') ?? 'lax',
+          maxAge: options?.maxAge ?? 2592000,
+          secure: process.env.NODE_ENV === 'production',
+        });
+      });
+
+      // Erase temporary auth next cookie
+      if (authNextCookie) {
+        response.cookies.set({
+          name: 'euronova_auth_next',
+          value: '',
+          path: '/',
+          maxAge: 0,
+        });
+      }
+
       return response;
     } else {
       console.error("Auth callback error:", error);
@@ -108,6 +160,7 @@ export async function GET(request: Request) {
   const errorTarget = `/${currentLocale}/login?error=oauth_error`;
   const errorDestinationUrl = `${origin}${errorTarget}`;
   const errorResponse = NextResponse.redirect(errorDestinationUrl);
+
   cookieStore.getAll().forEach((cookie) => {
     errorResponse.cookies.set({
       name: cookie.name,
@@ -118,5 +171,17 @@ export async function GET(request: Request) {
       secure: process.env.NODE_ENV === 'production',
     });
   });
+
+  pendingCookies.forEach(({ name, value, options }) => {
+    errorResponse.cookies.set({
+      name,
+      value,
+      path: options?.path ?? '/',
+      sameSite: (options?.sameSite as 'lax' | 'strict' | 'none') ?? 'lax',
+      maxAge: options?.maxAge ?? 2592000,
+      secure: process.env.NODE_ENV === 'production',
+    });
+  });
+
   return errorResponse;
 }

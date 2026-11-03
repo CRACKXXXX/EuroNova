@@ -42,10 +42,14 @@ export function LoginForm({ onToggleView }: LoginFormProps) {
 
     const supabase = createClient();
     const nextUrl = searchParams?.get("next") || "/dashboard";
+
+    // Set short-lived destination cookie before redirect to ensure clean OAuth URL
+    document.cookie = `euronova_auth_next=${encodeURIComponent(nextUrl)}; path=/; max-age=3600; SameSite=Lax`;
+
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextUrl)}`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
   };

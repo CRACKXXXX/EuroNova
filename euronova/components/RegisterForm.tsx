@@ -44,10 +44,14 @@ export function RegisterForm({ onToggleView }: RegisterFormProps) {
 
     const supabase = createClient();
     const nextUrl = searchParams?.get("next") || "/dashboard";
+
+    // Set short-lived destination cookie before redirect to ensure clean OAuth URL
+    document.cookie = `euronova_auth_next=${encodeURIComponent(nextUrl)}; path=/; max-age=3600; SameSite=Lax`;
+
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextUrl)}`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
   };
@@ -148,23 +152,8 @@ export function RegisterForm({ onToggleView }: RegisterFormProps) {
               className="w-full bg-void-deep/80 border border-void-border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan focus:shadow-[0_0_15px_rgba(0,229,255,0.2)] transition-all [color-scheme:dark]"
             />
             <p className="text-[11px] text-gray-400 font-mono">
-              {t("birthDateHelper")}
+              {t("ageGateNotice")}
             </p>
-          </div>
-        )}
-
-        {role === "org" && (
-          <div className="p-3.5 rounded-xl bg-void-deep/70 border border-void-border flex items-start gap-3 animate-in fade-in duration-300">
-            <input
-              type="checkbox"
-              id="org_age_declaration"
-              name="org_age_declaration"
-              required
-              className="mt-1 w-4 h-4 rounded border-void-border bg-void-surface text-hyper-violet focus:ring-hyper-violet cursor-pointer accent-hyper-violet shrink-0"
-            />
-            <label htmlFor="org_age_declaration" className="text-xs text-gray-300 leading-snug cursor-pointer select-none">
-              {t("orgAgeDeclaration")}
-            </label>
           </div>
         )}
 
@@ -196,35 +185,41 @@ export function RegisterForm({ onToggleView }: RegisterFormProps) {
           />
         </div>
 
-        {/* Auditable GDPR Art. 7 Consent Checkbox */}
-        <div className="p-3.5 rounded-xl bg-void-deep/70 border border-void-border flex items-start gap-3">
-          <input
-            type="checkbox"
-            id="accepted_tos"
-            name="accepted_tos"
-            required
-            className="mt-1 w-4 h-4 rounded border-void-border bg-void-surface text-plasma-cyan focus:ring-plasma-cyan cursor-pointer accent-plasma-cyan shrink-0"
-          />
-          <label htmlFor="accepted_tos" className="text-xs text-gray-300 leading-snug cursor-pointer select-none">
-            {t("acceptTosPrefix")}{" "}
-            <Link
-              href="/legal/terms"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-plasma-cyan hover:underline font-semibold"
-            >
-              {t("termsOfService")}
-            </Link>{" "}
-            {t("andThe")}{" "}
-            <Link
-              href="/legal/privacy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-plasma-cyan hover:underline font-semibold"
-            >
-              {t("privacyPolicy")}
-            </Link>{" "}
-            <span className="text-gray-400 font-mono text-[11px]">{t("gdprCompliant")}</span>
+        {/* Consent Checkboxes */}
+        <div className="space-y-3 pt-1">
+          <label className="flex items-start gap-3 cursor-pointer group">
+            <input
+              type="checkbox"
+              name="terms"
+              required
+              className="mt-1 w-4 h-4 rounded bg-void-deep border-void-border text-plasma-cyan focus:ring-plasma-cyan focus:ring-offset-void-deep"
+            />
+            <span className="text-xs text-gray-400 group-hover:text-gray-300 leading-relaxed">
+              {t.rich("termsAgreement", {
+                terms: (chunks) => (
+                  <Link href="/legal/terms" className="text-plasma-cyan hover:underline" target="_blank">
+                    {chunks}
+                  </Link>
+                ),
+                privacy: (chunks) => (
+                  <Link href="/legal/privacy" className="text-plasma-cyan hover:underline" target="_blank">
+                    {chunks}
+                  </Link>
+                ),
+              })}
+            </span>
+          </label>
+
+          <label className="flex items-start gap-3 cursor-pointer group">
+            <input
+              type="checkbox"
+              name="parentalConsent"
+              value="true"
+              className="mt-1 w-4 h-4 rounded bg-void-deep border-void-border text-plasma-cyan focus:ring-plasma-cyan focus:ring-offset-void-deep"
+            />
+            <span className="text-xs text-gray-400 group-hover:text-gray-300 leading-relaxed">
+              {t("parentalConsentLabel")}
+            </span>
           </label>
         </div>
 
@@ -241,7 +236,7 @@ export function RegisterForm({ onToggleView }: RegisterFormProps) {
           disabled={isPending || showToast}
           className={`w-full font-bold py-3.5 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer text-void-deep ${
             isPending || showToast
-              ? "bg-rup-emerald text-void-deep shadow-[0_0_25px_rgba(0,230,118,0.6)] animate-pulse scale-[0.99]"
+              ? "bg-plasma-cyan text-void-deep shadow-[0_0_25px_rgba(0,229,255,0.6)] animate-pulse scale-[0.99]"
               : "bg-plasma-cyan hover:bg-plasma-cyan/90 shadow-[0_0_20px_rgba(0,229,255,0.3)] hover:shadow-[0_0_30px_rgba(0,229,255,0.5)] hover:scale-[1.01] active:scale-[0.99]"
           } disabled:cursor-not-allowed`}
         >
