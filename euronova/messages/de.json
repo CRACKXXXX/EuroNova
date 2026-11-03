@@ -1092,7 +1092,11 @@
     "moderatorAccessTooltip": "Vollständiger Audit-Zugriff für Moderations- und Compliance-Untersuchungen gewährt.",
     "tabReportsQuick": "Berichte",
     "restrictedBadge": "Eingeschränkt",
-    "restrictedToModerator": "Auf Moderatoren beschränkt"
+    "restrictedToModerator": "Auf Moderatoren beschränkt",
+    "deleteResolvedEscalation": "Eskalation löschen",
+    "confirmDeleteEscalation": "Diesen gelösten Eskalationsdatensatz dauerhaft löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "escalationDeletedSuccess": "Gelöste Eskalation dauerhaft gelöscht.",
+    "failedDeleteEscalation": "Fehler beim Löschen der Eskalation."
   },
   "ProjectTypes": {
     "YE": "Jugendaustausch",
@@ -1193,7 +1197,17 @@
     "totalReviewsCount": "{count, plural, =0 {0 Bewertungen} one {# Bewertung} other {# Bewertungen}}",
     "reviewSubmittedToast": "Verifizierte Bewertung eingereicht! +{xp} XP vergeben.",
     "levelUpToast": "LEVEL UP! Du hast Level {level} erreicht!",
-    "totalMissionsCount": "{count, plural, =0 {0 Missionen} one {# Mission} other {# Missionen}}"
+    "totalMissionsCount": "{count, plural, =0 {0 Missionen} one {# Mission} other {# Missionen}}",
+    "lockedTitle": "Bewertungen gesperrt",
+    "lockedBadge": "Stufe 2 erforderlich",
+    "lockedDesc": "Um echte Bewertungen zu gewährleisten und Spam zu verhindern, müssen Community-Mitglieder mindestens Stufe 2 (100+ XP) erreichen, um Organisationen zu bewerten.",
+    "currentLevelStatus": "Aktueller Status: Stufe {level} ({xp} / 100 XP)",
+    "earnXpTip": "Tipp: Vervollständige deine Profildaten (+15 XP) und beteilige dich an Forendiskussionen (+10 XP), um Stufe 2 zu erreichen.",
+    "goToProfileBtn": "Profildossier vervollständigen",
+    "levelRequirementError": "Stufe 2 erforderlich: Du musst mindestens Stufe 2 (100+ XP) erreichen, um Organisationsbewertungen abzugeben.",
+    "ratingRequired": "Bitte wähle eine Bewertung zwischen 1 und 5 Sternen.",
+    "reviewMinLength": "Bitte verfasse mindestens ein paar Worte über deine Erfahrung.",
+    "rateStarAria": "Mit {star} Sternen bewerten"
   },
   "Map": {
     "title": "Kosmisches Missionsradar",

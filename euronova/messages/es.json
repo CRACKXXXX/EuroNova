@@ -1092,7 +1092,11 @@
     "moderatorAccessTooltip": "Acceso completo de auditoría concedido para investigaciones de moderación y cumplimiento.",
     "tabReportsQuick": "Reportes",
     "restrictedBadge": "Restringido",
-    "restrictedToModerator": "Restringido a Moderadores"
+    "restrictedToModerator": "Restringido a Moderadores",
+    "deleteResolvedEscalation": "Eliminar Escalada",
+    "confirmDeleteEscalation": "¿Eliminar permanentemente este registro de escalada resuelta? Esta acción no se puede deshacer.",
+    "escalationDeletedSuccess": "Escalada resuelta eliminada permanentemente.",
+    "failedDeleteEscalation": "Error al eliminar la escalada."
   },
   "ProjectTypes": {
     "YE": "Intercambio Juvenil",
@@ -1193,7 +1197,17 @@
     "totalReviewsCount": "{count, plural, =0 {0 reseñas} one {# reseña} other {# reseñas}}",
     "reviewSubmittedToast": "¡Reseña Verificada Enviada! +{xp} XP otorgados.",
     "levelUpToast": "¡SUBIDA DE NIVEL! ¡Has alcanzado el Nivel {level}!",
-    "totalMissionsCount": "{count, plural, =0 {0 misiones} one {# misión} other {# misiones}}"
+    "totalMissionsCount": "{count, plural, =0 {0 misiones} one {# misión} other {# misiones}}",
+    "lockedTitle": "Reseñas Bloqueadas",
+    "lockedBadge": "Nivel 2 Requerido",
+    "lockedDesc": "Para garantizar reseñas auténticas y evitar spam, los miembros de la comunidad deben alcanzar al menos el Nivel 2 (100+ XP) para evaluar organizaciones.",
+    "currentLevelStatus": "Estado actual: Nivel {level} ({xp} / 100 XP)",
+    "earnXpTip": "Consejo: Completa los datos de tu perfil (+15 XP) y participa en los foros (+10 XP) para subir al Nivel 2.",
+    "goToProfileBtn": "Completar Dossier de Perfil",
+    "levelRequirementError": "Nivel 2 requerido: Debes alcanzar al menos el Nivel 2 (100+ XP) para enviar reseñas de organizaciones.",
+    "ratingRequired": "Por favor, selecciona una puntuación entre 1 y 5 estrellas.",
+    "reviewMinLength": "Por favor, escribe al menos unas pocas palabras describiendo tu experiencia.",
+    "rateStarAria": "Puntuar con {star} estrellas"
   },
   "Map": {
     "title": "Radar Cósmico de Misiones",

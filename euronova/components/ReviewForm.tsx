@@ -70,12 +70,12 @@ export function ReviewForm({
     setSuccessMsg(null);
 
     if (!rating || rating < 1 || rating > 5) {
-      setErrorMsg("Please select a rating between 1 and 5 stars.");
+      setErrorMsg(t("ratingRequired"));
       return;
     }
 
     if (!reviewText.trim() || reviewText.trim().length < 5) {
-      setErrorMsg("Please write at least a few words describing your experience.");
+      setErrorMsg(t("reviewMinLength"));
       return;
     }
 
@@ -87,6 +87,8 @@ export function ReviewForm({
           if (res.error === "RATE_LIMIT_EXCEEDED") {
             toast.warning(tErrors("rateLimitExceeded"), { id: "rate-limit-toast", icon: "⏳" });
             setErrorMsg(tErrors("rateLimitExceeded"));
+          } else if (res.error === "LEVEL_2_REQUIRED") {
+            setErrorMsg(t("levelRequirementError"));
           } else {
             setErrorMsg(res.error);
           }
@@ -230,7 +232,7 @@ export function ReviewForm({
                   onMouseEnter={() => setHoverRating(star)}
                   onMouseLeave={() => setHoverRating(0)}
                   className="p-1 rounded-lg hover:scale-110 transition-transform cursor-pointer focus:outline-none"
-                  aria-label={`Rate ${star} stars`}
+                  aria-label={t("rateStarAria", { star })}
                 >
                   <Star
                     className={`w-7 h-7 transition-colors ${

@@ -78,7 +78,7 @@ export async function submitOrgReview(
     const userLevel = calculateLevelFromXp(typeof youth.xp === "number" ? youth.xp : 0);
     if (userLevel < 2) {
       return {
-        error: "Level 2 required: You must reach at least Level 2 (100+ XP) to submit organization reviews.",
+        error: "LEVEL_2_REQUIRED",
       };
     }
 

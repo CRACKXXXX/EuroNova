@@ -1092,7 +1092,11 @@
     "moderatorAccessTooltip": "Accès d'audit complet accordé pour les enquêtes de modération et de conformité.",
     "tabReportsQuick": "Signalements",
     "restrictedBadge": "Restreint",
-    "restrictedToModerator": "Réservé aux Modérateurs"
+    "restrictedToModerator": "Réservé aux Modérateurs",
+    "deleteResolvedEscalation": "Supprimer l'escalade",
+    "confirmDeleteEscalation": "Supprimer définitivement cet enregistrement d'escalade résolue ? Cette action est irréversible.",
+    "escalationDeletedSuccess": "Escalade résolue supprimée définitivement.",
+    "failedDeleteEscalation": "Échec de la suppression de l'escalade."
   },
   "ProjectTypes": {
     "YE": "Échange de jeunes",
@@ -1193,7 +1197,17 @@
     "totalReviewsCount": "{count, plural, =0 {0 avis} one {# avis} other {# avis}}",
     "reviewSubmittedToast": "Avis vérifié envoyé ! +{xp} XP accordés.",
     "levelUpToast": "NIVEAU SUPÉRIEUR ! Vous avez atteint le Niveau {level} !",
-    "totalMissionsCount": "{count, plural, =0 {0 missions} one {# mission} other {# missions}}"
+    "totalMissionsCount": "{count, plural, =0 {0 missions} one {# mission} other {# missions}}",
+    "lockedTitle": "Avis verrouillés",
+    "lockedBadge": "Niveau 2 requis",
+    "lockedDesc": "Pour garantir des avis authentiques et éviter le spam, les membres de la communauté doivent atteindre au moins le Niveau 2 (100+ XP) pour évaluer les organisations.",
+    "currentLevelStatus": "Statut actuel : Niveau {level} ({xp} / 100 XP)",
+    "earnXpTip": "Conseil : Complétez les détails de votre profil (+15 XP) et participez aux discussions du forum (+10 XP) pour atteindre le Niveau 2.",
+    "goToProfileBtn": "Compléter le dossier de profil",
+    "levelRequirementError": "Niveau 2 requis : Vous devez atteindre au moins le Niveau 2 (100+ XP) pour publier des avis sur les organisations.",
+    "ratingRequired": "Veuillez sélectionner une note entre 1 et 5 étoiles.",
+    "reviewMinLength": "Veuillez écrire au moins quelques mots décrivant votre expérience.",
+    "rateStarAria": "Noter {star} étoiles"
   },
   "Map": {
     "title": "Radar Cosmique de Missions",

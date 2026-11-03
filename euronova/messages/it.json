@@ -1092,7 +1092,11 @@
     "moderatorAccessTooltip": "Accesso completo di audit concesso per indagini di moderazione e conformità.",
     "tabReportsQuick": "Segnalazioni",
     "restrictedBadge": "Limitato",
-    "restrictedToModerator": "Riservato ai Moderatori"
+    "restrictedToModerator": "Riservato ai Moderatori",
+    "deleteResolvedEscalation": "Elimina escalation",
+    "confirmDeleteEscalation": "Eliminare definitivamente questo record di escalation risolta? Questa azione non può essere annullata.",
+    "escalationDeletedSuccess": "Escalation risolta eliminata definitivamente.",
+    "failedDeleteEscalation": "Impossibile eliminare l'escalation."
   },
   "ProjectTypes": {
     "YE": "Scambio Giovanile",
@@ -1193,7 +1197,17 @@
     "totalReviewsCount": "{count, plural, =0 {0 recensioni} one {# recensione} other {# recensioni}}",
     "reviewSubmittedToast": "Recensione verificata inviata! +{xp} XP assegnati.",
     "levelUpToast": "LEVEL UP! Hai raggiunto il Livello {level}!",
-    "totalMissionsCount": "{count, plural, =0 {0 missioni} one {# missione} other {# missioni}}"
+    "totalMissionsCount": "{count, plural, =0 {0 missioni} one {# missione} other {# missioni}}",
+    "lockedTitle": "Recensioni bloccate",
+    "lockedBadge": "Livello 2 richiesto",
+    "lockedDesc": "Per garantire recensioni autentiche e prevenire lo spam, i membri della community devono raggiungere almeno il Livello 2 (100+ XP) per valutare le organizzazioni.",
+    "currentLevelStatus": "Stato attuale: Livello {level} ({xp} / 100 XP)",
+    "earnXpTip": "Suggerimento: Completa i dettagli del tuo profilo (+15 XP) e partecipa alle discussioni del forum (+10 XP) per raggiungere il Livello 2.",
+    "goToProfileBtn": "Completa il dossier profilo",
+    "levelRequirementError": "Livello 2 richiesto: Devi raggiungere almeno il Livello 2 (100+ XP) per inviare recensioni sulle organizzazioni.",
+    "ratingRequired": "Seleziona una valutazione tra 1 e 5 stelle.",
+    "reviewMinLength": "Scrivi almeno qualche parola descrivendo la tua esperienza.",
+    "rateStarAria": "Valuta con {star} stelle"
   },
   "Map": {
     "title": "Radar Cosmico delle Missioni",

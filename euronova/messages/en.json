@@ -1204,7 +1204,10 @@
     "currentLevelStatus": "Current Status: Level {level} ({xp} / 100 XP)",
     "earnXpTip": "Tip: Complete your profile details (+15 XP) and participate in forum discussions (+10 XP) to reach Level 2.",
     "goToProfileBtn": "Complete Profile Dossier",
-    "levelRequirementError": "Level 2 required: You must reach at least Level 2 (100+ XP) to submit organization reviews."
+    "levelRequirementError": "Level 2 required: You must reach at least Level 2 (100+ XP) to submit organization reviews.",
+    "ratingRequired": "Please select a rating between 1 and 5 stars.",
+    "reviewMinLength": "Please write at least a few words describing your experience.",
+    "rateStarAria": "Rate {star} stars"
   },
   "Map": {
     "title": "Cosmic Mission Radar",

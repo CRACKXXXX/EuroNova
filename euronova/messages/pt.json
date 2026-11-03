@@ -1092,7 +1092,11 @@
     "moderatorAccessTooltip": "Acesso total de auditoria concedido para investigações de moderação e conformidade.",
     "tabReportsQuick": "Denúncias",
     "restrictedBadge": "Restrito",
-    "restrictedToModerator": "Restrito a Moderadores"
+    "restrictedToModerator": "Restrito a Moderadores",
+    "deleteResolvedEscalation": "Eliminar Escalação",
+    "confirmDeleteEscalation": "Eliminar permanentemente este registo de escalação resolvida? Esta ação não pode ser anulada.",
+    "escalationDeletedSuccess": "Escalação resolvida eliminada permanentemente.",
+    "failedDeleteEscalation": "Falha ao eliminar a escalação."
   },
   "ProjectTypes": {
     "YE": "Intercâmbio de Jovens",
@@ -1193,7 +1197,17 @@
     "totalReviewsCount": "{count, plural, =0 {0 avaliações} one {# avaliação} other {# avaliações}}",
     "reviewSubmittedToast": "Avaliação verificada enviada! +{xp} XP atribuídos.",
     "levelUpToast": "SUBIDA DE NÍVEL! Atingiste o Nível {level}!",
-    "totalMissionsCount": "{count, plural, =0 {0 missões} one {# missão} other {# missões}}"
+    "totalMissionsCount": "{count, plural, =0 {0 missões} one {# missão} other {# missões}}",
+    "lockedTitle": "Avaliações Bloqueadas",
+    "lockedBadge": "Nível 2 Necessário",
+    "lockedDesc": "Para garantir avaliações autênticas e prevenir spam, os membros da comunidade devem atingir pelo menos o Nível 2 (100+ XP) para avaliar organizações.",
+    "currentLevelStatus": "Estado atual: Nível {level} ({xp} / 100 XP)",
+    "earnXpTip": "Dica: Completa os detalhes do teu perfil (+15 XP) e participa nas discussões do fórum (+10 XP) para alcançar o Nível 2.",
+    "goToProfileBtn": "Completar Dossier de Perfil",
+    "levelRequirementError": "Nível 2 necessário: Precisas de alcançar pelo menos o Nível 2 (100+ XP) para enviar avaliações de organizações.",
+    "ratingRequired": "Por favor, seleciona uma classificação entre 1 e 5 estrelas.",
+    "reviewMinLength": "Por favor, escreve pelo menos algumas palavras a descrever a tua experiência.",
+    "rateStarAria": "Classificar com {star} estrelas"
   },
   "Map": {
     "title": "Radar Cartográfico de Oportunidades",
