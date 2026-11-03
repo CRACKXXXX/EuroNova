@@ -83,20 +83,6 @@ export function Footer() {
                   <span>{t("notice")}</span>
                 </Link>
               </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (typeof window !== "undefined") {
-                      window.dispatchEvent(new CustomEvent("euronova:open-cookie-preferences"));
-                    }
-                  }}
-                  className="flex items-center justify-center sm:justify-start gap-2 transition-colors hover:text-plasma-cyan group cursor-pointer text-xs sm:text-sm text-gray-400"
-                >
-                  <Cookie className="w-3.5 h-3.5 text-plasma-cyan/70 group-hover:text-plasma-cyan transition-colors" />
-                  <span>{t("cookiePreferences")}</span>
-                </button>
-              </li>
             </ul>
           </div>
 
@@ -129,11 +115,24 @@ export function Footer() {
 
         </div>
 
-        {/* Línea Inferior: Copyright */}
-        <div className="pt-8 mt-8 border-t border-void-border/60 text-center sm:text-left text-xs text-gray-500">
-          <p className="font-medium text-gray-400" suppressHydrationWarning>
+        {/* Línea Inferior: Copyright & Preferencias de Privacidad */}
+        <div className="pt-8 mt-8 border-t border-void-border/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+          <p className="font-medium text-gray-400 text-center sm:text-left" suppressHydrationWarning>
             &copy; {new Date().getFullYear()} {t("copyright")}
           </p>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("euronova:open-cookie-preferences"));
+              }
+            }}
+            className="inline-flex items-center justify-center gap-2 text-xs text-gray-400 hover:text-plasma-cyan transition-colors cursor-pointer group py-1.5 px-3 rounded-lg hover:bg-void-surface border border-transparent hover:border-void-border"
+          >
+            <Cookie className="w-3.5 h-3.5 text-plasma-cyan/70 group-hover:text-plasma-cyan transition-colors shrink-0" />
+            <span>{t("cookiePreferences")}</span>
+          </button>
         </div>
       </div>
       <CookieConsentGatekeeper />
