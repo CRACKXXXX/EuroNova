@@ -138,3 +138,4 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
     </form>
   );
 }
+

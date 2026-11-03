@@ -74,6 +74,7 @@ export function CookieBanner() {
   const pathname = usePathname();
   const t = useTranslations("CookieBanner");
   const tErrors = useTranslations("Errors");
+  const tCommon = useTranslations("Common");
 
   const mounted = useSyncExternalStore(
     emptySubscribe,
@@ -126,18 +127,33 @@ export function CookieBanner() {
     };
   }, [tErrors]);
 
-  // Lock body scroll when in blocking mode or when preferences modal is open
+  // Lock body scroll when in blocking mode or when preferences modal is open, with safe unlock
   useEffect(() => {
     if (!mounted) return;
     const isBlockingModalOpen = isBlockingRoute && consentStatus === null;
-    if (isBlockingModalOpen || showPreferences) {
-      const originalOverflow = document.body.style.overflow;
+    const shouldLock = isBlockingModalOpen || showPreferences;
+
+    if (shouldLock) {
+      const prevOverflow = document.body.style.overflow;
       document.body.style.overflow = "hidden";
       return () => {
-        document.body.style.overflow = originalOverflow;
+        document.body.style.overflow = prevOverflow && prevOverflow !== "hidden" ? prevOverflow : "";
       };
+    } else {
+      if (document.body.style.overflow === "hidden") {
+        document.body.style.overflow = "";
+      }
     }
   }, [mounted, isBlockingRoute, consentStatus, showPreferences]);
+
+  const handleClosePreferences = () => {
+    setShowPreferences(false);
+    setCustomAnalyticsToggle(null);
+    const isBlockingModalOpen = isBlockingRoute && consentStatus === null;
+    if (!isBlockingModalOpen) {
+      document.body.style.overflow = "";
+    }
+  };
 
   const saveConsent = (choice: "accepted" | "rejected") => {
     try {
@@ -152,6 +168,9 @@ export function CookieBanner() {
     }
     setShowPreferences(false);
     setCustomAnalyticsToggle(null);
+    if (!isBlockingRoute) {
+      document.body.style.overflow = "";
+    }
   };
 
   const handleAcceptAll = () => {
@@ -321,7 +340,7 @@ export function CookieBanner() {
           aria-modal="true"
           aria-label={t("preferencesTitle")}
           className="fixed inset-0 z-[999999] flex items-center justify-center bg-void-deep/90 backdrop-blur-md p-4 animate-in fade-in duration-200"
-          onClick={() => setShowPreferences(false)}
+          onClick={handleClosePreferences}
         >
           <div
             className="w-full max-w-lg rounded-3xl p-6 sm:p-8 bg-void-surface border border-plasma-cyan/40 shadow-[0_0_60px_rgba(0,0,0,0.95),0_0_35px_rgba(0,229,255,0.2)] relative space-y-4 animate-in zoom-in-95 duration-200"
@@ -348,9 +367,9 @@ export function CookieBanner() {
               </div>
               <button
                 type="button"
-                onClick={() => setShowPreferences(false)}
+                onClick={handleClosePreferences}
                 className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-void-deep border border-transparent hover:border-void-border transition-colors cursor-pointer"
-                aria-label="Close"
+                aria-label={tCommon("closeModal")}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -403,10 +422,10 @@ export function CookieBanner() {
             <div className="flex items-center gap-3 pt-3 relative z-10">
               <button
                 type="button"
-                onClick={() => setShowPreferences(false)}
+                onClick={handleClosePreferences}
                 className="flex-1 py-3 px-4 rounded-xl bg-void-deep hover:bg-void-surface border border-void-border hover:border-gray-500 text-xs font-bold text-gray-300 hover:text-white transition-all text-center cursor-pointer"
               >
-                Cancel
+                {tCommon("close")}
               </button>
               <button
                 type="button"

@@ -78,15 +78,20 @@ export function CookieConsentGatekeeper({
     };
   }, []);
 
-  // Lock body scroll when modal is open to prevent background scrolling
+  // Lock body scroll when modal is open to prevent background scrolling, ensuring clean restore
   useEffect(() => {
-    if (!mounted || !isOpen) return;
-
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
+    if (!mounted) return;
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow && originalOverflow !== "hidden" ? originalOverflow : "";
+      };
+    } else {
+      if (document.body.style.overflow === "hidden") {
+        document.body.style.overflow = "";
+      }
+    }
   }, [isOpen, mounted]);
 
   const handleChoice = (choice: "granted" | "denied") => {
@@ -100,12 +105,18 @@ export function CookieConsentGatekeeper({
 
     setHasDismissed(true);
     setManuallyOpened(false);
+    if (typeof document !== "undefined") {
+      document.body.style.overflow = "";
+    }
     onCloseOverride?.();
   };
 
   const handleClose = () => {
     setHasDismissed(true);
     setManuallyOpened(false);
+    if (typeof document !== "undefined") {
+      document.body.style.overflow = "";
+    }
     onCloseOverride?.();
   };
 

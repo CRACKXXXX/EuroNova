@@ -7,11 +7,10 @@ import {
   ShieldCheck, 
   Scale, 
   FileText, 
-  LifeBuoy,
+  LifeBuoy, 
   Heart,
   Cookie
 } from "lucide-react";
-import { CookieConsentGatekeeper } from "@/components/CookieConsentGatekeeper";
 
 export function Footer() {
   const t = useTranslations("Footer");
@@ -135,7 +134,6 @@ export function Footer() {
           </button>
         </div>
       </div>
-      <CookieConsentGatekeeper />
     </footer>
   );
 }
