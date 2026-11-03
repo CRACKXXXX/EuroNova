@@ -63,12 +63,12 @@ export function OrganizationCard({ org }: { org: OrganizationData }) {
   };
 
   return (
-    <div className="bg-void-surface border border-void-border rounded-2xl p-6 hover:border-hyper-violet/60 transition-all duration-300 hover:shadow-[0_0_30px_rgba(99,102,241,0.2)] hover:-translate-y-1.5 group/org flex flex-col h-full relative overflow-visible">
+    <div className="bg-void-surface border border-void-border rounded-2xl p-6 hover:border-hyper-violet/60 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-[0_10px_35px_-10px_rgba(0,0,0,0.85),0_0_25px_rgba(99,102,241,0.25),inset_0_1px_1px_rgba(255,255,255,0.12)] hover:-translate-y-2 hover:scale-[1.01] group/org flex flex-col h-full relative overflow-visible">
       {/* Shimmer Sheen on Hover */}
       <div className="absolute inset-0 -translate-x-full group-hover/org:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-hyper-violet/10 to-transparent pointer-events-none rounded-2xl overflow-hidden" />
 
       {/* Ambient Internal Glow */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-hyper-violet/5 rounded-full blur-2xl pointer-events-none group-hover/org:bg-hyper-violet/10 transition-colors duration-500" />
+      <div className="absolute top-0 right-0 w-32 h-32 bg-hyper-violet/5 rounded-full blur-2xl pointer-events-none group-hover/org:bg-hyper-violet/15 transition-colors duration-500" />
 
       <div className="flex items-start gap-4 mb-4">
         {/* Default Avatar Fallback or Actual Logo */}
@@ -78,7 +78,7 @@ export function OrganizationCard({ org }: { org: OrganizationData }) {
           fallbackType="org"
           name={org.org_name}
           sizeClassName="w-12 h-12"
-          className="border border-void-border bg-void-deep shadow-[0_0_15px_rgba(99,102,241,0.15)]"
+          className="border border-void-border bg-void-deep shadow-[0_0_15px_rgba(99,102,241,0.15)] group-hover/org:scale-105 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] shrink-0"
           iconClassName="w-6 h-6 text-plasma-cyan"
         />
 
@@ -88,7 +88,7 @@ export function OrganizationCard({ org }: { org: OrganizationData }) {
               {org.org_name || t("unnamedOrg")}
             </h2>
             {org.verification_status === "verified" && (
-              <span className="px-2 py-0.5 rounded-md bg-rup-emerald/10 border border-rup-emerald/30 text-[10px] font-bold text-rup-emerald uppercase tracking-wider shrink-0">
+              <span className="px-2 py-0.5 rounded-md bg-rup-emerald/10 border border-rup-emerald/30 text-[10px] font-bold text-rup-emerald uppercase tracking-wider shrink-0 shadow-[0_0_10px_rgba(0,230,118,0.2)]">
                 {t("verified")}
               </span>
             )}
@@ -124,29 +124,33 @@ export function OrganizationCard({ org }: { org: OrganizationData }) {
                 : t("entityTypeNgo")}
             </span>
           )}
-          {picValue && (
-            <TermTooltip term="PIC">
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-hyper-violet/15 border border-hyper-violet/30 text-hyper-violet uppercase tracking-wider">
-                PIC: {picValue}
+
+          {oidValue && (
+            <TermTooltip term="OID">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-hyper-violet/10 border border-hyper-violet/30 text-hyper-violet cursor-help">
+                OID: {oidValue}
               </span>
             </TermTooltip>
           )}
-          {oidValue && (
-            <TermTooltip term="OID">
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-plasma-cyan/15 border border-plasma-cyan/30 text-plasma-cyan uppercase tracking-wider">
-                OID: {oidValue}
+
+          {picValue && (
+            <TermTooltip term="PIC">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-plasma-cyan/10 border border-plasma-cyan/30 text-plasma-cyan cursor-help">
+                PIC: {picValue}
               </span>
             </TermTooltip>
           )}
         </div>
       )}
 
-      <p className="text-sm text-gray-300 mb-6 flex-1 line-clamp-3">
+      {/* Description */}
+      <p className="text-gray-400 text-sm line-clamp-3 mb-4 leading-relaxed font-light flex-1">
         {org.description || t("noDescription")}
       </p>
 
+      {/* Social Links & Contact Channels */}
       {hasAnyContact && (
-        <div className="pt-4 border-t border-void-border flex flex-wrap items-center gap-3">
+        <div className="pt-3 border-t border-void-border/60 flex items-center gap-2 flex-wrap">
           {website && (
             <CosmicTooltip content={t("websiteTitle")} side="top">
               <a
@@ -154,7 +158,7 @@ export function OrganizationCard({ org }: { org: OrganizationData }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={t("websiteTitle")}
-                className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all"
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all hover:scale-105 active:scale-95"
               >
                 <Globe className="w-4 h-4" />
               </a>
@@ -167,7 +171,7 @@ export function OrganizationCard({ org }: { org: OrganizationData }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={t("instagramTitle")}
-                className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all"
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all hover:scale-105 active:scale-95"
               >
                 <Camera className="w-4 h-4" />
               </a>
@@ -180,7 +184,7 @@ export function OrganizationCard({ org }: { org: OrganizationData }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={t("tiktokTitle")}
-                className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all"
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all hover:scale-105 active:scale-95"
               >
                 <Music className="w-4 h-4" />
               </a>
@@ -193,7 +197,7 @@ export function OrganizationCard({ org }: { org: OrganizationData }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={t("youtubeTitle")}
-                className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all"
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all hover:scale-105 active:scale-95"
               >
                 <PlaySquare className="w-4 h-4" />
               </a>
@@ -206,7 +210,7 @@ export function OrganizationCard({ org }: { org: OrganizationData }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={t("linkedinTitle")}
-                className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all"
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-void-deep border border-void-border text-gray-400 hover:text-plasma-cyan hover:border-plasma-cyan/50 hover:bg-plasma-cyan/10 transition-all hover:scale-105 active:scale-95"
               >
                 <Briefcase className="w-4 h-4" />
               </a>
@@ -227,7 +231,7 @@ export function OrganizationCard({ org }: { org: OrganizationData }) {
       <div className="pt-4 mt-4 border-t border-void-border flex items-center gap-2">
         <Link
           href={org.id ? `/dashboard/organizations/${org.id}` : "#"}
-          className={`flex-1 py-2.5 rounded-lg bg-hyper-violet/10 hover:bg-hyper-violet/20 text-hyper-violet border border-hyper-violet/30 font-medium text-sm transition-all flex justify-center items-center gap-2 group-hover/org:shadow-[0_0_15px_rgba(99,102,241,0.2)] ${
+          className={`flex-1 py-2.5 rounded-xl bg-hyper-violet/10 hover:bg-hyper-violet/20 text-hyper-violet border border-hyper-violet/30 font-bold text-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex justify-center items-center gap-2 group-hover/org:shadow-[0_0_20px_rgba(99,102,241,0.25)] hover:scale-[1.01] active:scale-[0.98] cursor-pointer ${
             !org.id ? "pointer-events-none opacity-50" : ""
           }`}
         >
@@ -241,7 +245,7 @@ export function OrganizationCard({ org }: { org: OrganizationData }) {
               type="button"
               onClick={handleShare}
               aria-label={copied ? t("copiedLink") : t("shareView")}
-              className="py-2.5 px-3 rounded-lg bg-void-deep hover:bg-plasma-cyan/10 text-gray-300 hover:text-plasma-cyan border border-void-border hover:border-plasma-cyan/40 text-sm font-medium transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+              className="py-2.5 px-3 rounded-xl bg-void-deep hover:bg-plasma-cyan/10 text-gray-300 hover:text-plasma-cyan border border-void-border hover:border-plasma-cyan/40 text-sm font-medium transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex items-center justify-center gap-1.5 shrink-0 cursor-pointer hover:scale-105 active:scale-95"
             >
               {copied ? (
                 <>

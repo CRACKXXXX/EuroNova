@@ -38,7 +38,7 @@ export default async function DashboardHome({
         <DashboardCardMotion className="col-span-1">
           <Link
             href="/dashboard/projects"
-            className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-plasma-cyan transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,229,255,0.2)] flex flex-col items-center text-center overflow-hidden h-full block"
+            className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-plasma-cyan transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-[0_10px_35px_-10px_rgba(0,0,0,0.85),0_0_25px_rgba(0,229,255,0.25),inset_0_1px_1px_rgba(255,255,255,0.12)] flex flex-col items-center text-center overflow-hidden h-full block"
           >
             {/* Shimmer Sheen */}
             <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-plasma-cyan/10 to-transparent pointer-events-none" />
@@ -69,7 +69,7 @@ export default async function DashboardHome({
         <DashboardCardMotion className="col-span-1">
           <Link
             href="/map"
-            className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-blue-500 transition-all duration-300 hover:shadow-[0_0_30px_rgba(37,99,235,0.25)] flex flex-col items-center text-center overflow-hidden h-full block"
+            className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-blue-500 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-[0_10px_35px_-10px_rgba(0,0,0,0.85),0_0_25px_rgba(37,99,235,0.28),inset_0_1px_1px_rgba(255,255,255,0.12)] flex flex-col items-center text-center overflow-hidden h-full block"
           >
             {/* Shimmer Sheen */}
             <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-blue-500/10 to-transparent pointer-events-none" />
@@ -100,7 +100,7 @@ export default async function DashboardHome({
         <DashboardCardMotion className="col-span-1">
           <Link
             href="/ecosystem"
-            className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-amber-500 transition-all duration-300 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)] flex flex-col items-center text-center overflow-hidden h-full block"
+            className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-amber-500 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-[0_10px_35px_-10px_rgba(0,0,0,0.85),0_0_25px_rgba(245,158,11,0.25),inset_0_1px_1px_rgba(255,255,255,0.12)] flex flex-col items-center text-center overflow-hidden h-full block"
           >
             {/* Shimmer Sheen */}
             <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-amber-400/10 to-transparent pointer-events-none" />
@@ -131,7 +131,7 @@ export default async function DashboardHome({
         <DashboardCardMotion isCenterpiece className="col-span-1 md:col-span-2 lg:col-span-3">
           <Link
             href="/dashboard/profile"
-            className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-slate-400 transition-all duration-300 hover:shadow-[0_0_30px_rgba(148,163,184,0.2)] flex flex-col md:flex-row items-center justify-center gap-6 text-center md:text-left overflow-hidden h-full block"
+            className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-slate-300 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-[0_10px_35px_-10px_rgba(0,0,0,0.85),0_0_25px_rgba(148,163,184,0.25),inset_0_1px_1px_rgba(255,255,255,0.12)] flex flex-col md:flex-row items-center justify-center gap-6 text-center md:text-left overflow-hidden h-full block"
           >
             {/* Shimmer Sheen */}
             <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-slate-400/10 to-transparent pointer-events-none" />
@@ -166,7 +166,7 @@ export default async function DashboardHome({
         <DashboardCardMotion className="col-span-1">
           <Link
             href="/dashboard/organizations"
-            className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-hyper-violet transition-all duration-300 hover:shadow-[0_0_30px_rgba(99,102,241,0.2)] flex flex-col items-center text-center overflow-hidden h-full block"
+            className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-hyper-violet transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-[0_10px_35px_-10px_rgba(0,0,0,0.85),0_0_25px_rgba(99,102,241,0.25),inset_0_1px_1px_rgba(255,255,255,0.12)] flex flex-col items-center text-center overflow-hidden h-full block"
           >
             {/* Shimmer Sheen */}
             <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-hyper-violet/10 to-transparent pointer-events-none" />
@@ -197,7 +197,7 @@ export default async function DashboardHome({
         <DashboardCardMotion className="col-span-1">
           <Link
             href="/dashboard/my-missions"
-            className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-red-500 transition-all duration-300 hover:shadow-[0_0_30px_rgba(239,68,68,0.25)] flex flex-col items-center text-center overflow-hidden h-full block"
+            className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-red-500 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-[0_10px_35px_-10px_rgba(0,0,0,0.85),0_0_25px_rgba(239,68,68,0.28),inset_0_1px_1px_rgba(255,255,255,0.12)] flex flex-col items-center text-center overflow-hidden h-full block"
           >
             {/* Shimmer Sheen */}
             <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-red-500/10 to-transparent pointer-events-none" />
@@ -228,7 +228,7 @@ export default async function DashboardHome({
         <DashboardCardMotion className="col-span-1">
           <Link
             href="/community"
-            className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-rup-emerald transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,230,118,0.2)] flex flex-col items-center text-center overflow-hidden h-full block"
+            className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-rup-emerald transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-[0_10px_35px_-10px_rgba(0,0,0,0.85),0_0_25px_rgba(0,230,118,0.25),inset_0_1px_1px_rgba(255,255,255,0.12)] flex flex-col items-center text-center overflow-hidden h-full block"
           >
             {/* Shimmer Sheen */}
             <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-rup-emerald/10 to-transparent pointer-events-none" />

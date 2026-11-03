@@ -116,7 +116,7 @@ export function MissionsFiltersBar({
             value={searchQuery}
             onChange={(e) => onSearchInput(e.target.value)}
             placeholder={t("searchPlaceholder")}
-            className="w-full bg-void-surface border border-void-border rounded-xl pl-9 pr-4 py-2 text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:border-plasma-cyan transition-all"
+            className="w-full bg-void-surface border border-void-border rounded-xl pl-9 pr-4 py-2 text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:border-plasma-cyan uiverse-input-glow transition-all"
           />
         </div>
       </div>
@@ -135,10 +135,10 @@ export function MissionsFiltersBar({
                 key={type}
                 type="button"
                 onClick={() => onTypeSelect(type)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase transition-all duration-200 shrink-0 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] shrink-0 cursor-pointer ${
                   isSelected
-                    ? "bg-plasma-cyan text-void-deep shadow-[0_0_12px_rgba(0,229,255,0.4)] scale-105"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                    ? "bg-plasma-cyan text-void-deep shadow-[0_0_15px_rgba(0,229,255,0.45)] scale-105"
+                    : "text-gray-400 hover:text-white hover:bg-white/5 hover:scale-105 active:scale-95"
                 }`}
               >
                 {type}
@@ -153,10 +153,10 @@ export function MissionsFiltersBar({
             <button
               type="button"
               onClick={() => onCountryToggle("")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] cursor-pointer hover:scale-105 active:scale-95 ${
                 !selectedDest
-                  ? "bg-void-surface border-plasma-cyan/60 text-plasma-cyan shadow-[0_0_8px_rgba(0,229,255,0.15)]"
-                  : "bg-void-deep border-void-border text-gray-400 hover:text-white"
+                  ? "bg-void-surface border-plasma-cyan/60 text-plasma-cyan shadow-[0_0_12px_rgba(0,229,255,0.25)] font-bold"
+                  : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-600"
               }`}
             >
               {t("allCountries")}
