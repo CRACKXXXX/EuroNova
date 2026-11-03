@@ -24,6 +24,7 @@ import {
   Edit3
 } from "lucide-react";
 import { COUNTRIES } from "@/lib/constants/countries";
+import { calculateLevelFromXp } from "@/lib/gamification";
 import { ReviewForm } from "@/components/ReviewForm";
 import { ProjectCard, ProjectData } from "@/components/ProjectCard";
 import { TermTooltip } from "@/components/TermTooltip";
@@ -147,25 +148,35 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
   const totalProjects = paginatedProjectsCount || 0;
   const totalProjectPages = Math.max(1, Math.ceil(totalProjects / PROJECTS_PER_PAGE));
 
-  // 4. Obtener interacciones del usuario autenticado si existe y verificar propiedad
+  // 4. Obtener interacciones del usuario autenticado si existe y verificar propiedad y nivel
   const { data: { user } } = await supabase.auth.getUser();
   let isOwner = false;
+  let userLevel = 1;
+  let isYouth = false;
+  let userXp = 0;
+
   if (user) {
     if (user.id === org.id || user.email === "euronovaofficial@gmail.com") {
       isOwner = true;
-    } else {
-      try {
-        const { data: youthProfile } = await supabase
-          .from("users_youth")
-          .select("role")
-          .eq("id", user.id)
-          .maybeSingle();
-        if (youthProfile?.role === "admin") {
+    }
+
+    try {
+      const { data: youthProfile } = await supabase
+        .from("users_youth")
+        .select("role, xp")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (youthProfile) {
+        isYouth = true;
+        userXp = typeof youthProfile.xp === "number" ? youthProfile.xp : 0;
+        userLevel = calculateLevelFromXp(userXp);
+        if (youthProfile.role === "admin") {
           isOwner = true;
         }
-      } catch (e) {
-        console.error("Could not check admin role in users_youth:", e);
       }
+    } catch (e) {
+      console.error("Could not check youth profile data:", e);
     }
   }
 
@@ -436,7 +447,13 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Columna Izquierda: Formulario de Reseña */}
         <div className="lg:col-span-1">
-          <ReviewForm orgId={id} />
+          <ReviewForm
+            orgId={id}
+            userLevel={user ? userLevel : 0}
+            isYouth={isYouth}
+            userXp={userXp}
+            isAuthenticated={Boolean(user)}
+          />
         </div>
 
         {/* Columna Derecha: Listado de Reseñas Existentes */}

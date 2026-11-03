@@ -7,6 +7,7 @@ import { ReviewSubmissionSchema } from "@/lib/schemas";
 import { stripDangerousHtml } from "@/lib/securitySanitizer";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimiter";
 import { verifyMidSessionActiveStatus } from "@/lib/moderationShield";
+import { calculateLevelFromXp } from "@/lib/gamification";
 
 export interface ReviewResult {
   success?: boolean;
@@ -58,10 +59,10 @@ export async function submitOrgReview(
       return { error: statusCheck.error || "You are temporarily restricted from submitting reviews." };
     }
 
-    // LÓGICA ANTI-SPAM: Verificar que el usuario pertenezca a users_youth
+    // LÓGICA ANTI-SPAM: Verificar que el usuario pertenezca a users_youth y tenga Nivel 2 mínimo
     const { data: youth, error: youthError } = await supabase
       .from("users_youth")
-      .select("id, full_name, birth_date, country_code, created_at")
+      .select("id, full_name, birth_date, country_code, created_at, xp")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -71,6 +72,14 @@ export async function submitOrgReview(
 
     if (!youth) {
       return { error: "Only verified youth participants can submit organization reviews." };
+    }
+
+    // Nivel 2 mínimo obligatorio para evaluar organizaciones
+    const userLevel = calculateLevelFromXp(typeof youth.xp === "number" ? youth.xp : 0);
+    if (userLevel < 2) {
+      return {
+        error: "Level 2 required: You must reach at least Level 2 (100+ XP) to submit organization reviews.",
+      };
     }
 
     // Verificar que los campos esenciales no sean nulos o vacíos

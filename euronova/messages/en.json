@@ -1197,7 +1197,14 @@
     "totalReviewsCount": "{count, plural, =0 {0 reviews} one {# review} other {# reviews}}",
     "reviewSubmittedToast": "Verified Review Submitted! +{xp} XP awarded.",
     "levelUpToast": "LEVEL UP! You reached Level {level}!",
-    "totalMissionsCount": "{count, plural, =0 {0 missions} one {# mission} other {# missions}}"
+    "totalMissionsCount": "{count, plural, =0 {0 missions} one {# mission} other {# missions}}",
+    "lockedTitle": "Reviews Locked",
+    "lockedBadge": "Level 2 Required",
+    "lockedDesc": "To ensure genuine reviews and prevent spam, community members must reach at least Level 2 (100+ XP) to evaluate organizations.",
+    "currentLevelStatus": "Current Status: Level {level} ({xp} / 100 XP)",
+    "earnXpTip": "Tip: Complete your profile details (+15 XP) and participate in forum discussions (+10 XP) to reach Level 2.",
+    "goToProfileBtn": "Complete Profile Dossier",
+    "levelRequirementError": "Level 2 required: You must reach at least Level 2 (100+ XP) to submit organization reviews."
   },
   "Map": {
     "title": "Cosmic Mission Radar",

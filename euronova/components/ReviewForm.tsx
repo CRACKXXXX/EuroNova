@@ -1,16 +1,27 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
-import { Star, Send, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { useState, useTransition, useRef, useEffect } from "react";
+import { Star, Send, AlertCircle, CheckCircle2, Loader2, Lock, ShieldAlert } from "lucide-react";
 import { submitOrgReview } from "@/actions/reviews";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { Link } from "@/i18n/routing";
 
 interface ReviewFormProps {
   orgId: string;
+  userLevel?: number;
+  isYouth?: boolean;
+  userXp?: number;
+  isAuthenticated?: boolean;
 }
 
-export function ReviewForm({ orgId }: ReviewFormProps) {
+export function ReviewForm({
+  orgId,
+  userLevel = 1,
+  isYouth = false,
+  userXp = 0,
+  isAuthenticated = true,
+}: ReviewFormProps) {
   const t = useTranslations("OrgReviews");
   const tErrors = useTranslations("Errors");
   const [rating, setRating] = useState<number>(5);
@@ -19,10 +30,41 @@ export function ReviewForm({ orgId }: ReviewFormProps) {
   const [isPending, startTransition] = useTransition();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [liveLevel, setLiveLevel] = useState<number>(userLevel);
+  const [liveXp, setLiveXp] = useState<number>(userXp);
   const inFlightRef = useRef(false);
+
+  // Sync state if initial props change
+  useEffect(() => {
+    setLiveLevel(userLevel);
+    setLiveXp(userXp);
+  }, [userLevel, userXp]);
+
+  // Listen to in-session XP / level upgrades
+  useEffect(() => {
+    const handleXpUpdated = (e: Event) => {
+      const custom = e as CustomEvent<{ xpGained?: number; level?: number }>;
+      if (custom.detail?.level) {
+        setLiveLevel(custom.detail.level);
+      }
+      if (custom.detail?.xpGained) {
+        setLiveXp((prev) => prev + (custom.detail.xpGained || 0));
+      }
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("euronova:xp-updated", handleXpUpdated);
+      return () => window.removeEventListener("euronova:xp-updated", handleXpUpdated);
+    }
+  }, []);
+
+  const isLocked = !isAuthenticated || !isYouth || liveLevel < 2;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLocked) {
+      setErrorMsg(t("levelRequirementError"));
+      return;
+    }
     if (inFlightRef.current) return;
     setErrorMsg(null);
     setSuccessMsg(null);
@@ -73,11 +115,85 @@ export function ReviewForm({ orgId }: ReviewFormProps) {
     });
   };
 
+  // ESTADO BLOQUEADO: Si no está autenticado, no es participante youth o no tiene Nivel 2 mínimo
+  if (isLocked) {
+    const safeXp = Math.max(0, liveXp);
+    const progressPercent = Math.min(100, Math.max(0, Math.round((safeXp / 100) * 100)));
+
+    return (
+      <div className="bg-void-surface border border-void-border rounded-2xl p-6 shadow-xl relative overflow-hidden backdrop-blur-sm">
+        {/* Ambient Warm Glow */}
+        <div className="absolute top-0 right-0 w-36 h-36 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <h3 className="text-xl font-bold text-white flex items-center gap-2">
+            <Lock className="w-5 h-5 text-amber-400" />
+            <span>{t("lockedTitle")}</span>
+          </h3>
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-400/15 text-amber-300 border border-amber-400/30 flex items-center gap-1 shrink-0">
+            <Lock className="w-3 h-3" />
+            {t("lockedBadge")}
+          </span>
+        </div>
+
+        <p className="text-sm text-gray-400 mb-5 leading-relaxed">
+          {t("lockedDesc")}
+        </p>
+
+        {/* Indicador de Nivel Actual y Progreso a Nivel 2 */}
+        {isAuthenticated && isYouth && (
+          <div className="p-4 rounded-xl bg-void-deep/90 border border-void-border space-y-2.5 mb-5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-gray-300">
+                {t("currentLevelStatus", { level: liveLevel, xp: safeXp })}
+              </span>
+              <span className="font-mono text-amber-400 font-bold">
+                {progressPercent}%
+              </span>
+            </div>
+
+            {/* Barra de Progreso */}
+            <div className="w-full h-2 rounded-full bg-void-surface overflow-hidden border border-void-border/60">
+              <div
+                className="h-full bg-gradient-to-r from-amber-500 to-plasma-cyan rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+
+            <p className="text-[11px] text-gray-400 leading-normal pt-1">
+              {t("earnXpTip")}
+            </p>
+          </div>
+        )}
+
+        {/* Acción para Desbloquear */}
+        <div className="pt-2">
+          {!isAuthenticated ? (
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl bg-plasma-cyan/15 hover:bg-plasma-cyan text-plasma-cyan hover:text-void-deep border border-plasma-cyan/40 hover:border-plasma-cyan font-bold text-xs sm:text-sm transition-all"
+            >
+              <span>{t("signInToReview")}</span>
+            </Link>
+          ) : (
+            <Link
+              href="/dashboard/profile"
+              className="inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl bg-void-deep hover:bg-amber-400/10 text-gray-300 hover:text-amber-300 border border-void-border hover:border-amber-400/40 font-semibold text-xs sm:text-sm transition-all"
+            >
+              <ShieldAlert className="w-4 h-4 text-amber-400" />
+              <span>{t("goToProfileBtn")}</span>
+            </Link>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-void-surface border border-void-border rounded-2xl p-6 shadow-xl">
       <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
         <Star className="w-5 h-5 text-plasma-cyan fill-plasma-cyan" />
-        {t("writeReview")}
+        <span>{t("writeReview")}</span>
       </h3>
       <p className="text-sm text-gray-400 mb-6">
         {t("beTheFirst")}

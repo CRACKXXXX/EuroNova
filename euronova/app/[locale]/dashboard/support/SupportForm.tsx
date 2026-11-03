@@ -3,7 +3,29 @@
 import { useActionState, useState, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { createTicket } from "./actions";
-import { Mail, Phone, MessageSquare, Send, Sparkles, Globe, MessageCircle, Info, Paperclip, Image as ImageIcon, Upload, X } from "lucide-react";
+import {
+  Mail,
+  Phone,
+  MessageSquare,
+  Send,
+  Sparkles,
+  Globe,
+  MessageCircle,
+  Info,
+  Paperclip,
+  Image as ImageIcon,
+  Upload,
+  X,
+  ChevronDown,
+  Check,
+  ShieldAlert,
+  Bug,
+  Wrench,
+  User,
+  Rocket,
+  CreditCard,
+  HelpCircle,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -19,6 +41,20 @@ const ALLOWED_REASONS = [
   "other",
 ] as const;
 
+type AllowedReasonKey = (typeof ALLOWED_REASONS)[number];
+
+const REASON_OPTIONS = [
+  { key: "apply_support", labelKey: "reasonApplySupport", icon: Sparkles },
+  { key: "survey_moderation", labelKey: "reasonSurveyModeration", icon: MessageSquare },
+  { key: "trust_score_dispute", labelKey: "reasonTrustScoreDispute", icon: ShieldAlert },
+  { key: "scraper_issue", labelKey: "reasonScraperIssue", icon: Bug },
+  { key: "technical", labelKey: "reasonTechnical", icon: Wrench },
+  { key: "account", labelKey: "reasonAccount", icon: User },
+  { key: "projects", labelKey: "reasonProjects", icon: Rocket },
+  { key: "billing", labelKey: "reasonBilling", icon: CreditCard },
+  { key: "other", labelKey: "reasonOther", icon: HelpCircle },
+] as const;
+
 export function SupportForm() {
   const t = useTranslations("SupportForm");
   const tErrors = useTranslations("Errors");
@@ -28,6 +64,7 @@ export function SupportForm() {
 
   const [contactMethod, setContactMethod] = useState<"website" | "email" | "whatsapp">("website");
   const [selectedReason, setSelectedReason] = useState(defaultReason);
+  const [isReasonDropdownOpen, setIsReasonDropdownOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [subjectValue, setSubjectValue] = useState(
     defaultReason === "apply_support"
@@ -35,6 +72,7 @@ export function SupportForm() {
       : ""
   );
 
+  const reasonDropdownRef = useRef<HTMLDivElement>(null);
   const [state, action, isPending] = useActionState(createTicket, null);
   const inFlightRef = useRef(false);
 
@@ -43,6 +81,19 @@ export function SupportForm() {
     setPrevSuccess(true);
     setSelectedFiles([]);
   }
+
+  // Close reason dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (reasonDropdownRef.current && !reasonDropdownRef.current.contains(e.target as Node)) {
+        setIsReasonDropdownOpen(false);
+      }
+    };
+    if (isReasonDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isReasonDropdownOpen]);
 
   useEffect(() => {
     if (state?.error === "RATE_LIMIT_EXCEEDED") {
@@ -87,12 +138,18 @@ export function SupportForm() {
 
   const handleAction = async (formData: FormData) => {
     if (inFlightRef.current) return;
+    if (!selectedReason) {
+      toast.error(t("selectReason"));
+      setIsReasonDropdownOpen(true);
+      return;
+    }
     inFlightRef.current = true;
     try {
       formData.delete("attachments");
       for (const file of selectedFiles) {
         formData.append("attachments", file);
       }
+      formData.set("reason", selectedReason);
       await action(formData);
     } finally {
       inFlightRef.current = false;
@@ -121,10 +178,11 @@ export function SupportForm() {
           <button
             type="button"
             onClick={() => setContactMethod("website")}
-            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${contactMethod === "website"
+            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
+              contactMethod === "website"
                 ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.2)]"
                 : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-700"
-              }`}
+            }`}
           >
             <Globe className="w-4 h-4" />
             <span>{t("contactMethodWebsite")}</span>
@@ -133,10 +191,11 @@ export function SupportForm() {
           <button
             type="button"
             onClick={() => setContactMethod("email")}
-            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${contactMethod === "email"
+            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
+              contactMethod === "email"
                 ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.2)]"
                 : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-700"
-              }`}
+            }`}
           >
             <Mail className="w-4 h-4" />
             <span>{t("contactMethodEmail")}</span>
@@ -145,10 +204,11 @@ export function SupportForm() {
           <button
             type="button"
             onClick={() => setContactMethod("whatsapp")}
-            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${contactMethod === "whatsapp"
+            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
+              contactMethod === "whatsapp"
                 ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.2)]"
                 : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-700"
-              }`}
+            }`}
           >
             <MessageCircle className="w-4 h-4" />
             <span>{t("contactMethodWhatsapp")}</span>
@@ -189,10 +249,11 @@ export function SupportForm() {
               name="phone"
               required={contactMethod === "whatsapp"}
               maxLength={30}
-              className={`w-full bg-void-deep border rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-1 transition-all ${contactMethod === "whatsapp"
+              className={`w-full bg-void-deep border rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-1 transition-all ${
+                contactMethod === "whatsapp"
                   ? "border-plasma-cyan/60 focus:border-plasma-cyan focus:ring-plasma-cyan"
                   : "border-void-border focus:border-plasma-cyan focus:ring-plasma-cyan"
-                }`}
+              }`}
               placeholder={
                 contactMethod === "whatsapp"
                   ? t("phoneWhatsappPlaceholder")
@@ -218,26 +279,91 @@ export function SupportForm() {
           />
         </div>
 
-        <div className="space-y-2">
+        {/* Custom Cosmic Dark Dropdown for Inquiry Reason */}
+        <div className="space-y-2 relative" ref={reasonDropdownRef}>
           <label className="text-sm font-medium text-gray-300">{t("reason")}</label>
-          <select
-            name="reason"
-            required
-            value={selectedReason}
-            onChange={(e) => setSelectedReason(e.target.value)}
-            className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all appearance-none cursor-pointer"
+          <input type="hidden" name="reason" value={selectedReason} />
+
+          {/* Custom Trigger */}
+          <button
+            type="button"
+            onClick={() => setIsReasonDropdownOpen((prev) => !prev)}
+            aria-haspopup="listbox"
+            aria-expanded={isReasonDropdownOpen}
+            className={`w-full bg-void-deep border rounded-xl px-4 py-3 text-sm text-left flex items-center justify-between gap-3 transition-all cursor-pointer focus:outline-none ${
+              isReasonDropdownOpen
+                ? "border-plasma-cyan ring-1 ring-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.15)]"
+                : "border-void-border hover:border-plasma-cyan/60 text-white"
+            }`}
           >
-            <option value="">{t("selectReason")}</option>
-            <option value="apply_support">{t("reasonApplySupport")}</option>
-            <option value="survey_moderation">{t("reasonSurveyModeration")}</option>
-            <option value="trust_score_dispute">{t("reasonTrustScoreDispute")}</option>
-            <option value="scraper_issue">{t("reasonScraperIssue")}</option>
-            <option value="technical">{t("reasonTechnical")}</option>
-            <option value="account">{t("reasonAccount")}</option>
-            <option value="projects">{t("reasonProjects")}</option>
-            <option value="billing">{t("reasonBilling")}</option>
-            <option value="other">{t("reasonOther")}</option>
-          </select>
+            <div className="flex items-center gap-3 min-w-0">
+              {(() => {
+                const currentOption = REASON_OPTIONS.find((r) => r.key === selectedReason);
+                if (currentOption) {
+                  const Icon = currentOption.icon;
+                  return (
+                    <>
+                      <Icon className="w-4 h-4 text-plasma-cyan shrink-0" />
+                      <span className="text-white font-medium truncate">
+                        {t(currentOption.labelKey)}
+                      </span>
+                    </>
+                  );
+                }
+                return (
+                  <>
+                    <HelpCircle className="w-4 h-4 text-gray-500 shrink-0" />
+                    <span className="text-gray-500 truncate">{t("selectReason")}</span>
+                  </>
+                );
+              })()}
+            </div>
+
+            <ChevronDown
+              className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 ${
+                isReasonDropdownOpen ? "rotate-180 text-plasma-cyan" : ""
+              }`}
+            />
+          </button>
+
+          {/* Floating Dropdown List */}
+          {isReasonDropdownOpen && (
+            <div
+              role="listbox"
+              className="absolute left-0 right-0 top-full mt-2 rounded-2xl bg-void-deep/95 border border-void-border shadow-[0_20px_50px_rgba(0,0,0,0.95),0_0_25px_rgba(0,229,255,0.12)] z-50 p-2 space-y-1 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 max-h-72 overflow-y-auto custom-scrollbar"
+            >
+              {REASON_OPTIONS.map((opt) => {
+                const Icon = opt.icon;
+                const isSelected = selectedReason === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    onClick={() => {
+                      setSelectedReason(opt.key);
+                      if (opt.key === "apply_support" && !subjectValue) {
+                        setSubjectValue("Application for EuroNova Community Support Specialist (Level 10+)");
+                      }
+                      setIsReasonDropdownOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm transition-all cursor-pointer text-left ${
+                      isSelected
+                        ? "bg-plasma-cyan/15 text-plasma-cyan font-bold border border-plasma-cyan/40 shadow-[0_0_15px_rgba(0,229,255,0.15)]"
+                        : "text-gray-300 hover:bg-void-surface hover:text-white border border-transparent"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Icon className={`w-4 h-4 shrink-0 ${isSelected ? "text-plasma-cyan" : "text-gray-400"}`} />
+                      <span className="truncate">{t(opt.labelKey)}</span>
+                    </div>
+                    {isSelected && <Check className="w-4 h-4 text-plasma-cyan shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
