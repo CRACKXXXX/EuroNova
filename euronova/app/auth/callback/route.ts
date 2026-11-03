@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import type { EmailOtpType } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { routing } from '@/i18n/routing';
 
@@ -20,6 +21,8 @@ interface PendingCookie {
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
+  const token_hash = requestUrl.searchParams.get('token_hash');
+  const type = requestUrl.searchParams.get('type') as EmailOtpType | null;
 
   const cookieStore = await cookies();
   const localeCookie = cookieStore.get('NEXT_LOCALE')?.value;
@@ -54,10 +57,10 @@ export async function GET(request: Request) {
   const origin = requestUrl.origin;
   const destinationUrl = `${origin}/${currentLocale}${sanitizedNext}`;
 
-  // Collector for cookies emitted by Supabase during exchangeCodeForSession
+  // Collector for cookies emitted by Supabase during exchangeCodeForSession or verifyOtp
   const pendingCookies: PendingCookie[] = [];
 
-  if (code) {
+  if (code || (token_hash && type)) {
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -86,22 +89,33 @@ export async function GET(request: Request) {
       }
     );
 
-    const { error, data } = await supabase.auth.exchangeCodeForSession(code);
+    let authError: Error | null = null;
+    let authUser = null;
 
-    if (!error && data?.user) {
+    if (code) {
+      const { error, data } = await supabase.auth.exchangeCodeForSession(code);
+      authError = error;
+      authUser = data?.user ?? null;
+    } else if (token_hash && type) {
+      const { error, data } = await supabase.auth.verifyOtp({ token_hash, type });
+      authError = error;
+      authUser = data?.user ?? null;
+    }
+
+    if (!authError && authUser) {
       try {
         const authRoleCookie = cookieStore.get('euronova_auth_role')?.value;
         const [{ data: youthData }, { data: orgData }] = await Promise.all([
-          supabase.from('users_youth').select('id').eq('id', data.user.id).maybeSingle(),
-          supabase.from('users_org').select('id').eq('id', data.user.id).maybeSingle(),
+          supabase.from('users_youth').select('id').eq('id', authUser.id).maybeSingle(),
+          supabase.from('users_org').select('id').eq('id', authUser.id).maybeSingle(),
         ]);
 
         if (!youthData && !orgData) {
           if (authRoleCookie === 'org') {
             const randomPic = '9' + Math.floor(10000000 + Math.random() * 90000000).toString();
             await supabase.from('users_org').upsert({
-              id: data.user.id,
-              org_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || 'European Organization',
+              id: authUser.id,
+              org_name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || 'European Organization',
               pic_number: randomPic,
               country_hq: 'ES',
               is_verified: false,
@@ -109,8 +123,8 @@ export async function GET(request: Request) {
           } else {
             // Create default youth profile with required constraint fields satisfied
             await supabase.from('users_youth').upsert({
-              id: data.user.id,
-              full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || 'European Youth',
+              id: authUser.id,
+              full_name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || 'European Youth',
               birth_date: '2000-01-01',
               country_code: 'ES',
               is_rup_region: false,
@@ -168,7 +182,7 @@ export async function GET(request: Request) {
 
       return response;
     } else {
-      console.error("Auth callback error:", error);
+      console.error("Auth callback error:", authError);
     }
   }
 

@@ -8,13 +8,20 @@ import Image from "next/image";
 import { PublicHeader } from "@/components/PublicHeader";
 import { LoginForm } from "@/components/LoginForm";
 import { RegisterForm } from "@/components/RegisterForm";
+import { ForgotPasswordForm } from "@/components/ForgotPasswordForm";
 
 function LoginContent() {
   const t = useTranslations("Login");
   const tCommon = useTranslations("Common");
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") || searchParams.get("view");
-  const [isViewLogin, setIsViewLogin] = useState(mode !== "signup" && mode !== "register");
+  const [view, setView] = useState<"login" | "signup" | "forgot">(
+    mode === "signup" || mode === "register"
+      ? "signup"
+      : mode === "forgot" || mode === "forgot-password"
+      ? "forgot"
+      : "login"
+  );
 
   return (
     <div className="min-h-screen bg-void-deep flex flex-col items-center justify-center pt-24 pb-12 px-4 sm:px-6 lg:px-8 text-white relative overflow-hidden">
@@ -39,15 +46,28 @@ function LoginContent() {
             className="w-auto h-auto max-w-full drop-shadow-[0_0_25px_rgba(0,229,255,0.15)]" 
           />
           <h2 className="sr-only">EuroNova</h2>
-          <p className="text-gray-400 mt-2 text-sm sm:text-base font-light">
-            {isViewLogin ? t('welcome') : t('join')}
+          <p className="text-gray-400 mt-2 text-sm sm:text-base font-light text-center">
+            {view === "forgot" 
+              ? t("forgotPasswordSubtitle") 
+              : view === "signup" 
+              ? t("join") 
+              : t("welcome")}
           </p>
         </div>
 
-        {isViewLogin ? (
-          <LoginForm onToggleView={() => setIsViewLogin(false)} />
-        ) : (
-          <RegisterForm onToggleView={() => setIsViewLogin(true)} />
+        {view === "login" && (
+          <LoginForm 
+            onToggleView={() => setView("signup")} 
+            onForgotPassword={() => setView("forgot")}
+          />
+        )}
+
+        {view === "signup" && (
+          <RegisterForm onToggleView={() => setView("login")} />
+        )}
+
+        {view === "forgot" && (
+          <ForgotPasswordForm onBackToLogin={() => setView("login")} />
         )}
       </div>
 

@@ -39,6 +39,12 @@ pnpm-debug.log*
 *token*
 *tokens*
 *password*
+*Password*
+!*password*/
+!*password*/**
+!*Password*/**
+!*Password*.tsx
+!*password*.tsx
 *.txt.bak
 *.log
 vercel.json

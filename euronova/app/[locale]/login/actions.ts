@@ -206,3 +206,40 @@ export async function signInWithGoogle(nextUrl = "/dashboard") {
     redirect(data.url);
   }
 }
+
+export async function requestPasswordReset(prevState: unknown, formData: FormData) {
+  const rawEmail = (formData.get("email") as string)?.trim().toLowerCase();
+  const email = stripDangerousHtml(rawEmail, 150);
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { error: "INVALID_EMAIL" };
+  }
+
+  const clientIp = await getClientIp();
+  const rateCheck = await checkRateLimit(`reset_pwd_${clientIp}`, RATE_LIMITS.AUTH);
+  if (!rateCheck.success) {
+    return { error: "RATE_LIMIT_EXCEEDED" };
+  }
+
+  try {
+    const [supabase, headersList] = await Promise.all([
+      createClient(),
+      headers(),
+    ]);
+    const host = headersList.get("host") || "localhost:3000";
+    const proto = headersList.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
+    const origin = headersList.get("origin") || `${proto}://${host}`;
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${origin}/auth/callback?next=/reset-password`,
+    });
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: unknown) {
+    return { error: err instanceof Error ? err.message : "Unexpected error during password reset request." };
+  }
+}

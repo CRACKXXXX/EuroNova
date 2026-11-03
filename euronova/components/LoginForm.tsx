@@ -12,11 +12,12 @@ import { createClient } from "@/utils/supabase/client";
 
 interface LoginFormProps {
   onToggleView?: () => void;
+  onForgotPassword?: () => void;
 }
 
 const subscribe = () => () => {};
 
-export function LoginForm({ onToggleView }: LoginFormProps) {
+export function LoginForm({ onToggleView, onForgotPassword }: LoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations("Login");
@@ -123,9 +124,20 @@ export function LoginForm({ onToggleView }: LoginFormProps) {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">
-            {t("password")}
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-gray-300">
+              {t("password")}
+            </label>
+            {onForgotPassword && (
+              <button
+                type="button"
+                onClick={onForgotPassword}
+                className="text-xs text-plasma-cyan hover:underline transition-colors cursor-pointer"
+              >
+                {t("forgotPassword")}
+              </button>
+            )}
+          </div>
           <input
             type="password"
             name="password"
