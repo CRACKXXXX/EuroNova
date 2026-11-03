@@ -95,12 +95,12 @@ export default async function DashboardHome({
         </DashboardCardMotion>
 
         {/* ============================================================== */}
-        {/* ROW 1: ITEM 3 — Ecosystem (Warm Golden Amber)                  */}
+        {/* ROW 1: ITEM 3 — Ecosystem (Warm Amber)                        */}
         {/* ============================================================== */}
         <DashboardCardMotion className="col-span-1">
           <Link
             href="/ecosystem"
-            className="group relative bg-gradient-to-br from-amber-200/5 via-void-surface to-void-deep border border-amber-500/30 hover:border-amber-400 rounded-2xl p-6 sm:p-8 transition-all duration-300 hover:shadow-[0_0_35px_rgba(245,158,11,0.25)] flex flex-col items-center text-center overflow-hidden h-full block"
+            className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-amber-500 transition-all duration-300 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)] flex flex-col items-center text-center overflow-hidden h-full block"
           >
             {/* Shimmer Sheen */}
             <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-amber-400/10 to-transparent pointer-events-none" />
@@ -109,17 +109,14 @@ export default async function DashboardHome({
             <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-[40px] pointer-events-none group-hover:bg-amber-500/15 transition-colors duration-500" />
             
             {/* Icon Container with Orbital Ring */}
-            <div className="relative mb-4">
+            <div className="relative mb-6">
               <span className="absolute -inset-2 rounded-full border border-amber-500/30 scale-75 opacity-0 group-hover:scale-110 group-hover:opacity-100 group-hover:animate-ping transition-all duration-500 pointer-events-none" />
-              <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/30 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.15)] group-hover:scale-110 group-hover:border-amber-400 transition-all duration-300">
-                <Compass className="w-8 h-8 text-amber-400" />
+              <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/25 rounded-full flex items-center justify-center group-hover:scale-110 group-hover:border-amber-500 transition-all duration-300 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+                <Compass className="w-8 h-8 text-amber-500" />
               </div>
             </div>
 
-            <span className="mb-2 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/15 text-amber-200 border border-amber-500/30">
-              {t("ecosystemBadge")}
-            </span>
-            <h2 className="text-xl sm:text-2xl font-bold text-white group-hover:text-amber-300 transition-colors mb-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-white group-hover:text-amber-400 transition-colors mb-2">
               {t("ecosystemHub")}
             </h2>
             <p className="text-gray-400 text-sm leading-relaxed">
@@ -129,34 +126,34 @@ export default async function DashboardHome({
         </DashboardCardMotion>
 
         {/* ============================================================== */}
-        {/* ROW 2: CENTERPIECE — My Profile (Metallic Cosmic Grey)          */}
+        {/* ROW 2: CENTERPIECE — My Profile (Metallic Slate Grey)          */}
         {/* ============================================================== */}
         <DashboardCardMotion isCenterpiece className="col-span-1 md:col-span-2 lg:col-span-3">
           <Link
             href="/dashboard/profile"
-            className="group relative bg-gradient-to-r from-zinc-900/95 via-slate-800/85 to-zinc-900/95 border border-slate-400/40 hover:border-slate-200 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 transition-all duration-500 shadow-[0_0_45px_rgba(148,163,184,0.2)] hover:shadow-[0_0_65px_rgba(226,232,240,0.35)] flex flex-col md:flex-row items-center justify-center gap-6 text-center md:text-left overflow-hidden h-full block"
+            className="group relative bg-void-surface border border-void-border rounded-2xl p-6 sm:p-8 hover:border-slate-400 transition-all duration-300 hover:shadow-[0_0_30px_rgba(148,163,184,0.2)] flex flex-col md:flex-row items-center justify-center gap-6 text-center md:text-left overflow-hidden h-full block"
           >
             {/* Shimmer Sheen */}
-            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-slate-200/10 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-slate-400/10 to-transparent pointer-events-none" />
 
-            {/* Ambient Internal Blurs */}
-            <div className="absolute top-0 right-0 w-80 h-80 bg-slate-300/10 rounded-full blur-[90px] pointer-events-none group-hover:bg-slate-300/20 transition-all duration-700" />
-            <div className="absolute bottom-0 left-1/4 w-72 h-72 bg-zinc-400/10 rounded-full blur-[90px] pointer-events-none group-hover:bg-zinc-400/20 transition-all duration-700" />
+            {/* Ambient Nebula Glow */}
+            <div className="absolute top-0 right-0 w-80 h-80 bg-slate-400/5 rounded-full blur-[80px] pointer-events-none group-hover:bg-slate-400/15 transition-colors duration-500" />
+            <div className="absolute bottom-0 left-1/4 w-72 h-72 bg-zinc-400/5 rounded-full blur-[80px] pointer-events-none group-hover:bg-zinc-400/15 transition-colors duration-500" />
 
             {/* Icon Container with Orbital Ring */}
             <div className="relative shrink-0">
-              <span className="absolute -inset-2 rounded-2xl border border-slate-300/40 scale-75 opacity-0 group-hover:scale-110 group-hover:opacity-100 group-hover:animate-ping transition-all duration-500 pointer-events-none" />
-              <div className="relative z-10 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-slate-400/15 border border-slate-300/40 text-slate-200 shadow-[0_0_25px_rgba(203,213,225,0.3)] flex items-center justify-center group-hover:scale-110 group-hover:border-slate-200 transition-transform duration-300">
-                <User className="w-8 h-8 sm:w-10 sm:h-10 text-slate-200" />
+              <span className="absolute -inset-2 rounded-2xl border border-slate-400/30 scale-75 opacity-0 group-hover:scale-110 group-hover:opacity-100 group-hover:animate-ping transition-all duration-500 pointer-events-none" />
+              <div className="w-16 h-16 bg-slate-400/10 border border-slate-400/25 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:border-slate-300 transition-all duration-300 shadow-[0_0_15px_rgba(148,163,184,0.15)]">
+                <User className="w-8 h-8 text-slate-300" />
               </div>
             </div>
 
             {/* Profile Text Header & Description */}
             <div className="relative z-10 space-y-1.5 max-w-2xl">
-              <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white group-hover:text-slate-200 transition-colors">
+              <h2 className="text-xl sm:text-2xl font-bold text-white group-hover:text-slate-200 transition-colors">
                 {t("myProfile")}
               </h2>
-              <p className="text-slate-300 text-sm sm:text-base font-light leading-relaxed">
+              <p className="text-gray-400 text-sm leading-relaxed">
                 {t("myProfileDesc")}
               </p>
             </div>
