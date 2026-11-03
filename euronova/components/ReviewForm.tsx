@@ -123,33 +123,36 @@ export function ReviewForm({
     const progressPercent = Math.min(100, Math.max(0, Math.round((safeXp / 100) * 100)));
 
     return (
-      <div className="bg-void-surface border border-void-border rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden backdrop-blur-sm">
+      <div className="bg-void-surface border border-void-border rounded-2xl p-5 sm:p-6 shadow-xl relative overflow-hidden backdrop-blur-sm">
         {/* Ambient Warm Glow */}
         <div className="absolute top-0 right-0 w-36 h-36 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3.5">
-          <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2 min-w-0 break-words leading-tight">
-            <Lock className="w-5 h-5 text-amber-400 shrink-0" />
-            <span className="break-words">{t("lockedTitle")}</span>
-          </h3>
-          <span className="self-start sm:self-auto px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider bg-amber-400/15 text-amber-300 border border-amber-400/30 flex items-center gap-1 shrink-0 whitespace-nowrap">
-            <Lock className="w-3 h-3 shrink-0" />
+        {/* 1. Status Badge Superior */}
+        <div className="mb-3">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-400/15 text-amber-300 border border-amber-400/30 shadow-[0_0_12px_rgba(245,158,11,0.15)]">
+            <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
             <span>{t("lockedBadge")}</span>
           </span>
         </div>
 
-        <p className="text-xs sm:text-sm text-gray-400 mb-4 sm:mb-5 leading-relaxed break-words">
+        {/* 2. Título Principal */}
+        <h3 className="text-xl font-bold text-white mb-2.5 flex items-center gap-2">
+          <span>{t("lockedTitle")}</span>
+        </h3>
+
+        {/* 3. Descripción Informativa */}
+        <p className="text-sm text-gray-400 mb-5 leading-relaxed">
           {t("lockedDesc")}
         </p>
 
-        {/* Indicador de Nivel Actual y Progreso a Nivel 2 */}
+        {/* 4. Indicador de Nivel Actual y Progreso a Nivel 2 */}
         {isAuthenticated && isYouth && (
-          <div className="p-3.5 sm:p-4 rounded-xl bg-void-deep/90 border border-void-border space-y-2.5 mb-4 sm:mb-5">
-            <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 text-xs">
-              <span className="font-semibold text-gray-300 break-words leading-tight min-w-0">
+          <div className="p-4 rounded-xl bg-void-deep/90 border border-void-border space-y-2.5 mb-5">
+            <div className="flex items-center justify-between gap-2 text-xs">
+              <span className="font-semibold text-gray-300">
                 {t("currentLevelStatus", { level: liveLevel, xp: safeXp })}
               </span>
-              <span className="font-mono text-amber-400 font-bold px-2 py-0.5 rounded-md bg-amber-400/10 border border-amber-400/20 text-[11px] shrink-0 self-start sm:self-auto">
+              <span className="font-mono text-amber-400 font-bold px-2 py-0.5 rounded-md bg-amber-400/10 border border-amber-400/20 text-[11px] shrink-0">
                 {progressPercent}%
               </span>
             </div>
@@ -162,27 +165,27 @@ export function ReviewForm({
               />
             </div>
 
-            <p className="text-[11px] sm:text-xs text-gray-400 leading-normal pt-1 break-words">
+            <p className="text-xs text-gray-400 leading-normal pt-1">
               {t("earnXpTip")}
             </p>
           </div>
         )}
 
-        {/* Acción para Desbloquear */}
+        {/* 5. Acción para Desbloquear */}
         <div className="pt-1">
           {!isAuthenticated ? (
             <Link
               href="/login"
-              className="inline-flex items-center justify-center gap-2 w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl bg-plasma-cyan/15 hover:bg-plasma-cyan text-plasma-cyan hover:text-void-deep border border-plasma-cyan/40 hover:border-plasma-cyan font-bold text-xs sm:text-sm transition-all text-center break-words"
+              className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-plasma-cyan/15 hover:bg-plasma-cyan text-plasma-cyan hover:text-void-deep border border-plasma-cyan/40 hover:border-plasma-cyan font-bold text-sm transition-all text-center shadow-[0_0_15px_rgba(0,229,255,0.2)] hover:shadow-[0_0_20px_rgba(0,229,255,0.35)]"
             >
               <span>{t("signInToReview")}</span>
             </Link>
           ) : (
             <Link
               href="/dashboard/profile"
-              className="inline-flex items-center justify-center gap-2 w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl bg-void-deep hover:bg-amber-400/10 text-gray-300 hover:text-amber-300 border border-void-border hover:border-amber-400/40 font-semibold text-xs sm:text-sm transition-all text-center break-words leading-snug"
+              className="inline-flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-void-deep hover:bg-amber-400/10 text-gray-200 hover:text-amber-300 border border-void-border hover:border-amber-400/40 font-semibold text-sm transition-all text-center leading-snug shadow-md group"
             >
-              <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
+              <ShieldAlert className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
               <span>{t("goToProfileBtn")}</span>
             </Link>
           )}
