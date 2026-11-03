@@ -458,12 +458,12 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
 
         {/* Columna Derecha: Listado de Reseñas Existentes */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="flex items-center justify-between pb-3 border-b border-void-border">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-hyper-violet" />
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-void-border">
+            <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2 min-w-0 break-words">
+              <MessageSquare className="w-5 h-5 text-hyper-violet shrink-0" />
               <span>{t("title")}</span>
             </h2>
-            <span className="text-xs font-semibold text-gray-400">
+            <span className="text-xs font-semibold text-gray-400 shrink-0">
               {t("totalReviewsCount", { count: totalReviews })}
             </span>
           </div>
@@ -487,7 +487,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                     key={rev.id}
                     className="bg-void-surface border border-void-border rounded-2xl p-5 space-y-3 hover:border-hyper-violet/40 transition-colors"
                   >
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-wrap sm:flex-nowrap items-start justify-between gap-2.5 sm:gap-3">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-void-surface to-plasma-cyan/20 border border-plasma-cyan/30 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(0,229,255,0.15)]">
                           <User className="w-4 h-4 text-plasma-cyan" />
