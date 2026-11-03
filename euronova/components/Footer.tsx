@@ -118,7 +118,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/support"
-                  className="flex items-center justify-center sm:justify-start gap-2 transition-colors hover:text-nova-flare group font-medium text-nova-flare/90"
+                  className="flex items-center justify-center sm:justify-start gap-2 transition-colors hover:text-plasma-cyan group"
                 >
                   <Heart className="w-3.5 h-3.5 text-nova-flare/70 group-hover:text-nova-flare transition-colors" />
                   <span>{t("supportEuroNova")}</span>
