@@ -278,7 +278,7 @@ export function MissionsGrid({
         <button
           type="button"
           onClick={onGoToAllFavorites}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-plasma-cyan bg-plasma-cyan text-void-deep font-bold text-sm shadow-[0_0_15px_rgba(0,229,255,0.25)] hover:shadow-[0_0_20px_rgba(0,229,255,0.35)] hover:scale-[1.015] active:scale-[0.985] transition-all duration-300 ease-out cursor-pointer"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-plasma-cyan bg-plasma-cyan text-void-deep font-bold text-sm shadow-[0_0_20px_rgba(0,229,255,0.25)] hover:shadow-[0_0_30px_rgba(0,229,255,0.4)] transition-all cursor-pointer"
         >
           <Bookmark className="w-4 h-4" />
           <span>{t("goToAllFavorites")}</span>
@@ -286,7 +286,7 @@ export function MissionsGrid({
       ) : (
         <Link
           href="/dashboard/projects"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-plasma-cyan bg-plasma-cyan text-void-deep font-bold text-sm shadow-[0_0_15px_rgba(0,229,255,0.25)] hover:shadow-[0_0_20px_rgba(0,229,255,0.35)] hover:scale-[1.015] active:scale-[0.985] transition-all duration-300 ease-out"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-plasma-cyan bg-plasma-cyan text-void-deep font-bold text-sm shadow-[0_0_20px_rgba(0,229,255,0.25)] hover:shadow-[0_0_30px_rgba(0,229,255,0.4)] transition-all"
         >
           <Compass className="w-4 h-4" />
           <span>{t("exploreMissions")}</span>

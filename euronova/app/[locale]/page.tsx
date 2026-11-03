@@ -210,17 +210,15 @@ export default async function Home({ params, searchParams }: PageProps) {
 
             {/* LA CARD / CAJA CON BORDES QUE ENVUELVE EL BOTÓN */}
             <div className="bg-transparent border border-transparent shadow-none rounded-3xl p-8 flex items-center justify-center transition-all duration-300">
-              {/* EL BOTÓN REAL DENTRO DE LA CARD CON FÍSICA SPRING UIVERSE */}
+              {/* EL BOTÓN REAL DENTRO DE LA CARD */}
               <Link
                 href="/login"
-                className="group relative flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-plasma-cyan/15 via-plasma-cyan/25 to-hyper-violet/20 border border-plasma-cyan/40 hover:border-plasma-cyan text-plasma-cyan hover:text-white transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] shadow-[0_0_25px_rgba(0,229,255,0.25)] hover:shadow-[0_0_40px_rgba(0,229,255,0.55)] hover:scale-105 active:scale-95 overflow-hidden"
+                className="group flex items-center justify-center gap-3 px-8 py-4 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 transition-all duration-300 hover:bg-cyan-500/20 hover:text-cyan-300 hover:scale-105 active:scale-95"
               >
-                {/* Dynamic Sheen Sweep */}
-                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none" />
-                <span className="relative z-10 font-extrabold text-lg sm:text-xl tracking-wide text-center break-words sm:whitespace-nowrap min-w-0">
+                <span className="font-extrabold text-lg sm:text-xl tracking-wide text-center break-words sm:whitespace-nowrap min-w-0">
                   {t("singleCta")}
                 </span>
-                <Rocket className="relative z-10 w-6 h-6 shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:translate-x-1.5 group-hover:-translate-y-1.5 group-hover:scale-110" />
+                <Rocket className="w-6 h-6 shrink-0 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1" />
               </Link>
 
             </div>

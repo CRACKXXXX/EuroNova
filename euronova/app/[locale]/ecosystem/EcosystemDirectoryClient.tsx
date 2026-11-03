@@ -195,23 +195,20 @@ export function EcosystemDirectoryClient() {
           return false;
         }
       }
-      // Search query filter (checks title, description, localized description, country name, and normalized tags)
+      // Search query filter (checks title, description, country name, and normalized tags)
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const matchesTitle = res.title.toLowerCase().includes(q);
         const matchesDesc = res.description.toLowerCase().includes(q);
-        const matchesLocDesc = getLocalizedDescription(res, locale).toLowerCase().includes(q);
-        const matchesCountry =
-          res.countryName.toLowerCase().includes(q) ||
-          getLocalizedCountryName(res.countryCode, locale, res.countryName).toLowerCase().includes(q);
+        const matchesCountry = res.countryName.toLowerCase().includes(q);
         const matchesTags = res.tags.some((tag) => tag.toLowerCase().trim().includes(q));
-        if (!matchesTitle && !matchesDesc && !matchesLocDesc && !matchesCountry && !matchesTags) {
+        if (!matchesTitle && !matchesDesc && !matchesCountry && !matchesTags) {
           return false;
         }
       }
       return true;
     });
-  }, [searchQuery, selectedCategory, selectedCountry, selectedTags, locale]);
+  }, [searchQuery, selectedCategory, selectedCountry, selectedTags]);
 
   // Numeric pagination calculation
   const totalPages = Math.max(1, Math.ceil(filteredResources.length / ITEMS_PER_PAGE));
@@ -656,11 +653,8 @@ export function EcosystemDirectoryClient() {
               return (
                 <div
                   key={res.id}
-                  className="bg-void-surface/90 border border-void-border rounded-2xl p-6 flex flex-col h-full hover:border-plasma-cyan/60 backdrop-blur-xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-2 hover:scale-[1.01] hover:shadow-[0_10px_35px_-10px_rgba(0,0,0,0.85),0_0_25px_rgba(0,229,255,0.22),inset_0_1px_1px_rgba(255,255,255,0.12)] group relative overflow-hidden"
+                  className="bg-void-surface/90 border border-void-border rounded-2xl p-6 flex flex-col h-full hover:border-plasma-cyan/50 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(0,0,0,0.6)] group"
                 >
-                  {/* Shimmer Sheen on Hover */}
-                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-plasma-cyan/5 to-transparent pointer-events-none rounded-2xl" />
-
                   {/* Top Badge Row */}
                   <div className="flex items-center justify-between gap-2 mb-4">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -714,9 +708,9 @@ export function EcosystemDirectoryClient() {
                           key={idx}
                           type="button"
                           onClick={() => handleToggleTag(normalizedTag)}
-                          className={`text-[10px] font-medium px-2 py-0.5 rounded-md border transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] cursor-pointer hover:scale-105 active:scale-95 ${
+                          className={`text-[10px] font-medium px-2 py-0.5 rounded-md border transition-colors cursor-pointer ${
                             isTagActive
-                              ? "bg-plasma-cyan/20 text-plasma-cyan border-plasma-cyan/50 font-bold shadow-[0_0_10px_rgba(0,229,255,0.25)]"
+                              ? "bg-plasma-cyan/20 text-plasma-cyan border-plasma-cyan/50 font-bold"
                               : "bg-void-deep/80 hover:bg-void-surface border-void-border hover:border-plasma-cyan/40 text-gray-400 hover:text-plasma-cyan"
                           }`}
                         >
@@ -737,7 +731,7 @@ export function EcosystemDirectoryClient() {
                           href={`https://www.google.com/search?q=${encodeURIComponent(res.title + " " + t("searchGoogleSuffix"))}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 hover:border-amber-400 text-amber-300 font-bold text-xs sm:text-sm transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group/btn shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:shadow-[0_0_25px_rgba(245,158,11,0.3)] hover:scale-[1.02] active:scale-[0.98]"
+                          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 hover:border-amber-400 text-amber-300 font-bold text-xs sm:text-sm transition-all group/btn shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:scale-[1.01]"
                         >
                           <Search className="w-4 h-4 transition-transform group-hover/btn:scale-110 shrink-0 text-amber-400" />
                           <span>{t("searchGoogle")}</span>
@@ -752,7 +746,7 @@ export function EcosystemDirectoryClient() {
                           href={res.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-plasma-cyan/10 hover:bg-plasma-cyan/20 border border-plasma-cyan/30 hover:border-plasma-cyan text-plasma-cyan font-bold text-xs sm:text-sm transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group/btn shadow-[0_0_15px_rgba(0,229,255,0.15)] hover:shadow-[0_0_25px_rgba(0,229,255,0.35)] hover:scale-[1.02] active:scale-[0.98]"
+                          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-plasma-cyan/10 hover:bg-plasma-cyan/20 border border-plasma-cyan/30 hover:border-plasma-cyan text-plasma-cyan font-bold text-xs sm:text-sm transition-all group/btn shadow-[0_0_15px_rgba(0,229,255,0.1)]"
                         >
                           <span>{t("openResource")}</span>
                           <ExternalLink className="w-4 h-4 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 shrink-0" />
@@ -802,10 +796,10 @@ export function EcosystemDirectoryClient() {
                       key={p}
                       type="button"
                       onClick={() => handlePageChange(p)}
-                      className={`w-9 h-9 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex items-center justify-center cursor-pointer ${
+                      className={`w-9 h-9 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center cursor-pointer ${
                         isActive
-                          ? "bg-plasma-cyan text-void-deep font-black shadow-[0_0_20px_rgba(0,229,255,0.45)] scale-105"
-                          : "bg-void-surface border border-void-border text-gray-300 hover:border-plasma-cyan/50 hover:text-white hover:scale-105 active:scale-95"
+                          ? "bg-plasma-cyan text-void-deep font-black shadow-[0_0_15px_rgba(0,229,255,0.4)]"
+                          : "bg-void-surface border border-void-border text-gray-300 hover:border-plasma-cyan/50 hover:text-white"
                       }`}
                     >
                       {p}

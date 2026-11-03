@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
@@ -17,7 +17,8 @@ import {
   Headphones,
   Map as MapIcon,
   Users,
-  Globe
+  Globe,
+  ChevronDown
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { LogoutButton } from "@/components/LogoutButton";
@@ -43,6 +44,8 @@ export function Header({
   orgId?: string | null; 
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const moreDropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname() || "";
   const locale = useLocale();
   const t = useTranslations("Header");
@@ -61,13 +64,28 @@ export function Header({
   const isCommunityActive = pathname.startsWith(`/${locale}/community`) || pathname.startsWith("/community");
   const isMapActive = pathname.startsWith(`/${locale}/map`) || pathname.startsWith("/map");
   const isEcosystemActive = pathname.startsWith(`/${locale}/ecosystem`) || pathname.startsWith("/ecosystem");
+  const isMoreActive = isCommunityActive || isMapActive || isEcosystemActive;
 
   // Automatically dismiss menus on route changes
   const [prevPathname, setPrevPathname] = useState(pathname);
   if (prevPathname !== pathname) {
     setPrevPathname(pathname);
     setIsOpen(false);
+    setIsMoreOpen(false);
   }
+
+  // Dismiss "More" dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (moreDropdownRef.current && !moreDropdownRef.current.contains(e.target as Node)) {
+        setIsMoreOpen(false);
+      }
+    };
+    if (isMoreOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isMoreOpen]);
 
   // Lock body scroll while mobile drawer is open, and release safely on close or unmount
   useEffect(() => {
@@ -148,18 +166,19 @@ export function Header({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         if (isOpen) setIsOpen(false);
+        if (isMoreOpen) setIsMoreOpen(false);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
+  }, [isOpen, isMoreOpen]);
 
   return (
     <header className={`fixed top-0 left-0 right-0 h-16 bg-void-deep/90 backdrop-blur-md border-b border-void-border transition-colors ${isOpen ? "z-[9999]" : "z-40"}`}>
       <PassiveXpTracker userId={currentUserId} role={role} />
-      <div className="w-full max-w-[1600px] mx-auto h-full flex justify-between items-center px-3 sm:px-4 xl:px-6">
+      <div className="max-w-7xl 2xl:max-w-[1536px] mx-auto h-full flex justify-between items-center w-full px-3 sm:px-4 xl:px-6">
         {/* Left: Logo & Desktop Navigation Spaced Out */}
-        <div className="flex items-center gap-2 xl:gap-3 2xl:gap-4 min-w-0 flex-nowrap shrink-0">
+        <div className="flex items-center gap-3 xl:gap-4 2xl:gap-6 min-w-0 flex-nowrap shrink-0">
           {/* Logo */}
           <Link
             href={`/${locale}/dashboard`}
@@ -172,12 +191,12 @@ export function Header({
               <Image
                 src="/logo-big.png"
                 alt={tCommon("logoAlt")}
-                width={120}
-                height={32}
+                width={130}
+                height={35}
                 priority
-                sizes="120px"
+                sizes="130px"
                 style={{ width: "auto", height: "auto" }}
-                className="h-7.5 xl:h-8 w-auto object-contain rounded-md group-hover:scale-105 transition-transform"
+                className="h-8 2xl:h-9 w-auto object-contain rounded-md group-hover:scale-105 transition-transform"
               />
             </div>
             {/* Mobile / Compact Logo */}
@@ -185,23 +204,23 @@ export function Header({
               <Image
                 src="/logo-small.png"
                 alt={tCommon("logoAlt")}
-                width={34}
-                height={34}
+                width={36}
+                height={36}
                 priority
-                sizes="34px"
+                sizes="36px"
                 style={{ width: "auto", height: "auto" }}
-                className="h-8 w-auto object-contain rounded-md group-hover:scale-110 transition-transform"
+                className="h-8 sm:h-9 w-auto object-contain rounded-md group-hover:scale-110 transition-transform"
               />
             </div>
           </Link>
 
           {/* Desktop Navigation Links - Viewport-aware Cosmic Tooltips */}
-          <nav className="hidden xl:flex items-center gap-0.5 min-[1380px]:gap-1 2xl:gap-2 flex-nowrap shrink-0 whitespace-nowrap">
+          <nav className="hidden xl:flex items-center gap-1 xl:gap-1.5 2xl:gap-3 flex-nowrap shrink-0 whitespace-nowrap">
             <CosmicTooltip content={t("home")} side="bottom">
               <Link
                 href={`/${locale}/dashboard`}
                 aria-label={t("home")}
-                className={`flex items-center gap-1 2xl:gap-1.5 text-[11px] min-[1380px]:text-xs 2xl:text-[13px] px-1.5 min-[1380px]:px-2 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
+                className={`flex items-center gap-1 2xl:gap-1.5 text-xs 2xl:text-sm px-1.5 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
                   isHomeActive
                     ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
                     : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
@@ -216,7 +235,7 @@ export function Header({
               <Link
                 href={`/${locale}/dashboard/projects`}
                 aria-label={t("searchProjects")}
-                className={`flex items-center gap-1 2xl:gap-1.5 text-[11px] min-[1380px]:text-xs 2xl:text-[13px] px-1.5 min-[1380px]:px-2 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
+                className={`flex items-center gap-1 2xl:gap-1.5 text-xs 2xl:text-sm px-1.5 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
                   isProjectsActive
                     ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
                     : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
@@ -231,7 +250,7 @@ export function Header({
               <Link
                 href={`/${locale}/dashboard/organizations`}
                 aria-label={t("searchOrgs")}
-                className={`flex items-center gap-1 2xl:gap-1.5 text-[11px] min-[1380px]:text-xs 2xl:text-[13px] px-1.5 min-[1380px]:px-2 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
+                className={`flex items-center gap-1 2xl:gap-1.5 text-xs 2xl:text-sm px-1.5 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
                   isOrgsActive
                     ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
                     : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
@@ -246,7 +265,7 @@ export function Header({
               <Link
                 href={`/${locale}/dashboard/my-missions`}
                 aria-label={t("myMissions")}
-                className={`flex items-center gap-1 2xl:gap-1.5 text-[11px] min-[1380px]:text-xs 2xl:text-[13px] px-1.5 min-[1380px]:px-2 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
+                className={`flex items-center gap-1 2xl:gap-1.5 text-xs 2xl:text-sm px-1.5 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent ${
                   isMissionsActive
                     ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
                     : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
@@ -257,55 +276,111 @@ export function Header({
               </Link>
             </CosmicTooltip>
 
-            <CosmicTooltip content={t("community")} side="bottom">
-              <Link
-                href={`/${locale}/community`}
-                aria-label={t("community")}
-                className={`flex items-center gap-1 2xl:gap-1.5 text-[11px] min-[1380px]:text-xs 2xl:text-[13px] px-1.5 min-[1380px]:px-2 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent group ${
-                  isCommunityActive
-                    ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
-                    : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
-                }`}
-              >
-                <Users className={`w-3.5 h-3.5 2xl:w-4 2xl:h-4 transition-colors ${isCommunityActive ? "text-plasma-cyan" : "text-gray-400 group-hover:text-plasma-cyan"}`} />
-                <span>{t("community")}</span>
-              </Link>
-            </CosmicTooltip>
+            {/* Desktop 2XL inline links for Community, Map & Ecosystem */}
+            <div className="hidden 2xl:flex items-center gap-1 2xl:gap-3">
+              <CosmicTooltip content={t("community")} side="bottom">
+                <Link
+                  href={`/${locale}/community`}
+                  aria-label={t("community")}
+                  className={`flex items-center gap-1.5 text-xs 2xl:text-sm px-1.5 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent group ${
+                    isCommunityActive
+                      ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
+                      : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
+                  }`}
+                >
+                  <Users className={`w-3.5 h-3.5 2xl:w-4 2xl:h-4 transition-colors ${isCommunityActive ? "text-plasma-cyan" : "text-gray-400 group-hover:text-plasma-cyan"}`} />
+                  <span>{t("community")}</span>
+                </Link>
+              </CosmicTooltip>
 
-            <CosmicTooltip content={t("map")} side="bottom">
-              <Link
-                href={`/${locale}/map`}
-                aria-label={t("map")}
-                className={`flex items-center gap-1 2xl:gap-1.5 text-[11px] min-[1380px]:text-xs 2xl:text-[13px] px-1.5 min-[1380px]:px-2 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent group ${
-                  isMapActive
-                    ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
-                    : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
-                }`}
-              >
-                <MapIcon className={`w-3.5 h-3.5 2xl:w-4 2xl:h-4 transition-colors ${isMapActive ? "text-plasma-cyan" : "text-gray-400 group-hover:text-plasma-cyan"}`} />
-                <span>{t("map")}</span>
-              </Link>
-            </CosmicTooltip>
+              <CosmicTooltip content={t("map")} side="bottom">
+                <Link
+                  href={`/${locale}/map`}
+                  aria-label={t("map")}
+                  className={`flex items-center gap-1.5 text-xs 2xl:text-sm px-1.5 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent group ${
+                    isMapActive
+                      ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
+                      : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
+                  }`}
+                >
+                  <MapIcon className={`w-3.5 h-3.5 2xl:w-4 2xl:h-4 transition-colors ${isMapActive ? "text-plasma-cyan" : "text-gray-400 group-hover:text-plasma-cyan"}`} />
+                  <span>{t("map")}</span>
+                </Link>
+              </CosmicTooltip>
 
-            <CosmicTooltip content={t("ecosystem")} side="bottom">
-              <Link
-                href={`/${locale}/ecosystem`}
-                aria-label={t("ecosystem")}
-                className={`flex items-center gap-1 2xl:gap-1.5 text-[11px] min-[1380px]:text-xs 2xl:text-[13px] px-1.5 min-[1380px]:px-2 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent group ${
-                  isEcosystemActive
+              <CosmicTooltip content={t("ecosystem")} side="bottom">
+                <Link
+                  href={`/${locale}/ecosystem`}
+                  aria-label={t("ecosystem")}
+                  className={`flex items-center gap-1.5 text-xs 2xl:text-sm px-1.5 py-1 transition-all whitespace-nowrap shrink-0 border-b-2 bg-transparent group ${
+                    isEcosystemActive
+                      ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
+                      : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
+                  }`}
+                >
+                  <Globe className={`w-3.5 h-3.5 2xl:w-4 2xl:h-4 transition-colors ${isEcosystemActive ? "text-plasma-cyan" : "text-gray-400 group-hover:text-plasma-cyan"}`} />
+                  <span>{t("ecosystem")}</span>
+                </Link>
+              </CosmicTooltip>
+            </div>
+
+            {/* Compact "More" Dropdown for XL screens (1280px-1535px) to prevent overflow */}
+            <div ref={moreDropdownRef} className="relative hidden xl:block 2xl:hidden">
+              <button
+                type="button"
+                onClick={() => setIsMoreOpen((prev) => !prev)}
+                className={`flex items-center gap-1 text-xs py-1 px-1.5 transition-all whitespace-nowrap shrink-0 border-b-2 rounded-t ${
+                  isMoreActive
                     ? "font-bold text-plasma-cyan border-plasma-cyan drop-shadow-[0_0_8px_rgba(0,229,255,0.6)]"
                     : "font-medium text-gray-300 hover:text-plasma-cyan border-transparent hover:border-plasma-cyan/60"
                 }`}
+                aria-expanded={isMoreOpen}
+                aria-haspopup="true"
               >
-                <Globe className={`w-3.5 h-3.5 2xl:w-4 2xl:h-4 transition-colors ${isEcosystemActive ? "text-plasma-cyan" : "text-gray-400 group-hover:text-plasma-cyan"}`} />
-                <span>{t("ecosystem")}</span>
-              </Link>
-            </CosmicTooltip>
+                <span>{t("more")}</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isMoreOpen ? "rotate-180 text-plasma-cyan" : ""}`} />
+              </button>
+
+              {isMoreOpen && (
+                <div className="absolute left-0 mt-2 w-48 py-2 bg-void-surface/95 border border-void-border rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] backdrop-blur-xl z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <Link
+                    href={`/${locale}/community`}
+                    onClick={() => setIsMoreOpen(false)}
+                    className={`flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ${
+                      isCommunityActive ? "text-plasma-cyan font-bold bg-plasma-cyan/10" : "text-gray-300 hover:text-plasma-cyan hover:bg-void-deep/60"
+                    }`}
+                  >
+                    <Users className={`w-3.5 h-3.5 ${isCommunityActive ? "text-plasma-cyan" : "text-gray-400"}`} />
+                    <span>{t("community")}</span>
+                  </Link>
+                  <Link
+                    href={`/${locale}/map`}
+                    onClick={() => setIsMoreOpen(false)}
+                    className={`flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ${
+                      isMapActive ? "text-plasma-cyan font-bold bg-plasma-cyan/10" : "text-gray-300 hover:text-plasma-cyan hover:bg-void-deep/60"
+                    }`}
+                  >
+                    <MapIcon className={`w-3.5 h-3.5 ${isMapActive ? "text-plasma-cyan" : "text-gray-400"}`} />
+                    <span>{t("map")}</span>
+                  </Link>
+                  <Link
+                    href={`/${locale}/ecosystem`}
+                    onClick={() => setIsMoreOpen(false)}
+                    className={`flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ${
+                      isEcosystemActive ? "text-plasma-cyan font-bold bg-plasma-cyan/10" : "text-gray-300 hover:text-plasma-cyan hover:bg-void-deep/60"
+                    }`}
+                  >
+                    <Globe className={`w-3.5 h-3.5 ${isEcosystemActive ? "text-plasma-cyan" : "text-gray-400"}`} />
+                    <span>{t("ecosystem")}</span>
+                  </Link>
+                </div>
+              )}
+            </div>
           </nav>
         </div>
 
         {/* Desktop Actions / Auth - Strict single line with comfortable spacing */}
-        <div className="hidden xl:flex items-center gap-1.5 xl:gap-2 2xl:gap-2.5 shrink-0 flex-nowrap ml-2 xl:ml-3">
+        <div className="hidden xl:flex items-center gap-2 2xl:gap-3 shrink-0 flex-nowrap ml-2 xl:ml-3 2xl:ml-8">
           {/* Language Selector */}
           <div className="shrink-0 flex items-center">
             <LanguageSwitcher />
@@ -333,7 +408,7 @@ export function Header({
               <Link
                 href={`/${locale}/dashboard/moderator-panel`}
                 aria-label={t("moderatorPanel")}
-                className="p-1.5 2xl:p-2 min-w-[38px] min-h-[38px] rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:border-amber-400 focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(245,158,11,0.15)]"
+                className="p-1.5 2xl:p-2 min-w-[38px] min-h-[38px] 2xl:min-w-[44px] 2xl:min-h-[44px] rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:border-amber-400 focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(245,158,11,0.15)]"
               >
                 <ShieldCheck className="w-4 h-4" />
               </Link>
@@ -346,7 +421,7 @@ export function Header({
               <Link
                 href={`/${locale}/dashboard/support-panel`}
                 aria-label={t("supportPanel")}
-                className="p-1.5 2xl:p-2 min-w-[38px] min-h-[38px] rounded-lg bg-plasma-cyan/10 hover:bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/30 hover:border-plasma-cyan focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(0,229,255,0.15)]"
+                className="p-1.5 2xl:p-2 min-w-[38px] min-h-[38px] 2xl:min-w-[44px] 2xl:min-h-[44px] rounded-lg bg-plasma-cyan/10 hover:bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/30 hover:border-plasma-cyan focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(0,229,255,0.15)]"
               >
                 <Headphones className="w-4 h-4" />
               </Link>
@@ -359,7 +434,7 @@ export function Header({
               <Link
                 href={`/${locale}/dashboard/admin`}
                 aria-label={t("adminPanel")}
-                className="p-1.5 2xl:p-2 min-w-[38px] min-h-[38px] rounded-lg bg-nova-flare/10 hover:bg-nova-flare/20 text-nova-flare border border-nova-flare/30 hover:border-nova-flare focus-visible:ring-2 focus-visible:ring-nova-flare focus-visible:outline-none transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(255,46,99,0.15)]"
+                className="p-1.5 2xl:p-2 min-w-[38px] min-h-[38px] 2xl:min-w-[44px] 2xl:min-h-[44px] rounded-lg bg-nova-flare/10 hover:bg-nova-flare/20 text-nova-flare border border-nova-flare/30 hover:border-nova-flare focus-visible:ring-2 focus-visible:ring-nova-flare focus-visible:outline-none transition-all shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(255,46,99,0.15)]"
               >
                 <ShieldAlert className="w-4 h-4" />
               </Link>
@@ -371,15 +446,15 @@ export function Header({
             <Link
               href={orgOrProfileHref}
               aria-label={isOrg ? t("myOrg") : t("myProfile")}
-              className="flex items-center gap-1.5 px-2 py-1.5 min-h-[38px] rounded-lg bg-transparent hover:bg-hyper-violet/10 border border-void-border hover:border-hyper-violet/30 focus-visible:ring-2 focus-visible:ring-hyper-violet focus-visible:outline-none text-gray-300 hover:text-hyper-violet transition-all text-xs font-semibold shrink-0 whitespace-nowrap"
+              className="flex items-center gap-1.5 2xl:gap-2 px-2 2xl:px-3 py-1.5 min-h-[38px] 2xl:min-h-[44px] rounded-lg bg-transparent hover:bg-hyper-violet/10 border border-void-border hover:border-hyper-violet/30 focus-visible:ring-2 focus-visible:ring-hyper-violet focus-visible:outline-none text-gray-300 hover:text-hyper-violet transition-all text-xs 2xl:text-sm font-semibold shrink-0 whitespace-nowrap"
             >
               <AvatarFallback
                 src={avatarUrl}
                 alt={isOrg ? "Organization Logo" : "Profile Picture"}
                 fallbackType={isOrg ? "org" : "user"}
-                sizeClassName="w-7 h-7"
+                sizeClassName="w-7 h-7 2xl:w-8 2xl:h-8"
               />
-              <span className="hidden min-[1700px]:inline max-w-[100px] truncate">{isOrg ? t("myOrg") : t("myProfile")}</span>
+              <span className="hidden 2xl:inline">{isOrg ? t("myOrg") : t("myProfile")}</span>
               {!isOrg && <UserLevelBadge level={youthLevel} size="sm" />}
             </Link>
           </CosmicTooltip>
@@ -410,10 +485,10 @@ export function Header({
         <div
           id="mobile-menu-drawer"
           style={{ backgroundColor: "#050508" }}
-          className="fixed inset-0 z-[9999] flex flex-col h-[100dvh] w-full backdrop-blur-3xl overflow-y-auto overscroll-contain p-4 sm:p-6 md:p-8 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[9999] flex flex-col h-[100dvh] w-full backdrop-blur-3xl overflow-y-auto overscroll-contain p-6 sm:p-8 animate-in fade-in duration-200"
         >
           {/* Top Bar: Brand & Close Button */}
-          <div className="flex items-center justify-between w-full max-w-4xl mx-auto shrink-0 pb-4 border-b border-void-border/30">
+          <div className="flex items-center justify-between w-full max-w-4xl mx-auto shrink-0 pb-4">
             <Link
               href={`/${locale}/dashboard`}
               onClick={() => setIsOpen(false)}
@@ -423,11 +498,11 @@ export function Header({
               <Image
                 src="/logo-big.png"
                 alt={tCommon("logoAlt")}
-                width={130}
-                height={35}
-                sizes="130px"
+                width={140}
+                height={38}
+                sizes="140px"
                 style={{ width: "auto", height: "auto" }}
-                className="h-8 w-auto object-contain rounded-md group-hover:scale-105 transition-transform"
+                className="h-9 w-auto object-contain rounded-md group-hover:scale-105 transition-transform"
               />
             </Link>
 
@@ -437,97 +512,96 @@ export function Header({
               className="min-w-[44px] min-h-[44px] p-2.5 rounded-full border border-void-border bg-void-surface text-gray-300 hover:text-white hover:border-plasma-cyan focus-visible:ring-2 focus-visible:ring-plasma-cyan focus-visible:outline-none transition-colors cursor-pointer flex items-center justify-center"
               aria-label={t("closeMenu")}
             >
-              <X className="w-6 h-6" />
+              <X className="w-7 h-7" />
             </button>
           </div>
 
-          {/* Navigation Links - Scrollable without negative scroll bounds */}
-          <nav className="flex-1 flex flex-col items-center justify-start gap-3.5 sm:gap-4 py-6 text-center w-full max-w-md mx-auto">
+          {/* Navigation Links */}
+          <nav className="flex-1 flex flex-col items-center justify-center gap-7 my-auto py-8 text-center">
             <Link
               href={`/${locale}/dashboard`}
               onClick={() => setIsOpen(false)}
-              className={`w-full py-2 text-lg sm:text-xl md:text-2xl tracking-tight transition-all flex items-center justify-center gap-3 group rounded-xl ${
-                isHomeActive ? "font-black text-plasma-cyan bg-plasma-cyan/10" : "font-semibold text-gray-300 hover:text-plasma-cyan hover:bg-void-surface"
+              className={`text-2xl sm:text-3xl tracking-tight transition-all flex items-center gap-3.5 group ${
+                isHomeActive ? "font-black text-plasma-cyan" : "font-extrabold text-gray-300 hover:text-plasma-cyan"
               }`}
             >
-              <Home className={`w-5 h-5 shrink-0 transition-colors ${isHomeActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
-              <span className="truncate">{t("home")}</span>
+              <Home className={`w-6 h-6 transition-colors ${isHomeActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
+              <span>{t("home")}</span>
             </Link>
 
             <Link
               href={`/${locale}/dashboard/projects`}
               onClick={() => setIsOpen(false)}
-              className={`w-full py-2 text-lg sm:text-xl md:text-2xl tracking-tight transition-all flex items-center justify-center gap-3 group rounded-xl ${
-                isProjectsActive ? "font-black text-plasma-cyan bg-plasma-cyan/10" : "font-semibold text-gray-300 hover:text-plasma-cyan hover:bg-void-surface"
+              className={`text-2xl sm:text-3xl tracking-tight transition-all flex items-center gap-3.5 group ${
+                isProjectsActive ? "font-black text-plasma-cyan" : "font-extrabold text-gray-300 hover:text-plasma-cyan"
               }`}
             >
-              <Compass className={`w-5 h-5 shrink-0 transition-colors ${isProjectsActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
-              <span className="truncate">{t("searchProjects")}</span>
+              <Compass className={`w-6 h-6 transition-colors ${isProjectsActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
+              <span>{t("searchProjects")}</span>
             </Link>
 
             <Link
               href={`/${locale}/dashboard/organizations`}
               onClick={() => setIsOpen(false)}
-              className={`w-full py-2 text-lg sm:text-xl md:text-2xl tracking-tight transition-all flex items-center justify-center gap-3 group rounded-xl ${
-                isOrgsActive ? "font-black text-plasma-cyan bg-plasma-cyan/10" : "font-semibold text-gray-300 hover:text-plasma-cyan hover:bg-void-surface"
+              className={`text-2xl sm:text-3xl tracking-tight transition-all flex items-center gap-3.5 group ${
+                isOrgsActive ? "font-black text-plasma-cyan" : "font-extrabold text-gray-300 hover:text-plasma-cyan"
               }`}
             >
-              <Building className={`w-5 h-5 shrink-0 transition-colors ${isOrgsActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
-              <span className="truncate">{t("searchOrgs")}</span>
+              <Building className={`w-6 h-6 transition-colors ${isOrgsActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
+              <span>{t("searchOrgs")}</span>
             </Link>
 
             <Link
               href={`/${locale}/dashboard/my-missions`}
               onClick={() => setIsOpen(false)}
-              className={`w-full py-2 text-lg sm:text-xl md:text-2xl tracking-tight transition-all flex items-center justify-center gap-3 group rounded-xl ${
-                isMissionsActive ? "font-black text-plasma-cyan bg-plasma-cyan/10" : "font-semibold text-gray-300 hover:text-plasma-cyan hover:bg-void-surface"
+              className={`text-2xl sm:text-3xl tracking-tight transition-all flex items-center gap-3.5 group ${
+                isMissionsActive ? "font-black text-plasma-cyan" : "font-extrabold text-gray-300 hover:text-plasma-cyan"
               }`}
             >
-              <Briefcase className={`w-5 h-5 shrink-0 transition-colors ${isMissionsActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
-              <span className="truncate">{t("myMissions")}</span>
+              <Briefcase className={`w-6 h-6 transition-colors ${isMissionsActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
+              <span>{t("myMissions")}</span>
             </Link>
 
             <Link
               href={`/${locale}/community`}
               onClick={() => setIsOpen(false)}
-              className={`w-full py-2 text-lg sm:text-xl md:text-2xl tracking-tight transition-all flex items-center justify-center gap-3 group rounded-xl ${
-                isCommunityActive ? "font-black text-plasma-cyan bg-plasma-cyan/10" : "font-semibold text-gray-300 hover:text-plasma-cyan hover:bg-void-surface"
+              className={`text-2xl sm:text-3xl tracking-tight transition-all flex items-center gap-3.5 group ${
+                isCommunityActive ? "font-black text-plasma-cyan" : "font-extrabold text-gray-300 hover:text-plasma-cyan"
               }`}
             >
-              <Users className={`w-5 h-5 shrink-0 transition-colors ${isCommunityActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
-              <span className="truncate">{t("community")}</span>
+              <Users className={`w-6 h-6 transition-colors ${isCommunityActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
+              <span>{t("community")}</span>
             </Link>
 
             <Link
               href={`/${locale}/map`}
               onClick={() => setIsOpen(false)}
-              className={`w-full py-2 text-lg sm:text-xl md:text-2xl tracking-tight transition-all flex items-center justify-center gap-3 group rounded-xl ${
-                isMapActive ? "font-black text-plasma-cyan bg-plasma-cyan/10" : "font-semibold text-gray-300 hover:text-plasma-cyan hover:bg-void-surface"
+              className={`text-2xl sm:text-3xl tracking-tight transition-all flex items-center gap-3.5 group ${
+                isMapActive ? "font-black text-plasma-cyan" : "font-extrabold text-gray-300 hover:text-plasma-cyan"
               }`}
             >
-              <MapIcon className={`w-5 h-5 shrink-0 transition-colors ${isMapActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
-              <span className="truncate">{t("map")}</span>
+              <MapIcon className={`w-6 h-6 transition-colors ${isMapActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
+              <span>{t("map")}</span>
             </Link>
 
             <Link
               href={`/${locale}/ecosystem`}
               onClick={() => setIsOpen(false)}
-              className={`w-full py-2 text-lg sm:text-xl md:text-2xl tracking-tight transition-all flex items-center justify-center gap-3 group rounded-xl ${
-                isEcosystemActive ? "font-black text-plasma-cyan bg-plasma-cyan/10" : "font-semibold text-gray-300 hover:text-plasma-cyan hover:bg-void-surface"
+              className={`text-2xl sm:text-3xl tracking-tight transition-all flex items-center gap-3.5 group ${
+                isEcosystemActive ? "font-black text-plasma-cyan" : "font-extrabold text-gray-300 hover:text-plasma-cyan"
               }`}
             >
-              <Globe className={`w-5 h-5 shrink-0 transition-colors ${isEcosystemActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
-              <span className="truncate">{t("ecosystem")}</span>
+              <Globe className={`w-6 h-6 transition-colors ${isEcosystemActive ? "text-plasma-cyan" : "text-gray-500 group-hover:text-plasma-cyan"}`} />
+              <span>{t("ecosystem")}</span>
             </Link>
 
-            {/* Role specific mobile action links */}
             {isOrg && (
               <Link
                 href={`/${locale}/dashboard/projects/new`}
                 onClick={() => setIsOpen(false)}
-                className="w-full py-2 text-base sm:text-lg font-bold tracking-tight text-plasma-cyan hover:bg-plasma-cyan/10 rounded-xl transition-all flex items-center justify-center gap-2"
+                className="text-xl sm:text-2xl font-bold tracking-tight text-plasma-cyan hover:scale-105 transition-all flex items-center gap-2.5"
               >
-                <PlusCircle className="w-5 h-5 shrink-0" />
+                <PlusCircle className="w-5 h-5" />
                 <span>{t("publish")}</span>
               </Link>
             )}
@@ -536,9 +610,9 @@ export function Header({
               <Link
                 href={`/${locale}/dashboard/moderator-panel`}
                 onClick={() => setIsOpen(false)}
-                className="w-full py-2 text-base sm:text-lg font-bold tracking-tight text-amber-400 hover:bg-amber-500/10 rounded-xl transition-all flex items-center justify-center gap-2"
+                className="text-xl sm:text-2xl font-bold tracking-tight text-amber-400 hover:scale-105 transition-all flex items-center gap-2.5"
               >
-                <ShieldCheck className="w-5 h-5 shrink-0" />
+                <ShieldCheck className="w-5 h-5" />
                 <span>{t("moderatorPanel")}</span>
               </Link>
             )}
@@ -547,9 +621,9 @@ export function Header({
               <Link
                 href={`/${locale}/dashboard/support-panel`}
                 onClick={() => setIsOpen(false)}
-                className="w-full py-2 text-base sm:text-lg font-bold tracking-tight text-plasma-cyan hover:bg-plasma-cyan/10 rounded-xl transition-all flex items-center justify-center gap-2"
+                className="text-xl sm:text-2xl font-bold tracking-tight text-plasma-cyan hover:scale-105 transition-all flex items-center gap-2.5"
               >
-                <Headphones className="w-5 h-5 shrink-0" />
+                <Headphones className="w-5 h-5" />
                 <span>{t("supportPanel")}</span>
               </Link>
             )}
@@ -558,16 +632,16 @@ export function Header({
               <Link
                 href={`/${locale}/dashboard/admin`}
                 onClick={() => setIsOpen(false)}
-                className="w-full py-2 text-base sm:text-lg font-bold tracking-tight text-nova-flare hover:bg-nova-flare/10 rounded-xl transition-all flex items-center justify-center gap-2"
+                className="text-xl sm:text-2xl font-bold tracking-tight text-nova-flare hover:scale-105 transition-all flex items-center gap-2.5"
               >
-                <ShieldAlert className="w-5 h-5 shrink-0" />
+                <ShieldAlert className="w-5 h-5" />
                 <span>{t("adminPanel")}</span>
               </Link>
             )}
           </nav>
 
           {/* Bottom Area: Language Switcher, Profile, and Logout */}
-          <div className="pb-6 pt-4 flex flex-col items-center gap-4 w-full max-w-sm mx-auto shrink-0 border-t border-void-border/40">
+          <div className="pb-8 pt-4 flex flex-col items-center gap-5 w-full max-w-sm mx-auto shrink-0 border-t border-void-border/40">
             <div className="flex items-center gap-3">
               <span className="text-xs text-gray-400 font-mono uppercase tracking-wider">
                 {t("language")}
@@ -575,19 +649,19 @@ export function Header({
               <LanguageSwitcher />
             </div>
 
-            <div className="flex items-center gap-3 w-full justify-center">
+            <div className="flex items-center gap-4 w-full justify-center">
               <Link
                 href={orgOrProfileHref}
                 onClick={() => setIsOpen(false)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-transparent hover:bg-hyper-violet/10 border border-void-border hover:border-hyper-violet/50 text-gray-300 hover:text-hyper-violet transition-all text-xs sm:text-sm font-semibold truncate max-w-[200px]"
+                className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-transparent hover:bg-hyper-violet/10 border border-void-border hover:border-hyper-violet/50 text-gray-300 hover:text-hyper-violet transition-all text-sm font-semibold"
               >
                 <AvatarFallback
                   src={avatarUrl}
                   alt={isOrg ? "Organization Logo" : "Profile Picture"}
                   fallbackType={isOrg ? "org" : "user"}
-                  sizeClassName="w-7 h-7 shrink-0"
+                  sizeClassName="w-8 h-8"
                 />
-                <span className="truncate">{isOrg ? t("myOrg") : t("myProfile")}</span>
+                <span>{isOrg ? t("myOrg") : t("myProfile")}</span>
                 {!isOrg && <UserLevelBadge level={youthLevel} size="sm" />}
               </Link>
 

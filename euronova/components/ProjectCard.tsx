@@ -86,7 +86,7 @@ export function ProjectCard({
     setIsApplied(project.is_applied ?? false);
   }
 
-  // Pure evaluation of 24h freshness
+  // Calcula si el proyecto fue creado en las últimas 24 horas (Pure evaluation)
   const [isNew] = useState(() => {
     if (!project.created_at) return false;
     const createdTime = new Date(project.created_at).getTime();
@@ -161,9 +161,9 @@ export function ProjectCard({
           setIsApplied(res.is_applied);
           onToggleApplied?.(project.id, res.is_applied);
           if (res.is_applied && res.xpGained) {
-            toast.success(t("appLoggedXp", { xp: res.xpGained }), { icon: "✨" });
+            toast.success(t("appLoggedXp", { xp: res.xpGained }), { icon: "🚀" });
             if (res.leveledUp) {
-              toast.success(t("appLoggedLevelUp", { level: res.newLevel ?? 1 }), { icon: "🎉" });
+              toast.success(t("appLoggedLevelUp", { level: res.newLevel ?? 1 }), { icon: "⚡" });
             }
             if (typeof window !== "undefined") {
               window.dispatchEvent(new CustomEvent("euronova:xp-updated", { 
@@ -171,7 +171,7 @@ export function ProjectCard({
               }));
             }
           } else if (res.is_applied && !res.xpGained) {
-            toast.info(t("appLoggedAlreadyClaimed"), { icon: "ℹ️" });
+            toast.info(t("appLoggedAlreadyClaimed"), { icon: "📋" });
           }
         }
       } catch (err: unknown) {
@@ -187,16 +187,10 @@ export function ProjectCard({
   };
 
   return (
-    <div className="bg-void-surface border border-void-border rounded-2xl overflow-visible hover:border-plasma-cyan/40 hover:shadow-[0_8px_25px_-5px_rgba(0,0,0,0.7),0_0_15px_rgba(0,229,255,0.15)] hover:-translate-y-1.5 transition-all duration-300 ease-out group/card flex flex-col h-full relative">
-      {/* Shimmer Sheen & Ambient Nebula Glow - Strictly clipped within rounded bounds to prevent overflow artifacts */}
-      <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none z-0">
-        <div className="absolute inset-0 -translate-x-full group-hover/card:translate-x-full transition-transform duration-1000 ease-out bg-gradient-to-r from-transparent via-plasma-cyan/5 to-transparent" />
-        <div className="absolute top-0 right-0 w-32 h-32 bg-plasma-cyan/[0.03] rounded-full blur-2xl group-hover/card:bg-plasma-cyan/[0.08] transition-colors duration-500" />
-      </div>
-
+    <div className="bg-void-surface border border-void-border rounded-2xl overflow-visible hover:border-plasma-cyan/50 hover:shadow-[0_0_30px_rgba(0,229,255,0.1)] transition-all duration-300 group/card flex flex-col h-full relative">
       {/* Badge "NEW" 24h con pulso y brillo neón */}
       {isNew && (
-        <span className="absolute top-3 right-3 px-2 py-1 text-[10px] font-bold bg-nova-flare/20 text-nova-flare border border-nova-flare/40 rounded-full animate-cosmic-breathing shadow-[0_0_12px_rgba(255,46,99,0.35)] z-20">
+        <span className="absolute top-3 right-3 px-2 py-1 text-[10px] font-bold bg-nova-flare/20 text-nova-flare border border-nova-flare/40 rounded-full animate-pulse shadow-[0_0_10px_rgba(255,46,99,0.3)] z-20">
           NEW
         </span>
       )}
@@ -259,7 +253,7 @@ export function ProjectCard({
             {/* AI Anti-Scam Shield micro-badge */}
             <CosmicTooltip content={t("antiScamVerifiedTitle")} side="top">
               <div
-                className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/40 shadow-[0_0_10px_rgba(0,230,118,0.2)] flex items-center gap-1 shrink-0 select-none cursor-default hover:scale-105 transition-all duration-300 ease-out"
+                className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/40 shadow-[0_0_12px_rgba(0,230,118,0.25)] flex items-center gap-1 shrink-0 select-none cursor-default"
               >
                 <ShieldCheck className="w-3 h-3 text-rup-emerald shrink-0" />
                 <span>{t("antiScamVerified")}</span>
@@ -267,7 +261,7 @@ export function ProjectCard({
             </CosmicTooltip>
           </div>
 
-          {/* Botones de acción interactiva: Guardar (Favorite) y Aplicar (Applied) con física táctil suave */}
+          {/* Botones de acción interactiva: Guardar (Favorite) y Aplicar (Applied) */}
           <div className={`flex items-center gap-1.5 shrink-0 z-10 transition-all ${isNew ? "mt-6" : ""}`}>
             {/* Botón Favorito */}
             <CosmicTooltip content={isFavorite ? t("removeFromFavorites") : t("addToFavorites")} side="top">
@@ -276,15 +270,15 @@ export function ProjectCard({
                 onClick={handleToggleFavorite}
                 disabled={isPendingFav}
                 aria-label={isFavorite ? t("removeFromFavorites") : t("addToFavorites")}
-                className={`p-2 rounded-xl border transition-all duration-300 ease-out cursor-pointer hover:scale-105 active:scale-95 ${
+                className={`p-2 rounded-xl border transition-all duration-200 cursor-pointer ${
                   isFavorite
-                    ? "bg-nova-flare/20 border-nova-flare/50 text-nova-flare shadow-[0_0_12px_rgba(255,46,99,0.3)]"
-                    : "bg-void-deep/80 border-void-border text-gray-400 hover:text-white hover:border-gray-500 hover:shadow-[0_0_10px_rgba(255,255,255,0.08)]"
+                    ? "bg-nova-flare/20 border-nova-flare/60 text-nova-flare shadow-[0_0_12px_rgba(255,46,99,0.35)]"
+                    : "bg-void-deep/80 border-void-border text-gray-400 hover:text-white hover:border-gray-600"
                 }`}
               >
                 <Heart
-                  className={`w-4 h-4 transition-transform duration-300 ease-out ${
-                    isFavorite ? "fill-nova-flare scale-105" : ""
+                  className={`w-4 h-4 transition-transform ${
+                    isFavorite ? "fill-nova-flare scale-110" : ""
                   }`}
                 />
               </button>
@@ -297,15 +291,15 @@ export function ProjectCard({
                 onClick={handleToggleApplied}
                 disabled={isPendingApp}
                 aria-label={isApplied ? t("applied") : t("markAsApplied")}
-                className={`p-2 rounded-xl border transition-all duration-300 ease-out cursor-pointer hover:scale-105 active:scale-95 ${
+                className={`p-2 rounded-xl border transition-all duration-200 cursor-pointer ${
                   isApplied
-                    ? "bg-hyper-violet/20 border-hyper-violet/50 text-hyper-violet shadow-[0_0_12px_rgba(99,102,241,0.3)]"
-                    : "bg-void-deep/80 border-void-border text-gray-400 hover:text-white hover:border-gray-500 hover:shadow-[0_0_10px_rgba(255,255,255,0.08)]"
+                    ? "bg-hyper-violet/25 border-hyper-violet/60 text-hyper-violet shadow-[0_0_12px_rgba(99,102,241,0.35)]"
+                    : "bg-void-deep/80 border-void-border text-gray-400 hover:text-white hover:border-gray-600"
                 }`}
               >
                 <Briefcase
-                  className={`w-4 h-4 transition-transform duration-300 ease-out ${
-                    isApplied ? "fill-hyper-violet/40 scale-105" : ""
+                  className={`w-4 h-4 transition-transform ${
+                    isApplied ? "fill-hyper-violet/40 scale-110" : ""
                   }`}
                 />
               </button>
@@ -322,14 +316,14 @@ export function ProjectCard({
 
         {/* Organization Information */}
         {project.org_name && (
-          <div className="flex items-center gap-2 mb-4 group/avatar">
+          <div className="flex items-center gap-2 mb-4">
             <AvatarFallback
               src={project.org_logo_url}
               alt={project.org_name}
               fallbackType="org"
               name={project.org_name}
               sizeClassName="w-5 h-5"
-              className="border border-void-border bg-void-deep group-hover/avatar:scale-105 transition-transform duration-300 ease-out"
+              className="border border-void-border bg-void-deep"
               iconClassName="w-3 h-3 text-plasma-cyan"
             />
             <span className="text-sm text-gray-400 font-medium truncate">
@@ -341,7 +335,7 @@ export function ProjectCard({
         {/* Key Project Meta (Grid / Icons) */}
         <div className="space-y-2.5 text-xs text-gray-400 border-t border-void-border/60 pt-3">
           <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-plasma-cyan shrink-0" />
+            <MapPin className="w-4 h-4 text-plasma-cyan" />
             <span className="font-medium text-gray-300 flex items-center gap-1.5 flex-wrap">
               {(() => {
                 if (!project.dest_country) return <span>{t("europe")}</span>;
@@ -360,7 +354,7 @@ export function ProjectCard({
           </div>
 
           <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-hyper-violet shrink-0" />
+            <Users className="w-4 h-4 text-hyper-violet" />
             <span>
               {project.min_age} - {project.max_age} {t("yearsCount", { count: project.max_age })}
             </span>
@@ -368,7 +362,7 @@ export function ProjectCard({
 
           {project.duration_days && (
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-gray-400 shrink-0" />
+              <Clock className="w-4 h-4 text-gray-400" />
               <span>
                 {t("durationDaysCount", { count: project.duration_days })}
               </span>
@@ -388,7 +382,7 @@ export function ProjectCard({
 
           {project.financing_type && (
             <div className="flex items-center gap-2">
-              <Wallet className="w-4 h-4 text-plasma-cyan shrink-0" />
+              <Wallet className="w-4 h-4 text-plasma-cyan" />
               <span>
                 {t("financingType")}: {project.financing_type}
               </span>
@@ -404,7 +398,7 @@ export function ProjectCard({
               return (
                 <CosmicTooltip key={i} content={label} side="top">
                   <span
-                    className="px-2 py-0.5 text-[10px] font-medium bg-void-deep text-gray-300 rounded-md border border-void-border truncate max-w-[150px] cursor-default hover:border-plasma-cyan/40 transition-colors"
+                    className="px-2 py-0.5 text-[10px] font-medium bg-void-deep text-gray-300 rounded-md border border-void-border truncate max-w-[150px] cursor-default"
                   >
                     {label}
                   </span>
@@ -423,7 +417,7 @@ export function ProjectCard({
       <div className="p-4 border-t border-void-border bg-void-deep/50 mt-auto">
         <Link
           href={`/dashboard/projects/${project.id}`}
-          className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-plasma-cyan/15 text-white font-bold text-sm transition-all duration-300 ease-out border border-void-border hover:border-plasma-cyan/40 hover:shadow-[0_0_15px_rgba(0,229,255,0.18)] hover:scale-[1.01] active:scale-[0.98] flex justify-center items-center gap-2 text-center break-words min-w-0 px-3 cursor-pointer"
+          className="w-full py-2.5 rounded-lg bg-white/5 hover:bg-plasma-cyan/10 text-white font-medium text-sm transition-colors border border-transparent hover:border-plasma-cyan/30 flex justify-center items-center gap-2 text-center break-words min-w-0 px-3"
         >
           {t("viewDetails")}
         </Link>

@@ -3,7 +3,7 @@
 import { useActionState, useState, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { createTicket } from "./actions";
-import { Mail, Phone, MessageSquare, Send, Sparkles, Globe, MessageCircle, Paperclip, Image as ImageIcon, Upload, X } from "lucide-react";
+import { Mail, Phone, MessageSquare, Send, Sparkles, Globe, MessageCircle, Info, Paperclip, Image as ImageIcon, Upload, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -46,7 +46,7 @@ export function SupportForm() {
 
   useEffect(() => {
     if (state?.error === "RATE_LIMIT_EXCEEDED") {
-      toast.warning(tErrors("rateLimitExceeded"), { id: "rate-limit-toast", icon: "⚠️" });
+      toast.warning(tErrors("rateLimitExceeded"), { id: "rate-limit-toast", icon: "⏳" });
     }
   }, [state?.error, tErrors]);
 
@@ -102,7 +102,7 @@ export function SupportForm() {
   return (
     <form action={handleAction} className="space-y-6">
       {selectedReason === "apply_support" && (
-        <div className="p-4 rounded-xl bg-rup-emerald/10 border border-rup-emerald/30 text-rup-emerald text-xs flex items-center gap-3 animate-in fade-in shadow-[0_0_15px_rgba(0,230,118,0.15)]">
+        <div className="p-4 rounded-xl bg-rup-emerald/10 border border-rup-emerald/30 text-rup-emerald text-xs flex items-center gap-3 animate-in fade-in">
           <Sparkles className="w-5 h-5 shrink-0" />
           <span>
             <strong>{t("vanguardAppPrefix")}</strong> {t("vanguardAppDesc")}
@@ -121,11 +121,10 @@ export function SupportForm() {
           <button
             type="button"
             onClick={() => setContactMethod("website")}
-            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all duration-300 ease-out hover:scale-[1.015] active:scale-[0.985] cursor-pointer ${
-              contactMethod === "website"
-                ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.18)]"
-                : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-700 hover:bg-void-surface"
-            }`}
+            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${contactMethod === "website"
+                ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.2)]"
+                : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-700"
+              }`}
           >
             <Globe className="w-4 h-4" />
             <span>{t("contactMethodWebsite")}</span>
@@ -134,11 +133,10 @@ export function SupportForm() {
           <button
             type="button"
             onClick={() => setContactMethod("email")}
-            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all duration-300 ease-out hover:scale-[1.015] active:scale-[0.985] cursor-pointer ${
-              contactMethod === "email"
-                ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.18)]"
-                : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-700 hover:bg-void-surface"
-            }`}
+            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${contactMethod === "email"
+                ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.2)]"
+                : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-700"
+              }`}
           >
             <Mail className="w-4 h-4" />
             <span>{t("contactMethodEmail")}</span>
@@ -147,15 +145,37 @@ export function SupportForm() {
           <button
             type="button"
             onClick={() => setContactMethod("whatsapp")}
-            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all duration-300 ease-out hover:scale-[1.015] active:scale-[0.985] cursor-pointer ${
-              contactMethod === "whatsapp"
-                ? "bg-rup-emerald/15 border-rup-emerald text-rup-emerald shadow-[0_0_15px_rgba(0,230,118,0.18)]"
-                : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-700 hover:bg-void-surface"
-            }`}
+            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${contactMethod === "whatsapp"
+                ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.2)]"
+                : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-700"
+              }`}
           >
             <MessageCircle className="w-4 h-4" />
             <span>{t("contactMethodWhatsapp")}</span>
           </button>
+        </div>
+
+        {/* Visual Tip Recommending Website */}
+        <div className="p-3.5 rounded-xl bg-plasma-cyan/10 border border-plasma-cyan/20 text-plasma-cyan text-xs flex items-center gap-2.5 animate-in fade-in">
+          <Info className="w-4 h-4 shrink-0" />
+          <span>{t("fasterResolutionTip")}</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-300">{t("email")}</label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <input
+              type="email"
+              name="email"
+              required
+              maxLength={120}
+              className="w-full bg-void-deep border border-void-border rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all"
+              placeholder={t("emailPlaceholder")}
+            />
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -163,17 +183,16 @@ export function SupportForm() {
             {contactMethod === "whatsapp" ? t("phoneWhatsappRequired") : t("phone")}
           </label>
           <div className="relative">
-            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input
               type="text"
               name="phone"
               required={contactMethod === "whatsapp"}
               maxLength={30}
-              className={`w-full bg-void-deep border rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none uiverse-input-glow ${
-                contactMethod === "whatsapp"
-                  ? "border-rup-emerald/60 focus:border-rup-emerald"
-                  : "border-void-border focus:border-plasma-cyan"
-              }`}
+              className={`w-full bg-void-deep border rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-1 transition-all ${contactMethod === "whatsapp"
+                  ? "border-plasma-cyan/60 focus:border-plasma-cyan focus:ring-plasma-cyan"
+                  : "border-void-border focus:border-plasma-cyan focus:ring-plasma-cyan"
+                }`}
               placeholder={
                 contactMethod === "whatsapp"
                   ? t("phoneWhatsappPlaceholder")
@@ -194,7 +213,7 @@ export function SupportForm() {
             maxLength={150}
             value={subjectValue}
             onChange={(e) => setSubjectValue(e.target.value)}
-            className="w-full bg-void-deep border border-void-border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-plasma-cyan uiverse-input-glow"
+            className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all"
             placeholder={t("subjectPlaceholder")}
           />
         </div>
@@ -206,7 +225,7 @@ export function SupportForm() {
             required
             value={selectedReason}
             onChange={(e) => setSelectedReason(e.target.value)}
-            className="w-full bg-void-deep border border-void-border rounded-xl px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan uiverse-input-glow appearance-none cursor-pointer"
+            className="w-full bg-void-deep border border-void-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all appearance-none cursor-pointer"
           >
             <option value="">{t("selectReason")}</option>
             <option value="apply_support">{t("reasonApplySupport")}</option>
@@ -225,13 +244,13 @@ export function SupportForm() {
       <div className="space-y-2">
         <label className="text-sm font-medium text-gray-300">{t("content")}</label>
         <div className="relative">
-          <MessageSquare className="absolute left-3 top-4 w-4 h-4 text-gray-500 pointer-events-none" />
+          <MessageSquare className="absolute left-3 top-4 w-4 h-4 text-gray-500" />
           <textarea
             name="content"
             required
             rows={5}
             maxLength={5000}
-            className="w-full bg-void-deep border border-void-border rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-plasma-cyan uiverse-input-glow"
+            className="w-full bg-void-deep border border-void-border rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan transition-all"
             placeholder={
               selectedReason === "apply_support"
                 ? t("applySupportPlaceholder")
@@ -254,7 +273,7 @@ export function SupportForm() {
         </div>
 
         {selectedFiles.length < 3 && (
-          <label className="flex flex-col items-center justify-center p-4 border border-dashed border-void-border hover:border-plasma-cyan/60 rounded-xl bg-void-deep/60 hover:bg-void-deep cursor-pointer transition-all duration-300 hover:scale-[1.01] group">
+          <label className="flex flex-col items-center justify-center p-4 border border-dashed border-void-border hover:border-plasma-cyan/60 rounded-xl bg-void-deep/60 hover:bg-void-deep cursor-pointer transition-all group">
             <Upload className="w-5 h-5 text-gray-500 group-hover:text-plasma-cyan transition-colors mb-1" />
             <span className="text-xs text-gray-400 group-hover:text-gray-200">
               {t("attachmentsHint")}
@@ -274,7 +293,7 @@ export function SupportForm() {
             {selectedFiles.map((file, idx) => (
               <div
                 key={idx}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-void-surface border border-void-border text-xs text-gray-300 shadow-sm"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-void-surface border border-void-border text-xs text-gray-300"
               >
                 <ImageIcon className="w-3.5 h-3.5 text-plasma-cyan shrink-0" />
                 <span className="truncate max-w-[150px]">{file.name}</span>
@@ -296,7 +315,7 @@ export function SupportForm() {
       </div>
 
       {state?.error && (
-        <div className="p-4 rounded-xl bg-nova-flare/20 border border-nova-flare text-nova-flare text-sm font-medium text-center shadow-[0_0_15px_rgba(255,46,99,0.2)]">
+        <div className="p-4 rounded-lg bg-nova-flare/20 border border-nova-flare text-nova-flare text-sm font-medium text-center">
           {state.error === "RATE_LIMIT_EXCEEDED"
             ? tErrors("rateLimitExceeded")
             : state.error === "AUTH_REQUIRED"
@@ -306,7 +325,7 @@ export function SupportForm() {
       )}
 
       {state?.success ? (
-        <div className="p-6 rounded-2xl bg-rup-emerald/20 border border-rup-emerald text-center space-y-2 shadow-[0_0_25px_rgba(0,230,118,0.2)]">
+        <div className="p-6 rounded-lg bg-rup-emerald/20 border border-rup-emerald text-center space-y-2">
           <p className="text-rup-emerald font-bold text-lg">{t("success")}</p>
           <p className="text-rup-emerald/80 text-sm">{t("successDesc")}</p>
         </div>
@@ -314,10 +333,10 @@ export function SupportForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full font-bold py-4 px-4 rounded-xl transition-all duration-300 ease-out flex items-center justify-center gap-2 text-void-deep bg-plasma-cyan hover:bg-plasma-cyan/90 shadow-[0_0_15px_rgba(0,229,255,0.25)] hover:shadow-[0_0_25px_rgba(0,229,255,0.35)] hover:scale-[1.015] active:scale-[0.985] disabled:opacity-50 cursor-pointer"
+          className="w-full font-bold py-4 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-void-deep bg-plasma-cyan hover:bg-plasma-cyan/80 shadow-[0_0_15px_rgba(0,229,255,0.3)] hover:shadow-[0_0_25px_rgba(0,229,255,0.5)] disabled:opacity-50 cursor-pointer"
         >
           <Send className="w-5 h-5" />
-          <span>{isPending ? t("submitting") : t("submit")}</span>
+          {isPending ? t("submitting") : t("submit")}
         </button>
       )}
     </form>

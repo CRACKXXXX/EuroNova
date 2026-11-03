@@ -61,8 +61,8 @@ export function ProjectsViewManager({ projects }: ProjectsViewManagerProps) {
             <button
               type="button"
               onClick={() => handleToggle("grid")}
-              className={`p-1.5 rounded-lg transition-all duration-300 ease-out cursor-pointer ${viewMode === "grid"
-                  ? "bg-plasma-cyan text-void-deep shadow-[0_0_12px_rgba(0,229,255,0.25)]"
+              className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "grid"
+                  ? "bg-plasma-cyan text-void-deep shadow-[0_0_12px_rgba(0,229,255,0.4)]"
                   : "text-gray-400 hover:text-white"
                 }`}
               aria-label={t("gridView")}
@@ -75,8 +75,8 @@ export function ProjectsViewManager({ projects }: ProjectsViewManagerProps) {
             <button
               type="button"
               onClick={() => handleToggle("list")}
-              className={`p-1.5 rounded-lg transition-all duration-300 ease-out cursor-pointer ${viewMode === "list"
-                  ? "bg-plasma-cyan text-void-deep shadow-[0_0_12px_rgba(0,229,255,0.25)]"
+              className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "list"
+                  ? "bg-plasma-cyan text-void-deep shadow-[0_0_12px_rgba(0,229,255,0.4)]"
                   : "text-gray-400 hover:text-white"
                 }`}
               aria-label={t("listView")}

@@ -489,9 +489,9 @@ export function ProjectsMap() {
                   key={type}
                   type="button"
                   onClick={() => setSelectedType(type)}
-                  className={`px-2.5 py-1 rounded-xl text-xs font-bold uppercase transition-all duration-300 ease-out shrink-0 cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-xl text-xs font-bold uppercase transition-all duration-200 shrink-0 cursor-pointer ${
                     isSelected
-                      ? "bg-plasma-cyan text-void-deep shadow-[0_0_12px_rgba(0,229,255,0.25)] scale-105"
+                      ? "bg-plasma-cyan text-void-deep shadow-[0_0_12px_rgba(0,229,255,0.4)] scale-105"
                       : "text-gray-400 hover:text-white hover:bg-white/5"
                   }`}
                 >
@@ -699,9 +699,9 @@ function ProjectPopupContent({
       {/* Primary Action Button: Routing to /[locale]/projects/[id] */}
       <a
         href={`/${locale}/projects/${properties.id}`}
-        className="group mt-2 flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl font-bold text-xs transition-all duration-300 ease-out
+        className="group mt-2 flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl font-bold text-xs transition-all duration-300
           bg-plasma-cyan text-void-deep
-          hover:bg-plasma-cyan/90 shadow-[0_0_12px_rgba(0,229,255,0.2)] hover:shadow-[0_0_18px_rgba(0,229,255,0.35)] hover:scale-[1.015] active:scale-[0.985]"
+          hover:bg-plasma-cyan/90 hover:shadow-[0_0_20px_rgba(0,229,255,0.5)] hover:scale-[1.02] active:scale-[0.98]"
       >
         <span>{t("viewMission")}</span>
         <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />

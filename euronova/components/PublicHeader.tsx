@@ -10,7 +10,7 @@ export function PublicHeader() {
 
   return (
     <header className="fixed top-0 left-0 right-0 w-full h-20 bg-void-deep/80 backdrop-blur-2xl border-b border-void-border/70 z-50 transition-all">
-      <div className="w-full max-w-7xl mx-auto h-full flex items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto h-full flex items-center justify-between px-6 sm:px-8 lg:px-12">
         {/* Left: Brand Logo */}
         <Link
           href="/"
