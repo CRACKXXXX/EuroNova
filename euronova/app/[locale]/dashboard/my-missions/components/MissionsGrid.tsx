@@ -70,7 +70,7 @@ export function MissionsGrid({
   if (paginatedList.length > 0) {
     return (
       <div className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
           {paginatedList.map((interaction) => {
             const proj = interaction.projects!;
             const org = Array.isArray(proj.users_org)
@@ -226,8 +226,8 @@ export function MissionsGrid({
   if (currentFolderList.length > 0) {
     /* No results matching filter in current folder */
     return (
-      <div className="py-20 text-center border border-dashed border-void-border rounded-2xl bg-void-surface/40 p-8 space-y-4">
-        <div className="w-14 h-14 mx-auto rounded-2xl border border-void-border bg-void-deep flex items-center justify-center text-gray-500">
+      <div className="py-20 text-center border border-dashed border-void-border rounded-2xl bg-void-surface/40 p-8 space-y-4 animate-in fade-in duration-300">
+        <div className="w-14 h-14 mx-auto rounded-2xl border border-void-border bg-void-deep flex items-center justify-center text-gray-500 cosmic-float">
           <Filter className="w-7 h-7 text-plasma-cyan/60" />
         </div>
         <h2 className="text-xl font-bold text-white">
@@ -250,8 +250,8 @@ export function MissionsGrid({
 
   /* Empty state for this specific folder */
   return (
-    <div className="py-24 text-center border border-dashed border-void-border rounded-2xl bg-void-surface/40 p-8">
-      <div className="w-16 h-16 mx-auto mb-4 rounded-2xl border border-void-border bg-void-deep flex items-center justify-center text-gray-500 shadow-inner">
+    <div className="py-24 text-center border border-dashed border-void-border rounded-2xl bg-void-surface/40 p-8 animate-in fade-in duration-300">
+      <div className="w-16 h-16 mx-auto mb-4 rounded-2xl border border-void-border bg-void-deep flex items-center justify-center text-gray-500 shadow-inner cosmic-float">
         {activeFolderId === "applied" ? (
           <Send className="w-8 h-8 text-hyper-violet/60" />
         ) : activeCustomFolder ? (

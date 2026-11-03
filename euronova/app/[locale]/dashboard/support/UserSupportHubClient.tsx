@@ -194,7 +194,7 @@ export function UserSupportHubClient({
         <div className="absolute top-0 right-0 w-80 h-80 bg-hyper-violet/10 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-hyper-violet/15 text-hyper-violet border border-hyper-violet/40 mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-hyper-violet/15 text-hyper-violet border border-hyper-violet/40 mb-3 cosmic-float">
             <Headphones className="w-3.5 h-3.5" />
             <span>{t("title")}</span>
           </div>
@@ -217,7 +217,7 @@ export function UserSupportHubClient({
           <button
             type="button"
             onClick={() => setActiveTab("my_tickets")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 hover:-translate-y-0.5 active:scale-[0.98] ${
               activeTab === "my_tickets"
                 ? "bg-hyper-violet text-white shadow-[0_0_15px_rgba(99,102,241,0.3)]"
                 : "text-gray-400 hover:text-white"
@@ -233,7 +233,7 @@ export function UserSupportHubClient({
               setActiveTab("new_ticket");
               setSelectedTicketId(null);
             }}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 hover:-translate-y-0.5 active:scale-[0.98] ${
               activeTab === "new_ticket"
                 ? "bg-plasma-cyan text-void-deep shadow-[0_0_15px_rgba(0,229,255,0.3)]"
                 : "text-gray-400 hover:text-white"
@@ -247,11 +247,11 @@ export function UserSupportHubClient({
 
       {/* VIEW 1: MY TICKETS & TWO-WAY THREAD */}
       {activeTab === "my_tickets" && (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
           {tickets.length === 0 ? (
             /* Empty State: No tickets submitted yet */
             <div className="p-10 rounded-3xl bg-void-surface border border-void-border text-center space-y-4 max-w-xl mx-auto shadow-xl">
-              <div className="w-16 h-16 rounded-2xl bg-hyper-violet/10 border border-hyper-violet/30 flex items-center justify-center mx-auto text-hyper-violet shadow-[0_0_20px_rgba(99,102,241,0.2)]">
+              <div className="w-16 h-16 rounded-2xl bg-hyper-violet/10 border border-hyper-violet/30 flex items-center justify-center mx-auto text-hyper-violet shadow-[0_0_20px_rgba(99,102,241,0.2)] cosmic-float">
                 <Headphones className="w-8 h-8" />
               </div>
               <h3 className="text-xl font-bold text-white tracking-tight">
@@ -602,14 +602,14 @@ export function UserSupportHubClient({
                             }
                           }}
                           placeholder={t("replyPlaceholder")}
-                          className="flex-1 bg-void-deep border border-void-border rounded-xl p-3 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet resize-none transition-colors"
+                          className="flex-1 bg-void-deep border border-void-border rounded-xl p-3 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-hyper-violet focus:shadow-[0_0_15px_rgba(99,102,241,0.25)] focus:ring-1 focus:ring-hyper-violet resize-none transition-all"
                         />
 
                         <button
                           type="button"
                           onClick={handleSendReply}
                           disabled={isPending || !replyInput.trim()}
-                          className="px-5 py-3 rounded-xl bg-hyper-violet hover:bg-hyper-violet/90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shrink-0 shadow-[0_0_15px_rgba(99,102,241,0.3)] cursor-pointer"
+                          className="px-5 py-3 rounded-xl bg-hyper-violet hover:bg-hyper-violet/90 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shrink-0 shadow-[0_0_15px_rgba(99,102,241,0.3)] hover:shadow-[0_0_25px_rgba(99,102,241,0.5)] cursor-pointer"
                         >
                           {isPending ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -640,7 +640,7 @@ export function UserSupportHubClient({
 
       {/* VIEW 2: SUBMIT NEW TICKET */}
       {activeTab === "new_ticket" && (
-        <div className="bg-void-surface border border-void-border rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-2xl max-w-3xl mx-auto">
+        <div className="bg-void-surface border border-void-border rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-2xl max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div className="absolute top-0 right-0 w-64 h-64 bg-plasma-cyan/5 rounded-full blur-[80px] pointer-events-none" />
           <div className="mb-6 flex items-center justify-between pb-4 border-b border-void-border">
             <div className="flex items-center gap-2">

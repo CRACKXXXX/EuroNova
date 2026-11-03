@@ -84,7 +84,7 @@ export function ForumThreadList({
           <button
             type="button"
             onClick={onOpenCreateModal}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-plasma-cyan text-void-deep text-xs font-bold hover:bg-plasma-cyan/90 transition-all shrink-0 cursor-pointer shadow-[0_0_15px_rgba(0,229,255,0.3)]"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-plasma-cyan text-void-deep text-xs font-bold hover:bg-plasma-cyan/90 hover:-translate-y-0.5 active:scale-[0.98] transition-all shrink-0 cursor-pointer shadow-[0_0_15px_rgba(0,229,255,0.3)] hover:shadow-[0_0_25px_rgba(0,229,255,0.5)]"
           >
             <PlusCircle className="w-3.5 h-3.5" />
             <span>{t("startDiscussion")}</span>
@@ -126,7 +126,7 @@ export function ForumThreadList({
             <div
               key={thread.id}
               onClick={() => onSelectThread(thread)}
-              className="p-5 rounded-2xl bg-void-surface/70 border border-void-border/80 hover:border-plasma-cyan/50 hover:bg-void-surface/90 transition-all duration-200 cursor-pointer group flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              className="p-5 rounded-2xl bg-void-surface/70 border border-void-border/80 hover:border-plasma-cyan/50 hover:bg-void-surface/90 hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 cursor-pointer group flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm hover:shadow-[0_0_20px_rgba(0,229,255,0.12)]"
             >
               <div className="space-y-2 min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">

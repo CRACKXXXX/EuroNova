@@ -1,11 +1,12 @@
 import { Rocket } from "lucide-react";
-import { ProjectsGridSkeleton } from "@/components/Skeletons";
+import { ProjectsGridSkeleton, ShimmerBeam } from "@/components/Skeletons";
 
 export default function MyMissionsLoading() {
   return (
-    <div className="space-y-8 animate-pulse max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div className="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 animate-in fade-in duration-300">
       {/* 1. Header Banner Skeleton */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-void-surface border border-void-border/70 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="p-6 sm:p-8 rounded-3xl bg-void-surface border border-void-border/70 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden shadow-lg">
+        <ShimmerBeam />
         <div className="space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-void-border/40 border border-void-border/60">
             <Rocket className="w-3.5 h-3.5 text-plasma-cyan/40" />
@@ -28,16 +29,27 @@ export default function MyMissionsLoading() {
           "w-28", // Selected
           "w-28", // Completed
         ].map((w, idx) => (
-          <div key={idx} className={`h-10 rounded-xl bg-void-border/40 shrink-0 ${w}`} />
+          <div
+            key={idx}
+            className={`h-10 rounded-xl bg-void-surface border border-void-border/60 relative overflow-hidden shrink-0 ${w}`}
+          >
+            <ShimmerBeam />
+          </div>
         ))}
       </div>
 
       {/* 3. Search & Filter Bar Skeleton */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="w-full sm:w-80 h-10 rounded-xl bg-void-surface border border-void-border/70" />
+        <div className="w-full sm:w-80 h-10 rounded-xl bg-void-surface border border-void-border/70 relative overflow-hidden">
+          <ShimmerBeam />
+        </div>
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="w-36 h-10 rounded-xl bg-void-surface border border-void-border/70" />
-          <div className="w-36 h-10 rounded-xl bg-void-surface border border-void-border/70" />
+          <div className="w-36 h-10 rounded-xl bg-void-surface border border-void-border/70 relative overflow-hidden">
+            <ShimmerBeam />
+          </div>
+          <div className="w-36 h-10 rounded-xl bg-void-surface border border-void-border/70 relative overflow-hidden">
+            <ShimmerBeam />
+          </div>
         </div>
       </div>
 

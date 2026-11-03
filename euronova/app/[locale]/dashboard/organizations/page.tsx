@@ -46,14 +46,16 @@ export default async function OrganizationsPage(props: {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
+    <div className="max-w-7xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 animate-in fade-in slide-in-from-bottom-2 duration-300 relative">
+      {/* Ambient Cosmic Background Nebula */}
+      <div className="absolute -top-12 right-0 w-80 h-80 bg-hyper-violet/5 rounded-full blur-3xl pointer-events-none" />
       <div className="mb-2">
         <Breadcrumbs items={[{ label: t('directory') }]} />
       </div>
       
       <div>
         <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
-          <Building className="w-8 h-8 text-hyper-violet" /> 
+          <Building className="w-8 h-8 text-hyper-violet cosmic-float" /> 
           {t('directory')}
         </h1>
         <p className="text-gray-400 mt-2">
@@ -71,14 +73,14 @@ export default async function OrganizationsPage(props: {
         />
       </Suspense>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-8 animate-in fade-in duration-300">
         {organizations && organizations.length > 0 ? (
           organizations.map((org) => (
             <OrganizationCard key={org.id as string} org={org} />
           ))
         ) : (
           <div className="col-span-full py-20 text-center border border-dashed border-void-border rounded-2xl bg-void-surface/50">
-            <Building className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+            <Building className="w-12 h-12 text-hyper-violet/50 mx-auto mb-4 cosmic-float" />
             <h3 className="text-xl font-bold text-white mb-2">{t('noOrgsFound')}</h3>
             <p className="text-gray-400">{t('adjustFilters')}</p>
           </div>

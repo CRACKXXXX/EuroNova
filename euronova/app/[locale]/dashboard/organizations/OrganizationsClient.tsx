@@ -86,7 +86,7 @@ export function OrganizationsClient({
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t("searchPlaceholder")}
-            className="w-full bg-void-deep border border-void-border rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-hyper-violet focus:ring-1 focus:ring-hyper-violet transition-all"
+            className="w-full bg-void-deep border border-void-border rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-hyper-violet focus:shadow-[0_0_15px_rgba(99,102,241,0.25)] focus:ring-1 focus:ring-hyper-violet transition-all"
           />
         </div>
         <div className="w-full md:w-64">
@@ -113,7 +113,7 @@ export function OrganizationsClient({
         </div>
 
         <div className="w-full sm:w-auto shrink-0 flex items-center justify-end">
-          <label className="flex items-center gap-3 cursor-pointer group bg-void-deep px-4 py-2.5 rounded-lg border border-void-border w-full sm:w-auto">
+          <label className="flex items-center gap-3 cursor-pointer group bg-void-deep px-4 py-2.5 rounded-lg border border-void-border hover:border-void-border/80 hover:-translate-y-0.5 active:scale-[0.98] transition-all w-full sm:w-auto select-none">
             <div className="relative">
               <input
                 type="checkbox"

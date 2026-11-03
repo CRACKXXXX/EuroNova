@@ -26,10 +26,10 @@ export function ForumCategoryBar({
             key={cat.id}
             type="button"
             onClick={() => onSelectCategory(cat)}
-            className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between relative overflow-hidden group ${
+            className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between relative overflow-hidden group hover:-translate-y-1 active:scale-[0.98] ${
               isSelected
-                ? "bg-void-surface border-plasma-cyan/50 shadow-[0_0_25px_rgba(0,229,255,0.12)]"
-                : "bg-void-surface/50 border-void-border/80 hover:border-void-border hover:bg-void-surface/80"
+                ? "bg-void-surface border-plasma-cyan/50 shadow-[0_0_25px_rgba(0,229,255,0.2)]"
+                : "bg-void-surface/50 border-void-border/80 hover:border-plasma-cyan/30 hover:bg-void-surface/80"
             }`}
           >
             <div className="flex items-center justify-between gap-2 mb-3">

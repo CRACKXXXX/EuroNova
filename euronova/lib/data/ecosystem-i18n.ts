@@ -35,12 +35,12 @@ export function getLocalizedCountryName(
 // Curated overrides for high-profile entities
 const CURATED_DESCRIPTIONS: Record<string, Record<string, string>> = {
   "ngo-es-mad-mediterranean-crew": {
-    es: "ONG juvenil y cultural española centrada en la conservación medioambiental mediterránea, intercambios interculturales y participación activa de jóvenes en iniciativas Erasmus+.",
-    de: "Spanische Jugend- und Kultur-NGO mit Schwerpunkt auf mediterranem Umweltschutz, interkulturellem Austausch und aktiver Jugendbeteiligung an Erasmus+-Initiativen.",
-    fr: "ONG de jeunesse et culturelle espagnole axée sur la préservation environnementale en Méditerranée, les échanges interculturels et la participation des jeunes au programme Erasmus+.",
-    it: "ONG giovanile e culturale spagnola focalizzata sulla conservazione ambientale mediterranea, scambi interculturali e partecipazione giovanile a Erasmus+.",
-    pt: "ONG juvenil e cultural espanhola focada na conservação ambiental mediterrânica, intercâmbios interculturais e participação dos jovens em iniciativas Erasmus+.",
-    ru: "Испанская молодежная культурная НКО, ориентированная на охрану окружающей среды Средиземноморья, межкультурные обмены и участие молодежи в Erasmus+.",
+    es: "ONG juvenil y cultural española MadMediterranea Crew (Maditerranea) centrada en la conservación medioambiental mediterránea, intercambios interculturales y participación activa de jóvenes en iniciativas Erasmus+.",
+    de: "Spanische Jugend- und Kultur-NGO MadMediterranea Crew (Maditerranea) mit Schwerpunkt auf mediterranem Umweltschutz, interkulturellem Austausch und aktiver Jugendbeteiligung an Erasmus+-Initiativen.",
+    fr: "ONG de jeunesse et culturelle espagnole MadMediterranea Crew (Maditerranea) axée sur la préservation environnementale en Méditerranée, les échanges interculturels et la participation des jeunes au programme Erasmus+.",
+    it: "ONG giovanile e culturale spagnola MadMediterranea Crew (Maditerranea) focalizzata sulla conservazione ambientale mediterranea, scambi interculturali e partecipazione giovanile a Erasmus+.",
+    pt: "ONG juvenil e cultural espanhola MadMediterranea Crew (Maditerranea) focada na conservação ambiental mediterrânica, intercâmbios interculturais e participação dos jovens em iniciativas Erasmus+.",
+    ru: "Испанская молодежная культурная НКО MadMediterranea Crew (Maditerranea), ориентированная на охрану окружающей среды Средиземноморья, межкультурные обмены и участие молодежи в Erasmus+.",
   },
   "ngo-blooming-horizons": {
     es: "Asociación educativa sin ánimo de lucro que organiza intercambios juveniles internacionales, cursos de formación y talleres de inclusión social en toda Europa en el marco del programa Erasmus+.",

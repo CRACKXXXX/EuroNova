@@ -91,7 +91,7 @@ export default async function MyMissionsPage(props: MyMissionsPageProps) {
   const interactions = (rawInteractions as unknown as MissionInteraction[] | null) || [];
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-in fade-in slide-in-from-bottom-2 duration-300 relative">
       {/* Navegación de migas de pan y accesos */}
       <div className="flex items-center justify-between">
         <Breadcrumbs items={[{ label: t("title") }]} />
@@ -109,12 +109,12 @@ export default async function MyMissionsPage(props: MyMissionsPageProps) {
       <div className="relative overflow-hidden rounded-2xl border border-void-border bg-void-surface/60 p-6 md:p-8 backdrop-blur-xl">
         <div className="absolute top-0 right-0 w-80 h-80 bg-hyper-violet/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-plasma-cyan/30 bg-plasma-cyan/10 text-plasma-cyan text-xs font-semibold mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-plasma-cyan/30 bg-plasma-cyan/10 text-plasma-cyan text-xs font-semibold mb-3 cosmic-float">
             <Sparkles className="w-3.5 h-3.5" />
             <span>{t("trackerBadge")}</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight flex items-center gap-3">
-            <Rocket className="w-8 h-8 text-plasma-cyan" />
+            <Rocket className="w-8 h-8 text-plasma-cyan cosmic-float" />
             {t("title")}
           </h1>
           <p className="text-gray-400 mt-2 text-sm md:text-base max-w-2xl">

@@ -63,7 +63,13 @@ export function OrganizationCard({ org }: { org: OrganizationData }) {
   };
 
   return (
-    <div className="bg-void-surface border border-void-border rounded-2xl p-6 hover:border-hyper-violet/50 transition-all duration-300 hover:shadow-[0_0_20px_rgba(99,102,241,0.1)] group/org flex flex-col h-full relative overflow-visible">
+    <div className="bg-void-surface border border-void-border rounded-2xl p-6 hover:border-hyper-violet/60 transition-all duration-300 hover:shadow-[0_0_30px_rgba(99,102,241,0.2)] hover:-translate-y-1.5 group/org flex flex-col h-full relative overflow-visible">
+      {/* Shimmer Sheen on Hover */}
+      <div className="absolute inset-0 -translate-x-full group-hover/org:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-hyper-violet/10 to-transparent pointer-events-none rounded-2xl overflow-hidden" />
+
+      {/* Ambient Internal Glow */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-hyper-violet/5 rounded-full blur-2xl pointer-events-none group-hover/org:bg-hyper-violet/10 transition-colors duration-500" />
+
       <div className="flex items-start gap-4 mb-4">
         {/* Default Avatar Fallback or Actual Logo */}
         <AvatarFallback
@@ -82,7 +88,7 @@ export function OrganizationCard({ org }: { org: OrganizationData }) {
               {org.org_name || t("unnamedOrg")}
             </h2>
             {org.verification_status === "verified" && (
-              <span className="px-2 py-0.5 rounded-md bg-rup-emerald/10 border border-rup-emerald/30 text-[10px] font-bold text-rup-emerald uppercase tracking-wider shrink-0">
+              <span className="px-2 py-0.5 rounded-md bg-rup-emerald/10 border border-rup-emerald/30 text-[10px] font-bold text-rup-emerald uppercase tracking-wider shrink-0 shadow-[0_0_10px_rgba(0,230,118,0.2)]">
                 {t("verified")}
               </span>
             )}

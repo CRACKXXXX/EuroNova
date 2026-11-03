@@ -610,10 +610,10 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
 
         <button
           onClick={() => setIsEditing(true)}
-          className={`w-full font-bold py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-white border ${
+          className={`w-full font-bold py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-white border hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer ${
             role === "youth"
-              ? "border-plasma-cyan/30 hover:border-plasma-cyan hover:bg-plasma-cyan/10"
-              : "border-hyper-violet/30 hover:border-hyper-violet hover:bg-hyper-violet/10"
+              ? "border-plasma-cyan/30 hover:border-plasma-cyan hover:bg-plasma-cyan/10 hover:shadow-[0_0_20px_rgba(0,229,255,0.2)]"
+              : "border-hyper-violet/30 hover:border-hyper-violet hover:bg-hyper-violet/10 hover:shadow-[0_0_20px_rgba(99,102,241,0.2)]"
           }`}
         >
           <Edit2 className="w-5 h-5" />
@@ -1009,14 +1009,14 @@ export function ProfileForm({ initialData, role }: ProfileFormProps) {
         <button
           type="button"
           onClick={() => setIsEditing(false)}
-          className="px-6 py-3 rounded-lg text-gray-400 hover:text-white transition-colors border border-void-border hover:border-gray-600"
+          className="px-6 py-3 rounded-lg text-gray-400 hover:text-white transition-all border border-void-border hover:border-gray-600 hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer"
         >
           {t("cancel")}
         </button>
         <button
           type="submit"
           disabled={isPending}
-          className={`flex-1 font-bold py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-void-deep ${
+          className={`flex-1 font-bold py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-void-deep hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer ${
             role === "youth"
               ? "bg-plasma-cyan hover:bg-plasma-cyan/80 shadow-[0_0_15px_rgba(0,229,255,0.3)] hover:shadow-[0_0_25px_rgba(0,229,255,0.5)]"
               : "bg-hyper-violet hover:bg-hyper-violet/80 shadow-[0_0_15px_rgba(99,102,241,0.3)] hover:shadow-[0_0_25px_rgba(99,102,241,0.5)]"

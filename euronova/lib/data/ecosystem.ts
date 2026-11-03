@@ -3219,16 +3219,16 @@ export const ECOSYSTEM_RESOURCES: EcosystemResource[] = [
   // =========================================================================
   {
     id: "ngo-es-mad-mediterranean-crew",
-    title: "Mad Mediterranean Crew",
+    title: "MadMediterranea Crew",
     descriptionKey: "ngo_mad_mediterranean_crew_desc",
-    description: "Spanish youth and cultural NGO focused on Mediterranean environmental conservation, intercultural exchanges, and youth participation in Erasmus+ initiatives.",
+    description: "Spanish youth and cultural NGO (MadMediterranea / Maditerranea) focused on Mediterranean environmental conservation, intercultural exchanges, and youth participation in Erasmus+ initiatives.",
     category: "ngo",
     countryCode: "ES",
     countryName: "Spain",
-    url: "#",
+    url: "https://maditerranea.com/",
     badge: "Youth NGO",
     badgeKey: "badgeNGO",
-    tags: ["youth","erasmus","volunteering","mediterranean","spain","sustainability"],
+    tags: ["madmediterranea","maditerranea","mad mediterranean crew","youth","erasmus","volunteering","mediterranean","spain","sustainability"],
   },
   {
     id: "ngo-blooming-horizons",

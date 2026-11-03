@@ -187,7 +187,13 @@ export function ProjectCard({
   };
 
   return (
-    <div className="bg-void-surface border border-void-border rounded-2xl overflow-visible hover:border-plasma-cyan/50 hover:shadow-[0_0_30px_rgba(0,229,255,0.1)] transition-all duration-300 group/card flex flex-col h-full relative">
+    <div className="bg-void-surface border border-void-border rounded-2xl overflow-visible hover:border-plasma-cyan/60 hover:shadow-[0_0_35px_rgba(0,229,255,0.15)] hover:-translate-y-1.5 transition-all duration-300 group/card flex flex-col h-full relative">
+      {/* Shimmer Sheen on Hover */}
+      <div className="absolute inset-0 -translate-x-full group-hover/card:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-plasma-cyan/5 to-transparent pointer-events-none rounded-2xl overflow-hidden" />
+
+      {/* Ambient Internal Nebula Glow */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-plasma-cyan/5 rounded-full blur-2xl pointer-events-none group-hover/card:bg-plasma-cyan/10 transition-colors duration-500" />
+
       {/* Badge "NEW" 24h con pulso y brillo neón */}
       {isNew && (
         <span className="absolute top-3 right-3 px-2 py-1 text-[10px] font-bold bg-nova-flare/20 text-nova-flare border border-nova-flare/40 rounded-full animate-pulse shadow-[0_0_10px_rgba(255,46,99,0.3)] z-20">
@@ -270,7 +276,7 @@ export function ProjectCard({
                 onClick={handleToggleFavorite}
                 disabled={isPendingFav}
                 aria-label={isFavorite ? t("removeFromFavorites") : t("addToFavorites")}
-                className={`p-2 rounded-xl border transition-all duration-200 cursor-pointer ${
+                className={`p-2 rounded-xl border transition-all duration-200 cursor-pointer hover:scale-105 active:scale-90 ${
                   isFavorite
                     ? "bg-nova-flare/20 border-nova-flare/60 text-nova-flare shadow-[0_0_12px_rgba(255,46,99,0.35)]"
                     : "bg-void-deep/80 border-void-border text-gray-400 hover:text-white hover:border-gray-600"
@@ -291,7 +297,7 @@ export function ProjectCard({
                 onClick={handleToggleApplied}
                 disabled={isPendingApp}
                 aria-label={isApplied ? t("applied") : t("markAsApplied")}
-                className={`p-2 rounded-xl border transition-all duration-200 cursor-pointer ${
+                className={`p-2 rounded-xl border transition-all duration-200 cursor-pointer hover:scale-105 active:scale-90 ${
                   isApplied
                     ? "bg-hyper-violet/25 border-hyper-violet/60 text-hyper-violet shadow-[0_0_12px_rgba(99,102,241,0.35)]"
                     : "bg-void-deep/80 border-void-border text-gray-400 hover:text-white hover:border-gray-600"

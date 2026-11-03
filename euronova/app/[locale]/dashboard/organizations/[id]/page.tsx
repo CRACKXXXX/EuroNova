@@ -204,7 +204,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 px-4 sm:px-6 lg:px-8 overflow-visible">
+    <div className="max-w-6xl mx-auto space-y-8 px-4 sm:px-6 lg:px-8 overflow-visible animate-in fade-in slide-in-from-bottom-2 duration-300">
       {/* Migas de pan de navegación */}
       <div className="mb-2">
         <Breadcrumbs
@@ -238,7 +238,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                   </TermTooltip>
                 )}
                 {org.verification_status === "verified" && (
-                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-rup-emerald/20 border border-rup-emerald/40 text-rup-emerald flex items-center gap-1.5 uppercase tracking-wider">
+                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-rup-emerald/20 border border-rup-emerald/40 text-rup-emerald flex items-center gap-1.5 uppercase tracking-wider cosmic-float">
                     <ShieldCheck className="w-3.5 h-3.5" />
                     {tOrg("verified")}
                   </span>
@@ -261,7 +261,7 @@ export default async function OrganizationDetailPage(props: OrganizationDetailPa
                 />
               ) : (
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-void-surface to-plasma-cyan/20 border border-plasma-cyan/30 flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(0,229,255,0.2)]">
-                  <Building className="w-8 h-8 text-plasma-cyan" />
+                  <Building className="w-8 h-8 text-plasma-cyan cosmic-float" />
                 </div>
               )}
               <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight break-words">

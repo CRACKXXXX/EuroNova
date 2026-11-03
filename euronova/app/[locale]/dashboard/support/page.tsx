@@ -30,7 +30,7 @@ export default async function SupportPage(props: {
   ]);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
+    <div className="max-w-7xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div className="mb-2">
         <Breadcrumbs items={[{ label: t("title") }]} />
       </div>
