@@ -50,14 +50,8 @@ export async function GET(request: Request) {
     sanitizedNext = '/dashboard';
   }
 
-  // Support Vercel reverse proxy / load balancer headers
-  const forwardedHost = request.headers.get('x-forwarded-host');
-  const forwardedProto = request.headers.get('x-forwarded-proto') || 'https';
-  const isLocalEnv = process.env.NODE_ENV === 'development';
-  const origin = isLocalEnv
-    ? requestUrl.origin
-    : (forwardedHost ? `${forwardedProto}://${forwardedHost}` : requestUrl.origin);
-
+  // Consistent origin resolution: keep the client on the exact origin that initiated OAuth
+  const origin = requestUrl.origin;
   const destinationUrl = `${origin}/${currentLocale}${sanitizedNext}`;
 
   // Collector for cookies emitted by Supabase during exchangeCodeForSession
@@ -96,19 +90,33 @@ export async function GET(request: Request) {
 
     if (!error && data?.user) {
       try {
-        // Check if user has a profile, if not create a youth profile by default
+        const authRoleCookie = cookieStore.get('euronova_auth_role')?.value;
         const [{ data: youthData }, { data: orgData }] = await Promise.all([
           supabase.from('users_youth').select('id').eq('id', data.user.id).maybeSingle(),
           supabase.from('users_org').select('id').eq('id', data.user.id).maybeSingle(),
         ]);
 
         if (!youthData && !orgData) {
-          // Create default youth profile
-          await supabase.from('users_youth').upsert({
-            id: data.user.id,
-            full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || null,
-            avatar_url: data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture || null,
-          });
+          if (authRoleCookie === 'org') {
+            const randomPic = '9' + Math.floor(10000000 + Math.random() * 90000000).toString();
+            await supabase.from('users_org').upsert({
+              id: data.user.id,
+              org_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || 'European Organization',
+              pic_number: randomPic,
+              country_hq: 'ES',
+              is_verified: false,
+            });
+          } else {
+            // Create default youth profile with required constraint fields satisfied
+            await supabase.from('users_youth').upsert({
+              id: data.user.id,
+              full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || 'European Youth',
+              birth_date: '2000-01-01',
+              country_code: 'ES',
+              is_rup_region: false,
+              interests: [],
+            });
+          }
         }
       } catch (profileErr) {
         console.error("Profile check/creation error during OAuth callback:", profileErr);
@@ -140,10 +148,18 @@ export async function GET(request: Request) {
         });
       });
 
-      // Erase temporary auth next cookie
+      // Erase temporary auth next and role cookies
       if (authNextCookie) {
         response.cookies.set({
           name: 'euronova_auth_next',
+          value: '',
+          path: '/',
+          maxAge: 0,
+        });
+      }
+      if (cookieStore.get('euronova_auth_role')?.value) {
+        response.cookies.set({
+          name: 'euronova_auth_role',
           value: '',
           path: '/',
           maxAge: 0,

@@ -183,12 +183,18 @@ export async function signInWithGoogle(nextUrl = "/dashboard") {
     createClient(),
     headers(),
   ]);
-  const origin = headersList.get("origin") || "http://localhost:3000";
+  const host = headersList.get("host") || "localhost:3000";
+  const proto = headersList.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
+  const origin = headersList.get("origin") || `${proto}://${host}`;
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
       redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(nextUrl)}`,
+      queryParams: {
+        access_type: "offline",
+        prompt: "select_account",
+      },
     },
   });
 
