@@ -88,7 +88,7 @@ export function OrganizationCard({ org }: { org: OrganizationData }) {
               {org.org_name || t("unnamedOrg")}
             </h2>
             {org.verification_status === "verified" && (
-              <span className="px-2 py-0.5 rounded-md bg-rup-emerald/10 border border-rup-emerald/30 text-[10px] font-bold text-rup-emerald uppercase tracking-wider shrink-0 shadow-[0_0_10px_rgba(0,230,118,0.2)]">
+              <span className="px-2 py-0.5 rounded-md bg-rup-emerald/10 border border-rup-emerald/30 text-[10px] font-bold text-rup-emerald uppercase tracking-wider shrink-0">
                 {t("verified")}
               </span>
             )}

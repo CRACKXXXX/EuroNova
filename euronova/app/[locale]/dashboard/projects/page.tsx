@@ -220,10 +220,7 @@ export default async function ProjectsPage(props: {
   });
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-in fade-in slide-in-from-bottom-2 duration-300 relative">
-      {/* Faint Cosmic Nebula Background Accent */}
-      <div className="absolute -top-12 -left-12 w-96 h-96 bg-plasma-cyan/5 rounded-full blur-3xl pointer-events-none" />
-
+    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <ScrollRestorationHelper storageKey="euronova_projects_scroll_position" />
       {/* Breadcrumb Navigation */}
       <div className="flex items-center justify-between">
@@ -233,7 +230,7 @@ export default async function ProjectsPage(props: {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <h2 className="text-3xl font-black tracking-tight flex items-center gap-3 text-white">
-            <Rocket className="w-8 h-8 text-plasma-cyan cosmic-float" /> 
+            <Rocket className="w-8 h-8 text-plasma-cyan" /> 
             {t("transmissionsReceived")}
           </h2>
           <p className="text-gray-400 mt-2">{t("exploreMissions")}</p>
@@ -279,7 +276,7 @@ export default async function ProjectsPage(props: {
                 ) : (
                   <Link
                     href={buildPageUrl(page - 1)}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-void-border bg-void-surface text-gray-200 hover:text-white hover:border-plasma-cyan hover:shadow-[0_0_15px_rgba(0,229,255,0.25)] hover:-translate-y-0.5 active:scale-[0.98] text-sm font-medium transition-all"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-void-border bg-void-surface text-gray-200 hover:text-white hover:border-plasma-cyan hover:shadow-[0_0_12px_rgba(0,229,255,0.15)] text-sm font-medium transition-all"
                   >
                     <ChevronLeft className="w-4 h-4 text-plasma-cyan" />
                     <span>{t("previous")}</span>
@@ -305,7 +302,7 @@ export default async function ProjectsPage(props: {
                 ) : (
                   <Link
                     href={buildPageUrl(page + 1)}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-void-border bg-void-surface text-gray-200 hover:text-white hover:border-plasma-cyan hover:shadow-[0_0_15px_rgba(0,229,255,0.25)] hover:-translate-y-0.5 active:scale-[0.98] text-sm font-medium transition-all"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-void-border bg-void-surface text-gray-200 hover:text-white hover:border-plasma-cyan hover:shadow-[0_0_12px_rgba(0,229,255,0.15)] text-sm font-medium transition-all"
                   >
                     <span>{t("next")}</span>
                     <ChevronRight className="w-4 h-4 text-plasma-cyan" />

@@ -346,7 +346,7 @@ export default async function ProfilePage(props: {
   const unlockedCount = achievements.filter(a => a.isUnlocked).length;
 
   return (
-    <div className="max-w-3xl mx-auto mt-4 sm:mt-8 px-4 sm:px-6 lg:px-8 pb-16 animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="max-w-3xl mx-auto mt-4 sm:mt-8 px-4 sm:px-6 lg:px-8 pb-16">
       <div className="mb-6">
         <Breadcrumbs
           items={
@@ -369,7 +369,7 @@ export default async function ProfilePage(props: {
         )}
 
         <div className="flex items-center gap-4 mb-8 border-b border-void-border pb-6">
-          <div className={`w-14 h-14 rounded-full flex items-center justify-center shrink-0 cosmic-float ${
+          <div className={`w-14 h-14 rounded-full flex items-center justify-center shrink-0 ${
             role === "youth" ? "bg-plasma-cyan/20 text-plasma-cyan" : "bg-hyper-violet/20 text-hyper-violet"
           }`}>
             {role === "youth" ? <User className="w-7 h-7" /> : <Building className="w-7 h-7" />}

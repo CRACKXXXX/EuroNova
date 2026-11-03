@@ -61,7 +61,7 @@ export function ProjectsViewManager({ projects }: ProjectsViewManagerProps) {
             <button
               type="button"
               onClick={() => handleToggle("grid")}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer hover:scale-105 active:scale-95 ${viewMode === "grid"
+              className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "grid"
                   ? "bg-plasma-cyan text-void-deep shadow-[0_0_12px_rgba(0,229,255,0.4)]"
                   : "text-gray-400 hover:text-white"
                 }`}
@@ -75,7 +75,7 @@ export function ProjectsViewManager({ projects }: ProjectsViewManagerProps) {
             <button
               type="button"
               onClick={() => handleToggle("list")}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer hover:scale-105 active:scale-95 ${viewMode === "list"
+              className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === "list"
                   ? "bg-plasma-cyan text-void-deep shadow-[0_0_12px_rgba(0,229,255,0.4)]"
                   : "text-gray-400 hover:text-white"
                 }`}
@@ -90,11 +90,11 @@ export function ProjectsViewManager({ projects }: ProjectsViewManagerProps) {
       {/* Projects Container (Grid or Horizontal Row Layout) */}
       {projects && projects.length > 0 ? (
         <div
-          className={`animate-in fade-in slide-in-from-bottom-2 duration-300 ${
+          className={
             viewMode === "grid"
               ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-max"
               : "flex flex-col gap-4"
-          }`}
+          }
         >
           {projects.map((project) => (
             <div key={project.id} className={viewMode === "list" ? "w-full" : "h-full"}>
@@ -103,9 +103,9 @@ export function ProjectsViewManager({ projects }: ProjectsViewManagerProps) {
           ))}
         </div>
       ) : (
-        <div className="py-20 text-center space-y-4 animate-in fade-in duration-300">
-          <div className="w-16 h-16 rounded-2xl bg-void-surface border border-void-border/80 flex items-center justify-center mx-auto text-gray-500 shadow-inner cosmic-float">
-            <Search className="w-8 h-8 text-plasma-cyan/60" />
+        <div className="py-20 text-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-void-surface border border-void-border flex items-center justify-center mx-auto text-gray-500 shadow-inner">
+            <Search className="w-8 h-8" />
           </div>
           <h3 className="text-lg font-bold text-white">
             {t("waitingTransmissions")}

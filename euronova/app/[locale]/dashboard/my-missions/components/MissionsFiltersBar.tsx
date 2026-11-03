@@ -83,7 +83,7 @@ export function MissionsFiltersBar({
                     type="button"
                     onClick={() => onStartEditFolder(activeCustomFolder)}
                     title={t("renameCollection")}
-                    className="p-1 rounded-lg border border-void-border bg-void-deep text-gray-400 hover:text-white hover:border-plasma-cyan hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer"
+                    className="p-1 rounded-lg border border-void-border bg-void-deep text-gray-400 hover:text-white hover:border-plasma-cyan transition-colors"
                   >
                     <Pencil className="w-3 h-3" />
                   </button>
@@ -91,7 +91,7 @@ export function MissionsFiltersBar({
                     type="button"
                     onClick={() => onOpenDeleteFolder(activeCustomFolder)}
                     title={t("deleteCollection")}
-                    className="p-1 rounded-lg border border-void-border bg-void-deep text-gray-400 hover:text-nova-flare hover:border-nova-flare hover:-translate-y-0.5 active:scale-95 transition-all cursor-pointer"
+                    className="p-1 rounded-lg border border-void-border bg-void-deep text-gray-400 hover:text-nova-flare hover:border-nova-flare transition-colors"
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
@@ -116,7 +116,7 @@ export function MissionsFiltersBar({
             value={searchQuery}
             onChange={(e) => onSearchInput(e.target.value)}
             placeholder={t("searchPlaceholder")}
-            className="w-full bg-void-surface border border-void-border rounded-xl pl-9 pr-4 py-2 text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:border-plasma-cyan focus:shadow-[0_0_15px_rgba(0,229,255,0.2)] transition-all"
+            className="w-full bg-void-surface border border-void-border rounded-xl pl-9 pr-4 py-2 text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:border-plasma-cyan transition-all"
           />
         </div>
       </div>
@@ -135,7 +135,7 @@ export function MissionsFiltersBar({
                 key={type}
                 type="button"
                 onClick={() => onTypeSelect(type)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase transition-all duration-200 shrink-0 cursor-pointer hover:-translate-y-0.5 active:scale-95 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase transition-all duration-200 shrink-0 cursor-pointer ${
                   isSelected
                     ? "bg-plasma-cyan text-void-deep shadow-[0_0_12px_rgba(0,229,255,0.4)] scale-105"
                     : "text-gray-400 hover:text-white hover:bg-white/5"

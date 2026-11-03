@@ -383,7 +383,7 @@ export default async function AdminPage(props: {
             </Link>
           </div>
           <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight flex items-center gap-3">
-            <ShieldAlert className="w-9 h-9 text-nova-flare shrink-0 cosmic-float" />
+            <ShieldAlert className="w-9 h-9 text-nova-flare shrink-0" />
             <span>{t("title")}</span>
           </h1>
           <p className="text-gray-400 mt-2 text-sm md:text-base">

@@ -1,12 +1,11 @@
 import { Building2 } from "lucide-react";
-import { ProjectCardSkeleton, ShimmerBeam } from "@/components/Skeletons";
+import { ProjectCardSkeleton } from "@/components/Skeletons";
 
 export default function OrganizationDetailLoading() {
   return (
-    <div className="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 animate-in fade-in duration-300">
+    <div className="space-y-8 animate-pulse max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
       {/* 1. Organization Hero Banner Skeleton */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-void-surface border border-void-border/70 relative overflow-hidden shadow-lg">
-        <ShimmerBeam />
+      <div className="p-6 sm:p-8 rounded-3xl bg-void-surface border border-void-border/70 relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
             {/* Avatar / Logo */}
@@ -40,12 +39,7 @@ export default function OrganizationDetailLoading() {
           "w-24", // Surveys
           "w-24", // Webhooks
         ].map((w, idx) => (
-          <div
-            key={idx}
-            className={`h-10 rounded-xl bg-void-surface border border-void-border/60 relative overflow-hidden shrink-0 ${w}`}
-          >
-            <ShimmerBeam />
-          </div>
+          <div key={idx} className={`h-10 rounded-xl bg-void-border/40 shrink-0 ${w}`} />
         ))}
       </div>
 
@@ -53,8 +47,7 @@ export default function OrganizationDetailLoading() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: NGO Profile Card */}
         <div className="lg:col-span-1 space-y-6">
-          <div className="p-6 rounded-2xl bg-void-surface border border-void-border/80 space-y-4 relative overflow-hidden shadow-lg">
-            <ShimmerBeam />
+          <div className="p-6 rounded-2xl bg-void-surface border border-void-border/80 space-y-4">
             <div className="w-32 h-5 rounded bg-void-border/60" />
             <div className="space-y-2">
               <div className="w-full h-3 rounded bg-void-border/40" />

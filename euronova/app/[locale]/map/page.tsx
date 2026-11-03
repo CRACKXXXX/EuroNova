@@ -56,7 +56,7 @@ export default async function MapPage({
       <Header role={role} isAdmin={isAdmin} />
 
       {/* Fullscreen Map Workspace (pt-16 compensates for fixed Header) */}
-      <main className="flex-1 w-full h-[calc(100dvh-4rem)] pt-16 flex flex-col relative overflow-hidden animate-in fade-in duration-300">
+      <main className="flex-1 w-full h-[calc(100dvh-4rem)] pt-16 flex flex-col relative overflow-hidden">
         <ProjectsMap />
       </main>
     </div>

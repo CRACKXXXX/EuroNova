@@ -77,27 +77,6 @@ body {
   animation: cosmic-float 4s ease-in-out infinite;
 }
 
-/* Subtle border luminescence for featured cosmic containers */
-.cosmic-luminous-border {
-  animation: cosmic-glow-border 5s ease-in-out infinite;
-}
-
-/* Page and list entrance transition */
-.cosmic-page-entrance {
-  animation: cosmic-fade-in-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes cosmic-fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 /* Tactile micro-interactions for buttons */
 .cosmic-interactive-btn {
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);

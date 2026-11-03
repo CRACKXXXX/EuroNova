@@ -121,7 +121,7 @@ export function SupportForm() {
           <button
             type="button"
             onClick={() => setContactMethod("website")}
-            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer ${contactMethod === "website"
+            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${contactMethod === "website"
                 ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.2)]"
                 : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-700"
               }`}
@@ -133,7 +133,7 @@ export function SupportForm() {
           <button
             type="button"
             onClick={() => setContactMethod("email")}
-            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer ${contactMethod === "email"
+            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${contactMethod === "email"
                 ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.2)]"
                 : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-700"
               }`}
@@ -145,7 +145,7 @@ export function SupportForm() {
           <button
             type="button"
             onClick={() => setContactMethod("whatsapp")}
-            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer ${contactMethod === "whatsapp"
+            className={`p-3.5 rounded-xl border text-xs font-semibold flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${contactMethod === "whatsapp"
                 ? "bg-plasma-cyan/15 border-plasma-cyan text-plasma-cyan shadow-[0_0_15px_rgba(0,229,255,0.2)]"
                 : "bg-void-deep border-void-border text-gray-400 hover:text-white hover:border-gray-700"
               }`}
@@ -333,7 +333,7 @@ export function SupportForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full font-bold py-4 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-void-deep bg-plasma-cyan hover:bg-plasma-cyan/80 shadow-[0_0_15px_rgba(0,229,255,0.3)] hover:shadow-[0_0_25px_rgba(0,229,255,0.5)] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+          className="w-full font-bold py-4 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-void-deep bg-plasma-cyan hover:bg-plasma-cyan/80 shadow-[0_0_15px_rgba(0,229,255,0.3)] hover:shadow-[0_0_25px_rgba(0,229,255,0.5)] disabled:opacity-50 cursor-pointer"
         >
           <Send className="w-5 h-5" />
           {isPending ? t("submitting") : t("submit")}

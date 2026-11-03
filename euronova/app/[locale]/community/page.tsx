@@ -74,7 +74,7 @@ export default async function CommunityPage({ params, searchParams }: CommunityP
       <div className="absolute top-20 left-1/4 w-[450px] h-[450px] bg-hyper-violet/10 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute top-1/3 right-1/4 w-[450px] h-[450px] bg-plasma-cyan/10 rounded-full blur-[140px] pointer-events-none" />
 
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 pb-20 space-y-8 z-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 pb-20 space-y-8 z-10">
         {/* Breadcrumbs */}
         <Breadcrumbs
           items={[
@@ -85,7 +85,7 @@ export default async function CommunityPage({ params, searchParams }: CommunityP
 
         {/* Hero Header */}
         <div className="space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[10px] font-bold bg-plasma-cyan/10 text-plasma-cyan border border-plasma-cyan/30 uppercase tracking-wider cosmic-float">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[10px] font-bold bg-plasma-cyan/10 text-plasma-cyan border border-plasma-cyan/30 uppercase tracking-wider">
             <Users className="w-3.5 h-3.5" />
             <span>{t("badge")}</span>
           </div>
