@@ -3,9 +3,34 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
+import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { AuthCredentialsSchema, SignupCredentialsSchema } from "@/lib/schemas";
 import { checkRateLimit, RATE_LIMITS, getClientIp } from "@/lib/rateLimiter";
 import { stripDangerousHtml } from "@/lib/securitySanitizer";
+
+/**
+ * Isolated server-side Supabase admin client using SUPABASE_SERVICE_ROLE_KEY.
+ * Strictly used to safely bypass Row Level Security (RLS) during initial profile bootstrap.
+ * Never exposed or transmitted to the client-side.
+ */
+function getSignupAdminClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const serviceRoleKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_KEY ||
+    process.env.SUPABASE_SECRET_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    return null;
+  }
+
+  return createSupabaseAdminClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+}
 
 export async function login(prevState: unknown, formData: FormData) {
   const email = (formData.get("email") as string)?.trim();
@@ -124,7 +149,7 @@ export async function signup(prevState: unknown, formData: FormData) {
   try {
     const supabase = await createClient();
 
-    // Step 1: Base Authentication and Consent Audit Metadata
+    // Step 1: Base Authentication and Consent Audit Metadata via Supabase Auth
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -140,7 +165,13 @@ export async function signup(prevState: unknown, formData: FormData) {
     });
 
     if (error) {
-      console.error("[Auth Signup Error]:", error);
+      console.error("[Supabase Auth Signup Error]:", {
+        message: error.message,
+        status: error.status,
+        code: (error as { code?: string }).code,
+        name: error.name,
+      });
+
       if (
         error.status === 422 ||
         error.message?.toLowerCase().includes("already registered") ||
@@ -151,25 +182,60 @@ export async function signup(prevState: unknown, formData: FormData) {
       return { error: "Error creating account" };
     }
 
-    // Step 2: Relational profile creation with defensive attributes
+    // Step 2: Relational profile creation using Service Role Admin Client
+    // Bypasses Row Level Security (RLS) reliably since the newly signed up user session is not yet active in this SSR request
     if (data.user) {
+      const adminClient = getSignupAdminClient();
+      const dbClient = adminClient || supabase;
+
+      if (!adminClient) {
+        console.warn(
+          "[Supabase Profile Creation Warning]: SUPABASE_SERVICE_ROLE_KEY is missing in server environment. Falling back to session client; RLS policies may block profile creation."
+        );
+      }
+
       if (role === "youth") {
-        const { error: profileError } = await supabase.from("users_youth").upsert({
+        const { error: profileError } = await dbClient.from("users_youth").upsert({
           id: data.user.id,
           full_name: fullName || null,
           birth_date: birthDate,
+          country_code: "ES",
+          is_rup_region: false,
+          interests: [],
         });
+
         if (profileError) {
-          console.error("[Profile Creation Error - Youth]:", profileError);
+          console.error("[Supabase Profile Creation RLS/DB Error - YOUTH]:", {
+            userId: data.user.id,
+            email,
+            role,
+            code: profileError.code,
+            message: profileError.message,
+            details: profileError.details,
+            hint: profileError.hint,
+          });
           return { error: "Error creating account" };
         }
       } else if (role === "org") {
-        const { error: profileError } = await supabase.from("users_org").upsert({
+        const randomPic = "9" + Math.floor(10000000 + Math.random() * 90000000).toString();
+        const { error: profileError } = await dbClient.from("users_org").upsert({
           id: data.user.id,
-          org_name: fullName || null,
+          org_name: fullName || "European Organization",
+          pic_number: randomPic,
+          country_hq: "ES",
+          is_verified: false,
         });
+
         if (profileError) {
-          console.error("[Profile Creation Error - Org]:", profileError);
+          console.error("[Supabase Profile Creation RLS/DB Error - ORG]:", {
+            userId: data.user.id,
+            email,
+            role,
+            code: profileError.code,
+            message: profileError.message,
+            details: profileError.details,
+            hint: profileError.hint,
+          });
           return { error: "Error creating account" };
         }
       }
@@ -177,7 +243,10 @@ export async function signup(prevState: unknown, formData: FormData) {
 
     return { success: true };
   } catch (err: unknown) {
-    console.error("[Unexpected Registration Exception]:", err);
+    console.error("[Unexpected Registration Exception]:", {
+      message: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+    });
     return { error: "Error creating account" };
   }
 }
