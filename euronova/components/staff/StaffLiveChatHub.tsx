@@ -22,6 +22,7 @@ import {
   Paperclip,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/utils/supabase/client";
 import { AvatarFallback } from "@/components/AvatarFallback";
 import { ROLE_BADGE_CONFIG, type UserRole } from "@/lib/rolesTypes";
@@ -55,6 +56,8 @@ export function StaffLiveChatHub({
   embedded = false,
   onClose,
 }: StaffLiveChatHubProps) {
+  const t = useTranslations("StaffChat");
+
   // Compute visible channels strictly based on read access clearance
   const visibleChannels = useMemo(() => {
     return STAFF_CHANNELS.filter((ch) => canReadChannel(ch.id, currentUserRole));
@@ -113,13 +116,13 @@ export function StaffLiveChatHub({
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("File size cannot exceed 10MB.");
+      toast.error(t("fileSizeExceeded"));
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
     const allowed = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
     if (!allowed.includes(file.type)) {
-      toast.error("Only PNG, JPG, WEBP, and PDF files are allowed.");
+      toast.error(t("fileTypeNotAllowed"));
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
@@ -177,9 +180,9 @@ export function StaffLiveChatHub({
         setHighlightedMessageId((curr) => (curr === messageId ? null : curr));
       }, 2500);
     } else {
-      toast.info("Target message is outside current feed view.");
+      toast.info(t("targetOutsideView"));
     }
-  }, []);
+  }, [t]);
 
   // Channel switch and initial fetch
   useEffect(() => {
@@ -218,13 +221,12 @@ export function StaffLiveChatHub({
           setMessages(res.data);
         }
       } catch {
-        // Non-blocking refresh
+        // Silent polling catch
       }
     }
 
-    // 1. Supabase Realtime channel subscription
-    const channelSub = supabase
-      .channel(`staff_chat_${selectedChannel}`)
+    const channel = supabase
+      .channel(`realtime-staff-chat-${selectedChannel}`)
       .on(
         "postgres_changes",
         {
@@ -239,64 +241,64 @@ export function StaffLiveChatHub({
       )
       .subscribe();
 
-    // 2. Resilient 8-second interval fallback
     const intervalId = setInterval(() => {
       void refreshMessages();
     }, 8000);
 
     return () => {
+      void supabase.removeChannel(channel);
       clearInterval(intervalId);
-      void supabase.removeChannel(channelSub);
     };
   }, [selectedChannel]);
 
-  // Scoped auto-scroll on message updates (avoids scrolling window)
+  // Auto-scroll on initial load or new message
   useEffect(() => {
-    if (!isLoading && !editingMessage) {
+    if (!isLoading && messages.length > 0) {
       scrollToBottom(false);
     }
-  }, [optimisticMessages.length, isLoading, scrollToBottom, editingMessage]);
+  }, [isLoading, selectedChannel, scrollToBottom, messages.length]);
 
-  const handleSelectChannel = (channel: StaffChatChannel) => {
-    if (channel === selectedChannel) return;
+  const canBroadcastInChannel = useMemo(() => {
+    return canWriteChannel(selectedChannel, currentUserRole);
+  }, [selectedChannel, currentUserRole]);
+
+  const handleSelectChannel = (chId: StaffChatChannel) => {
+    if (chId === selectedChannel) return;
+    setUserSelectedChannel(chId);
     setIsLoading(true);
-    setReplyingTo(null);
-    setEditingMessage(null);
     setInputContent("");
     setAttachedFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
-    setUserSelectedChannel(channel);
+    setReplyingTo(null);
+    setEditingMessage(null);
+    setActivePinIndex(0);
+    setIsPinDropdownOpen(false);
   };
 
-  const canBroadcastInChannel = canWriteChannel(selectedChannel, currentUserRole);
+  // Reply handlers
+  const handleStartReply = (msg: StaffChatMessage) => {
+    setEditingMessage(null);
+    setReplyingTo(msg);
+    textareaRef.current?.focus();
+  };
 
-  // Start Editing a message (strictly own messages)
-  const handleStartEdit = (msg: StaffChatMessage) => {
-    if (msg.deletedAt) return;
-    setEditingMessage(msg);
+  const handleCancelReply = () => {
     setReplyingTo(null);
+  };
+
+  // Edit handlers
+  const handleStartEdit = (msg: StaffChatMessage) => {
+    setReplyingTo(null);
+    setEditingMessage(msg);
     setInputContent(msg.content);
-    setTimeout(() => {
-      textareaRef.current?.focus();
-      textareaRef.current?.select();
-    }, 50);
+    textareaRef.current?.focus();
   };
 
   const handleCancelEdit = () => {
     setEditingMessage(null);
     setInputContent("");
-  };
-
-  // Start Replying to a message
-  const handleStartReply = (msg: StaffChatMessage) => {
-    setReplyingTo(msg);
-    setEditingMessage(null);
-    setTimeout(() => {
-      textareaRef.current?.focus();
-    }, 50);
-  };
-
-  const handleCancelReply = () => {
+    setAttachedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     setReplyingTo(null);
   };
 
@@ -310,7 +312,7 @@ export function StaffLiveChatHub({
     if (!trimmed || isSubmitting) return;
 
     if (!canBroadcastInChannel) {
-      toast.error("You do not have broadcasting clearance in this channel.");
+      toast.error(t("noBroadcastClearance"));
       return;
     }
 
@@ -333,14 +335,14 @@ export function StaffLiveChatHub({
                 m.id === targetId ? { ...m, content: trimmed, isEdited: true, updatedAt: new Date().toISOString() } : m
               )
             );
-            toast.success("Message updated successfully.");
+            toast.success(t("msgUpdatedSuccess"));
           } else {
-            toast.error(res.error || "Failed to update message.");
+            toast.error(res.error || t("msgUpdateFailed"));
             setInputContent(trimmed);
           }
         } catch (err) {
           console.error("Edit message error:", err);
-          toast.error("Failed to update message.");
+          toast.error(t("msgUpdateFailed"));
           setInputContent(trimmed);
         } finally {
           setIsSubmitting(false);
@@ -365,7 +367,7 @@ export function StaffLiveChatHub({
         ? {
             id: replyingTo.id,
             authorName: replyingTo.authorName,
-            content: replyingTo.deletedAt ? "[This message was deleted]" : replyingTo.content,
+            content: replyingTo.deletedAt ? t("deletedMessage") : replyingTo.content,
           }
         : null,
       deletedAt: null,
@@ -393,12 +395,12 @@ export function StaffLiveChatHub({
           setMessages((prev) => [...prev, res.data as StaffChatMessage]);
           scrollToBottom(true);
         } else {
-          toast.error(res.error || "Failed to send message.");
+          toast.error(res.error || t("msgSendFailed"));
           setInputContent(trimmed);
         }
       } catch (err) {
         console.error("Optimistic send error:", err);
-        toast.error("Failed to transmit message.");
+        toast.error(t("msgSendFailed"));
         setInputContent(trimmed);
       } finally {
         setIsSubmitting(false);
@@ -425,7 +427,7 @@ export function StaffLiveChatHub({
   // Pin Message
   const handleTogglePin = (messageId: string) => {
     if (currentUserRole === "support") {
-      toast.error("Support specialists cannot pin announcements.");
+      toast.error(t("supportCannotPin"));
       return;
     }
 
@@ -437,9 +439,9 @@ export function StaffLiveChatHub({
             m.id === messageId ? { ...m, isPinned: Boolean(res.data?.isPinned) } : m
           )
         );
-        toast.success(res.data?.isPinned ? "Message pinned to channel." : "Message unpinned.");
+        toast.success(res.data?.isPinned ? t("msgPinnedSuccess") : t("msgUnpinnedSuccess"));
       } else {
-        toast.error(res.error || "Failed to update pin.");
+        toast.error(res.error || t("pinStatusFailed"));
       }
     });
   };
@@ -454,9 +456,9 @@ export function StaffLiveChatHub({
             m.id === messageId ? { ...m, deletedAt: new Date().toISOString() } : m
           )
         );
-        toast.success("Message removed from staff logs.");
+        toast.success(t("msgDeletedSuccess"));
       } else {
-        toast.error(res.error || "Failed to delete message.");
+        toast.error(res.error || t("msgDeleteFailed"));
       }
     });
   };
@@ -465,8 +467,10 @@ export function StaffLiveChatHub({
     return messages.filter((m) => m.isPinned && !m.deletedAt);
   }, [messages]);
 
-  const safePinIndex = pinnedMessages.length > 0 ? Math.min(activePinIndex, pinnedMessages.length - 1) : 0;
-  const currentPin = pinnedMessages[safePinIndex] || pinnedMessages[0];
+  const safePinIndex =
+    activePinIndex >= pinnedMessages.length ? Math.max(0, pinnedMessages.length - 1) : activePinIndex;
+  const currentPin = pinnedMessages[safePinIndex] || null;
+
   const activeChannelMeta = STAFF_CHANNELS.find((c) => c.id === selectedChannel);
 
   // Helper for rendering channel icon
@@ -500,16 +504,16 @@ export function StaffLiveChatHub({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-black text-white tracking-tight">
-                STAFF LIVE COMMS <span className="text-plasma-cyan">HUB</span>
+              <h2 className="text-base font-black text-white tracking-tight uppercase">
+                {t("terminalBadge")}
               </h2>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rup-emerald/15 text-rup-emerald border border-rup-emerald/30 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-rup-emerald animate-pulse" />
-                Live Grid
+                {t("liveGrid")}
               </span>
             </div>
             <p className="text-xs text-gray-400">
-              Encrypted channel strictly restricted to verified EuroNova staff.
+              {t("encryptedSub")}
             </p>
           </div>
         </div>
@@ -519,7 +523,7 @@ export function StaffLiveChatHub({
             onClick={onClose}
             className="px-3 py-1.5 rounded-lg text-xs font-bold text-gray-400 hover:text-white bg-void-deep border border-void-border hover:border-gray-600 transition-all cursor-pointer"
           >
-            Close
+            {t("cancel")}
           </button>
         )}
       </div>
@@ -530,7 +534,7 @@ export function StaffLiveChatHub({
         <div className="w-60 sm:w-68 bg-void-deep/70 border-r border-void-border flex flex-col p-3 space-y-1 shrink-0 overflow-y-auto">
           <div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
             <Hash className="w-3.5 h-3.5 text-plasma-cyan" />
-            <span>Staff Channels</span>
+            <span>{t("staffChannels")}</span>
           </div>
 
           {visibleChannels.map((ch) => {
@@ -564,7 +568,7 @@ export function StaffLiveChatHub({
 
           <div className="mt-auto p-3 rounded-xl bg-void-surface/80 border border-void-border text-[11px] space-y-1">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-              Active Clearance
+              {t("activeClearance")}
             </span>
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-plasma-cyan animate-pulse" />
@@ -590,11 +594,11 @@ export function StaffLiveChatHub({
             <div className="flex items-center gap-2">
               {!canBroadcastInChannel && (
                 <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">
-                  Read Only
+                  {t("readOnlyNotice")}
                 </span>
               )}
               <span className="text-[10px] font-mono text-gray-500">
-                {messages.length} transmissions
+                {messages.length} {t("transmissions")}
               </span>
             </div>
           </div>
@@ -606,13 +610,13 @@ export function StaffLiveChatHub({
                 <div
                   onClick={() => handleScrollToMessage(currentPin.id)}
                   className="flex items-start gap-3 flex-1 overflow-hidden cursor-pointer group/pin"
-                  title="Click to jump to this pinned message"
+                  title={t("jumpToPinTitle")}
                 >
                   <Pin className="w-4 h-4 text-amber-400 shrink-0 mt-0.5 fill-amber-400/20 group-hover/pin:scale-110 transition-transform" />
                   <div className="flex-1 overflow-hidden">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-amber-300 uppercase tracking-wider text-[10px] block">
-                        Pinned Announcement
+                        {t("pinnedAnnouncement")}
                       </span>
                       {pinnedMessages.length > 1 && (
                         <span className="text-[10px] font-mono text-amber-400/80">
@@ -620,7 +624,7 @@ export function StaffLiveChatHub({
                         </span>
                       )}
                       <span className="text-[10px] font-mono text-amber-400/80 group-hover/pin:text-amber-300 flex items-center gap-1 ml-auto sm:ml-2">
-                        <span>Jump to pin</span>
+                        <span>{t("jumpToPin")}</span>
                         <span>↓</span>
                       </span>
                     </div>
@@ -639,7 +643,7 @@ export function StaffLiveChatHub({
                         e.stopPropagation();
                         setActivePinIndex((prev) => (prev > 0 ? prev - 1 : pinnedMessages.length - 1));
                       }}
-                      title="Previous pin"
+                      title={t("prevPin")}
                       className="p-1 rounded-md bg-void-deep/80 hover:bg-void-deep text-amber-400 hover:text-amber-300 border border-amber-500/30 transition-colors cursor-pointer"
                     >
                       <ChevronLeft className="w-3.5 h-3.5" />
@@ -650,7 +654,7 @@ export function StaffLiveChatHub({
                         e.stopPropagation();
                         setActivePinIndex((prev) => (prev < pinnedMessages.length - 1 ? prev + 1 : 0));
                       }}
-                      title="Next pin"
+                      title={t("nextPin")}
                       className="p-1 rounded-md bg-void-deep/80 hover:bg-void-deep text-amber-400 hover:text-amber-300 border border-amber-500/30 transition-colors cursor-pointer"
                     >
                       <ChevronRight className="w-3.5 h-3.5" />
@@ -661,10 +665,10 @@ export function StaffLiveChatHub({
                         e.stopPropagation();
                         setIsPinDropdownOpen((prev) => !prev);
                       }}
-                      title="Show all pinned messages"
+                      title={t("showAllPins")}
                       className="px-2 py-1 rounded-md bg-void-deep/80 hover:bg-void-deep text-amber-400 hover:text-amber-300 border border-amber-500/30 text-[10px] font-mono font-bold transition-colors cursor-pointer"
                     >
-                      All Pins ({pinnedMessages.length})
+                      {t("pinnedAnnouncement")} ({pinnedMessages.length})
                     </button>
                   </div>
                 )}
@@ -674,7 +678,7 @@ export function StaffLiveChatHub({
               {isPinDropdownOpen && pinnedMessages.length > 1 && (
                 <div className="mt-1 p-2 rounded-xl bg-void-surface border border-amber-500/30 shadow-2xl space-y-1.5 max-h-48 overflow-y-auto animate-in fade-in duration-150">
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2 block">
-                    All Pinned Messages ({pinnedMessages.length})
+                    {t("pinnedAnnouncement")} ({pinnedMessages.length})
                   </span>
                   {pinnedMessages.map((pin, idx) => (
                     <div
@@ -704,7 +708,7 @@ export function StaffLiveChatHub({
                         </p>
                       </div>
                       <span className="text-[10px] font-mono text-amber-400 hover:underline shrink-0 mt-0.5">
-                        Jump →
+                        {t("jumpToPin")} →
                       </span>
                     </div>
                   ))}
@@ -718,7 +722,7 @@ export function StaffLiveChatHub({
             {isLoading ? (
               <div className="h-full flex items-center justify-center text-xs text-gray-400 gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-plasma-cyan" />
-                <span>Connecting to staff communication stream...</span>
+                <span>{t("connecting")}</span>
               </div>
             ) : optimisticMessages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-3">
@@ -726,10 +730,10 @@ export function StaffLiveChatHub({
                   <Hash className="w-6 h-6 text-plasma-cyan" />
                 </div>
                 <h4 className="text-sm font-bold text-white">
-                  Welcome to #{selectedChannel}
+                  {t("welcomeChannel", { channel: selectedChannel })}
                 </h4>
                 <p className="text-xs text-gray-400 max-w-sm">
-                  This channel is currently quiet. Be the first staff specialist to initiate a transmission.
+                  {t("noTransmissions")}
                 </p>
               </div>
             ) : (
@@ -778,7 +782,7 @@ export function StaffLiveChatHub({
                       <div
                         onClick={() => handleScrollToMessage(msg.replyTo!.id)}
                         className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2 hover:text-plasma-cyan cursor-pointer transition-colors group/reply select-none pl-2 border-l-2 border-void-border hover:border-plasma-cyan"
-                        title="Click to jump to message"
+                        title={t("clickToJump")}
                       >
                         <CornerDownRight className="w-3 h-3 text-gray-500 group-hover/reply:text-plasma-cyan shrink-0" />
                         <span className="font-semibold text-gray-300 group-hover/reply:text-white">
@@ -814,7 +818,7 @@ export function StaffLiveChatHub({
                         {isOptimistic ? (
                           <span className="text-[10px] text-plasma-cyan font-mono flex items-center gap-1">
                             <Loader2 className="w-2.5 h-2.5 animate-spin" />
-                            TRANSMITTING...
+                            {t("transmissions").toUpperCase()}...
                           </span>
                         ) : (
                           <span className="text-[10px] text-gray-500 font-mono" suppressHydrationWarning>
@@ -828,7 +832,7 @@ export function StaffLiveChatHub({
                         {msg.isPinned && !isDeleted && (
                           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
                             <Pin className="w-2.5 h-2.5 fill-amber-300" />
-                            PINNED
+                            {t("pinnedAnnouncement")}
                           </span>
                         )}
                       </div>
@@ -840,7 +844,7 @@ export function StaffLiveChatHub({
                             <button
                               type="button"
                               onClick={() => handleStartReply(msg)}
-                              title="Reply"
+                              title={t("replyMessage")}
                               className="p-1.5 rounded-lg text-gray-400 hover:text-plasma-cyan hover:bg-void-surface transition-all cursor-pointer"
                             >
                               <CornerDownRight className="w-3.5 h-3.5" />
@@ -851,7 +855,7 @@ export function StaffLiveChatHub({
                             <button
                               type="button"
                               onClick={() => handleStartEdit(msg)}
-                              title="Edit message"
+                              title={t("editMessage")}
                               className="p-1.5 rounded-lg text-gray-400 hover:text-amber-300 hover:bg-void-surface transition-all cursor-pointer"
                             >
                               <Pencil className="w-3.5 h-3.5" />
@@ -863,7 +867,7 @@ export function StaffLiveChatHub({
                               type="button"
                               onClick={() => handleTogglePin(msg.id)}
                               disabled={isPending}
-                              title={msg.isPinned ? "Unpin message" : "Pin message"}
+                              title={msg.isPinned ? t("unpinMessage") : t("pinMessage")}
                               className={`p-1.5 rounded-lg transition-all cursor-pointer ${
                                 msg.isPinned
                                   ? "text-amber-300 bg-amber-500/20 hover:bg-amber-500/30"
@@ -879,7 +883,7 @@ export function StaffLiveChatHub({
                               type="button"
                               onClick={() => handleDeleteMessage(msg.id)}
                               disabled={isPending}
-                              title="Delete message"
+                              title={t("deleteMessage")}
                               className="p-1.5 rounded-lg text-gray-400 hover:text-nova-flare hover:bg-void-surface transition-all cursor-pointer"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -893,7 +897,7 @@ export function StaffLiveChatHub({
                     <div className="mt-2 text-xs leading-relaxed">
                       {isDeleted ? (
                         <span className="italic text-gray-500 font-mono">
-                          [This message was deleted by author or staff moderation]
+                          {t("deletedMessage")}
                         </span>
                       ) : (
                         <div className="space-y-1">
@@ -902,7 +906,7 @@ export function StaffLiveChatHub({
                           </p>
                           {msg.isEdited && (
                             <span className="text-[10px] text-gray-500 font-mono italic">
-                              (edited)
+                              {t("editedTag")}
                             </span>
                           )}
                         </div>
@@ -921,11 +925,11 @@ export function StaffLiveChatHub({
                 <div className="flex items-center gap-2.5 text-gray-400">
                   <Lock className="w-4 h-4 text-plasma-cyan shrink-0" />
                   <span>
-                    <strong className="text-white">Read-Only Channel:</strong> You have viewing clearance. Broadcasting is restricted by operational role hierarchy.
+                    {t("readOnlyNotice")}
                   </span>
                 </div>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-plasma-cyan/10 text-plasma-cyan border border-plasma-cyan/30 shrink-0">
-                  MONITORED
+                  RO
                 </span>
               </div>
             ) : (
@@ -935,17 +939,17 @@ export function StaffLiveChatHub({
                   <div className="flex items-center justify-between px-3.5 py-1.5 bg-void-deep/90 border border-plasma-cyan/40 rounded-xl text-xs text-gray-300 shadow-sm animate-in fade-in duration-150">
                     <div className="flex items-center gap-2 truncate">
                       <CornerDownRight className="w-3.5 h-3.5 text-plasma-cyan shrink-0" />
-                      <span className="text-[11px] text-gray-400">Replying to</span>
+                      <span className="text-[11px] text-gray-400">{t("replyingTo")}</span>
                       <span className="text-[11px] font-bold text-plasma-cyan">@{replyingTo.authorName}</span>
                       <span className="text-[11px] text-gray-400 truncate max-w-xs sm:max-w-md">
-                        &quot;{replyingTo.deletedAt ? "[This message was deleted]" : replyingTo.content}&quot;
+                        &quot;{replyingTo.deletedAt ? t("deletedMessage") : replyingTo.content}&quot;
                       </span>
                     </div>
                     <button
                       type="button"
                       onClick={handleCancelReply}
                       className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-void-surface transition-colors cursor-pointer"
-                      title="Cancel reply (Esc)"
+                      title={t("cancelReply")}
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -957,18 +961,18 @@ export function StaffLiveChatHub({
                   <div className="flex items-center justify-between px-3.5 py-1.5 bg-void-deep/90 border border-amber-500/40 rounded-xl text-xs text-gray-300 shadow-sm animate-in fade-in duration-150">
                     <div className="flex items-center gap-2 truncate">
                       <Pencil className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                      <span className="text-[11px] text-amber-300 font-bold">Editing message</span>
+                      <span className="text-[11px] text-amber-300 font-bold">{t("editingMessage")}</span>
                       <span className="text-[11px] text-gray-400 truncate max-w-xs sm:max-w-md">
                         &quot;{editingMessage.content}&quot;
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-gray-500 font-mono hidden sm:inline">Esc to cancel</span>
+                      <span className="text-[10px] text-gray-500 font-mono hidden sm:inline">{t("escapeToCancel")}</span>
                       <button
                         type="button"
                         onClick={handleCancelEdit}
                         className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-void-surface transition-colors cursor-pointer"
-                        title="Cancel edit (Esc)"
+                        title={t("cancelEdit")}
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -991,8 +995,8 @@ export function StaffLiveChatHub({
                         if (fileInputRef.current) fileInputRef.current.value = "";
                       }}
                       className="p-0.5 rounded text-gray-400 hover:text-nova-flare transition-colors cursor-pointer"
-                      title="Remove attachment"
-                      aria-label="Remove attachment"
+                      title={t("removeAttachment")}
+                      aria-label={t("removeAttachment")}
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -1009,8 +1013,8 @@ export function StaffLiveChatHub({
                     rows={2}
                     placeholder={
                       editingMessage
-                        ? "Edit transmission (Enter to save, Esc to cancel)..."
-                        : `Transmit message to #${selectedChannel} (Enter to send, Shift+Enter for new line)...`
+                        ? t("editMessage")
+                        : t("placeholder", { channel: selectedChannel })
                     }
                     className={`w-full bg-void-deep/90 border rounded-xl p-3 text-xs text-white placeholder-gray-500 resize-none outline-none transition-all pr-20 ${
                       editingMessage
@@ -1030,8 +1034,8 @@ export function StaffLiveChatHub({
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isSubmitting}
-                      title="Attach Image or Document (PNG, JPG, WEBP, PDF)"
-                      aria-label="Attach file"
+                      title={t("attachFile")}
+                      aria-label={t("attachFile")}
                       className="p-1.5 rounded-lg text-gray-400 hover:text-plasma-cyan hover:bg-plasma-cyan/10 transition-colors cursor-pointer"
                     >
                       <Paperclip className="w-4 h-4 text-plasma-cyan" />
@@ -1039,7 +1043,7 @@ export function StaffLiveChatHub({
                     <button
                       type="submit"
                       disabled={isSubmitting || (!inputContent.trim() && !attachedFile)}
-                      title={editingMessage ? "Save changes" : "Send message"}
+                      title={editingMessage ? t("saveChanges") : t("pressEnter")}
                       className={`p-2 rounded-lg font-bold transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer ${
                         editingMessage
                           ? "bg-amber-500 text-void-deep hover:bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.3)]"
@@ -1057,8 +1061,8 @@ export function StaffLiveChatHub({
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-[10px] text-gray-500 px-1">
-                  <span>Markdown formatting supported</span>
-                  <span>{editingMessage ? "Press Enter to save changes" : "Press Enter to send"}</span>
+                  <span>{t("markdownSupport")}</span>
+                  <span>{editingMessage ? t("saveChanges") : t("pressEnter")}</span>
                 </div>
               </form>
             )}

@@ -823,7 +823,14 @@
     "view": "Voir",
     "org": "Org",
     "tabSupportTickets": "Tickets de support",
-    "reporterLabel": "Signalé par :"
+    "reporterLabel": "Signalé par :",
+    "escalateTicketTitle": "Escalader le ticket à l'administrateur",
+    "escalateTicketReasonRequired": "Veuillez préciser la raison de l'escalade vers l'administrateur.",
+    "escalatedTicketSuccess": "Ticket de support escaladé à l'administration exécutive.",
+    "ticketSubject": "Objet du ticket",
+    "targetAuthority": "Autorité de destination",
+    "executiveAdminAuthority": "Administration exécutive (#admin-command)",
+    "escalateTicketPlaceholder": "Précisez pourquoi cette demande nécessite une intervention exécutive ou des modifications de la base de données..."
   },
   "AdminPanel": {
     "title": "Mode Dieu : Centre de commandement",
@@ -1716,7 +1723,28 @@
     "openTransmission": "Ouvrir la transmission",
     "manageFrequencies": "Gérer les fréquences de notification",
     "calibratingFrequencies": "Calibrage des fréquences de transmission...",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "notificationDetailTitle": "Détails de la Transmission",
+    "senderLabel": "Origine",
+    "senderEuroNova": "Commandement Orbital EuroNova",
+    "timestampLabel": "Envoyé",
+    "categoryLabel": "Catégorie",
+    "statusLabel": "Statut",
+    "statusRead": "Lue",
+    "statusUnread": "Nouveau",
+    "openActionUrl": "Accéder à la mission",
+    "deleteNotification": "Supprimer la notification",
+    "closeDetail": "Fermer",
+    "languagePrefTitle": "Langue des notifications et envois",
+    "languagePrefDesc": "Choisissez la langue dans laquelle vous recevez les e-mails automatisés, réponses du support et notifications Discord.",
+    "languageSelectorLabel": "Langue préférée de réception",
+    "langEn": "Anglais (English)",
+    "langEs": "Espagnol (Español)",
+    "langDe": "Allemand (Deutsch)",
+    "langFr": "Français",
+    "langIt": "Italien (Italiano)",
+    "langPt": "Portugais (Português)",
+    "langRu": "Russe (Русский)"
   },
   "Errors": {
     "badge": "ANOMALIE DE MISSION DÉTECTÉE",
@@ -2280,7 +2308,27 @@
     "clickToJump": "Click to jump to message",
     "attachFile": "Joindre une image ou un document (PNG, JPG, WEBP, PDF)",
     "removeAttachment": "Supprimer la pièce jointe",
-    "fileSizeExceeded": "La taille du fichier ne peut dépasser 10 Mo."
+    "fileSizeExceeded": "La taille du fichier ne peut dépasser 10 Mo.",
+    "fileTypeNotAllowed": "Seuls les fichiers PNG, JPG, WEBP et PDF sont autorisés.",
+    "targetOutsideView": "Le message cible est en dehors de la vue actuelle.",
+    "noBroadcastClearance": "Vous n'avez pas l'autorisation d'émettre dans ce canal.",
+    "msgUpdatedSuccess": "Message mis à jour avec succès.",
+    "msgUpdateFailed": "Échec de la mise à jour du message.",
+    "msgSendFailed": "Échec de la transmission du message.",
+    "supportCannotPin": "Les spécialistes du support ne peuvent pas épingler d'annonces.",
+    "msgPinnedSuccess": "Message épinglé au canal.",
+    "msgUnpinnedSuccess": "Message désépinglé.",
+    "pinStatusFailed": "Échec de la mise à jour de l'épingle.",
+    "msgDeletedSuccess": "Message supprimé des journaux de l'équipe.",
+    "msgDeleteFailed": "Échec de la suppression du message.",
+    "staffChannels": "Canaux de l'équipe",
+    "jumpToPin": "Aller au message épinglé",
+    "jumpToPinTitle": "Cliquer pour accéder à ce message épinglé",
+    "prevPin": "Épingle précédente",
+    "nextPin": "Épingle suivante",
+    "showAllPins": "Afficher tous les messages épinglés",
+    "connecting": "Connexion au flux de communication de l'équipe...",
+    "readOnlyNotice": "Canal en lecture seule : vous avez l'autorisation de lecture. L'émission est restreinte par la hiérarchie des rôles."
   },
   "CookieBanner": {
     "title": "Préférences de Confidentialité et Cookies",
@@ -2451,5 +2499,14 @@
     "selectTags": "Sélectionner des tags",
     "SearchTagsPlaceholder": "Rechercher des tags...",
     "pageOf": "Page {current} sur {total}"
+  },
+  "SupportPanel": {
+    "escalateSupportTicket": "Escalader le ticket de support",
+    "escalateTo": "Escalader vers",
+    "toModerator": "Vers modérateur",
+    "toAdmin": "Vers administrateur",
+    "escalateReasonPlaceholder": "Détaillez la question complexe, le litige grave ou l'intervention exécutive requise...",
+    "escalateReasonRequired": "Veuillez préciser le motif de l'escalade.",
+    "escalateBtn": "Escalader"
   }
 }

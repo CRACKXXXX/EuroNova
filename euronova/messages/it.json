@@ -823,7 +823,14 @@
     "view": "Visualizza",
     "org": "Org",
     "tabSupportTickets": "Ticket di Supporto",
-    "reporterLabel": "Segnalato da:"
+    "reporterLabel": "Segnalato da:",
+    "escalateTicketTitle": "Invia ticket all'amministratore",
+    "escalateTicketReasonRequired": "Specifica il motivo dell'invio all'amministratore.",
+    "escalatedTicketSuccess": "Ticket di supporto inviato all'amministrazione esecutiva.",
+    "ticketSubject": "Oggetto del ticket",
+    "targetAuthority": "Autorità di destinazione",
+    "executiveAdminAuthority": "Amministrazione Esecutiva (#admin-command)",
+    "escalateTicketPlaceholder": "Specifica perché questa richiesta richiede un intervento esecutivo o modifiche al database..."
   },
   "AdminPanel": {
     "title": "God Mode: Centro di Comando",
@@ -1716,7 +1723,28 @@
     "openTransmission": "Apri trasmissione",
     "manageFrequencies": "Gestisci frequenze di notifica",
     "calibratingFrequencies": "Calibrazione frequenze di trasmissione...",
-    "cancel": "Annulla"
+    "cancel": "Annulla",
+    "notificationDetailTitle": "Dettagli della Trasmissione",
+    "senderLabel": "Origine",
+    "senderEuroNova": "Comando Orbitale EuroNova",
+    "timestampLabel": "Inviato",
+    "categoryLabel": "Categoria",
+    "statusLabel": "Stato",
+    "statusRead": "Letta",
+    "statusUnread": "Nuovo",
+    "openActionUrl": "Accedi alla missione",
+    "deleteNotification": "Elimina notifica",
+    "closeDetail": "Chiudi",
+    "languagePrefTitle": "Lingua delle notifiche e comunicazioni",
+    "languagePrefDesc": "Seleziona la lingua in cui ricevere avvisi via email, risposte del supporto e notifiche Discord.",
+    "languageSelectorLabel": "Lingua preferita di recapito",
+    "langEn": "Inglese (English)",
+    "langEs": "Spagnolo (Español)",
+    "langDe": "Tedesco (Deutsch)",
+    "langFr": "Francese (Français)",
+    "langIt": "Italiano",
+    "langPt": "Portoghese (Português)",
+    "langRu": "Russo (Русский)"
   },
   "Errors": {
     "badge": "ANOMALIA DI MISSIONE RILEVATA",
@@ -2280,7 +2308,27 @@
     "clickToJump": "Click to jump to message",
     "attachFile": "Allega immagine o documento (PNG, JPG, WEBP, PDF)",
     "removeAttachment": "Rimuovi allegato",
-    "fileSizeExceeded": "La dimensione del file non può superare i 10 MB."
+    "fileSizeExceeded": "La dimensione del file non può superare i 10 MB.",
+    "fileTypeNotAllowed": "Sono ammessi solo file PNG, JPG, WEBP e PDF.",
+    "targetOutsideView": "Il messaggio di destinazione è al di fuori della visualizzazione corrente.",
+    "noBroadcastClearance": "Non disponi dell'autorizzazione per trasmettere in questo canale.",
+    "msgUpdatedSuccess": "Messaggio aggiornato con successo.",
+    "msgUpdateFailed": "Impossibile aggiornare il messaggio.",
+    "msgSendFailed": "Impossibile trasmettere il messaggio.",
+    "supportCannotPin": "Gli specialisti del supporto non possono fissare annunci.",
+    "msgPinnedSuccess": "Messaggio fissato nel canale.",
+    "msgUnpinnedSuccess": "Messaggio sbloccato.",
+    "pinStatusFailed": "Impossibile aggiornare lo stato di blocco.",
+    "msgDeletedSuccess": "Messaggio rimosso dai registri del personale.",
+    "msgDeleteFailed": "Impossibile eliminare il messaggio.",
+    "staffChannels": "Canali del Personale",
+    "jumpToPin": "Vai al messaggio fissato",
+    "jumpToPinTitle": "Clicca per passare a questo messaggio fissato",
+    "prevPin": "Messaggio fissato precedente",
+    "nextPin": "Messaggio fissato successivo",
+    "showAllPins": "Mostra tutti i messaggi fissati",
+    "connecting": "Connessione al flusso di comunicazione del personale...",
+    "readOnlyNotice": "Canale di sola lettura: disponi dell'autorizzazione di visualizzazione. La trasmissione è limitata dalla gerarchia dei ruoli."
   },
   "CookieBanner": {
     "title": "Preferenze di Privacy e Cookie",
@@ -2451,5 +2499,14 @@
     "selectTags": "Seleziona tag",
     "SearchTagsPlaceholder": "Cerca tag...",
     "pageOf": "Pagina {current} di {total}"
+  },
+  "SupportPanel": {
+    "escalateSupportTicket": "Invia ticket di supporto",
+    "escalateTo": "Invia a",
+    "toModerator": "A moderatore",
+    "toAdmin": "All'amministratore",
+    "escalateReasonPlaceholder": "Dettaglia la questione complessa, la grave controversia o l'intervento esecutivo necessario...",
+    "escalateReasonRequired": "Specifica il motivo della trasmissione.",
+    "escalateBtn": "Invia"
   }
 }

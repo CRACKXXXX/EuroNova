@@ -32,6 +32,7 @@ export interface NotificationPreferences {
   progression: boolean;
   action_required: boolean;
   system: boolean;
+  notification_language?: string;
   updated_at?: string;
 }
 
@@ -376,11 +377,18 @@ export async function getNotificationPreferences(): Promise<NotificationActionRe
         progression: true,
         action_required: true,
         system: true,
+        notification_language: "en",
       };
       return { success: true, data: defaults };
     }
 
-    return { success: true, data: data as NotificationPreferences };
+    return { 
+      success: true, 
+      data: {
+        ...data,
+        notification_language: data.notification_language || "en",
+      } as NotificationPreferences 
+    };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to fetch notification preferences.";
     return { success: false, error: message };
@@ -410,6 +418,11 @@ export async function updateNotificationPreferences(
       .eq("user_id", user.id)
       .maybeSingle();
 
+    const allowedLanguages = ["en", "es", "de", "fr", "it", "pt", "ru"];
+    const targetLanguage = preferences.notification_language && allowedLanguages.includes(preferences.notification_language)
+      ? preferences.notification_language
+      : existing?.notification_language || "en";
+
     const merged = {
       user_id: user.id,
       alert: preferences.alert ?? existing?.alert ?? true,
@@ -417,6 +430,7 @@ export async function updateNotificationPreferences(
       progression: preferences.progression ?? existing?.progression ?? true,
       action_required: preferences.action_required ?? existing?.action_required ?? true,
       system: preferences.system ?? existing?.system ?? true,
+      notification_language: targetLanguage,
       updated_at: new Date().toISOString(),
     };
 
@@ -428,6 +442,19 @@ export async function updateNotificationPreferences(
 
     if (error) {
       return { success: false, error: error.message };
+    }
+
+    // Sync notification_language with users_youth and users_org under strict user-scoped RLS
+    if (preferences.notification_language && allowedLanguages.includes(preferences.notification_language)) {
+      void supabase
+        .from("users_youth")
+        .update({ notification_language: preferences.notification_language })
+        .eq("id", user.id);
+
+      void supabase
+        .from("users_org")
+        .update({ notification_language: preferences.notification_language })
+        .eq("id", user.id);
     }
 
     revalidatePath("/dashboard");

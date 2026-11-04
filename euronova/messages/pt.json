@@ -823,7 +823,14 @@
     "view": "Ver",
     "org": "Org",
     "tabSupportTickets": "Tickets de Suporte",
-    "reporterLabel": "Denunciante:"
+    "reporterLabel": "Denunciante:",
+    "escalateTicketTitle": "Escalar ticket para administrador",
+    "escalateTicketReasonRequired": "Por favor, detalha o motivo da escalação para o administrador.",
+    "escalatedTicketSuccess": "Ticket de suporte escalado para a administração executiva.",
+    "ticketSubject": "Assunto do ticket",
+    "targetAuthority": "Autoridade de destino",
+    "executiveAdminAuthority": "Administração Executiva (#admin-command)",
+    "escalateTicketPlaceholder": "Detalha por que esta consulta requer intervenção executiva ou alterações na base de dados..."
   },
   "AdminPanel": {
     "title": "Modo Deus: Centro de Comando",
@@ -1716,7 +1723,28 @@
     "openTransmission": "Abrir transmissão",
     "manageFrequencies": "Gerir frequências de notificação",
     "calibratingFrequencies": "A calibrar frequências de transmissão...",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "notificationDetailTitle": "Detalhes da Transmissão",
+    "senderLabel": "Origem",
+    "senderEuroNova": "Comando Orbital EuroNova",
+    "timestampLabel": "Enviado",
+    "categoryLabel": "Categoria",
+    "statusLabel": "Estado",
+    "statusRead": "Lida",
+    "statusUnread": "Nova",
+    "openActionUrl": "Aceder à missão",
+    "deleteNotification": "Eliminar notificação",
+    "closeDetail": "Fechar",
+    "languagePrefTitle": "Idioma de Notificações e Envios",
+    "languagePrefDesc": "Seleciona o idioma no qual pretendes receber alertas por e-mail, respostas de suporte e notificações do Discord.",
+    "languageSelectorLabel": "Idioma preferido de receção",
+    "langEn": "Inglês (English)",
+    "langEs": "Espanhol (Español)",
+    "langDe": "Alemão (Deutsch)",
+    "langFr": "Francês (Français)",
+    "langIt": "Italiano",
+    "langPt": "Português",
+    "langRu": "Russo (Русский)"
   },
   "Errors": {
     "badge": "ANOMALIA DE MISSÃO DETETADA",
@@ -2280,7 +2308,27 @@
     "clickToJump": "Click to jump to message",
     "attachFile": "Anexar Imagem ou Documento (PNG, JPG, WEBP, PDF)",
     "removeAttachment": "Remover anexo",
-    "fileSizeExceeded": "O tamanho do ficheiro não pode exceder 10 MB."
+    "fileSizeExceeded": "O tamanho do ficheiro não pode exceder 10 MB.",
+    "fileTypeNotAllowed": "Apenas são permitidos ficheiros PNG, JPG, WEBP e PDF.",
+    "targetOutsideView": "A mensagem de destino está fora da visualização atual.",
+    "noBroadcastClearance": "Não tens autorização para transmitir neste canal.",
+    "msgUpdatedSuccess": "Mensagem atualizada com sucesso.",
+    "msgUpdateFailed": "Erro ao atualizar a mensagem.",
+    "msgSendFailed": "Erro ao transmitir a mensagem.",
+    "supportCannotPin": "Os especialistas de suporte não podem fixar anúncios.",
+    "msgPinnedSuccess": "Mensagem fixada no canal.",
+    "msgUnpinnedSuccess": "Mensagem desmarcada.",
+    "pinStatusFailed": "Erro ao atualizar o estado de fixação.",
+    "msgDeletedSuccess": "Mensagem removida dos registos da equipa.",
+    "msgDeleteFailed": "Erro ao eliminar a mensagem.",
+    "staffChannels": "Canais da Equipa",
+    "jumpToPin": "Ir para a mensagem fixada",
+    "jumpToPinTitle": "Clica para ir para esta mensagem fixada",
+    "prevPin": "Mensagem fixada anterior",
+    "nextPin": "Mensagem fixada seguinte",
+    "showAllPins": "Mostrar todas as mensagens fixadas",
+    "connecting": "A ligar ao fluxo de comunicação da equipa...",
+    "readOnlyNotice": "Canal de apenas leitura: tens autorização de visualização. A transmissão está restrita pela hierarquia de funções."
   },
   "CookieBanner": {
     "title": "Preferências de Privacidade e Cookies",
@@ -2451,5 +2499,14 @@
     "selectTags": "Selecionar etiquetas",
     "SearchTagsPlaceholder": "Pesquisar etiquetas...",
     "pageOf": "Página {current} de {total}"
+  },
+  "SupportPanel": {
+    "escalateSupportTicket": "Escalar ticket de suporte",
+    "escalateTo": "Escalar para",
+    "toModerator": "Para moderador",
+    "toAdmin": "Para administrador",
+    "escalateReasonPlaceholder": "Detalha a questão complexa, a disputa grave ou a intervenção executiva necessária...",
+    "escalateReasonRequired": "Por favor, detalha o motivo da escalação.",
+    "escalateBtn": "Escalar"
   }
 }

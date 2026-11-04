@@ -823,7 +823,14 @@
     "view": "View",
     "org": "Org",
     "tabSupportTickets": "Support Tickets",
-    "reporterLabel": "Reporter:"
+    "reporterLabel": "Reporter:",
+    "escalateTicketTitle": "Escalate Ticket to Admin",
+    "escalateTicketReasonRequired": "Please detail the reason for escalation to Admin.",
+    "escalatedTicketSuccess": "Support ticket escalated to Executive Administration.",
+    "ticketSubject": "Ticket Subject",
+    "targetAuthority": "Target Authority",
+    "executiveAdminAuthority": "Executive Administration (#admin-command)",
+    "escalateTicketPlaceholder": "Detail why this user support inquiry requires executive intervention or administrative database mutations..."
   },
   "AdminPanel": {
     "title": "God Mode: Command Center",
@@ -1716,7 +1723,28 @@
     "openTransmission": "Open transmission",
     "manageFrequencies": "Manage notification frequencies",
     "calibratingFrequencies": "Calibrating transmission frequencies...",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "notificationDetailTitle": "Transmission Details",
+    "senderLabel": "Origin",
+    "senderEuroNova": "EuroNova Orbital Command",
+    "timestampLabel": "Dispatched",
+    "categoryLabel": "Category",
+    "statusLabel": "Status",
+    "statusRead": "Read",
+    "statusUnread": "New",
+    "openActionUrl": "Proceed to Mission",
+    "deleteNotification": "Delete Notification",
+    "closeDetail": "Close",
+    "languagePrefTitle": "Notification & Dispatch Language",
+    "languagePrefDesc": "Select the language in which you receive automated email alerts, direct support replies, and Discord webhook embeds.",
+    "languageSelectorLabel": "Preferred Dispatch Language",
+    "langEn": "English",
+    "langEs": "Spanish (Español)",
+    "langDe": "German (Deutsch)",
+    "langFr": "French (Français)",
+    "langIt": "Italian (Italiano)",
+    "langPt": "Portuguese (Português)",
+    "langRu": "Russian (Русский)"
   },
   "Errors": {
     "badge": "MISSION ANOMALY DETECTED",
@@ -2280,7 +2308,27 @@
     "clickToJump": "Click to jump to message",
     "attachFile": "Attach Image or Document (PNG, JPG, WEBP, PDF)",
     "removeAttachment": "Remove attachment",
-    "fileSizeExceeded": "File size cannot exceed 10MB."
+    "fileSizeExceeded": "File size cannot exceed 10MB.",
+    "fileTypeNotAllowed": "Only PNG, JPG, WEBP, and PDF files are allowed.",
+    "targetOutsideView": "Target message is outside current feed view.",
+    "noBroadcastClearance": "You do not have broadcasting clearance in this channel.",
+    "msgUpdatedSuccess": "Message updated successfully.",
+    "msgUpdateFailed": "Failed to update message.",
+    "msgSendFailed": "Failed to transmit message.",
+    "supportCannotPin": "Support specialists cannot pin announcements.",
+    "msgPinnedSuccess": "Message pinned to channel.",
+    "msgUnpinnedSuccess": "Message unpinned.",
+    "pinStatusFailed": "Failed to update pin.",
+    "msgDeletedSuccess": "Message removed from staff logs.",
+    "msgDeleteFailed": "Failed to delete message.",
+    "staffChannels": "Staff Channels",
+    "jumpToPin": "Jump to pin",
+    "jumpToPinTitle": "Click to jump to this pinned message",
+    "prevPin": "Previous pin",
+    "nextPin": "Next pin",
+    "showAllPins": "Show all pinned messages",
+    "connecting": "Connecting to staff communication stream...",
+    "readOnlyNotice": "Read-Only Channel: You have viewing clearance. Broadcasting is restricted by operational role hierarchy."
   },
   "CookieBanner": {
     "title": "Privacy & Cookie Preferences",
@@ -2451,5 +2499,14 @@
     "selectTags": "Select Tags",
     "SearchTagsPlaceholder": "Search tags...",
     "pageOf": "Page {current} of {total}"
+  },
+  "SupportPanel": {
+    "escalateSupportTicket": "Escalate Support Ticket",
+    "escalateTo": "Escalate To",
+    "toModerator": "To Moderator",
+    "toAdmin": "To Admin",
+    "escalateReasonPlaceholder": "Detail the complex policy inquiry, severe dispute, or executive intervention needed...",
+    "escalateReasonRequired": "Please detail the reason for escalation.",
+    "escalateBtn": "Escalate"
   }
 }

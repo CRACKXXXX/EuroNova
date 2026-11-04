@@ -823,7 +823,14 @@
     "view": "Ansehen",
     "org": "Org",
     "tabSupportTickets": "Support-Tickets",
-    "reporterLabel": "Gemeldet von:"
+    "reporterLabel": "Gemeldet von:",
+    "escalateTicketTitle": "Ticket an Admin eskalieren",
+    "escalateTicketReasonRequired": "Bitte gib den Grund für die Eskalation an den Administrator an.",
+    "escalatedTicketSuccess": "Support-Ticket an die Geschäftsleitung eskaliert.",
+    "ticketSubject": "Ticket-Betreff",
+    "targetAuthority": "Zielbehörde",
+    "executiveAdminAuthority": "Geschäftsleitung (#admin-command)",
+    "escalateTicketPlaceholder": "Beschreibe, warum diese Anfrage ein Eingreifen der Geschäftsleitung erfordert..."
   },
   "AdminPanel": {
     "title": "God Mode: Kommandozentrale",
@@ -1716,7 +1723,28 @@
     "openTransmission": "Übertragung öffnen",
     "manageFrequencies": "Benachrichtigungsfrequenzen verwalten",
     "calibratingFrequencies": "Übertragungsfrequenzen werden kalibriert...",
-    "cancel": "Abbrechen"
+    "cancel": "Abbrechen",
+    "notificationDetailTitle": "Übertragungsdetails",
+    "senderLabel": "Herkunft",
+    "senderEuroNova": "EuroNova Orbitalkommando",
+    "timestampLabel": "Gesendet",
+    "categoryLabel": "Kategorie",
+    "statusLabel": "Status",
+    "statusRead": "Gelesen",
+    "statusUnread": "Neu",
+    "openActionUrl": "Zur Mission übergehen",
+    "deleteNotification": "Benachrichtigung löschen",
+    "closeDetail": "Schließen",
+    "languagePrefTitle": "Benachrichtigungs- und Versandsprache",
+    "languagePrefDesc": "Wähle die Sprache, in der du E-Mail-Benachrichtigungen, Support-Antworten und Discord-Nachrichten erhältst.",
+    "languageSelectorLabel": "Bevorzugte Versandsprache",
+    "langEn": "Englisch (English)",
+    "langEs": "Spanisch (Español)",
+    "langDe": "Deutsch",
+    "langFr": "Französisch (Français)",
+    "langIt": "Italienisch (Italiano)",
+    "langPt": "Portugiesisch (Português)",
+    "langRu": "Russisch (Русский)"
   },
   "Errors": {
     "badge": "MISSIONSANOMALIE ERKANNT",
@@ -2280,7 +2308,27 @@
     "clickToJump": "Click to jump to message",
     "attachFile": "Bild oder Dokument anhängen (PNG, JPG, WEBP, PDF)",
     "removeAttachment": "Anhang entfernen",
-    "fileSizeExceeded": "Die Dateigröße darf 10 MB nicht überschreiten."
+    "fileSizeExceeded": "Die Dateigröße darf 10 MB nicht überschreiten.",
+    "fileTypeNotAllowed": "Nur PNG-, JPG-, WEBP- und PDF-Dateien sind zulässig.",
+    "targetOutsideView": "Die Zielnachricht liegt außerhalb der aktuellen Ansicht.",
+    "noBroadcastClearance": "Du hast keine Sendeberechtigung in diesem Kanal.",
+    "msgUpdatedSuccess": "Nachricht erfolgreich aktualisiert.",
+    "msgUpdateFailed": "Fehler beim Aktualisieren der Nachricht.",
+    "msgSendFailed": "Fehler beim Übertragen der Nachricht.",
+    "supportCannotPin": "Support-Spezialisten können keine Ankündigungen anheften.",
+    "msgPinnedSuccess": "Nachricht im Kanal angeheftet.",
+    "msgUnpinnedSuccess": "Nachricht gelöst.",
+    "pinStatusFailed": "Fehler beim Aktualisieren des Anheftungsstatus.",
+    "msgDeletedSuccess": "Nachricht aus den Mitarbeiterprotokollen entfernt.",
+    "msgDeleteFailed": "Fehler beim Löschen der Nachricht.",
+    "staffChannels": "Mitarbeiter-Kanäle",
+    "jumpToPin": "Zum angehefteten springen",
+    "jumpToPinTitle": "Klicken, um zu dieser angehefteten Nachricht zu springen",
+    "prevPin": "Vorherige Anheftung",
+    "nextPin": "Nächste Anheftung",
+    "showAllPins": "Alle angehefteten Nachrichten anzeigen",
+    "connecting": "Verbindung zum Kommunikationsstream der Mitarbeiter wird hergestellt...",
+    "readOnlyNotice": "Schreibgeschützter Kanal: Du hast Leseberechtigung. Das Senden ist durch die Betriebsrollen-Hierarchie eingeschränkt."
   },
   "CookieBanner": {
     "title": "Datenschutz- & Cookie-Einstellungen",
@@ -2451,5 +2499,14 @@
     "selectTags": "Tags auswählen",
     "SearchTagsPlaceholder": "Tags suchen...",
     "pageOf": "Seite {current} von {total}"
+  },
+  "SupportPanel": {
+    "escalateSupportTicket": "Support-Ticket eskalieren",
+    "escalateTo": "Eskalieren an",
+    "toModerator": "An Moderator",
+    "toAdmin": "An Administrator",
+    "escalateReasonPlaceholder": "Beschreibe die komplexe Richtlinienfrage, die schwerwiegende Streitigkeit oder das erforderliche Eingreifen...",
+    "escalateReasonRequired": "Bitte gib den Grund für die Eskalation an.",
+    "escalateBtn": "Eskalieren"
   }
 }

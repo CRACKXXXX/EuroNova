@@ -56,51 +56,166 @@ function getAdminClient() {
 }
 
 /**
- * Fetches user-configured notification preferences (Email & Discord Webhook)
- * from either `users_youth` or `users_org`.
+ * Fetches user-configured notification preferences (Email, Discord Webhook & Preferred Language)
+ * from `notification_preferences`, `users_youth`, or `users_org`.
  */
 export async function getUserNotificationPreferences(userId: string): Promise<{
   notificationEmail?: string;
   discordWebhookUrl?: string;
+  notificationLanguage?: string;
 }> {
   try {
     const supabase = getAdminClient();
     if (!supabase) return {};
 
-    // 1. Try users_youth table
+    // 1. Check notification_preferences first
+    const { data: prefData } = await supabase
+      .from("notification_preferences")
+      .select("notification_language")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    const notifLang = prefData?.notification_language;
+
+    // 2. Try users_youth table
     const { data: youth } = await supabase
       .from("users_youth")
-      .select("notification_email, discord_webhook_url")
+      .select("notification_email, discord_webhook_url, notification_language")
       .eq("id", userId)
       .maybeSingle();
 
-    if (youth && (youth.notification_email || youth.discord_webhook_url)) {
+    if (youth && (youth.notification_email || youth.discord_webhook_url || youth.notification_language)) {
       return {
         notificationEmail: youth.notification_email || undefined,
         discordWebhookUrl: youth.discord_webhook_url || undefined,
+        notificationLanguage: notifLang || youth.notification_language || "en",
       };
     }
 
-    // 2. Try users_org table
+    // 3. Try users_org table
     const { data: org } = await supabase
       .from("users_org")
-      .select("notification_email, discord_webhook_url")
+      .select("notification_email, discord_webhook_url, notification_language")
       .eq("id", userId)
       .maybeSingle();
 
-    if (org && (org.notification_email || org.discord_webhook_url)) {
+    if (org && (org.notification_email || org.discord_webhook_url || org.notification_language)) {
       return {
         notificationEmail: org.notification_email || undefined,
         discordWebhookUrl: org.discord_webhook_url || undefined,
+        notificationLanguage: notifLang || org.notification_language || "en",
       };
     }
 
-    return {};
+    return {
+      notificationLanguage: notifLang || "en",
+    };
   } catch (err) {
     console.error("Error fetching user notification preferences:", err);
     return {};
   }
 }
+
+const LOCALIZED_DISPATCH: Record<
+  string,
+  {
+    commandSubtitle: string;
+    openBtn: string;
+    securityTitle: string;
+    securityText: string;
+    footerText: string;
+    footerSubtext: string;
+    ticketSubject: string;
+    ticketStatus: string;
+    ticketReplyTitle: string;
+    ticketReplyDesk: string;
+  }
+> = {
+  en: {
+    commandSubtitle: "European Mobility & Volunteer Command",
+    openBtn: "Open EuroNova Transmission",
+    securityTitle: "Security Advisory:",
+    securityText: "If you did not initiate this transmission or request, you can safely disregard this notice or report suspicious activity through your EuroNova dashboard.",
+    footerText: "EuroNova • European Youth Mobility & Anti-Scam Shield",
+    footerSubtext: "Canary Islands & Outermost Regions (RUP) Priority Grid",
+    ticketSubject: "Ticket Subject",
+    ticketStatus: "Status",
+    ticketReplyTitle: "Support Reply:",
+    ticketReplyDesk: "EuroNova Support Desk • Direct Notification",
+  },
+  es: {
+    commandSubtitle: "Comando de Movilidad y Voluntariado Europeo",
+    openBtn: "Abrir Transmisión en EuroNova",
+    securityTitle: "Aviso de Seguridad:",
+    securityText: "Si no iniciaste esta transmisión o solicitud, puedes desestimar este aviso o reportar actividad sospechosa en tu panel de EuroNova.",
+    footerText: "EuroNova • Movilidad Juvenil Europea y Escudo Anti-Fraude",
+    footerSubtext: "Red Prioritaria de Islas Canarias y Regiones Ultraperiféricas (RUP)",
+    ticketSubject: "Asunto del Ticket",
+    ticketStatus: "Estado",
+    ticketReplyTitle: "Respuesta de Soporte:",
+    ticketReplyDesk: "Mesa de Ayuda EuroNova • Notificación Directa",
+  },
+  de: {
+    commandSubtitle: "Europäisches Mobilitäts- und Freiwilligenkommando",
+    openBtn: "EuroNova-Übertragung öffnen",
+    securityTitle: "Sicherheitshinweis:",
+    securityText: "Wenn du diese Übertragung nicht veranlasst hast, kannst du diese Nachricht ignorieren oder verdächtige Aktivitäten melden.",
+    footerText: "EuroNova • Europäische Jugendmobilität & Schutzschild",
+    footerSubtext: "Prioritätsnetzwerk Kanarische Inseln & Gebiete in äußerster Randlage (RUP)",
+    ticketSubject: "Ticket-Betreff",
+    ticketStatus: "Status",
+    ticketReplyTitle: "Support-Antwort:",
+    ticketReplyDesk: "EuroNova Support-Desk • Direkte Benachrichtigung",
+  },
+  fr: {
+    commandSubtitle: "Commandement de la Mobilité Européenne et du Volontariat",
+    openBtn: "Ouvrir la transmission EuroNova",
+    securityTitle: "Avis de sécurité :",
+    securityText: "Si vous n'êtes pas à l'origine de cette transmission, vous pouvez ignorer cet avis ou signaler toute activité suspecte.",
+    footerText: "EuroNova • Mobilité Jeunesse Européenne & Bouclier Anti-Fraude",
+    footerSubtext: "Réseau Prioritaire Îles Canaries & Régions Ultrapériphériques (RUP)",
+    ticketSubject: "Objet du ticket",
+    ticketStatus: "Statut",
+    ticketReplyTitle: "Réponse du support :",
+    ticketReplyDesk: "Centre de support EuroNova • Notification Directe",
+  },
+  it: {
+    commandSubtitle: "Comando Europeo per la Mobilità e il Volontariato",
+    openBtn: "Apri trasmissione EuroNova",
+    securityTitle: "Avviso di sicurezza:",
+    securityText: "Se non hai avviato tu questa trasmissione, puoi ignorare questo avviso o segnalare attività sospette.",
+    footerText: "EuroNova • Mobilità Giovanile Europea & Scudo Anti-Truffa",
+    footerSubtext: "Rete Prioritaria Isole Canarie e Regioni Ultraperiferiche (RUP)",
+    ticketSubject: "Oggetto del ticket",
+    ticketStatus: "Stato",
+    ticketReplyTitle: "Risposta del supporto:",
+    ticketReplyDesk: "Desk di supporto EuroNova • Notifica Diretta",
+  },
+  pt: {
+    commandSubtitle: "Comando Europeu de Mobilidade e Voluntariado",
+    openBtn: "Abrir Transmissão no EuroNova",
+    securityTitle: "Aviso de Segurança:",
+    securityText: "Se não iniciaste esta transmissão, podes ignorar esta notificação ou reportar atividade suspeita no painel EuroNova.",
+    footerText: "EuroNova • Mobilidade Jovem Europeia e Escudo Anti-Fraude",
+    footerSubtext: "Rede Prioritária das Ilhas Canárias e Regiões Ultraperiféricas (RUP)",
+    ticketSubject: "Assunto do ticket",
+    ticketStatus: "Estado",
+    ticketReplyTitle: "Resposta do suporte:",
+    ticketReplyDesk: "Centro de Suporte EuroNova • Notificação Direta",
+  },
+  ru: {
+    commandSubtitle: "Европейское командование мобильности и волонтерства",
+    openBtn: "Открыть передачу в EuroNova",
+    securityTitle: "Уведомление о безопасности:",
+    securityText: "Если вы не запрашивали эту передачу, вы можете проигнорировать это уведомление или сообщить о подозрительной активности.",
+    footerText: "EuroNova • Европейская молодежная мобильность и защита от мошенничества",
+    footerSubtext: "Приоритетная сеть Канарских островов и отдаленных регионов (RUP)",
+    ticketSubject: "Тема тикета",
+    ticketStatus: "Статус",
+    ticketReplyTitle: "Ответ поддержки:",
+    ticketReplyDesk: "Служба поддержки EuroNova • Прямое уведомление",
+  },
+};
 
 /**
  * Sends a structured payload to the configured Discord Webhook URL.
@@ -170,27 +285,34 @@ export async function sendPendingNotificationEmail(
 
   try {
     let targetEmail = recipientEmail;
+    let userLang = "en";
 
-    // Resolve target email if userId provided and no direct recipientEmail
-    if (!targetEmail && userId) {
+    // Resolve target email and language preference if userId provided
+    if (userId) {
       const prefs = await getUserNotificationPreferences(userId);
-      if (prefs.notificationEmail) {
-        targetEmail = prefs.notificationEmail;
-      } else {
-        const supabase = getAdminClient();
-        if (supabase) {
-          const { data: youth } = await supabase
-            .from("users_youth")
-            .select("email")
-            .eq("id", userId)
-            .maybeSingle();
+      if (prefs.notificationLanguage) {
+        userLang = prefs.notificationLanguage;
+      }
+      if (!targetEmail) {
+        if (prefs.notificationEmail) {
+          targetEmail = prefs.notificationEmail;
+        } else {
+          const supabase = getAdminClient();
+          if (supabase) {
+            const { data: youth } = await supabase
+              .from("users_youth")
+              .select("email, notification_language")
+              .eq("id", userId)
+              .maybeSingle();
 
-          if (youth?.email) {
-            targetEmail = youth.email;
-          } else {
-            const { data: authUser } = await supabase.auth.admin.getUserById(userId);
-            if (authUser?.user?.email) {
-              targetEmail = authUser.user.email;
+            if (youth?.email) {
+              targetEmail = youth.email;
+              if (youth.notification_language) userLang = youth.notification_language;
+            } else {
+              const { data: authUser } = await supabase.auth.admin.getUserById(userId);
+              if (authUser?.user?.email) {
+                targetEmail = authUser.user.email;
+              }
             }
           }
         }
@@ -201,6 +323,7 @@ export async function sendPendingNotificationEmail(
       return false;
     }
 
+    const loc = LOCALIZED_DISPATCH[userLang.toLowerCase()] || LOCALIZED_DISPATCH.en;
     const cleanTitle = stripDangerousHtml(title, 120);
     const cleanMessage = stripDangerousHtml(message, 3000);
     const destinationUrl = actionUrl
@@ -216,7 +339,7 @@ export async function sendPendingNotificationEmail(
 
     const htmlContent = `
 <!DOCTYPE html>
-<html lang="en">
+<html lang="${userLang}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -236,7 +359,7 @@ export async function sendPendingNotificationEmail(
                       EURONOVA <span style="color:#00E5FF;">ORBITAL</span>
                     </span>
                     <div style="font-size:11px;color:#94A3B8;letter-spacing:1px;text-transform:uppercase;margin-top:2px;">
-                      European Mobility & Volunteer Command
+                      ${loc.commandSubtitle}
                     </div>
                   </td>
                 </tr>
@@ -257,14 +380,14 @@ export async function sendPendingNotificationEmail(
                     <a href="${destinationUrl}"
                        target="_blank"
                        style="display:inline-block;padding:12px 28px;font-size:13px;font-weight:700;color:#08090E;text-decoration:none;letter-spacing:0.3px;text-transform:uppercase;border-radius:10px;">
-                      Open EuroNova Transmission
+                      ${loc.openBtn}
                     </a>
                   </td>
                 </tr>
               </table>
               <div style="margin-top:24px;padding:12px 16px;background-color:#08090E;border-radius:10px;border:1px solid #1E2640;">
                 <p style="margin:0;font-size:11px;color:#94A3B8;line-height:1.5;">
-                  <strong>Security Advisory:</strong> If you did not initiate this transmission or request, you can safely disregard this notice or report suspicious activity through your EuroNova dashboard.
+                  <strong>${loc.securityTitle}</strong> ${loc.securityText}
                 </p>
               </div>
             </td>
@@ -272,10 +395,10 @@ export async function sendPendingNotificationEmail(
           <tr>
             <td style="padding:20px 32px;background-color:#0A0D18;border-top:1px solid #1E2640;text-align:center;">
               <p style="margin:0 0 6px 0;font-size:11px;color:#64748B;">
-                EuroNova • European Youth Mobility & Anti-Scam Shield
+                ${loc.footerText}
               </p>
               <p style="margin:0;font-size:10px;color:#475569;">
-                Canary Islands & Outermost Regions (RUP) Priority Grid
+                ${loc.footerSubtext}
               </p>
             </td>
           </tr>
@@ -487,14 +610,17 @@ export async function sendDirectTicketReplyAlert(params: {
 }): Promise<void> {
   try {
     const prefs = await getUserNotificationPreferences(params.userId);
+    const userLang = (prefs.notificationLanguage || "en").toLowerCase();
+    const loc = LOCALIZED_DISPATCH[userLang] || LOCALIZED_DISPATCH.en;
 
     // 1. Dispatch Email notification if configured (or fallback to ticket email)
     const targetEmail = prefs.notificationEmail || params.fallbackEmail;
     if (targetEmail) {
       void sendPendingNotificationEmail({
+        userId: params.userId,
         recipientEmail: targetEmail,
-        subject: `[EuroNova Support] Response to: ${params.ticketSubject}`,
-        title: `Support Specialist Reply: ${params.ticketSubject}`,
+        subject: `[EuroNova] ${loc.ticketReplyTitle} ${params.ticketSubject}`,
+        title: `${loc.ticketReplyTitle} ${params.ticketSubject}`,
         message: params.replyMessage,
         actionUrl: "/dashboard/support",
         priority: "urgent",
@@ -504,16 +630,16 @@ export async function sendDirectTicketReplyAlert(params: {
     // 2. Dispatch to user's personalized Discord Webhook if configured
     if (prefs.discordWebhookUrl) {
       const embed: DiscordEmbed = {
-        title: `🚨 Support Reply: ${params.ticketSubject}`,
+        title: `🚨 ${loc.ticketReplyTitle} ${params.ticketSubject}`,
         description: params.replyMessage,
         color: COSMIC_COLORS.plasmaCyan,
         timestamp: new Date().toISOString(),
         fields: [
-          { name: "Ticket Subject", value: params.ticketSubject, inline: true },
-          { name: "Status", value: (params.newStatus || "updated").toUpperCase(), inline: true },
+          { name: loc.ticketSubject, value: params.ticketSubject, inline: true },
+          { name: loc.ticketStatus, value: (params.newStatus || "updated").toUpperCase(), inline: true },
         ],
         footer: {
-          text: "EuroNova Support Desk • Direct Notification",
+          text: loc.ticketReplyDesk,
         },
       };
 

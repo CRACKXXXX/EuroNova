@@ -184,7 +184,7 @@ export function ModeratorPanelClient({
   const handleEscalateTicketSubmit = () => {
     if (!escalateTicketModal) return;
     if (!escalateTicketReason.trim()) {
-      toast.error("Please detail the reason for escalation to Admin.");
+      toast.error(t("escalateTicketReasonRequired"));
       return;
     }
 
@@ -196,12 +196,12 @@ export function ModeratorPanelClient({
       );
 
       if (res.success) {
-        toast.success("Support ticket escalated to Executive Administration.");
+        toast.success(t("escalatedTicketSuccess"));
         setEscalateTicketModal(null);
         setEscalateTicketReason("");
         router.refresh();
       } else {
-        toast.error(res.error || "Failed to escalate ticket.");
+        toast.error(res.error || t("failedEscalateReport"));
       }
     });
   };
@@ -1185,7 +1185,7 @@ export function ModeratorPanelClient({
             <div className="flex items-center justify-between pb-3 border-b border-void-border">
               <div className="flex items-center gap-2">
                 <ShieldAlert className="w-5 h-5 text-amber-400" />
-                <h3 className="text-base font-bold text-white">Escalate Ticket to Admin</h3>
+                <h3 className="text-base font-bold text-white">{t("escalateTicketTitle")}</h3>
               </div>
               <button
                 type="button"
@@ -1198,30 +1198,30 @@ export function ModeratorPanelClient({
 
             <div className="space-y-4 text-xs">
               <div>
-                <label className="block font-bold text-gray-400 uppercase mb-1">Ticket Subject</label>
+                <label className="block font-bold text-gray-400 uppercase mb-1">{t("ticketSubject")}</label>
                 <div className="p-2.5 rounded-xl bg-void-deep border border-void-border text-white font-semibold">
                   {escalateTicketModal.subject}
                 </div>
               </div>
 
               <div>
-                <label className="block font-bold text-gray-400 uppercase mb-1">Target Authority</label>
+                <label className="block font-bold text-gray-400 uppercase mb-1">{t("targetAuthority")}</label>
                 <div className="p-2.5 rounded-xl bg-nova-flare/10 border border-nova-flare/30 text-nova-flare text-xs font-bold flex items-center gap-2">
                   <ShieldAlert className="w-4 h-4 shrink-0" />
-                  <span>Executive Administration (#admin-command)</span>
+                  <span>{t("executiveAdminAuthority")}</span>
                 </div>
               </div>
 
               <div>
                 <label className="block font-bold text-gray-400 uppercase mb-1">
-                  Reason for Escalation
+                  {t("reasonRequired")}
                 </label>
                 <textarea
                   rows={4}
                   value={escalateTicketReason}
                   onChange={(e) => setEscalateTicketReason(e.target.value)}
                   maxLength={2000}
-                  placeholder="Detail why this user support inquiry requires executive intervention or administrative database mutations..."
+                  placeholder={t("escalateTicketPlaceholder")}
                   className="w-full p-2.5 rounded-xl bg-void-deep border border-void-border text-white focus:border-amber-400 focus:outline-none resize-y"
                 />
               </div>
@@ -1233,7 +1233,7 @@ export function ModeratorPanelClient({
                 onClick={() => setEscalateTicketModal(null)}
                 className="px-4 py-2 rounded-xl bg-void-deep text-gray-300 hover:text-white border border-void-border text-xs font-bold cursor-pointer"
               >
-                Cancel
+                {t("cancel")}
               </button>
               <button
                 type="button"
@@ -1244,12 +1244,12 @@ export function ModeratorPanelClient({
                 {isPending ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Escalating...</span>
+                    <span>{t("escalating")}</span>
                   </>
                 ) : (
                   <>
                     <Send className="w-3.5 h-3.5" />
-                    <span>Transmit Escalation</span>
+                    <span>{t("transmitEscalation")}</span>
                   </>
                 )}
               </button>

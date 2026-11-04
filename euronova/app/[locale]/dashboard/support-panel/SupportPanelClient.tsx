@@ -51,6 +51,7 @@ export function SupportPanelClient({
 }: SupportPanelClientProps) {
   const t = useTranslations("AdminPanel");
   const tMod = useTranslations("ModeratorPanel");
+  const tSupportPanel = useTranslations("SupportPanel");
   const router = useRouter();
   const format = useFormatter();
   const [activeView, setActiveView] = useState<"tickets" | "reports" | "staff_chat">("tickets");
@@ -183,7 +184,7 @@ export function SupportPanelClient({
   const handleEscalateSubmit = () => {
     if (!escalateModal) return;
     if (!escalateReason.trim()) {
-      toast.error(tMod("explanationRequiredError") || "Escalation reason is required.");
+      toast.error(tMod("explanationRequiredError"));
       return;
     }
 
@@ -196,11 +197,7 @@ export function SupportPanelClient({
       );
 
       if (res.success) {
-        toast.success(
-          escalateTargetRole === "moderator"
-            ? "Report escalated to Moderator Queue."
-            : tMod("escalatedSuccess")
-        );
+        toast.success(tMod("escalatedSuccess"));
         setEscalateModal(null);
         setEscalateReason("");
         router.refresh();
@@ -213,7 +210,7 @@ export function SupportPanelClient({
   const handleEscalateTicketSubmit = () => {
     if (!escalateTicketModal) return;
     if (!escalateTicketReason.trim()) {
-      toast.error("Please detail the reason for escalation.");
+      toast.error(tSupportPanel("escalateReasonRequired"));
       return;
     }
 
@@ -225,16 +222,12 @@ export function SupportPanelClient({
       );
 
       if (res.success) {
-        toast.success(
-          escalateTicketTargetRole === "moderator"
-            ? "Support ticket escalated to Moderator Queue."
-            : "Support ticket escalated to Executive Admin."
-        );
+        toast.success(tMod("escalatedTicketSuccess"));
         setEscalateTicketModal(null);
         setEscalateTicketReason("");
         router.refresh();
       } else {
-        toast.error(res.error || "Failed to escalate ticket.");
+        toast.error(res.error || tMod("failedEscalateReport"));
       }
     });
   };
@@ -1041,7 +1034,7 @@ export function SupportPanelClient({
 
               <div>
                 <label className="block font-bold text-gray-400 uppercase mb-1">
-                  Escalate To
+                  {tSupportPanel("escalateTo")}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -1053,7 +1046,7 @@ export function SupportPanelClient({
                         : "bg-void-deep border-void-border text-gray-400 hover:text-white"
                     }`}
                   >
-                    <span>To Moderator</span>
+                    <span>{tSupportPanel("toModerator")}</span>
                   </button>
                   <button
                     type="button"
@@ -1064,7 +1057,7 @@ export function SupportPanelClient({
                         : "bg-void-deep border-void-border text-gray-400 hover:text-white"
                     }`}
                   >
-                    <span>To Admin</span>
+                    <span>{tSupportPanel("toAdmin")}</span>
                   </button>
                 </div>
               </div>
@@ -1148,7 +1141,7 @@ export function SupportPanelClient({
             <div className="flex items-center justify-between pb-3 border-b border-void-border">
               <div className="flex items-center gap-2.5">
                 <ShieldAlert className="w-5 h-5 text-amber-400" />
-                <h3 className="text-base font-bold text-white">Escalate Support Ticket</h3>
+                <h3 className="text-base font-bold text-white">{tSupportPanel("escalateSupportTicket")}</h3>
               </div>
               <button
                 type="button"
@@ -1161,14 +1154,14 @@ export function SupportPanelClient({
 
             <div className="space-y-4 text-xs">
               <div>
-                <label className="block font-bold text-gray-400 uppercase mb-1">Ticket Subject</label>
+                <label className="block font-bold text-gray-400 uppercase mb-1">{tMod("ticketSubject")}</label>
                 <div className="p-2.5 rounded-xl bg-void-deep border border-void-border text-white font-semibold">
                   {escalateTicketModal.subject}
                 </div>
               </div>
 
               <div>
-                <label className="block font-bold text-gray-400 uppercase mb-1">Escalate To</label>
+                <label className="block font-bold text-gray-400 uppercase mb-1">{tSupportPanel("escalateTo")}</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
@@ -1179,7 +1172,7 @@ export function SupportPanelClient({
                         : "bg-void-deep border-void-border text-gray-400 hover:text-white"
                     }`}
                   >
-                    <span>To Moderator</span>
+                    <span>{tSupportPanel("toModerator")}</span>
                   </button>
                   <button
                     type="button"
@@ -1190,21 +1183,21 @@ export function SupportPanelClient({
                         : "bg-void-deep border-void-border text-gray-400 hover:text-white"
                     }`}
                   >
-                    <span>To Admin</span>
+                    <span>{tSupportPanel("toAdmin")}</span>
                   </button>
                 </div>
               </div>
 
               <div>
                 <label className="block font-bold text-gray-400 uppercase mb-1">
-                  Reason for Escalation
+                  {tMod("reasonRequired")}
                 </label>
                 <textarea
                   rows={4}
                   value={escalateTicketReason}
                   onChange={(e) => setEscalateTicketReason(e.target.value)}
                   maxLength={2000}
-                  placeholder="Detail the complex policy inquiry, severe dispute, or executive intervention needed..."
+                  placeholder={tSupportPanel("escalateReasonPlaceholder")}
                   className="w-full p-2.5 rounded-xl bg-void-deep border border-void-border text-white focus:border-amber-400 focus:outline-none resize-y"
                 />
               </div>
@@ -1216,7 +1209,7 @@ export function SupportPanelClient({
                 onClick={() => setEscalateTicketModal(null)}
                 className="px-4 py-2 rounded-xl bg-void-deep text-gray-300 hover:text-white border border-void-border text-xs font-bold cursor-pointer"
               >
-                Cancel
+                {tMod("cancel")}
               </button>
               <button
                 type="button"
@@ -1227,12 +1220,12 @@ export function SupportPanelClient({
                 {isPending ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Escalating...</span>
+                    <span>{tMod("escalating")}</span>
                   </>
                 ) : (
                   <>
                     <Send className="w-3.5 h-3.5" />
-                    <span>Transmit Escalation</span>
+                    <span>{tMod("transmitEscalation")}</span>
                   </>
                 )}
               </button>

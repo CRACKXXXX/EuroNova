@@ -12,7 +12,8 @@ import {
   Radio, 
   Check, 
   Loader2, 
-  SlidersHorizontal 
+  SlidersHorizontal,
+  Globe 
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { 
@@ -40,6 +41,7 @@ export function NotificationPreferencesModal({ isOpen, onClose }: NotificationPr
     progression: true,
     action_required: true,
     system: true,
+    notification_language: "en",
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
@@ -52,7 +54,10 @@ export function NotificationPreferencesModal({ isOpen, onClose }: NotificationPr
     getNotificationPreferences()
       .then((res) => {
         if (!ignore && res.success && res.data) {
-          setPreferences(res.data);
+          setPreferences({
+            ...res.data,
+            notification_language: res.data.notification_language || "en",
+          });
         }
       })
       .catch((err) => {
@@ -71,10 +76,17 @@ export function NotificationPreferencesModal({ isOpen, onClose }: NotificationPr
     };
   }, [isOpen]);
 
-  const handleToggle = (key: keyof Omit<NotificationPreferences, "user_id" | "updated_at">) => {
+  const handleToggle = (key: keyof Omit<NotificationPreferences, "user_id" | "updated_at" | "notification_language">) => {
     setPreferences((prev) => ({
       ...prev,
       [key]: !prev[key],
+    }));
+  };
+
+  const handleLanguageChange = (lang: string) => {
+    setPreferences((prev) => ({
+      ...prev,
+      notification_language: lang,
     }));
   };
 
@@ -87,6 +99,7 @@ export function NotificationPreferencesModal({ isOpen, onClose }: NotificationPr
           progression: preferences.progression,
           action_required: preferences.action_required,
           system: preferences.system,
+          notification_language: preferences.notification_language || "en",
         });
 
         if (res.success) {
@@ -96,10 +109,10 @@ export function NotificationPreferencesModal({ isOpen, onClose }: NotificationPr
             onClose();
           }, 1200);
         } else {
-          toast.error(res.error || "Failed to update notification preferences.");
+          toast.error(res.error || t("savePreferences"));
         }
       } catch (err: unknown) {
-        toast.error(err instanceof Error ? err.message : "Failed to update notification preferences.");
+        toast.error(err instanceof Error ? err.message : t("savePreferences"));
       }
     });
   };
@@ -107,7 +120,7 @@ export function NotificationPreferencesModal({ isOpen, onClose }: NotificationPr
   if (!isOpen || !isMounted) return null;
 
   const categories: Array<{
-    key: keyof Omit<NotificationPreferences, "user_id" | "updated_at">;
+    key: keyof Omit<NotificationPreferences, "user_id" | "updated_at" | "notification_language">;
     title: string;
     desc: string;
     icon: React.ComponentType<{ className?: string }>;
@@ -150,6 +163,16 @@ export function NotificationPreferencesModal({ isOpen, onClose }: NotificationPr
     },
   ];
 
+  const languageOptions = [
+    { code: "en", label: t("langEn") },
+    { code: "es", label: t("langEs") },
+    { code: "de", label: t("langDe") },
+    { code: "fr", label: t("langFr") },
+    { code: "it", label: t("langIt") },
+    { code: "pt", label: t("langPt") },
+    { code: "ru", label: t("langRu") },
+  ];
+
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-void-deep/80 backdrop-blur-md animate-in fade-in duration-200">
       <div 
@@ -187,55 +210,95 @@ export function NotificationPreferencesModal({ isOpen, onClose }: NotificationPr
           </button>
         </div>
 
-        {/* Modal Content / Category Toggles */}
-        <div className="py-4 overflow-y-auto space-y-3.5 custom-scrollbar flex-1">
+        {/* Modal Content / Category Toggles & Language Selector */}
+        <div className="py-4 overflow-y-auto space-y-4 custom-scrollbar flex-1">
           {isLoading ? (
             <div className="py-12 flex flex-col items-center justify-center gap-3 text-gray-400">
               <Loader2 className="w-8 h-8 animate-spin text-plasma-cyan" />
               <span className="text-xs font-semibold">{t("calibratingFrequencies")}</span>
             </div>
           ) : (
-            categories.map(({ key, title, desc, icon: IconComponent, accentColor }) => {
-              const isEnabled = preferences[key];
-              return (
-                <div
-                  key={key}
-                  onClick={() => handleToggle(key)}
-                  className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-4 ${
-                    isEnabled
-                      ? "bg-void-deep/80 border-void-border hover:border-plasma-cyan/40"
-                      : "bg-void-deep/40 border-void-border/50 opacity-60 hover:opacity-80"
-                  }`}
-                >
-                  <div className="flex items-start gap-3 min-w-0 flex-1">
-                    <div className={`w-8 h-8 rounded-lg bg-void-surface border border-void-border flex items-center justify-center shrink-0 mt-0.5 ${accentColor}`}>
-                      <IconComponent className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <h4 className="text-xs font-bold text-gray-200 tracking-wide">
-                        {title}
-                      </h4>
-                      <p className="text-[11px] text-gray-400 mt-0.5 leading-snug">
-                        {desc}
-                      </p>
-                    </div>
+            <>
+              {/* Language Selection Card */}
+              <div className="p-4 rounded-xl bg-void-deep/80 border border-void-border space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-plasma-cyan/15 border border-plasma-cyan/30 flex items-center justify-center text-plasma-cyan shrink-0 mt-0.5">
+                    <Globe className="w-4 h-4" />
                   </div>
-
-                  {/* Cosmic Toggle Switch */}
-                  <div
-                    className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-300 shrink-0 ${
-                      isEnabled ? "bg-plasma-cyan shadow-[0_0_12px_rgba(0,229,255,0.4)]" : "bg-void-surface border border-void-border"
-                    }`}
-                  >
-                    <div
-                      className={`bg-void-deep w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${
-                        isEnabled ? "translate-x-5" : "translate-x-0 bg-gray-500"
-                      }`}
-                    />
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-xs font-bold text-gray-200 tracking-wide">
+                      {t("languagePrefTitle")}
+                    </h4>
+                    <p className="text-[11px] text-gray-400 mt-0.5 leading-snug">
+                      {t("languagePrefDesc")}
+                    </p>
                   </div>
                 </div>
-              );
-            })
+
+                <div className="pt-1">
+                  <label htmlFor="notif-language-picker" className="sr-only">
+                    {t("languageSelectorLabel")}
+                  </label>
+                  <select
+                    id="notif-language-picker"
+                    value={preferences.notification_language || "en"}
+                    onChange={(e) => handleLanguageChange(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-void-surface border border-void-border text-xs font-semibold text-white focus:border-plasma-cyan focus:outline-none focus:ring-1 focus:ring-plasma-cyan transition-colors cursor-pointer"
+                  >
+                    {languageOptions.map((opt) => (
+                      <option key={opt.code} value={opt.code} className="bg-void-surface text-white">
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Notification Category Toggles */}
+              <div className="space-y-3">
+                {categories.map(({ key, title, desc, icon: IconComponent, accentColor }) => {
+                  const isEnabled = preferences[key];
+                  return (
+                    <div
+                      key={key}
+                      onClick={() => handleToggle(key)}
+                      className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-4 ${
+                        isEnabled
+                          ? "bg-void-deep/80 border-void-border hover:border-plasma-cyan/40"
+                          : "bg-void-deep/40 border-void-border/50 opacity-60 hover:opacity-80"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
+                        <div className={`w-8 h-8 rounded-lg bg-void-surface border border-void-border flex items-center justify-center shrink-0 mt-0.5 ${accentColor}`}>
+                          <IconComponent className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-bold text-gray-200 tracking-wide">
+                            {title}
+                          </h4>
+                          <p className="text-[11px] text-gray-400 mt-0.5 leading-snug">
+                            {desc}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Cosmic Toggle Switch */}
+                      <div
+                        className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-300 shrink-0 ${
+                          isEnabled ? "bg-plasma-cyan shadow-[0_0_12px_rgba(0,229,255,0.4)]" : "bg-void-surface border border-void-border"
+                        }`}
+                      >
+                        <div
+                          className={`bg-void-deep w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${
+                            isEnabled ? "translate-x-5" : "translate-x-0 bg-gray-500"
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
 

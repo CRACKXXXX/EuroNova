@@ -823,7 +823,14 @@
     "view": "Просмотр",
     "org": "Орг",
     "tabSupportTickets": "Тикеты поддержки",
-    "reporterLabel": "Заявитель:"
+    "reporterLabel": "Заявитель:",
+    "escalateTicketTitle": "Эскалировать тикет администратору",
+    "escalateTicketReasonRequired": "Пожалуйста, укажите причину эскалации администратору.",
+    "escalatedTicketSuccess": "Тикет поддержки успешно эскалирован исполнительной администрации.",
+    "ticketSubject": "Тема тикета",
+    "targetAuthority": "Конечная инстанция",
+    "executiveAdminAuthority": "Исполнительная администрация (#admin-command)",
+    "escalateTicketPlaceholder": "Подробно опишите, почему это обращение требует вмешательства руководства или изменения данных в базе..."
   },
   "AdminPanel": {
     "title": "Режим бога: командный центр",
@@ -1716,7 +1723,28 @@
     "openTransmission": "Открыть передачу",
     "manageFrequencies": "Управление частотами уведомлений",
     "calibratingFrequencies": "Калибровка частот передачи...",
-    "cancel": "Отмена"
+    "cancel": "Отмена",
+    "notificationDetailTitle": "Детали передачи",
+    "senderLabel": "Источник",
+    "senderEuroNova": "Орбитальное командование EuroNova",
+    "timestampLabel": "Отправлено",
+    "categoryLabel": "Категория",
+    "statusLabel": "Статус",
+    "statusRead": "Прочитано",
+    "statusUnread": "Новое",
+    "openActionUrl": "Перейти к миссии",
+    "deleteNotification": "Удалить уведомление",
+    "closeDetail": "Закрыть",
+    "languagePrefTitle": "Язык уведомлений и рассылок",
+    "languagePrefDesc": "Выберите язык, на котором хотите получать уведомления по электронной почте, ответы службы поддержки и оповещения в Discord.",
+    "languageSelectorLabel": "Предпочитаемый язык рассылки",
+    "langEn": "Английский (English)",
+    "langEs": "Испанский (Español)",
+    "langDe": "Немецкий (Deutsch)",
+    "langFr": "Французский (Français)",
+    "langIt": "Итальянский (Italiano)",
+    "langPt": "Португальский (Português)",
+    "langRu": "Русский"
   },
   "Errors": {
     "badge": "ОБНАРУЖЕНА СИСТЕМНАЯ АНОМАЛИЯ",
@@ -2280,7 +2308,27 @@
     "clickToJump": "Click to jump to message",
     "attachFile": "Прикрепить изображение или документ (PNG, JPG, WEBP, PDF)",
     "removeAttachment": "Удалить вложение",
-    "fileSizeExceeded": "Размер файла не должен превышать 10 МБ."
+    "fileSizeExceeded": "Размер файла не должен превышать 10 МБ.",
+    "fileTypeNotAllowed": "Разрешены только файлы PNG, JPG, WEBP и PDF.",
+    "targetOutsideView": "Целевое сообщение находится за пределами текущего экрана.",
+    "noBroadcastClearance": "У вас нет права на отправку сообщений в этот канал.",
+    "msgUpdatedSuccess": "Сообщение успешно обновлено.",
+    "msgUpdateFailed": "Не удалось обновить сообщение.",
+    "msgSendFailed": "Не удалось передать сообщение.",
+    "supportCannotPin": "Специалисты службы поддержки не могут закреплять объявления.",
+    "msgPinnedSuccess": "Сообщение закреплено в канале.",
+    "msgUnpinnedSuccess": "Сообщение откреплено.",
+    "pinStatusFailed": "Не удалось обновить статус закрепления.",
+    "msgDeletedSuccess": "Сообщение удалено из журнала команды.",
+    "msgDeleteFailed": "Не удалось удалить сообщение.",
+    "staffChannels": "Каналы команды",
+    "jumpToPin": "К закрепленному сообщению",
+    "jumpToPinTitle": "Нажмите, чтобы перейти к этому закрепленному сообщению",
+    "prevPin": "Предыдущее закрепление",
+    "nextPin": "Следующее закрепление",
+    "showAllPins": "Показать все закрепленные сообщения",
+    "connecting": "Подключение к каналу связи команды...",
+    "readOnlyNotice": "Канал только для чтения: у вас есть право просмотра. Отправка сообщений ограничена иерархией ролей."
   },
   "CookieBanner": {
     "title": "Настройки конфиденциальности и файлов cookie",
@@ -2451,5 +2499,14 @@
     "selectTags": "Выбрать теги",
     "SearchTagsPlaceholder": "Поиск по тегам...",
     "pageOf": "Страница {current} из {total}"
+  },
+  "SupportPanel": {
+    "escalateSupportTicket": "Эскалировать тикет поддержки",
+    "escalateTo": "Эскалировать в",
+    "toModerator": "Модератору",
+    "toAdmin": "Администратору",
+    "escalateReasonPlaceholder": "Подробно опишите сложный вопрос, спорную ситуацию или требуемое вмешательство руководства...",
+    "escalateReasonRequired": "Пожалуйста, укажите причину эскалации.",
+    "escalateBtn": "Эскалировать"
   }
 }
