@@ -275,7 +275,11 @@
     "errPasswordTooShort": "La password deve contenere almeno 8 caratteri.",
     "invalidRecoverySessionTitle": "Link di recupero scaduto o non valido",
     "invalidRecoverySessionDesc": "Questo link di recupero password è scaduto o è già stato utilizzato. Richiedine uno nuovo.",
-    "requestNewLinkBtn": "Richiedi un nuevo link"
+    "requestNewLinkBtn": "Richiedi un nuevo link",
+    "errEmailNotConfirmed": "Email non confermata. Controlla la tua casella di posta per verificare il tuo account.",
+    "errInvalidCredentials": "Email o password non validi. Verifica le tue credenziali e riprova.",
+    "signupCheckEmailSuccess": "Account creato con successo. Controlla la tua casella di posta e conferma la tua email prima di accedere.",
+    "signupCheckEmailTitle": "Verifica la tua email"
   },
   "Profile": {
     "title": "Configurazione Profilo",

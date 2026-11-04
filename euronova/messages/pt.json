@@ -275,7 +275,11 @@
     "errPasswordTooShort": "A palavra-passe deve ter pelo menos 8 carateres.",
     "invalidRecoverySessionTitle": "Link de recuperação inválido ou expirado",
     "invalidRecoverySessionDesc": "Este link de recuperação expirou ou já foi utilizado. Por favor, solicite um novo link.",
-    "requestNewLinkBtn": "Solicitar novo link"
+    "requestNewLinkBtn": "Solicitar novo link",
+    "errEmailNotConfirmed": "E-mail não confirmado. Por favor, verifica a tua caixa de correio para validar a tua conta.",
+    "errInvalidCredentials": "E-mail ou palavra-passe inválidos. Por favor, verifica as tuas credenciais e tenta novamente.",
+    "signupCheckEmailSuccess": "Conta criada com sucesso. Por favor, verifica a tua caixa de correio e confirma o teu e-mail antes de iniciar sessão.",
+    "signupCheckEmailTitle": "Verifica o teu e-mail"
   },
   "Profile": {
     "title": "Configuração do Perfil",

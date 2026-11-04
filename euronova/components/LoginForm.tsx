@@ -87,6 +87,17 @@ export function LoginForm({ onToggleView, onForgotPassword }: LoginFormProps) {
           if (result.error === "RATE_LIMIT_EXCEEDED") {
             toast.warning(tErrors("rateLimitExceeded"), { id: "rate-limit-toast", icon: "⏳" });
             setError(tErrors("rateLimitExceeded"));
+          } else if (
+            result.error === "ERR_EMAIL_NOT_CONFIRMED" ||
+            result.error.toLowerCase().includes("email not confirmed")
+          ) {
+            toast.error(t("errEmailNotConfirmed"), { id: "email-not-confirmed-toast", icon: "✉️" });
+            setError(t("errEmailNotConfirmed"));
+          } else if (
+            result.error === "ERR_INVALID_CREDENTIALS" ||
+            result.error.toLowerCase().includes("invalid login credentials")
+          ) {
+            setError(t("errInvalidCredentials"));
           } else {
             setError(result.error);
           }
@@ -109,6 +120,16 @@ export function LoginForm({ onToggleView, onForgotPassword }: LoginFormProps) {
         onSubmit={handleSubmit}
         className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out"
       >
+        {searchParams?.get("registered") === "true" && (
+          <div className="p-4 rounded-xl bg-rup-emerald/15 border border-rup-emerald/50 text-rup-emerald font-medium text-xs flex items-start gap-2.5 animate-in fade-in duration-300">
+            <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-rup-emerald" />
+            <div className="space-y-0.5">
+              <p className="font-bold">{t("signupCheckEmailTitle")}</p>
+              <p className="text-gray-300 leading-relaxed">{t("signupCheckEmailSuccess")}</p>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">
             {t("email")}

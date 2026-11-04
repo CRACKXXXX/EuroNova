@@ -30,6 +30,7 @@ export function RegisterForm({ onToggleView }: RegisterFormProps) {
   const [isGooglePending, setIsGooglePending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
+  const [registeredSuccess, setRegisteredSuccess] = useState(false);
   const mounted = useSyncExternalStore(subscribe, () => true, () => false);
   const { isGranted } = useCookieConsent();
 
@@ -130,17 +131,51 @@ export function RegisterForm({ onToggleView }: RegisterFormProps) {
             setError(result.error);
           }
         } else if (result?.success) {
+          setRegisteredSuccess(true);
           setShowToast(true);
-          setTimeout(() => {
-            router.push("/dashboard");
-            router.refresh();
-          }, 850);
+          toast.success(t("signupCheckEmailSuccess"), {
+            id: "registration-success-toast",
+            icon: "✉️",
+            duration: 8000,
+          });
         }
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : t("unexpectedError"));
       }
     });
   };
+
+  if (registeredSuccess) {
+    return (
+      <div className="p-6 sm:p-8 rounded-2xl bg-void-surface/90 border border-rup-emerald/40 text-center space-y-5 animate-in fade-in zoom-in-95 duration-500 shadow-[0_0_35px_rgba(0,230,118,0.2)]">
+        <div className="w-16 h-16 mx-auto rounded-2xl bg-rup-emerald/15 border border-rup-emerald/40 flex items-center justify-center shadow-[0_0_20px_rgba(0,230,118,0.3)]">
+          <CheckCircle2 className="w-8 h-8 text-rup-emerald animate-pulse" />
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-lg font-bold text-white tracking-wide">
+            {t("signupCheckEmailTitle")}
+          </h3>
+          <p className="text-sm text-gray-300 leading-relaxed max-w-sm mx-auto">
+            {t("signupCheckEmailSuccess")}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            if (onToggleView) {
+              onToggleView();
+            } else {
+              router.push("/login?registered=true");
+            }
+          }}
+          className="w-full py-3.5 px-4 rounded-xl bg-plasma-cyan hover:bg-plasma-cyan/90 text-void-deep font-bold text-sm shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all cursor-pointer flex items-center justify-center gap-2"
+        >
+          <span>{t("loginBtn")}</span>
+          <ArrowRight className="w-4 h-4 shrink-0" />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -436,10 +471,10 @@ export function RegisterForm({ onToggleView }: RegisterFormProps) {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-bold uppercase tracking-wider text-rup-emerald">
-                {t("welcomeToastTitle")}
+                {t("signupCheckEmailTitle")}
               </p>
               <p className="text-xs text-gray-300 mt-0.5 leading-snug">
-                {t("registerSuccess")}
+                {t("signupCheckEmailSuccess")}
               </p>
             </div>
           </div>

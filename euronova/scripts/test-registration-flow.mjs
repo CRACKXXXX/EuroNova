@@ -101,6 +101,32 @@ for (const loc of locales) {
 }
 assert(i18nParity, "All 7 language dictionaries contain localized Login.errTosRequired");
 
+// Test 6: Verify 7-language i18n parity for errEmailNotConfirmed
+let emailNotConfirmedParity = true;
+for (const loc of locales) {
+  const filePath = path.join(projectRoot, "messages", `${loc}.json`);
+  const content = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+  const msg = content?.Login?.errEmailNotConfirmed;
+  if (!msg || typeof msg !== "string") {
+    emailNotConfirmedParity = false;
+    console.error(`Missing Login.errEmailNotConfirmed in ${loc}.json`);
+  }
+}
+assert(emailNotConfirmedParity, "All 7 language dictionaries contain localized Login.errEmailNotConfirmed");
+
+// Test 7: Verify 7-language i18n parity for signupCheckEmailSuccess
+let signupCheckEmailParity = true;
+for (const loc of locales) {
+  const filePath = path.join(projectRoot, "messages", `${loc}.json`);
+  const content = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+  const msg = content?.Login?.signupCheckEmailSuccess;
+  if (!msg || typeof msg !== "string") {
+    signupCheckEmailParity = false;
+    console.error(`Missing Login.signupCheckEmailSuccess in ${loc}.json`);
+  }
+}
+assert(signupCheckEmailParity, "All 7 language dictionaries contain localized Login.signupCheckEmailSuccess");
+
 console.log(`\nResults: ${passed}/${total} tests passed.`);
 
 if (passed !== total) {

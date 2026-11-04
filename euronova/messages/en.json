@@ -275,7 +275,11 @@
     "errPasswordTooShort": "Password must be at least 8 characters long.",
     "invalidRecoverySessionTitle": "Recovery Link Expired or Invalid",
     "invalidRecoverySessionDesc": "This password recovery link has either expired or already been consumed. Please request a new recovery link.",
-    "requestNewLinkBtn": "Request New Recovery Link"
+    "requestNewLinkBtn": "Request New Recovery Link",
+    "errEmailNotConfirmed": "Email not confirmed. Please check your inbox to verify your account.",
+    "errInvalidCredentials": "Invalid email or password. Please verify your credentials and try again.",
+    "signupCheckEmailSuccess": "Account created successfully. Please check your inbox and confirm your email before logging in.",
+    "signupCheckEmailTitle": "Verify Your Email"
   },
   "Profile": {
     "title": "Profile Configuration",

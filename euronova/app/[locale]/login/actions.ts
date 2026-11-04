@@ -58,6 +58,18 @@ export async function login(prevState: unknown, formData: FormData) {
     });
 
     if (error) {
+      if (
+        error.message?.toLowerCase().includes("email not confirmed") ||
+        (error as { code?: string }).code === "email_not_confirmed"
+      ) {
+        return { error: "ERR_EMAIL_NOT_CONFIRMED" };
+      }
+      if (
+        error.message?.toLowerCase().includes("invalid login credentials") ||
+        (error as { code?: string }).code === "invalid_credentials"
+      ) {
+        return { error: "ERR_INVALID_CREDENTIALS" };
+      }
       return { error: error.message };
     }
 

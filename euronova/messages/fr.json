@@ -275,7 +275,11 @@
     "errPasswordTooShort": "Le mot de passe doit comporter au moins 8 caractères.",
     "invalidRecoverySessionTitle": "Lien de récupération expiré ou invalide",
     "invalidRecoverySessionDesc": "Ce lien de récupération de mot de passe a expiré ou a déjà été utilisé. Veuillez demander un nouveau lien.",
-    "requestNewLinkBtn": "Demander un nouveau lien"
+    "requestNewLinkBtn": "Demander un nouveau lien",
+    "errEmailNotConfirmed": "E-mail non confirmé. Veuillez vérifier votre boîte de réception pour valider votre compte.",
+    "errInvalidCredentials": "Adresse e-mail ou mot de passe invalide. Veuillez vérifier vos identifiants et réessayer.",
+    "signupCheckEmailSuccess": "Compte créé avec succès. Veuillez vérifier votre boîte de réception et confirmer votre e-mail avant de vous connecter.",
+    "signupCheckEmailTitle": "Vérifiez votre e-mail"
   },
   "Profile": {
     "title": "Configuration du Profil",

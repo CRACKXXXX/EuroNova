@@ -275,7 +275,11 @@
     "errPasswordTooShort": "La contraseña debe tener al menos 8 caracteres.",
     "invalidRecoverySessionTitle": "Enlace de recuperación no válido o expirado",
     "invalidRecoverySessionDesc": "Este enlace de recuperación ha expirado o ya ha sido utilizado. Por favor, solicita un nuevo enlace.",
-    "requestNewLinkBtn": "Solicitar nuevo enlace"
+    "requestNewLinkBtn": "Solicitar nuevo enlace",
+    "errEmailNotConfirmed": "Correo no confirmado. Por favor revisa tu bandeja de entrada para verificar tu cuenta.",
+    "errInvalidCredentials": "Correo electrónico o contraseña no válidos. Por favor verifica tus credenciales e inténtalo de nuevo.",
+    "signupCheckEmailSuccess": "Cuenta creada con éxito. Por favor revisa tu bandeja de entrada y confirma tu correo antes de iniciar sesión.",
+    "signupCheckEmailTitle": "Verifica tu correo electrónico"
   },
   "Profile": {
     "title": "Configuración de Perfil",
