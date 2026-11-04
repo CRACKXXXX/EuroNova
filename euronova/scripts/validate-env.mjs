@@ -8,21 +8,37 @@
 
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
-// 1. Manually parse .env.local if present
-const envLocalPath = path.resolve(process.cwd(), ".env.local");
-if (fs.existsSync(envLocalPath)) {
-  const content = fs.readFileSync(envLocalPath, "utf-8");
-  for (const line of content.split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eqIdx = trimmed.indexOf("=");
-    if (eqIdx > 0) {
-      const key = trimmed.slice(0, eqIdx).trim();
-      const val = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, "");
-      if (!process.env[key]) {
-        process.env[key] = val;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 1. Manually parse .env.local from potential project locations
+const candidatePaths = [
+  path.resolve(process.cwd(), ".env.local"),
+  path.resolve(process.cwd(), "euronova", ".env.local"),
+  path.resolve(__dirname, "..", ".env.local"),
+  path.resolve(__dirname, "..", "..", ".env.local"),
+];
+
+for (const envLocalPath of candidatePaths) {
+  if (fs.existsSync(envLocalPath)) {
+    try {
+      const content = fs.readFileSync(envLocalPath, "utf-8");
+      for (const line of content.split("\n")) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) continue;
+        const eqIdx = trimmed.indexOf("=");
+        if (eqIdx > 0) {
+          const key = trimmed.slice(0, eqIdx).trim();
+          const val = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, "");
+          if (!process.env[key]) {
+            process.env[key] = val;
+          }
+        }
       }
+    } catch {
+      // Continue to next candidate
     }
   }
 }
@@ -85,6 +101,37 @@ const ENV_SPEC = [
       if (!val) return { valid: false, message: "Missing Service Role Key (Server mutations)" };
       if (val.length < 30) return { valid: false, message: "Suspiciously short JWT key" };
       return { valid: true, message: "High-privilege Service Role key present" };
+    },
+  },
+  {
+    key: "SUPABASE_DB_URL",
+    category: "Database (Direct & Backup)",
+    required: false,
+    isSecret: true,
+    validate: (val) => {
+      if (!val) {
+        return {
+          valid: true,
+          warning: true,
+          message: "Unset: Direct pg_dump database backups and migrations will require DB URL",
+        };
+      }
+      try {
+        const u = new URL(val);
+        if (u.protocol !== "postgresql:" && u.protocol !== "postgres:") {
+          return { valid: false, message: "Invalid protocol: expected postgresql:// or postgres://" };
+        }
+        if (u.port === "6543") {
+          return {
+            valid: true,
+            warning: true,
+            message: "Port 6543 (Transaction Pooler) detected: session-level pg_dump requires port 5432",
+          };
+        }
+        return { valid: true, message: `Direct PostgreSQL pooler verified on port ${u.port || "5432"}` };
+      } catch {
+        return { valid: false, message: "Malformed PostgreSQL connection URI" };
+      }
     },
   },
 
