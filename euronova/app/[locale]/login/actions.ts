@@ -1,9 +1,9 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { AuthCredentialsSchema } from "@/lib/schemas";
+import { createClient } from "@/utils/supabase/server";
+import { AuthCredentialsSchema, SignupCredentialsSchema } from "@/lib/schemas";
 import { checkRateLimit, RATE_LIMITS, getClientIp } from "@/lib/rateLimiter";
 import { stripDangerousHtml } from "@/lib/securitySanitizer";
 
@@ -11,14 +11,13 @@ export async function login(prevState: unknown, formData: FormData) {
   const email = (formData.get("email") as string)?.trim();
   const password = formData.get("password") as string;
 
-  // 1. Zod double-layer schema validation
   const parsed = AuthCredentialsSchema.safeParse({ email, password });
   if (!parsed.success) {
-    const issue = parsed.error.issues[0]?.message || "Invalid login credentials.";
+    const issue = parsed.error.issues[0]?.message || "Invalid email or password.";
     return { error: issue };
   }
 
-  // 2. Anti-brute-force Rate Limiter (10 attempts per minute per IP)
+  // Anti-brute force Rate Limiter (5 attempts per minute per IP)
   const clientIp = await getClientIp();
   const rateCheck = await checkRateLimit(`login_${clientIp}`, RATE_LIMITS.AUTH);
   if (!rateCheck.success) {
@@ -50,11 +49,19 @@ export async function signup(prevState: unknown, formData: FormData) {
   const rawFullName = (formData.get("fullName") as string)?.trim();
   const fullName = stripDangerousHtml(rawFullName, 100);
   const birthDate = (formData.get("birth_date") as string)?.trim();
-  const orgAgeDeclaration = formData.get("org_age_declaration") === "on";
-  const acceptedTos = formData.get("accepted_tos") === "on";
+  const orgAgeDeclarationRaw = formData.get("org_age_declaration");
+  const orgAgeDeclaration = orgAgeDeclarationRaw === "on" || orgAgeDeclarationRaw === "true" || orgAgeDeclarationRaw === "1";
+  const acceptedTosRaw = formData.get("accepted_tos") || formData.get("terms");
+  const acceptedTos = acceptedTosRaw === "on" || acceptedTosRaw === "true" || acceptedTosRaw === "1";
 
-  // 1. Zod double-layer schema validation
-  const parsed = AuthCredentialsSchema.safeParse({ email, password });
+  // 1. Zod double-layer schema validation with terms requirement
+  const parsed = SignupCredentialsSchema.safeParse({
+    email,
+    password,
+    accepted_tos: acceptedTos,
+    role,
+  });
+
   if (!parsed.success) {
     const issue = parsed.error.issues[0]?.message || "Invalid registration credentials.";
     return { error: issue };
@@ -71,15 +78,15 @@ export async function signup(prevState: unknown, formData: FormData) {
     return { error: "RATE_LIMIT_EXCEEDED" };
   }
 
-  // Auditable Consent Traceability (Art. 7 GDPR)
+  // 3. Mandatory Server-Side Validation: Auditable Consent Traceability (Art. 7 GDPR)
   if (!acceptedTos) {
-    return { error: "You must accept the Terms of Service and Privacy Policy to create an account." };
+    return { error: "ERR_TOS_REQUIRED" };
   }
 
-  // Strict Age Verification Gate (Art. 8 GDPR & Erasmus+ Rules)
+  // 4. Strict Age Verification Gate (Art. 8 GDPR & Erasmus+ Rules)
   if (role === "youth") {
     if (!birthDate) {
-      return { error: "Please enter your date of birth." };
+      return { error: "ERR_AGE_REQUIRED" };
     }
 
     if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) {
@@ -94,7 +101,7 @@ export async function signup(prevState: unknown, formData: FormData) {
     const now = new Date();
 
     if (isNaN(birthDateObj.getTime()) || birthDateObj > now) {
-      return { error: "Date of birth cannot be in the future." };
+      return { error: "ERR_FUTURE_DATE" };
     }
 
     let age = now.getUTCFullYear() - birthDateObj.getUTCFullYear();
@@ -104,15 +111,11 @@ export async function signup(prevState: unknown, formData: FormData) {
     }
 
     if (age < 13) {
-      return {
-        error: "You must be at least 13 years old to register on EuroNova (GDPR Art. 8 & Erasmus+ compliance).",
-      };
+      return { error: "ERR_UNDERAGE" };
     }
   } else if (role === "org") {
     if (!orgAgeDeclaration) {
-      return {
-        error: "You must confirm that you are an authorized representative of legal age (18+).",
-      };
+      return { error: "ERR_ORG_AGE_DECLARATION" };
     }
   }
 
@@ -137,7 +140,15 @@ export async function signup(prevState: unknown, formData: FormData) {
     });
 
     if (error) {
-      return { error: error.message };
+      console.error("[Auth Signup Error]:", error);
+      if (
+        error.status === 422 ||
+        error.message?.toLowerCase().includes("already registered") ||
+        error.message?.toLowerCase().includes("already in use")
+      ) {
+        return { error: "User already registered or invalid input." };
+      }
+      return { error: "Error creating account" };
     }
 
     // Step 2: Relational profile creation with defensive attributes
@@ -149,7 +160,8 @@ export async function signup(prevState: unknown, formData: FormData) {
           birth_date: birthDate,
         });
         if (profileError) {
-          console.error("Error creating youth profile:", profileError);
+          console.error("[Profile Creation Error - Youth]:", profileError);
+          return { error: "Error creating account" };
         }
       } else if (role === "org") {
         const { error: profileError } = await supabase.from("users_org").upsert({
@@ -157,14 +169,16 @@ export async function signup(prevState: unknown, formData: FormData) {
           org_name: fullName || null,
         });
         if (profileError) {
-          console.error("Error creating org profile:", profileError);
+          console.error("[Profile Creation Error - Org]:", profileError);
+          return { error: "Error creating account" };
         }
       }
     }
 
     return { success: true };
   } catch (err: unknown) {
-    return { error: err instanceof Error ? err.message : "Unexpected error during registration." };
+    console.error("[Unexpected Registration Exception]:", err);
+    return { error: "Error creating account" };
   }
 }
 

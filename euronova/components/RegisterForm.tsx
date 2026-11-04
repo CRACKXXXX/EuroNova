@@ -23,6 +23,9 @@ export function RegisterForm({ onToggleView }: RegisterFormProps) {
   const t = useTranslations("Login");
   const tErrors = useTranslations("Errors");
   const [role, setRole] = useState<"youth" | "org">("youth");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [orgAgeDeclared, setOrgAgeDeclared] = useState(false);
+  const [parentalConsent, setParentalConsent] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [isGooglePending, setIsGooglePending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,8 +83,29 @@ export function RegisterForm({ onToggleView }: RegisterFormProps) {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+
+    // Client-side validation: Terms of Service acceptance
+    if (!acceptedTerms) {
+      setError(t("errTosRequired"));
+      return;
+    }
+
+    // Client-side validation: Organization representative age declaration
+    if (role === "org" && !orgAgeDeclared) {
+      setError(t("errOrgAgeDeclaration"));
+      return;
+    }
+
     const formData = new FormData(e.currentTarget);
     formData.set("role", role);
+    formData.set("accepted_tos", "true");
+    formData.set("terms", "true");
+    if (role === "org") {
+      formData.set("org_age_declaration", orgAgeDeclared ? "true" : "false");
+    }
+    if (role === "youth") {
+      formData.set("parentalConsent", parentalConsent ? "true" : "false");
+    }
 
     startTransition(async () => {
       try {
@@ -90,6 +114,18 @@ export function RegisterForm({ onToggleView }: RegisterFormProps) {
           if (result.error === "RATE_LIMIT_EXCEEDED") {
             toast.warning(tErrors("rateLimitExceeded"), { id: "rate-limit-toast", icon: "⏳" });
             setError(tErrors("rateLimitExceeded"));
+          } else if (result.error === "ERR_TOS_REQUIRED" || result.error.includes("Terms of Service") || result.error.includes("terms")) {
+            setError(t("errTosRequired"));
+          } else if (result.error === "ERR_AGE_REQUIRED" || result.error.includes("date of birth")) {
+            setError(t("errAgeRequired"));
+          } else if (result.error === "ERR_UNDERAGE" || result.error.includes("13 years old")) {
+            setError(t("errUnderage"));
+          } else if (result.error === "ERR_FUTURE_DATE" || result.error.includes("future")) {
+            setError(t("errFutureDate"));
+          } else if (result.error === "ERR_ORG_AGE_DECLARATION" || result.error.includes("authorized representative")) {
+            setError(t("errOrgAgeDeclaration"));
+          } else if (result.error === "Error creating account" || result.error === "ERR_ACCOUNT_CREATION") {
+            setError(t("errAccountCreation"));
           } else {
             setError(result.error);
           }
@@ -120,7 +156,10 @@ export function RegisterForm({ onToggleView }: RegisterFormProps) {
           <div className="grid grid-cols-2 gap-3.5">
             <button
               type="button"
-              onClick={() => setRole("youth")}
+              onClick={() => {
+                setRole("youth");
+                setError(null);
+              }}
               className={`flex flex-col items-center justify-center p-3.5 rounded-xl border transition-all cursor-pointer ${
                 role === "youth"
                   ? "bg-plasma-cyan/15 border-plasma-cyan text-white shadow-[0_0_15px_rgba(0,229,255,0.2)]"
@@ -132,7 +171,10 @@ export function RegisterForm({ onToggleView }: RegisterFormProps) {
             </button>
             <button
               type="button"
-              onClick={() => setRole("org")}
+              onClick={() => {
+                setRole("org");
+                setError(null);
+              }}
               className={`flex flex-col items-center justify-center p-3.5 rounded-xl border transition-all cursor-pointer ${
                 role === "org"
                   ? "bg-hyper-violet/15 border-hyper-violet text-white shadow-[0_0_15px_rgba(99,102,241,0.2)]"
@@ -208,40 +250,72 @@ export function RegisterForm({ onToggleView }: RegisterFormProps) {
 
         {/* Consent Checkboxes */}
         <div className="space-y-3 pt-1">
-          <label className="flex items-start gap-3 cursor-pointer group">
+          <div className="flex items-start gap-3 group">
             <input
               type="checkbox"
+              id="terms"
               name="terms"
-              required
-              className="mt-1 w-4 h-4 rounded bg-void-deep border-void-border text-plasma-cyan focus:ring-plasma-cyan focus:ring-offset-void-deep"
+              checked={acceptedTerms}
+              onChange={(e) => {
+                setAcceptedTerms(e.target.checked);
+                if (e.target.checked && error === t("errTosRequired")) {
+                  setError(null);
+                }
+              }}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border border-void-border bg-void-deep text-plasma-cyan accent-plasma-cyan focus:outline-none focus:ring-2 focus:ring-plasma-cyan focus:ring-offset-2 focus:ring-offset-void-surface cursor-pointer"
             />
-            <span className="text-xs text-gray-400 group-hover:text-gray-300 leading-relaxed">
+            <label htmlFor="terms" className="text-xs text-gray-400 group-hover:text-gray-300 leading-relaxed cursor-pointer select-none">
               {t.rich("termsAgreement", {
                 terms: (chunks) => (
-                  <Link href="/legal/terms" className="text-plasma-cyan hover:underline" target="_blank">
+                  <Link href="/legal/terms" className="text-plasma-cyan hover:underline font-medium" target="_blank">
                     {chunks}
                   </Link>
                 ),
                 privacy: (chunks) => (
-                  <Link href="/legal/privacy" className="text-plasma-cyan hover:underline" target="_blank">
+                  <Link href="/legal/privacy" className="text-plasma-cyan hover:underline font-medium" target="_blank">
                     {chunks}
                   </Link>
                 ),
               })}
-            </span>
-          </label>
+            </label>
+          </div>
 
-          <label className="flex items-start gap-3 cursor-pointer group">
-            <input
-              type="checkbox"
-              name="parentalConsent"
-              value="true"
-              className="mt-1 w-4 h-4 rounded bg-void-deep border-void-border text-plasma-cyan focus:ring-plasma-cyan focus:ring-offset-void-deep"
-            />
-            <span className="text-xs text-gray-400 group-hover:text-gray-300 leading-relaxed">
-              {t("parentalConsentLabel")}
-            </span>
-          </label>
+          {role === "org" && (
+            <div className="flex items-start gap-3 group animate-in fade-in duration-200">
+              <input
+                type="checkbox"
+                id="org_age_declaration"
+                name="org_age_declaration"
+                checked={orgAgeDeclared}
+                onChange={(e) => {
+                  setOrgAgeDeclared(e.target.checked);
+                  if (e.target.checked && error === t("errOrgAgeDeclaration")) {
+                    setError(null);
+                  }
+                }}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border border-void-border bg-void-deep text-hyper-violet accent-hyper-violet focus:outline-none focus:ring-2 focus:ring-hyper-violet focus:ring-offset-2 focus:ring-offset-void-surface cursor-pointer"
+              />
+              <label htmlFor="org_age_declaration" className="text-xs text-gray-400 group-hover:text-gray-300 leading-relaxed cursor-pointer select-none">
+                {t("orgAgeDeclaration")}
+              </label>
+            </div>
+          )}
+
+          {role === "youth" && (
+            <div className="flex items-start gap-3 group animate-in fade-in duration-200">
+              <input
+                type="checkbox"
+                id="parentalConsent"
+                name="parentalConsent"
+                checked={parentalConsent}
+                onChange={(e) => setParentalConsent(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border border-void-border bg-void-deep text-plasma-cyan accent-plasma-cyan focus:outline-none focus:ring-2 focus:ring-plasma-cyan focus:ring-offset-2 focus:ring-offset-void-surface cursor-pointer"
+              />
+              <label htmlFor="parentalConsent" className="text-xs text-gray-400 group-hover:text-gray-300 leading-relaxed cursor-pointer select-none">
+                {t("parentalConsentLabel")}
+              </label>
+            </div>
+          )}
         </div>
 
         {error && (

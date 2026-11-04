@@ -240,6 +240,7 @@
     "errUnderage": "Debes tener al menos 13 años para registrarte en EuroNova (cumplimiento del RGPD y directrices Erasmus+).",
     "errFutureDate": "La fecha de nacimiento no puede ser futura.",
     "errOrgAgeDeclaration": "Debes confirmar que eres un representante autorizado mayor de edad (18+).",
+    "errAccountCreation": "Error al crear la cuenta. Por favor, inténtalo de nuevo.",
     "orbitalDeparture": "Salida Orbital",
     "transmissionConfirmed": "Transmisión Confirmada",
     "welcomeToastTitle": "Bienvenido a EuroNova",

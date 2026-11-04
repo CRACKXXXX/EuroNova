@@ -240,6 +240,7 @@
     "errUnderage": "You must be at least 13 years old to register on EuroNova (GDPR Art. 8 & Erasmus+ compliance).",
     "errFutureDate": "Date of birth cannot be in the future.",
     "errOrgAgeDeclaration": "You must confirm that you are an authorized representative of legal age (18+).",
+    "errAccountCreation": "Error creating account. Please try again.",
     "orbitalDeparture": "Orbital Departure",
     "transmissionConfirmed": "Transmission Confirmed",
     "welcomeToastTitle": "Welcome to EuroNova",

@@ -41,6 +41,11 @@ export const AuthCredentialsSchema = z.object({
     .refine(noNullBytes, "Password cannot contain null bytes."),
 });
 
+export const SignupCredentialsSchema = AuthCredentialsSchema.extend({
+  accepted_tos: z.boolean({ message: "ERR_TOS_REQUIRED" }).refine((val) => val === true, "ERR_TOS_REQUIRED"),
+  role: z.enum(["youth", "org"]),
+});
+
 // 3. Support Ticket Submission Schema
 export const ALLOWED_ATTACHMENT_MIME_TYPES = [
   "image/jpeg",

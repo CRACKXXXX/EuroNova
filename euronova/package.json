@@ -8,7 +8,8 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "validate:i18n": "node scripts/validate-i18n.mjs"
+    "validate:i18n": "node scripts/validate-i18n.mjs",
+    "test:registration": "node scripts/test-registration-flow.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
