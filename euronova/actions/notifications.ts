@@ -434,11 +434,37 @@ export async function updateNotificationPreferences(
       updated_at: new Date().toISOString(),
     };
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("notification_preferences")
       .upsert(merged, { onConflict: "user_id" })
       .select("*")
       .single();
+
+    if (error && (error.message.includes("notification_language") || error.code === "PGRST204")) {
+      // Graceful fallback if migration 00033 has not yet been applied to production Supabase
+      const fallbackMerged = {
+        user_id: user.id,
+        alert: merged.alert,
+        moderation: merged.moderation,
+        progression: merged.progression,
+        action_required: merged.action_required,
+        system: merged.system,
+        updated_at: merged.updated_at,
+      };
+      const fallbackRes = await supabase
+        .from("notification_preferences")
+        .upsert(fallbackMerged, { onConflict: "user_id" })
+        .select("*")
+        .single();
+
+      if (!fallbackRes.error && fallbackRes.data) {
+        data = {
+          ...fallbackRes.data,
+          notification_language: targetLanguage,
+        };
+        error = null;
+      }
+    }
 
     if (error) {
       return { success: false, error: error.message };

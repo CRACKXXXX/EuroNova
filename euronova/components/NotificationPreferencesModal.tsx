@@ -21,6 +21,13 @@ import {
   updateNotificationPreferences, 
   type NotificationPreferences 
 } from "@/actions/notifications";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface NotificationPreferencesModalProps {
   isOpen: boolean;
@@ -164,13 +171,13 @@ export function NotificationPreferencesModal({ isOpen, onClose }: NotificationPr
   ];
 
   const languageOptions = [
-    { code: "en", label: t("langEn") },
-    { code: "es", label: t("langEs") },
-    { code: "de", label: t("langDe") },
-    { code: "fr", label: t("langFr") },
-    { code: "it", label: t("langIt") },
-    { code: "pt", label: t("langPt") },
-    { code: "ru", label: t("langRu") },
+    { code: "en", flag: "🇬🇧", label: t("langEn") },
+    { code: "es", flag: "🇪🇸", label: t("langEs") },
+    { code: "de", flag: "🇩🇪", label: t("langDe") },
+    { code: "fr", flag: "🇫🇷", label: t("langFr") },
+    { code: "it", flag: "🇮🇹", label: t("langIt") },
+    { code: "pt", flag: "🇵🇹", label: t("langPt") },
+    { code: "ru", flag: "🇷🇺", label: t("langRu") },
   ];
 
   return createPortal(
@@ -222,7 +229,7 @@ export function NotificationPreferencesModal({ isOpen, onClose }: NotificationPr
               {/* Language Selection Card */}
               <div className="p-4 rounded-xl bg-void-deep/80 border border-void-border space-y-3">
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-plasma-cyan/15 border border-plasma-cyan/30 flex items-center justify-center text-plasma-cyan shrink-0 mt-0.5">
+                  <div className="w-8 h-8 rounded-lg bg-plasma-cyan/15 border border-plasma-cyan/30 flex items-center justify-center text-plasma-cyan shrink-0 mt-0.5 shadow-[0_0_10px_rgba(0,229,255,0.15)]">
                     <Globe className="w-4 h-4" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -236,21 +243,47 @@ export function NotificationPreferencesModal({ isOpen, onClose }: NotificationPr
                 </div>
 
                 <div className="pt-1">
-                  <label htmlFor="notif-language-picker" className="sr-only">
+                  <label htmlFor="notif-language-select" className="sr-only">
                     {t("languageSelectorLabel")}
                   </label>
-                  <select
-                    id="notif-language-picker"
+                  <Select
                     value={preferences.notification_language || "en"}
-                    onChange={(e) => handleLanguageChange(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-void-surface border border-void-border text-xs font-semibold text-white focus:border-plasma-cyan focus:outline-none focus:ring-1 focus:ring-plasma-cyan transition-colors cursor-pointer"
+                    onValueChange={(val) => handleLanguageChange(val)}
                   >
-                    {languageOptions.map((opt) => (
-                      <option key={opt.code} value={opt.code} className="bg-void-surface text-white">
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger
+                      id="notif-language-select"
+                      className="w-full bg-void-surface border-void-border text-white text-xs font-semibold hover:border-plasma-cyan/50 focus:border-plasma-cyan focus:ring-1 focus:ring-plasma-cyan/50 transition-all shadow-inner"
+                      aria-label={t("languageSelectorLabel")}
+                    >
+                      <SelectValue placeholder={t("languageSelectorLabel")}>
+                        {(() => {
+                          const currentOpt = languageOptions.find(
+                            (opt) => opt.code === (preferences.notification_language || "en")
+                          );
+                          return currentOpt ? (
+                            <span className="flex items-center gap-2">
+                              <span className="text-base leading-none select-none">{currentOpt.flag}</span>
+                              <span className="font-semibold text-white">{currentOpt.label}</span>
+                            </span>
+                          ) : null;
+                        })()}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="bg-void-surface border-void-border text-white shadow-2xl z-[99999] rounded-xl">
+                      {languageOptions.map((opt) => (
+                        <SelectItem
+                          key={opt.code}
+                          value={opt.code}
+                          className="flex items-center gap-2.5 cursor-pointer hover:bg-plasma-cyan/10 focus:bg-plasma-cyan/15 transition-colors py-2.5 px-3 rounded-lg"
+                        >
+                          <span className="flex items-center gap-2 text-xs">
+                            <span className="text-base leading-none select-none shrink-0">{opt.flag}</span>
+                            <span className="font-medium text-gray-200">{opt.label}</span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
